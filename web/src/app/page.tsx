@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mic, Globe, Play, Pause, Sparkles, Shield, ArrowRight, BookOpen, Volume2, Radio, Share2 } from "lucide-react";
+import { Mic, Globe, Play, Pause, Sparkles, Shield, ArrowRight, BookOpen, Volume2, Radio, Share2, Languages } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { ContentRow } from "@/components/archive/ContentRow";
 import { AIAssistant } from "@/components/ai/AIAssistant";
@@ -164,6 +164,14 @@ export default function HomePage() {
           {/* Action Buttons */}
           <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
             <Link
+              href="/translate"
+              className="flex items-center gap-2 px-6 py-3 rounded-full bg-gradient-to-r from-netflix-red via-netflix-red-hover to-cultural-gold text-white font-bold text-sm shadow-netflix-glow hover:scale-105 transition-all"
+            >
+              <Languages className="w-4 h-4 text-white" />
+              <span>Day-to-Day Translator (నిత్య జీవిత సంభాషణలు)</span>
+            </Link>
+
+            <Link
               href="/record"
               className="flex items-center gap-2 px-6 py-3 rounded-full ios27-button-primary text-sm shadow-netflix-glow"
             >
@@ -295,6 +303,79 @@ export default function HomePage() {
           <div className="ios27-glass p-4 rounded-2xl text-center col-span-2 sm:col-span-1">
             <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white block">347h</span>
             <span className="text-xs text-netflix-gray">Audio Preserved</span>
+          </div>
+        </div>
+      </section>
+
+      {/* Dedicated Day-to-Day Translation Showcase Section */}
+      <section className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
+        <div className="p-6 sm:p-8 rounded-3xl bg-[#141414] border border-white/10 shadow-2xl space-y-6 relative overflow-hidden">
+          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-netflix-red to-cultural-gold flex items-center justify-center text-white shadow-netflix-glow">
+                <Languages className="w-6 h-6" />
+              </div>
+              <div>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
+                    దైనందిన సంభాషణల అనువాదం (Day-to-Day Translation)
+                  </h2>
+                  <span className="px-2.5 py-0.5 rounded-full bg-netflix-red/20 text-netflix-red border border-netflix-red/30 text-[10px] font-bold">
+                    ACTIVE
+                  </span>
+                </div>
+                <p className="text-xs text-netflix-light mt-0.5">
+                  పాటలు కాకుండా, నిజజీవితంలో ప్రతిరోజూ మాట్లాడుకునే సాధారణ సంభాషణల అనువాదం (Telugu, English, Hindi, Tamil, Kannada, Malayalam, Marathi, Odia, Bengali, Gondi, Koya, Lambadi).
+                </p>
+              </div>
+            </div>
+
+            <Link
+              href="/translate"
+              className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-netflix-red hover:bg-netflix-red-hover text-white font-bold text-xs shadow-netflix-glow transition-all hover:scale-105"
+            >
+              <span>పూర్తి ట్రాన్స్‌లేటర్‌ని తెరవండి (Open Full Translator)</span>
+              <ArrowRight className="w-4 h-4" />
+            </Link>
+          </div>
+
+          {/* Quick Real-life Everyday Phrases Grid */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1">
+            {[
+              {
+                q: "నమస్కారం! బాగున్నారా?",
+                en: "Greetings! How are you doing? Are you well?",
+                cat: "పరిచయాలు (Greetings)",
+              },
+              {
+                q: "తాగడానికి మంచి నీళ్ళు ఇవ్వండి",
+                en: "Could you please give me drinking water? I am thirsty.",
+                cat: "దాహం & నీళ్ళు (Water)",
+              },
+              {
+                q: "దీని ధర ఎంత? ఎంతకి ఇస్తారు?",
+                en: "How much does this cost? Can you reduce the price?",
+                cat: "సంత & ధరలు (Market)",
+              },
+              {
+                q: "సహాయం చేయండి, జ్వరంగా ఉంది",
+                en: "Please help me! I am feeling unwell with a fever.",
+                cat: "వైద్యం & సాయం (Health)",
+              },
+            ].map((p, idx) => (
+              <Link
+                key={idx}
+                href="/translate"
+                className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-netflix-red/60 hover:bg-white/10 transition-all space-y-2 group"
+              >
+                <div className="flex items-center justify-between">
+                  <span className="text-[10px] font-bold text-cultural-gold block">{p.cat}</span>
+                  <span className="text-[10px] text-netflix-light group-hover:text-netflix-red transition-colors">అనువదించు →</span>
+                </div>
+                <p className="text-sm font-bold text-white group-hover:text-netflix-red transition-colors">{p.q}</p>
+                <p className="text-xs text-netflix-light italic">{p.en}</p>
+              </Link>
+            ))}
           </div>
         </div>
       </section>

@@ -2,7 +2,13 @@ import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
 import { SpatialIcon } from "../components/SpatialIcon";
 
-export function HomeScreen({ onNavigateRecord }: { onNavigateRecord: () => void }) {
+export function HomeScreen({
+  onNavigateRecord,
+  onNavigateTranslate,
+}: {
+  onNavigateRecord: () => void;
+  onNavigateTranslate: () => void;
+}) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header */}
@@ -15,6 +21,32 @@ export function HomeScreen({ onNavigateRecord }: { onNavigateRecord: () => void 
           Capture oral stories, tribal dialects, and elder memory before they fade.
         </Text>
       </View>
+
+      {/* Day-to-Day Conversational Translation Quick Action Card */}
+      <TouchableOpacity
+        style={styles.translateHeroGlass}
+        onPress={onNavigateTranslate}
+        activeOpacity={0.85}
+      >
+        <View style={styles.specularShine} />
+        <View style={styles.translateCardTop}>
+          <View style={styles.translateIconOrb}>
+            <SpatialIcon name="globe" size={24} color="#E50914" />
+          </View>
+          <View style={{ flex: 1, marginLeft: 12 }}>
+            <View style={styles.dailyBadgeRow}>
+              <Text style={styles.dailyBadge}>DAY-TO-DAY TRANSLATION</Text>
+            </View>
+            <Text style={styles.translateCardTitle}>దైనందిన సంభాషణల అనువాదం</Text>
+            <Text style={styles.translateCardSub}>
+              రోజువారీ మాటలు: పలకరింపులు, నీళ్ళు, భోజనం, ధరలు, దారి & సాయం
+            </Text>
+          </View>
+        </View>
+        <View style={styles.translateCardFooter}>
+          <Text style={styles.translateActionText}>ట్రాన్స్‌లేటర్ తెరవండి (Open Translator) →</Text>
+        </View>
+      </TouchableOpacity>
 
       {/* Hero Liquid Glass Record Action */}
       <TouchableOpacity
@@ -314,5 +346,62 @@ const styles = StyleSheet.create({
     fontSize: 10,
     marginTop: 3,
     lineHeight: 14,
+  },
+  translateHeroGlass: {
+    backgroundColor: "rgba(229, 9, 20, 0.08)",
+    borderWidth: 1.5,
+    borderColor: "rgba(229, 9, 20, 0.35)",
+    borderRadius: 22,
+    padding: 16,
+    marginBottom: 16,
+    overflow: "hidden",
+  },
+  translateCardTop: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  translateIconOrb: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    backgroundColor: "rgba(229, 9, 20, 0.15)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  dailyBadgeRow: {
+    flexDirection: "row",
+    marginBottom: 4,
+  },
+  dailyBadge: {
+    backgroundColor: "rgba(229, 9, 20, 0.2)",
+    color: "#E50914",
+    fontSize: 9,
+    fontWeight: "800",
+    paddingHorizontal: 8,
+    paddingVertical: 2,
+    borderRadius: 6,
+    letterSpacing: 0.5,
+  },
+  translateCardTitle: {
+    fontSize: 15,
+    fontWeight: "800",
+    color: "#FFFFFF",
+    marginBottom: 2,
+  },
+  translateCardSub: {
+    fontSize: 11,
+    color: "#8E8E93",
+    lineHeight: 16,
+  },
+  translateCardFooter: {
+    marginTop: 12,
+    paddingTop: 10,
+    borderTopWidth: 1,
+    borderTopColor: "rgba(255, 255, 255, 0.08)",
+  },
+  translateActionText: {
+    color: "#E5A93C",
+    fontSize: 12,
+    fontWeight: "700",
   },
 });

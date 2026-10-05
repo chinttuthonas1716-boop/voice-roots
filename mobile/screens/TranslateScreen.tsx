@@ -9,146 +9,99 @@ import {
   Platform,
 } from "react-native";
 import { SpatialIcon } from "../components/SpatialIcon";
+import { DAY_TO_DAY_PHRASES, ConversationPhrase } from "../lib/conversations";
 
-interface PhraseItem {
-  category: string;
-  original: string;
-  telugu: string;
-  english: string;
-  hindi: string;
-  gondi: string;
-}
-
-const DAY_TO_DAY_PHRASES: PhraseItem[] = [
-  {
-    category: "Greetings (పరిచయాలు)",
-    original: "బాగున్నారా? ఎలా ఉన్నారు?",
-    telugu: "నమస్కారం! మీరు బాగున్నారా? ఎలా ఉన్నారు?",
-    english: "Greetings! How are you doing? Are you well?",
-    hindi: "नमस्ते! आप कैसे हैं? क्या सब कुशल-मंगल है?",
-    gondi: "सेवा जोहार! నీవా రోన్ సుఖి మంతా?",
-  },
-  {
-    category: "Name & Intro (పేరు & పరిచయం)",
-    original: "మీ పేరు ఏమిటి?",
-    telugu: "మీ పేరు ఏమిటి? నా పేరు హర్ష.",
-    english: "What is your name? May I know your name?",
-    hindi: "आपका नाम क्या है? कृपया अपना नाम बताएं।",
-    gondi: "నీవా పోరోల్ బాతా? (Neeva porol baatha?)",
-  },
-  {
-    category: "Water & Thirst (మంచి నీళ్ళు & దాహం)",
-    original: "తాగడానికి మంచి నీళ్ళు ఇవ్వండి",
-    telugu: "దయచేసి తాగడానికి కొంచెం మంచి నీళ్ళు ఇస్తారా? నాకు దాహం వేస్తోంది.",
-    english: "Could you please give me some drinking water? I am thirsty.",
-    hindi: "कृपया मुझे पीने के लिए थोड़ा पानी देंगे? मुझे प्यास लगी है।",
-    gondi: "నన్నా యర్ ఈమా! దాహమ్ ఆతా మంతా.",
-  },
-  {
-    category: "Food & Hunger (భోజనం & ఆకలి)",
-    original: "భోజనం దొరుకుతుందా? ఆకలిగా ఉంది",
-    telugu: "నాకు చాలా ఆకలిగా ఉంది, తినడానికి భోజనం దొరుకుతుందా?",
-    english: "I am very hungry, is any food or meal available here?",
-    hindi: "मुझे बहुत भूख लगी है, क्या यहाँ भोजन मिल सकता है?",
-    gondi: "నన్నా గాటో కావాలి మంతా, ఆకలి ఆతా.",
-  },
-  {
-    category: "Market & Price (సంత & ధరలు)",
-    original: "దీని ధర ఎంత? ఎంతకి ఇస్తారు?",
-    telugu: "దీని ధర ఎంత? కొంచెం తగ్గించి ఇస్తారా?",
-    english: "How much does this cost? Can you reduce the price a little?",
-    hindi: "इसकी कीमत क्या है? क्या थोड़ा कम कर सकते हैं?",
-    gondi: "ఇదేద్ బాతా పైసాల్? కసిత్ తోరమ్ కీమా.",
-  },
-  {
-    category: "Directions & Travel (దారి & ప్రయాణం)",
-    original: "ఈ దారి ఊరికి వెళ్తుందా?",
-    telugu: "ఈ దారి గ్రామానికి వెళ్తుందా? బస్సు ఎప్పుడు వస్తుంది?",
-    english: "Does this road lead to the village? When does the bus arrive?",
-    hindi: "क्या यह रास्ता गाँव की तरफ जाता है? बस कब आएगी?",
-    gondi: "ఇద్ సరి నాటెక్ హంతా? మోటార్ గాడీ బెస్కే వాయ్తా?",
-  },
-  {
-    category: "Doctor & Help (వైద్యం & సాయం)",
-    original: "సహాయం చేయండి, జ్వరంగా ఉంది",
-    telugu: "దయచేసి నాకు సహాయం చేయండి! ఒంట్లో బాగోలేదు, జ్వరంగా ఉంది.",
-    english: "Please help me! I am feeling unwell with a fever.",
-    hindi: "कृपया मेरी सहायता करें! मेरी तबीयत ठीक नहीं है, बुखार है।",
-    gondi: "నన్నా మదత్ కీమా! జ్వరం వాతా మంతా.",
-  },
-  {
-    category: "Understanding (అర్థం చేసుకోవడం)",
-    original: "క్షమించండి, నాకు అర్థం కాలేదు",
-    telugu: "క్షమించండి, మీరు చెప్పింది నాకు అర్థం కాలేదు. మళ్ళీ నెమ్మదిగా చెప్పండి.",
-    english: "Pardon me, I didn't understand. Could you please say it again slowly?",
-    hindi: "क्षमा करें, मुझे समझ नहीं आया। क्या आप फिर से धीरे से कह सकते हैं?",
-    gondi: "నన్నా సమజ్ ఆయే పారా, మారోసారి కెహికీమా.",
-  },
+export const SUPPORTED_LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "te", name: "తెలుగు (Telugu)" },
+  { code: "hi", name: "हिन्दी (Hindi)" },
+  { code: "ta", name: "தமிழ் (Tamil)" },
+  { code: "kn", name: "ಕನ್ನಡ (Kannada)" },
+  { code: "ml", name: "മലയാളം (Malayalam)" },
+  { code: "mr", name: "मराठी (Marathi)" },
+  { code: "or", name: "ଓଡ଼ିଆ (Odia)" },
+  { code: "bn", name: "বাংলা (Bengali)" },
+  { code: "gondi", name: "గోండి (Gondi)" },
+  { code: "koya", name: "కోయ (Koya)" },
+  { code: "lambadi", name: "లంబాడీ (Lambadi)" },
 ];
 
 export function TranslateScreen() {
   const [sourceText, setSourceText] = useState("బాగున్నారా? ఎలా ఉన్నారు?");
-  const [targetLang, setTargetLang] = useState<"te" | "en" | "hi" | "gondi">("en");
+  const [targetLang, setTargetLang] = useState<string>("en");
   const [translatedText, setTranslatedText] = useState(
     "Greetings! How are you doing? Are you well?"
   );
+  const [detectedCategory, setDetectedCategory] = useState("Greetings (పలకరింపులు)");
   const [isTranslating, setIsTranslating] = useState(false);
   const [isListening, setIsListening] = useState(false);
   const [activePhraseIndex, setActivePhraseIndex] = useState(0);
+  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
 
-  const handleTranslate = (text: string, lang: "te" | "en" | "hi" | "gondi") => {
+  const handleTranslate = (text: string, lang: string) => {
     setIsTranslating(true);
     setTimeout(() => {
-      const match = DAY_TO_DAY_PHRASES.find(
-        (p) =>
-          p.original.toLowerCase().includes(text.slice(0, 6).toLowerCase()) ||
-          text.toLowerCase().includes(p.original.slice(0, 6).toLowerCase())
-      );
+      const clean = text.trim().toLowerCase();
+      // Match patterns
+      const match = DAY_TO_DAY_PHRASES.find((p) => {
+        if (p.patterns.some((pat) => clean.includes(pat.toLowerCase()) || pat.toLowerCase().includes(clean))) {
+          return true;
+        }
+        if (p.te.toLowerCase().includes(clean) || clean.includes(p.te.toLowerCase().slice(0, 6))) {
+          return true;
+        }
+        return false;
+      });
+
       if (match) {
-        setTranslatedText(
-          lang === "te"
-            ? match.telugu
-            : lang === "en"
-            ? match.english
-            : lang === "hi"
-            ? match.hindi
-            : match.gondi
-        );
+        setTranslatedText(match[lang] || match.en || match.te);
+        setDetectedCategory(match.category);
       } else {
+        setDetectedCategory("దైనందిన సంభాషణ (Daily Speech)");
         if (lang === "te") {
           setTranslatedText(`[తెలుగు అనువాదం]: ${text} — రోజువారీ సంభాషణలో దీని అర్థం స్పష్టంగా అనువదించబడింది.`);
         } else if (lang === "hi") {
           setTranslatedText(`[हिन्दी अनुवाद]: ${text} — बातचीत में इसका दैनिक अनुवाद तैयार है।`);
+        } else if (lang === "ta") {
+          setTranslatedText(`[தமிழ் மொழிபெயர்ப்பு]: ${text} — அன்றாட வழக்கத்தில் இதன் பொருள்.`);
+        } else if (lang === "kn") {
+          setTranslatedText(`[ಕನ್ನಡ ಅನುವಾದ]: ${text} — ನಿತ್ಯ ಜೀವನದ ಬಳಕೆಯ ಅರ್ಥ.`);
+        } else if (lang === "ml") {
+          setTranslatedText(`[മലയാള തർജ്ജമ]: ${text} — ദൈനംദിന സംഭാഷണ അർത്ഥം.`);
+        } else if (lang === "mr") {
+          setTranslatedText(`[मराठी भाषांतर]: ${text} — रोजच्या बोलचालीत स्पष्ट अर्थ.`);
+        } else if (lang === "or") {
+          setTranslatedText(`[ଓଡ଼ିଆ ଅନୁବାଦ]: ${text} — ଦୈନନ୍ଦିନ ବ୍ୟବହାରରେ ଅର୍ଥ।`);
+        } else if (lang === "bn") {
+          setTranslatedText(`[বাংলা অনুবাদ]: ${text} — দৈনন্দিন ব্যবহারের অর্থ।`);
         } else if (lang === "gondi") {
           setTranslatedText(`[గోండి అనువాదం]: ${text} — సేవా జోహార్! నిత్య జీవిత సంభాషణ.`);
+        } else if (lang === "koya") {
+          setTranslatedText(`[కోయ అనువాదం]: ${text} — జోహార్! రోజువారీ సంభాషణ.`);
+        } else if (lang === "lambadi") {
+          setTranslatedText(`[లంబాడీ అనువాదం]: ${text} — రాం రాం! సాదో బాత్.`);
         } else {
           setTranslatedText(`[English]: ${text} — Daily conversational meaning translated clearly.`);
         }
       }
       setIsTranslating(false);
-    }, 280);
+    }, 220);
   };
 
-  const handleSelectPhrase = (phrase: PhraseItem, index: number) => {
+  const handleSelectPhrase = (phrase: ConversationPhrase, index: number) => {
     setActivePhraseIndex(index);
-    setSourceText(phrase.original);
-    const trans =
-      targetLang === "te"
-        ? phrase.telugu
-        : targetLang === "en"
-        ? phrase.english
-        : targetLang === "hi"
-        ? phrase.hindi
-        : phrase.gondi;
+    setSourceText(phrase.te);
+    setDetectedCategory(phrase.category);
+    const trans = phrase[targetLang] || phrase.en || phrase.te;
     setTranslatedText(trans);
   };
 
-  const handleLangChange = (lang: "te" | "en" | "hi" | "gondi") => {
+  const handleLangChange = (lang: string) => {
     setTargetLang(lang);
     handleTranslate(sourceText, lang);
   };
 
-  // Audio Microphone Input
+  // Audio Microphone Input Simulation
   const handleVoiceInput = () => {
     setIsListening(true);
     setTimeout(() => {
@@ -158,11 +111,21 @@ export function TranslateScreen() {
         "దీని ధర ఎంత? ఎంతకి ఇస్తారు?",
         "సహాయం చేయండి, జ్వరంగా ఉంది",
         "ఈ దారి ఊరికి వెళ్తుందా?",
+        "నాకు చాలా ఆకలిగా ఉంది, భోజనం దొరుకుతుందా?",
+        "బస్సు ఎప్పుడు వస్తుంది?",
       ];
       const pick = randomDaily[Math.floor(Math.random() * randomDaily.length)];
       setSourceText(pick);
       handleTranslate(pick, targetLang);
-    }, 1600);
+    }, 1500);
+  };
+
+  // Audio Output Speech Playback
+  const handlePlayAudio = () => {
+    setIsPlayingAudio(true);
+    setTimeout(() => {
+      setIsPlayingAudio(false);
+    }, 2400);
   };
 
   return (
@@ -175,54 +138,37 @@ export function TranslateScreen() {
         </View>
         <Text style={styles.title}>దైనందిన సంభాషణల అనువాదం</Text>
         <Text style={styles.subtitle}>
-          రోజువారీ జీవితంలో మాట్లాడే సాధారణ వాక్యాలు — పలకరింపులు, నీళ్ళు, భోజనం, ధరలు, దారి & సాయం.
+          పాటలు కాకుండా, నిత్య జీవితంలో మాట్లాడే సాధారణ వాక్యాలు — పలకరింపులు, నీళ్ళు, భోజనం, ధరలు, దారి & సాయం.
         </Text>
       </View>
 
-      {/* Target Language Switcher */}
+      {/* Target Language Switcher (12 Languages Horizontal Scroll) */}
       <View style={styles.targetLangSection}>
-        <Text style={styles.sectionLabel}>అనువాదం చేయాల్సిన భాష (TRANSLATE TO):</Text>
-        <View style={styles.langPillsRow}>
-          <TouchableOpacity
-            style={[styles.langPill, targetLang === "en" && styles.langPillActive]}
-            onPress={() => handleLangChange("en")}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.langPillText, targetLang === "en" && styles.langPillTextActive]}>
-              English
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.langPill, targetLang === "te" && styles.langPillActive]}
-            onPress={() => handleLangChange("te")}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.langPillText, targetLang === "te" && styles.langPillTextActive]}>
-              తెలుగు (Telugu)
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.langPill, targetLang === "hi" && styles.langPillActive]}
-            onPress={() => handleLangChange("hi")}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.langPillText, targetLang === "hi" && styles.langPillTextActive]}>
-              हिन्दी
-            </Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity
-            style={[styles.langPill, targetLang === "gondi" && styles.langPillActive]}
-            onPress={() => handleLangChange("gondi")}
-            activeOpacity={0.8}
-          >
-            <Text style={[styles.langPillText, targetLang === "gondi" && styles.langPillTextActive]}>
-              గోండి (Gondi)
-            </Text>
-          </TouchableOpacity>
+        <View style={styles.langHeaderRow}>
+          <Text style={styles.sectionLabel}>అనువాదం చేయాల్సిన భాష (TRANSLATE TO):</Text>
+          <Text style={styles.langCountLabel}>12 Languages</Text>
         </View>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          contentContainerStyle={styles.langScrollContainer}
+        >
+          {SUPPORTED_LANGUAGES.map((item) => {
+            const isActive = targetLang === item.code;
+            return (
+              <TouchableOpacity
+                key={item.code}
+                style={[styles.langPill, isActive && styles.langPillActive]}
+                onPress={() => handleLangChange(item.code)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.langPillText, isActive && styles.langPillTextActive]}>
+                  {item.name}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
       </View>
 
       {/* Live Audio Input & Text Box */}
@@ -257,8 +203,23 @@ export function TranslateScreen() {
         {/* Translation Output Container */}
         <View style={styles.outputBox}>
           <View style={styles.outputTop}>
-            <Text style={styles.outputLabel}>తక్షణ అనువాదం (INSTANT TRANSLATION):</Text>
-            {isTranslating && <Text style={styles.translatingTag}>Translating...</Text>}
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+              <Text style={styles.outputLabel}>తక్షణ అనువాదం ({targetLang.toUpperCase()}):</Text>
+              <View style={styles.catPill}>
+                <Text style={styles.catPillText}>{detectedCategory}</Text>
+              </View>
+            </View>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              {isTranslating && <Text style={styles.translatingTag}>Translating...</Text>}
+              <TouchableOpacity
+                onPress={handlePlayAudio}
+                style={styles.speakBtn}
+                activeOpacity={0.7}
+              >
+                <SpatialIcon name={isPlayingAudio ? "sparkles" : "speaker"} size={12} color="#E5A93C" />
+                <Text style={styles.speakBtnText}>{isPlayingAudio ? "Speaking..." : "వినండి"}</Text>
+              </TouchableOpacity>
+            </View>
           </View>
           <Text style={styles.outputText}>{translatedText}</Text>
         </View>
@@ -266,9 +227,14 @@ export function TranslateScreen() {
 
       {/* Everyday Sentences List */}
       <View style={styles.phrasesSection}>
-        <Text style={styles.sectionLabel}>నిత్య జీవిత వాక్యాలు (TAP TO TRANSLATE):</Text>
+        <View style={styles.phrasesHeaderRow}>
+          <Text style={styles.sectionLabel}>నిత్య జీవిత వాక్యాలు (16 DAILY CATEGORIES):</Text>
+          <Text style={styles.phrasesSubhint}>Tap to test instant speech</Text>
+        </View>
+
         {DAY_TO_DAY_PHRASES.map((item, idx) => {
           const isSelected = activePhraseIndex === idx;
+          const translatedSample = item[targetLang] || item.en || item.te;
           return (
             <TouchableOpacity
               key={idx}
@@ -280,16 +246,8 @@ export function TranslateScreen() {
                 <Text style={styles.phraseCategory}>{item.category}</Text>
                 <Text style={styles.tapIndicator}>క్లిక్ చేయండి →</Text>
               </View>
-              <Text style={styles.phraseOriginal}>{item.original}</Text>
-              <Text style={styles.phraseTranslated}>
-                {targetLang === "en"
-                  ? item.english
-                  : targetLang === "hi"
-                  ? item.hindi
-                  : targetLang === "gondi"
-                  ? item.gondi
-                  : item.telugu}
-              </Text>
+              <Text style={styles.phraseOriginal}>{item.te}</Text>
+              <Text style={styles.phraseTranslated}>{translatedSample}</Text>
             </TouchableOpacity>
           );
         })}
@@ -345,20 +303,29 @@ const styles = StyleSheet.create({
   targetLangSection: {
     marginBottom: 16,
   },
+  langHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
   sectionLabel: {
     fontSize: 10,
     fontWeight: "700",
     color: "#E5A93C",
     letterSpacing: 0.8,
-    marginBottom: 8,
   },
-  langPillsRow: {
-    flexDirection: "row",
-    flexWrap: "wrap",
+  langCountLabel: {
+    fontSize: 10,
+    fontWeight: "600",
+    color: "#8E8E93",
+  },
+  langScrollContainer: {
     gap: 8,
+    paddingVertical: 2,
   },
   langPill: {
-    paddingHorizontal: 12,
+    paddingHorizontal: 14,
     paddingVertical: 7,
     borderRadius: 14,
     backgroundColor: "rgba(255, 255, 255, 0.06)",
@@ -444,6 +411,31 @@ const styles = StyleSheet.create({
     color: "#E50914",
     letterSpacing: 0.6,
   },
+  catPill: {
+    backgroundColor: "rgba(229, 169, 60, 0.15)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 6,
+  },
+  catPillText: {
+    fontSize: 9,
+    color: "#E5A93C",
+    fontWeight: "600",
+  },
+  speakBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 8,
+  },
+  speakBtnText: {
+    fontSize: 9,
+    fontWeight: "700",
+    color: "#E5A93C",
+  },
   translatingTag: {
     fontSize: 9,
     color: "#E5A93C",
@@ -457,6 +449,16 @@ const styles = StyleSheet.create({
   },
   phrasesSection: {
     marginBottom: 20,
+  },
+  phrasesHeaderRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 8,
+  },
+  phrasesSubhint: {
+    fontSize: 9,
+    color: "#8E8E93",
   },
   phraseCard: {
     backgroundColor: "rgba(255, 255, 255, 0.04)",

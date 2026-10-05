@@ -35,10 +35,25 @@ const QUICK_CATEGORIES = [
   { id: "weather", name: "వాతావరణం (Weather)", icon: CloudRain },
 ];
 
+const SUPPORTED_TARGET_LANGUAGES = [
+  { code: "en", name: "English" },
+  { code: "te", name: "తెలుగు (Telugu)" },
+  { code: "hi", name: "हिन्दी (Hindi)" },
+  { code: "ta", name: "தமிழ் (Tamil)" },
+  { code: "kn", name: "ಕನ್ನಡ (Kannada)" },
+  { code: "ml", name: "മലയാളം (Malayalam)" },
+  { code: "mr", name: "मराठी (Marathi)" },
+  { code: "or", name: "ଓଡ଼ିଆ (Odia)" },
+  { code: "bn", name: "বাংলা (Bengali)" },
+  { code: "gondi", name: "గోండి (Gondi)" },
+  { code: "koya", name: "కోయ (Koya)" },
+  { code: "lambadi", name: "లంబాడీ (Lambadi)" },
+];
+
 export default function DayToDayTranslatePage() {
   const [activeCategory, setActiveCategory] = useState("all");
   const [inputText, setInputText] = useState("బాగున్నారా? ఎలా ఉన్నారు?");
-  const [targetLang, setTargetLang] = useState<"te" | "en" | "hi" | "gondi" | "koya">("en");
+  const [targetLang, setTargetLang] = useState<string>("en");
   const [sourceLang, setSourceLang] = useState("telugu");
 
   const [translatedText, setTranslatedText] = useState("Greetings! How are you doing? Are you well?");
@@ -230,47 +245,20 @@ export default function DayToDayTranslatePage() {
               <span className="text-xs font-bold text-netflix-red uppercase tracking-wider">
                 అనువాద భాష (Translate To):
               </span>
-              <div className="flex p-1 rounded-xl bg-black/60 border border-white/10">
-                <button
-                  onClick={() => setTargetLang("en")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                    targetLang === "en" ? "bg-netflix-red text-white shadow-netflix-glow" : "text-netflix-light hover:text-white"
-                  }`}
-                >
-                  English
-                </button>
-                <button
-                  onClick={() => setTargetLang("te")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                    targetLang === "te" ? "bg-netflix-red text-white shadow-netflix-glow" : "text-netflix-light hover:text-white"
-                  }`}
-                >
-                  తెలుగు
-                </button>
-                <button
-                  onClick={() => setTargetLang("hi")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                    targetLang === "hi" ? "bg-netflix-red text-white shadow-netflix-glow" : "text-netflix-light hover:text-white"
-                  }`}
-                >
-                  हिन्दी
-                </button>
-                <button
-                  onClick={() => setTargetLang("gondi")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                    targetLang === "gondi" ? "bg-netflix-red text-white shadow-netflix-glow" : "text-netflix-light hover:text-white"
-                  }`}
-                >
-                  గోండి (Gondi)
-                </button>
-                <button
-                  onClick={() => setTargetLang("koya")}
-                  className={`px-3 py-1 text-xs font-bold rounded-lg transition-all ${
-                    targetLang === "koya" ? "bg-netflix-red text-white shadow-netflix-glow" : "text-netflix-light hover:text-white"
-                  }`}
-                >
-                  కోయ (Koya)
-                </button>
+              <div className="flex p-1 rounded-xl bg-black/60 border border-white/10 overflow-x-auto max-w-full sm:max-w-xl scrollbar-none gap-1">
+                {SUPPORTED_TARGET_LANGUAGES.map((lang) => (
+                  <button
+                    key={lang.code}
+                    onClick={() => setTargetLang(lang.code)}
+                    className={`px-3 py-1 text-xs font-bold rounded-lg whitespace-nowrap transition-all ${
+                      targetLang === lang.code
+                        ? "bg-netflix-red text-white shadow-netflix-glow"
+                        : "text-netflix-light hover:text-white"
+                    }`}
+                  >
+                    {lang.name}
+                  </button>
+                ))}
               </div>
             </div>
           </div>
@@ -404,12 +392,14 @@ export default function DayToDayTranslatePage() {
 
                 <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-xs text-netflix-light space-y-1">
                   <div>
-                    <span className="text-[10px] font-bold text-cultural-gold mr-1.5">English:</span>
-                    <span>{phrase.en}</span>
+                    <span className="text-[10px] font-bold text-cultural-gold mr-1.5 uppercase">
+                      {targetLang} అనువాదం:
+                    </span>
+                    <span className="text-white font-medium">{phrase[targetLang] || phrase.en}</span>
                   </div>
                   <div>
-                    <span className="text-[10px] font-bold text-netflix-red mr-1.5">Gondi:</span>
-                    <span>{phrase.gondi}</span>
+                    <span className="text-[10px] font-bold text-netflix-red mr-1.5">Gondi / Koya:</span>
+                    <span>{phrase.gondi || phrase.koya}</span>
                   </div>
                 </div>
               </div>

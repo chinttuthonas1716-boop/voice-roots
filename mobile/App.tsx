@@ -51,7 +51,12 @@ export default function App() {
 
       {/* Screen Content */}
       <View style={styles.screenContainer}>
-        {currentTab === "home" && <HomeScreen onNavigateRecord={() => setCurrentTab("record")} />}
+        {currentTab === "home" && (
+          <HomeScreen
+            onNavigateRecord={() => setCurrentTab("record")}
+            onNavigateTranslate={() => setCurrentTab("translate")}
+          />
+        )}
         {currentTab === "record" && <RecordScreen />}
         {currentTab === "archive" && <ArchiveScreen />}
         {currentTab === "translate" && <TranslateScreen />}
