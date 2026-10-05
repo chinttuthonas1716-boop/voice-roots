@@ -37,17 +37,17 @@ export function ContentRow({ title, subtitle, items }: ContentRowProps) {
 
   return (
     <div className="space-y-4 group/row relative">
-      {/* Row Header */}
+      {/* Row Header with Netflix Cinematic Red Accent Indicator */}
       <div className="flex items-end justify-between px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
         <div className="space-y-0.5">
-          <div className="flex items-center gap-2">
-            <span className="w-1.5 h-4 rounded-full bg-root-emerald" />
-            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-text-primary">
+          <div className="flex items-center gap-2.5">
+            <span className="w-1.5 h-5 rounded-full bg-netflix-red shadow-netflix-glow" />
+            <h2 className="text-xl sm:text-2xl font-bold tracking-tight text-white hover:text-netflix-red transition-colors cursor-pointer">
               {title}
             </h2>
           </div>
           {subtitle && (
-            <p className="text-xs sm:text-sm text-text-secondary pl-3.5">{subtitle}</p>
+            <p className="text-xs sm:text-sm text-netflix-gray pl-4">{subtitle}</p>
           )}
         </div>
 
@@ -56,7 +56,7 @@ export function ContentRow({ title, subtitle, items }: ContentRowProps) {
           <button
             onClick={() => scroll("left")}
             disabled={!canScrollLeft}
-            className="p-2 rounded-full ios27-pill hover:bg-white/10 text-text-secondary hover:text-text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-full ios27-pill hover:bg-netflix-red hover:text-white text-netflix-light disabled:opacity-20 disabled:cursor-not-allowed transition-all"
             aria-label="Scroll left"
           >
             <ChevronLeft className="w-4 h-4" />
@@ -64,7 +64,7 @@ export function ContentRow({ title, subtitle, items }: ContentRowProps) {
           <button
             onClick={() => scroll("right")}
             disabled={!canScrollRight}
-            className="p-2 rounded-full ios27-pill hover:bg-white/10 text-text-secondary hover:text-text-primary disabled:opacity-20 disabled:cursor-not-allowed transition-all"
+            className="p-2 rounded-full ios27-pill hover:bg-netflix-red hover:text-white text-netflix-light disabled:opacity-20 disabled:cursor-not-allowed transition-all"
             aria-label="Scroll right"
           >
             <ChevronRight className="w-4 h-4" />
@@ -76,7 +76,7 @@ export function ContentRow({ title, subtitle, items }: ContentRowProps) {
       <div className="relative">
         {/* Left fade gradient */}
         <div
-          className={`absolute left-0 top-0 bottom-0 w-12 z-20 pointer-events-none bg-gradient-to-r from-obsidian to-transparent transition-opacity duration-300 ${
+          className={`absolute left-0 top-0 bottom-0 w-16 z-20 pointer-events-none bg-gradient-to-r from-netflix-black via-netflix-black/60 to-transparent transition-opacity duration-300 ${
             canScrollLeft ? "opacity-100" : "opacity-0"
           }`}
         />
@@ -94,7 +94,7 @@ export function ContentRow({ title, subtitle, items }: ContentRowProps) {
 
         {/* Right fade gradient */}
         <div
-          className={`absolute right-0 top-0 bottom-0 w-12 z-20 pointer-events-none bg-gradient-to-l from-obsidian to-transparent transition-opacity duration-300 ${
+          className={`absolute right-0 top-0 bottom-0 w-16 z-20 pointer-events-none bg-gradient-to-l from-netflix-black via-netflix-black/60 to-transparent transition-opacity duration-300 ${
             canScrollRight ? "opacity-100" : "opacity-0"
           }`}
         />

@@ -99,151 +99,172 @@ const ALL_ARCHIVE_ITEMS: RecordingCardData[] = [
     dialect: "Coastal Tulunadu",
     duration: "15:50",
     type: "song",
-    community: "Paddana Singers Guild",
-    excerpt: "ತುಳುನಾಡ ದೈವಾರಾಧನೆ ಪಡ್ಡಣ ಪದಗಳು ಮತ್ತು ಪುರಾಣ ಕಥೆಗಳು...",
-    translationExcerpt: "Epic oral ballads reciting the deeds of legendary protector spirits across coastal areca nut groves...",
+    community: "Paddana Chanters",
+    excerpt: "ತುಳುನಾಡಿನ ಭೂತಾರಾಧನೆಯ ಸಂದರ್ಭದಲ್ಲಿ ಪಾಡುವ ಪುರಾತನ ಪಾಡ್ಡನಗಳು...",
+    translationExcerpt: "Paddana epic recitations evoking regional guardian deities protecting the coconut groves...",
     confidence: 0.93,
   },
   {
     id: "vr-109",
-    title: "Nomadic Embroidery Song & Caravan Tales",
-    language: "Lambadi",
-    dialect: "Telangana Tanda",
-    duration: "10:15",
-    type: "story",
-    community: "Banjara Tanda Matriarchs",
-    excerpt: "गोरमाटी कसीदाकारी और टांडा के पुराने सफर की यादें...",
-    translationExcerpt: "Oral verses describing the geometric mirror-work patterns stitched while caravans migrated along trade routes...",
+    title: "Highland Barley Brewing Traditions",
+    language: "Ladakhi",
+    dialect: "Leh Valley",
+    duration: "08:10",
+    type: "traditional_knowledge",
+    community: "Himalayan Village Guild",
+    excerpt: "ལ་དྭགས་ཀྱི་སྲོལ་རྒྱུན་ནས་འབྲུ་ཆང་བཟོ་བའི་ལག་རྩལ།...",
+    translationExcerpt: "Traditional micro-fermentation of high-altitude roasted barley (chhang) for winter solstice gatherings...",
     confidence: 0.90,
   },
   {
     id: "vr-110",
-    title: "Mountain Herb Gathering in High Passes",
-    language: "Ladakhi",
-    dialect: "Nubra Valley",
-    duration: "08:35",
+    title: "Nomadic Caravan Trade Chants",
+    language: "Lambadi",
+    dialect: "Banjara Tanda Variety",
+    duration: "10:30",
+    type: "song",
+    community: "Banjara Tanda Elders",
+    excerpt: "बंजारा तांडा में गाये जाने वाले पारंपरिक लोकगीत और बंजारा संस्कृति...",
+    translationExcerpt: "Rhythmic travel ballads mapping seasonal cattle trails across the Deccan highlands...",
+    confidence: 0.93,
+  },
+  {
+    id: "vr-111",
+    title: "Bamboo Grove Management Oral Laws",
+    language: "Mizo",
+    dialect: "Lushai Hills",
+    duration: "12:05",
     type: "traditional_knowledge",
-    community: "Amchi Traditional Healers",
-    excerpt: "གངས་རིའི་སྨན་རྩྭ་འཐུ་སྟངས་དང་དུས་ཚོད་ངོས་འཛིན་གྱི་གནའ་བོའི་ཤེས་རབ...",
-    translationExcerpt: "The high-altitude gathering calendar of alpine medicinal botanicals under moonlit frost conditions...",
+    community: "Aizawl Forest Council",
+    excerpt: "Mautam leh rawthing enkawl dan chungchanga pi leh pute thurochhiah...",
+    translationExcerpt: "Elder decrees tracking the 48-year mautam flowering cycle and sustainable harvest rotation...",
     confidence: 0.94,
   },
   {
-    id: "vr-201",
-    title: "Seed Preservation in Mud Granaries",
-    language: "Telugu",
-    dialect: "Rayalaseema",
-    duration: "09:12",
+    id: "vr-112",
+    title: "Sacred Forest Grove Laws (Jaher Than)",
+    language: "Mundari",
+    dialect: "Khunti Variety",
+    duration: "11:45",
     type: "traditional_knowledge",
-    community: "Dryland Farming Collective",
-    excerpt: "పాతకాలం నాటి విత్తనాలను మట్టి గాదెలలో భద్రపరిచే విధానం...",
-    translationExcerpt: "Methods for storing heirloom millets in sun-baked clay vessels using neem leaf layers...",
+    community: "Munda Forest Council",
+    excerpt: "ᱡᱟᱦᱮᱨ ᱛᱷᱟᱱ ᱨᱮᱱᱟᱜ ᱵᱤᱨ ᱥᱟᱥᱚᱱ ᱟᱨ ᱥᱮᱨᱣᱟ ᱠᱟᱛᱷᱟ...",
+    translationExcerpt: "Oral legal codes dictating zero timber felling within sacred community groves...",
     confidence: 0.95,
-  },
-  {
-    id: "vr-202",
-    title: "Herbal Remedies of the Northern Hills",
-    language: "Bhili",
-    dialect: "Southern Rajasthan",
-    duration: "12:45",
-    type: "traditional_knowledge",
-    community: "Bhil Healers",
-    excerpt: "जंगल की जड़ी-बूटियों से मौसमी बीमारियों का इलाज करने का तरीका...",
-    translationExcerpt: "Forest apothecary practices for treating monsoon illnesses using bark extracts...",
-    confidence: 0.92,
   },
 ];
 
+const ALL_24_LANGUAGES = [
+  "all",
+  "Telugu",
+  "Gondi",
+  "Koya",
+  "Tulu",
+  "Toda",
+  "Kurukh",
+  "Kodava",
+  "Badaga",
+  "Santali",
+  "Mundari",
+  "Ho",
+  "Khasi",
+  "Garo",
+  "Korku",
+  "Bodo",
+  "Mizo",
+  "Meitei",
+  "Lepcha",
+  "Ladakhi",
+  "Bhili",
+  "Lambadi",
+  "Halbi",
+  "Shina",
+  "Balti",
+];
+
 export default function ArchivePage() {
+  const [searchTerm, setSearchTerm] = useState("");
   const [selectedLanguage, setSelectedLanguage] = useState("all");
   const [selectedType, setSelectedType] = useState("all");
-  const [searchTerm, setSearchTerm] = useState("");
 
   const filteredItems = ALL_ARCHIVE_ITEMS.filter((item) => {
-    const matchesLang = selectedLanguage === "all" || item.language.toLowerCase() === selectedLanguage.toLowerCase();
-    const matchesType = selectedType === "all" || item.type === selectedType;
     const matchesSearch =
       searchTerm === "" ||
       item.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
       item.excerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      item.translationExcerpt.toLowerCase().includes(searchTerm.toLowerCase());
-    return matchesLang && matchesType && matchesSearch;
+      item.translationExcerpt.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      item.community.toLowerCase().includes(searchTerm.toLowerCase());
+
+    const matchesLanguage =
+      selectedLanguage === "all" ||
+      item.language.toLowerCase() === selectedLanguage.toLowerCase();
+
+    const matchesType = selectedType === "all" || item.type === selectedType;
+
+    return matchesSearch && matchesLanguage && matchesType;
   });
 
   return (
-    <div className="min-h-screen bg-obsidian text-text-primary pb-28">
+    <div className="min-h-screen bg-netflix-black text-white pb-28">
       <Navbar />
 
-      <main className="pt-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
-        {/* Title */}
-        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/5 pb-6">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 pt-28 space-y-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
           <div>
-            <span className="text-xs font-mono uppercase text-leaf-mint font-semibold">Living Oral Repository</span>
+            <span className="text-xs font-mono uppercase text-netflix-red font-bold tracking-wider">Living Oral Repository</span>
             <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight mt-1">
               Digital Language Archive
             </h1>
-            <p className="text-text-secondary text-sm sm:text-base max-w-2xl mt-1 leading-relaxed">
+            <p className="text-netflix-gray text-sm sm:text-base max-w-2xl mt-1 leading-relaxed">
               Explore 4,821 oral recordings preserved across 24 indigenous and regional linguistic traditions.
             </p>
           </div>
 
           <Link
             href="/record"
-            className="self-start sm:self-auto flex items-center gap-2 px-6 py-2.5 rounded-full ios27-button-primary text-xs shadow-emerald-glow"
+            className="self-start sm:self-auto flex items-center gap-2 px-6 py-2.5 rounded-full ios27-button-primary text-xs shadow-netflix-glow"
           >
-            <Mic className="w-3.5 h-3.5 fill-current" />
+            <Mic className="w-3.5 h-3.5 fill-current text-white" />
             <span>Contribute Voice</span>
           </Link>
         </div>
 
-        {/* Filter Controls Bar (iOS 27 Glass) */}
-        <div className="ios27-glass p-4 sm:p-6 rounded-3xl space-y-4 shadow-ios27-glass">
+        {/* Filter Controls Bar (Liquid Glass Capsule Bar) */}
+        <div className="ios27-glass p-4 sm:p-6 rounded-3xl space-y-4 shadow-2xl border border-white/10">
           {/* Search bar */}
           <div className="relative">
-            <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-netflix-gray absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Filter by keyword, title, village name, ritual, or translated phrase..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-text-muted focus:outline-none focus:border-root-emerald/50"
+              className="w-full bg-black/60 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-netflix-muted focus:outline-none focus:border-netflix-red/60 focus:ring-1 focus:ring-netflix-red/30 transition-all"
             />
           </div>
 
           {/* Language Pills (24 languages) */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
-            <span className="text-[11px] font-mono text-text-muted mr-1">Language:</span>
-            {[
-              "all",
-              "Telugu",
-              "Gondi",
-              "Koya",
-              "Tulu",
-              "Toda",
-              "Khasi",
-              "Bodo",
-              "Santali",
-              "Lambadi",
-              "Ladakhi",
-              "Bhili",
-            ].map((lang) => (
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs py-1">
+            <span className="text-[11px] font-mono text-netflix-gray mr-1">Language:</span>
+            {ALL_24_LANGUAGES.map((lang) => (
               <button
                 key={lang}
                 onClick={() => setSelectedLanguage(lang)}
                 className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
                   selectedLanguage.toLowerCase() === lang.toLowerCase()
-                    ? "bg-root-emerald text-obsidian font-bold shadow-emerald-glow"
-                    : "ios27-pill text-text-secondary hover:text-white"
+                    ? "bg-netflix-red text-white font-bold shadow-netflix-glow scale-105"
+                    : "ios27-pill text-netflix-light hover:text-white"
                 }`}
               >
-                {lang === "all" ? "All Languages" : lang}
+                {lang === "all" ? "All 24 Languages" : lang}
               </button>
             ))}
           </div>
 
           {/* Type Pills */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
-            <span className="text-[11px] font-mono text-text-muted mr-1">Category:</span>
+            <span className="text-[11px] font-mono text-netflix-gray mr-1">Category:</span>
             {[
               { id: "all", label: "All Formats" },
               { id: "story", label: "Folk Stories" },
@@ -256,8 +277,8 @@ export default function ArchivePage() {
                 onClick={() => setSelectedType(cat.id)}
                 className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
                   selectedType === cat.id
-                    ? "bg-leaf-mint text-obsidian font-bold"
-                    : "ios27-pill text-text-secondary hover:text-white"
+                    ? "bg-white text-netflix-black font-bold shadow-md"
+                    : "ios27-pill text-netflix-light hover:text-white"
                 }`}
               >
                 {cat.label}
@@ -267,9 +288,9 @@ export default function ArchivePage() {
         </div>
 
         {/* Results Count */}
-        <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+        <div className="flex items-center justify-between text-xs font-mono text-netflix-gray">
           <span>Showing {filteredItems.length} preserved oral recordings</span>
-          <span>Verified against UNESCO Endangerment criteria</span>
+          <span className="text-netflix-red font-semibold">UNESCO Priority Preservation</span>
         </div>
 
         {/* Grid of Recordings (Netflix-style Hover Zoom) */}

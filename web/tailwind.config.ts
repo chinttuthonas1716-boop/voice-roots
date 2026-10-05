@@ -10,76 +10,59 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Deep Space & Spatial Obsidian
-        obsidian: "#060807",
-        "obsidian-deep": "#040504",
-        "surface-dark": "#0D110F",
-        "surface-glass": "rgba(18, 24, 21, 0.7)",
-        "surface-card": "rgba(255, 255, 255, 0.04)",
+        // Netflix Cinematic Palette
+        "netflix-black": "#141414",
+        "netflix-dark": "#0B0B0B",
+        "netflix-surface": "#181818",
+        "netflix-card": "#1F1F1F",
+        "netflix-card-hover": "#262626",
         
-        // Ethereal Luminescent Emerald & Jade (Voice Roots Signature)
-        "root-emerald": "#10B981",
-        "root-glow": "#34D399",
-        "leaf-mint": "#6EE7B7",
-        "jade-deep": "#047857",
+        // Netflix Iconic Red & Accents
+        "netflix-red": "#E50914",
+        "netflix-red-hover": "#F40612",
+        "netflix-red-dark": "#B81D24",
+        "netflix-red-glow": "rgba(229, 9, 20, 0.4)",
         
-        // Astral AI Violet & Prismatic Cyan
-        "ai-spectral": "#818CF8",
-        "ai-violet": "#A78BFA",
-        "ai-cyan": "#22D3EE",
-        "ai-glow": "rgba(167, 139, 250, 0.35)",
+        // Secondary Accents & Contrast
+        "netflix-white": "#FFFFFF",
+        "netflix-light": "#E5E5E5",
+        "netflix-gray": "#AAAAAA",
+        "netflix-muted": "#6D6D6E",
+        "netflix-dark-gray": "#333333",
 
-        // Earthen Amber & Champagne Heritage Gold
-        earth: "#D97706",
-        "earth-gold": "#F59E0B",
-        "champagne-light": "#FDE68A",
-        "sand-stone": "#A89F91",
-
-        // Typography
-        "text-primary": "#F8FAFC",
-        "text-secondary": "#94A3B8",
-        "text-muted": "#64748B",
+        // Cultural Heritage Warmth
+        "cultural-gold": "#E5A93C",
+        "cultural-amber": "#F59E0B",
       },
       fontFamily: {
         sans: [
           "-apple-system",
           "BlinkMacSystemFont",
+          "Netflix Sans",
           "SF Pro Display",
-          "SF Pro Text",
-          "system-ui",
+          "Helvetica Neue",
+          "Segoe UI",
+          "Roboto",
           "sans-serif",
         ],
         mono: ["SF Mono", "ui-monospace", "Menlo", "monospace"],
       },
       boxShadow: {
-        "ios27-glass": "0 20px 50px -10px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.15)",
-        "ios27-pill": "0 10px 30px -5px rgba(0, 0, 0, 0.5), inset 0 1px 1px 0 rgba(255, 255, 255, 0.25)",
-        "netflix-hover": "0 25px 60px -15px rgba(0, 0, 0, 0.95), 0 0 25px -5px rgba(16, 185, 129, 0.25)",
-        "emerald-glow": "0 0 35px -5px rgba(16, 185, 129, 0.45)",
-        "violet-glow": "0 0 35px -5px rgba(167, 139, 250, 0.45)",
+        "netflix-glow": "0 0 30px -5px rgba(229, 9, 20, 0.55)",
+        "netflix-card-hover": "0 20px 45px -10px rgba(0, 0, 0, 0.95), 0 0 25px -4px rgba(229, 9, 20, 0.35)",
+        "ios27-glass": "0 20px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12)",
       },
       animation: {
-        "pulse-slow": "pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite",
         "equalizer-1": "equalizer 1.1s ease-in-out infinite alternate",
         "equalizer-2": "equalizer 0.8s ease-in-out infinite alternate 0.2s",
         "equalizer-3": "equalizer 1.4s ease-in-out infinite alternate 0.4s",
         "equalizer-4": "equalizer 0.9s ease-in-out infinite alternate 0.1s",
-        "shimmer": "shimmer 2.5s linear infinite",
-        "float": "float 6s ease-in-out infinite",
       },
       keyframes: {
         equalizer: {
           "0%": { height: "15%" },
           "50%": { height: "100%" },
           "100%": { height: "35%" },
-        },
-        shimmer: {
-          "0%": { transform: "translateX(-100%)" },
-          "100%": { transform: "translateX(100%)" },
-        },
-        float: {
-          "0%, 100%": { transform: "translateY(0)" },
-          "50%": { transform: "translateY(-6px)" },
         },
       },
     },

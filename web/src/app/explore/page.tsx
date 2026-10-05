@@ -308,14 +308,14 @@ export default function ExplorePage() {
   });
 
   return (
-    <div className="min-h-screen bg-obsidian text-text-primary pb-28">
+    <div className="min-h-screen bg-netflix-black text-white pb-28">
       <Navbar />
 
       <main className="pt-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
         {/* Header */}
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full ios27-pill text-leaf-mint text-xs font-mono">
-            <Globe className="w-3.5 h-3.5 text-root-emerald" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full ios27-pill text-netflix-red text-xs font-mono font-semibold">
+            <Globe className="w-3.5 h-3.5 text-netflix-red" />
             <span>24 Preserved Indigenous & Oral Linguistic Traditions</span>
           </div>
 
@@ -323,13 +323,13 @@ export default function ExplorePage() {
             Explore Oral Linguistic Heritage
           </h1>
 
-          <p className="text-text-secondary text-sm sm:text-base max-w-3xl leading-relaxed">
+          <p className="text-netflix-gray text-sm sm:text-base max-w-3xl leading-relaxed">
             Every linguistic tradition contains verified oral speech samples, unwritten dialects, seasonal folklore, and native speaker contributions across four distinct language families.
           </p>
         </div>
 
-        {/* Filter Controls (iOS 27 Glass Capsule Bar) */}
-        <div className="ios27-glass p-4 sm:p-5 rounded-2xl space-y-4 shadow-ios27-glass">
+        {/* Filter Controls (Liquid Glass Capsule Bar) */}
+        <div className="ios27-glass p-4 sm:p-5 rounded-2xl space-y-4 shadow-2xl border border-white/10">
           {/* Search bar */}
           <div className="relative">
             <input
@@ -337,13 +337,13 @@ export default function ExplorePage() {
               placeholder="Search by language, script, region (e.g. Bastar, Nilgiris, Ladakh, Agency)..."
               value={searchFilter}
               onChange={(e) => setSearchFilter(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-text-muted focus:outline-none focus:border-root-emerald/50"
+              className="w-full bg-black/60 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-netflix-muted focus:outline-none focus:border-netflix-red/60 focus:ring-1 focus:ring-netflix-red/30 transition-all"
             />
           </div>
 
           {/* Language Family Filter Pills */}
-          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
-            <span className="text-[11px] font-mono text-text-muted mr-1">Family:</span>
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs py-1">
+            <span className="text-[11px] font-mono text-netflix-gray mr-1">Family:</span>
             {[
               { id: "all", label: "All 24 Traditions" },
               { id: "Dravidian", label: "Dravidian (10)" },
@@ -356,8 +356,8 @@ export default function ExplorePage() {
                 onClick={() => setSelectedFamily(fam.id)}
                 className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
                   selectedFamily === fam.id
-                    ? "bg-root-emerald text-obsidian font-bold shadow-emerald-glow"
-                    : "ios27-pill text-text-secondary hover:text-white"
+                    ? "bg-netflix-red text-white font-bold shadow-netflix-glow scale-105"
+                    : "ios27-pill text-netflix-light hover:text-white"
                 }`}
               >
                 {fam.label}
@@ -367,9 +367,9 @@ export default function ExplorePage() {
         </div>
 
         {/* Languages Count & Grid */}
-        <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+        <div className="flex items-center justify-between text-xs font-mono text-netflix-gray">
           <span>Showing {filteredLanguages.length} documented oral languages</span>
-          <span>Informed Consent Protocol Enforced</span>
+          <span className="text-netflix-red font-semibold">Informed Consent Protocol Enforced</span>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -383,31 +383,31 @@ export default function ExplorePage() {
                   <div className="flex items-center justify-between">
                     <div>
                       <h3 className="text-xl font-bold text-white tracking-tight">{lang.name}</h3>
-                      <span className="text-[11px] font-mono text-root-glow">{lang.family} Family</span>
+                      <span className="text-[11px] font-mono text-netflix-red font-semibold">{lang.family} Family</span>
                     </div>
-                    <span className="text-lg font-serif text-leaf-mint">{lang.nativeName}</span>
+                    <span className="text-lg font-serif text-white">{lang.nativeName}</span>
                   </div>
 
                   <div className="space-y-1 text-xs">
-                    <div className="flex justify-between text-text-secondary">
+                    <div className="flex justify-between text-netflix-gray">
                       <span>Region:</span>
                       <span className="text-white text-right max-w-[65%] truncate">{lang.region}</span>
                     </div>
-                    <div className="flex justify-between text-text-secondary">
+                    <div className="flex justify-between text-netflix-gray">
                       <span>UNESCO Status:</span>
-                      <span className="text-earth-gold font-mono">{lang.status}</span>
+                      <span className="text-cultural-gold font-mono">{lang.status}</span>
                     </div>
                   </div>
 
                   <div className="pt-2">
-                    <span className="text-[11px] font-mono uppercase text-text-muted block mb-1">
+                    <span className="text-[11px] font-mono uppercase text-netflix-muted block mb-1">
                       Documented Dialects:
                     </span>
                     <div className="flex flex-wrap gap-1.5">
                       {lang.dialects.map((d, dIdx) => (
                         <span
                           key={dIdx}
-                          className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-text-secondary border border-white/5"
+                          className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-netflix-light border border-white/10"
                         >
                           {d}
                         </span>
@@ -416,25 +416,25 @@ export default function ExplorePage() {
                   </div>
                 </div>
 
-                <div className="pt-4 border-t border-white/5 space-y-4">
+                <div className="pt-4 border-t border-white/10 space-y-4">
                   <div className="grid grid-cols-3 text-center text-xs">
                     <div>
                       <span className="font-mono font-bold text-white block">{lang.recordings}</span>
-                      <span className="text-[10px] text-text-muted">Voices</span>
+                      <span className="text-[10px] text-netflix-muted">Voices</span>
                     </div>
                     <div>
-                      <span className="font-mono font-bold text-leaf-mint block">{lang.words}</span>
-                      <span className="text-[10px] text-text-muted">Words</span>
+                      <span className="font-mono font-bold text-netflix-red block">{lang.words}</span>
+                      <span className="text-[10px] text-netflix-muted">Words</span>
                     </div>
                     <div>
-                      <span className="font-mono font-bold text-earth-gold block">{lang.hours}</span>
-                      <span className="text-[10px] text-text-muted">Audio</span>
+                      <span className="font-mono font-bold text-cultural-gold block">{lang.hours}</span>
+                      <span className="text-[10px] text-netflix-muted">Audio</span>
                     </div>
                   </div>
 
                   <Link
                     href={`/archive`}
-                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl ios27-pill hover:bg-root-emerald hover:text-obsidian text-xs font-semibold text-white transition-all group"
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl ios27-pill hover:bg-netflix-red hover:text-white text-xs font-semibold text-white transition-all group shadow-sm hover:shadow-netflix-glow"
                   >
                     <span>Browse {lang.name} Archive</span>
                     <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />

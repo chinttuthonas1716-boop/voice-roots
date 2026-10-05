@@ -62,46 +62,45 @@ export default function SearchPage() {
     setIsSearching(true);
     setTimeout(() => {
       setIsSearching(false);
-      // Shuffle or simulate matches
       setResults(SAMPLE_SEMANTIC_RESULTS);
     }, 400);
   };
 
   return (
-    <div className="min-h-screen bg-obsidian text-primary-text pb-24">
+    <div className="min-h-screen bg-netflix-black text-white pb-28">
       <Navbar />
 
-      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
+      <main className="pt-28 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
         {/* Header */}
         <div className="text-center space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-ai-violet/10 border border-ai-violet/30 text-ai-violet text-xs font-mono">
-            <Sparkles className="w-3.5 h-3.5" />
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-netflix-red/10 border border-netflix-red/30 text-netflix-red text-xs font-mono font-semibold">
+            <Sparkles className="w-3.5 h-3.5 text-netflix-red" />
             <span>AI Semantic Vector Search (pgvector + Multilingual Embeddings)</span>
           </div>
 
-          <h1 className="text-3xl sm:text-5xl font-semibold tracking-tight text-white">
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-white">
             Search by Meaning, Not Just Words
           </h1>
 
-          <p className="text-secondary-text text-sm max-w-xl mx-auto">
+          <p className="text-netflix-gray text-sm max-w-xl mx-auto leading-relaxed">
             Query across oral dialect recordings in English or Indian languages. The vector model finds concepts even when exact words differ.
           </p>
         </div>
 
         {/* Search Bar */}
         <form onSubmit={handleSearch} className="relative max-w-2xl mx-auto">
-          <div className="glass-surface p-2 rounded-full border border-white/10 flex items-center shadow-glass focus-within:border-root-green/50">
-            <SearchIcon className="w-5 h-5 text-secondary-text ml-4 mr-2 flex-shrink-0" />
+          <div className="ios27-glass p-2 rounded-full border border-white/10 flex items-center shadow-2xl focus-within:border-netflix-red/60 focus-within:ring-1 focus-within:ring-netflix-red/30 transition-all">
+            <SearchIcon className="w-5 h-5 text-netflix-gray ml-4 mr-2 flex-shrink-0" />
             <input
               type="text"
               placeholder="e.g. traditional farming stories, eclipse myths, herbal tea..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              className="w-full bg-transparent text-sm sm:text-base text-white focus:outline-none placeholder:text-secondary-text/50 pr-4"
+              className="w-full bg-transparent text-sm sm:text-base text-white focus:outline-none placeholder:text-netflix-muted pr-4"
             />
             <button
               type="submit"
-              className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-root-green text-obsidian font-semibold text-xs transition-transform hover:scale-105 active:scale-95 flex-shrink-0"
+              className="flex items-center gap-1.5 px-6 py-2.5 rounded-full ios27-button-primary font-bold text-xs transition-transform hover:scale-105 active:scale-95 flex-shrink-0 shadow-netflix-glow"
             >
               <span>Search</span>
             </button>
@@ -110,7 +109,7 @@ export default function SearchPage() {
 
         {/* Quick Suggestion Pills */}
         <div className="flex flex-wrap items-center justify-center gap-2 text-xs">
-          <span className="text-secondary-text/60">Try searching:</span>
+          <span className="text-netflix-gray">Try searching:</span>
           {["Rain and agriculture ceremonies", "Handloom weaving techniques", "Forest herbs for fevers", "Grandmother folk legends"].map(
             (term, idx) => (
               <button
@@ -119,7 +118,7 @@ export default function SearchPage() {
                   setQuery(term);
                   setResults(SAMPLE_SEMANTIC_RESULTS);
                 }}
-                className="px-3 py-1 rounded-full bg-white/5 hover:bg-white/10 text-secondary-text hover:text-white transition-colors"
+                className="px-3.5 py-1.5 rounded-full ios27-pill hover:bg-white/15 text-netflix-light hover:text-white transition-all text-xs"
               >
                 {term}
               </button>
@@ -129,33 +128,33 @@ export default function SearchPage() {
 
         {/* Results Stream */}
         <div className="space-y-4 pt-4">
-          <div className="flex items-center justify-between text-xs font-mono text-secondary-text">
+          <div className="flex items-center justify-between text-xs font-mono text-netflix-gray">
             <span>
               {isSearching ? "Computing cosine distance across 4,821 transcripts..." : `Found ${results.length} semantic matches`}
             </span>
-            <span>Sorted by pgvector distance</span>
+            <span className="text-netflix-red font-semibold">Sorted by pgvector distance</span>
           </div>
 
-          <div className="space-y-3">
+          <div className="space-y-4">
             {results.map((item) => (
               <div
                 key={item.id}
-                className="glass-card p-5 sm:p-6 rounded-2xl border border-white/5 hover:border-root-green/30 space-y-4 transition-all"
+                className="ios27-glass p-5 sm:p-6 rounded-2xl border border-white/10 hover:border-netflix-red/50 space-y-4 transition-all shadow-lg"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
                   <div className="space-y-1">
                     <div className="flex items-center gap-2">
-                      <span className="px-2 py-0.5 rounded-full bg-root-green/10 border border-root-green/20 text-leaf-green text-[11px] font-mono">
+                      <span className="px-2.5 py-0.5 rounded-full bg-netflix-red/15 border border-netflix-red/30 text-white text-[11px] font-mono font-medium">
                         {item.language}
                       </span>
-                      <span className="text-xs text-secondary-text">{item.speaker}</span>
-                      <span className="text-xs font-mono text-secondary-text">• {item.duration}</span>
+                      <span className="text-xs text-netflix-gray">{item.speaker}</span>
+                      <span className="text-xs font-mono text-netflix-gray">• {item.duration}</span>
                     </div>
-                    <h3 className="text-lg font-semibold text-white">{item.title}</h3>
+                    <h3 className="text-lg font-bold text-white hover:text-netflix-red transition-colors">{item.title}</h3>
                   </div>
 
                   <div className="flex items-center gap-2 self-start sm:self-auto">
-                    <div className="px-3 py-1 rounded-full bg-root-green/20 border border-root-green/40 text-leaf-green text-xs font-mono flex items-center gap-1.5">
+                    <div className="px-3 py-1 rounded-full bg-netflix-red/20 border border-netflix-red/40 text-netflix-red text-xs font-mono font-bold flex items-center gap-1.5">
                       <Sparkles className="w-3.5 h-3.5" />
                       <span>{(item.similarity * 100).toFixed(1)}% Match</span>
                     </div>
@@ -164,26 +163,26 @@ export default function SearchPage() {
 
                 {/* Excerpts */}
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-xs">
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[10px] font-mono text-leaf-green uppercase block">Matched Oral Text</span>
+                  <div className="p-3.5 rounded-xl bg-black/60 border border-white/5 space-y-1">
+                    <span className="text-[10px] font-mono text-netflix-red uppercase font-bold block">Matched Oral Text</span>
                     <p className="text-white/90 leading-relaxed font-sans">{item.matchedSegment}</p>
                   </div>
-                  <div className="p-3 rounded-xl bg-black/40 border border-white/5 space-y-1">
-                    <span className="text-[10px] font-mono text-ai-violet uppercase block">IndicTrans2 Translation</span>
-                    <p className="text-secondary-text leading-relaxed font-sans italic">{item.translation}</p>
+                  <div className="p-3.5 rounded-xl bg-black/60 border border-white/5 space-y-1">
+                    <span className="text-[10px] font-mono text-cultural-gold uppercase font-bold block">IndicTrans2 Translation</span>
+                    <p className="text-netflix-gray leading-relaxed font-sans italic">{item.translation}</p>
                   </div>
                 </div>
 
                 {/* Card footer */}
-                <div className="flex items-center justify-between pt-2 border-t border-white/5">
-                  <button className="flex items-center gap-1.5 text-xs text-secondary-text hover:text-white transition-colors">
-                    <Play className="w-3.5 h-3.5 fill-current text-root-green" />
+                <div className="flex items-center justify-between pt-2 border-t border-white/10">
+                  <button className="flex items-center gap-1.5 text-xs text-netflix-gray hover:text-white transition-colors">
+                    <Play className="w-3.5 h-3.5 fill-current text-netflix-red" />
                     <span>Play Audio Segment</span>
                   </button>
 
                   <Link
                     href={`/archive`}
-                    className="flex items-center gap-1 text-xs text-leaf-green hover:underline"
+                    className="flex items-center gap-1 text-xs text-netflix-red hover:underline font-semibold"
                   >
                     <span>View Full Recording & Metadata</span>
                     <ArrowRight className="w-3 h-3" />

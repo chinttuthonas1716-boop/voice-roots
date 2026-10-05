@@ -53,11 +53,11 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
     const dataArray = new Uint8Array(bufferLength);
     analyser.getByteTimeDomainData(dataArray);
 
-    ctx.fillStyle = "#0B0D0C";
+    ctx.fillStyle = "#141414";
     ctx.fillRect(0, 0, canvas.width, canvas.height);
 
     ctx.lineWidth = 2.5;
-    ctx.strokeStyle = isRecording ? "#6FAF8F" : "#A9B0AB";
+    ctx.strokeStyle = isRecording ? "#E50914" : "#555555";
     ctx.beginPath();
 
     const sliceWidth = (canvas.width * 1.0) / bufferLength;
@@ -230,22 +230,22 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
     <div className="w-full max-w-4xl mx-auto space-y-8">
       {/* Top Header */}
       <div className="text-center space-y-2">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-root-green/10 border border-root-green/20 text-leaf-green text-xs font-mono">
-          <Shield className="w-3.5 h-3.5" />
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-netflix-red/10 border border-netflix-red/30 text-netflix-red text-xs font-mono font-semibold">
+          <Shield className="w-3.5 h-3.5 text-netflix-red" />
           <span>Community Consent & AI Preservation Studio</span>
         </div>
-        <h1 className="text-3xl sm:text-4xl font-semibold tracking-tight text-white">
+        <h1 className="text-3xl sm:text-4xl font-bold tracking-tight text-white">
           Record Oral Language
         </h1>
-        <p className="text-secondary-text text-sm sm:text-base max-w-xl mx-auto">
+        <p className="text-netflix-gray text-sm sm:text-base max-w-xl mx-auto">
           Capture folk stories, songs, dialect conversations, and indigenous knowledge. Original audio is permanently protected.
         </p>
       </div>
 
       {!result ? (
         <div className="space-y-6">
-          {/* Waveform & Recording Canvas (iOS 27 Spatial Glass) */}
-          <div className="glass-surface p-6 sm:p-8 rounded-3xl relative overflow-hidden border border-white/10 shadow-glass">
+          {/* Waveform & Recording Canvas (Liquid Glass) */}
+          <div className="ios27-glass p-6 sm:p-8 rounded-3xl relative overflow-hidden border border-white/10 shadow-2xl">
             {/* Live Indicator */}
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2.5">
@@ -253,26 +253,26 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
                   className={`w-3 h-3 rounded-full ${
                     isRecording
                       ? isPaused
-                        ? "bg-earth"
-                        : "bg-red-500 animate-ping"
-                      : "bg-secondary-text/40"
+                        ? "bg-cultural-gold"
+                        : "bg-netflix-red animate-ping"
+                      : "bg-white/30"
                   }`}
                 />
-                <span className="text-xs uppercase tracking-wider font-mono text-secondary-text">
+                <span className="text-xs uppercase tracking-wider font-mono text-netflix-light">
                   {isRecording ? (isPaused ? "Paused" : "Live Recording") : audioBlob ? "Recorded Audio" : "Ready"}
                 </span>
               </div>
-              <span className="font-mono text-xl sm:text-2xl text-white font-medium">
+              <span className="font-mono text-xl sm:text-2xl text-white font-bold">
                 {formatTimer(duration)}
               </span>
             </div>
 
             {/* Canvas Waveform */}
-            <div className="h-32 w-full rounded-2xl bg-black/40 border border-white/5 flex items-center justify-center overflow-hidden relative">
+            <div className="h-32 w-full rounded-2xl bg-black/60 border border-white/10 flex items-center justify-center overflow-hidden relative">
               <canvas ref={canvasRef} width={800} height={128} className="w-full h-full" />
               {!isRecording && !audioBlob && (
-                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-secondary-text/60">
-                  <Mic className="w-8 h-8 stroke-1 text-root-green/50" />
+                <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 text-netflix-gray">
+                  <Mic className="w-8 h-8 stroke-1 text-netflix-red/60 animate-pulse" />
                   <span className="text-xs font-mono">Tap Start Recording below</span>
                 </div>
               )}
@@ -283,9 +283,9 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
               {!isRecording && !audioBlob && (
                 <button
                   onClick={startRecording}
-                  className="flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-root-green text-obsidian font-semibold hover:bg-leaf-green transition-all shadow-glow hover:scale-105 active:scale-95"
+                  className="flex items-center gap-2.5 px-6 py-3.5 rounded-full ios27-button-primary font-bold shadow-netflix-glow transition-all hover:scale-105 active:scale-95"
                 >
-                  <Mic className="w-5 h-5 fill-current" />
+                  <Mic className="w-5 h-5 fill-current text-white" />
                   <span>Start Recording</span>
                 </button>
               )}
@@ -295,7 +295,7 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
                   {!isPaused ? (
                     <button
                       onClick={pauseRecording}
-                      className="px-5 py-3 rounded-full glass-card hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2"
+                      className="px-5 py-3 rounded-full ios27-pill hover:bg-white/10 text-white font-medium text-sm flex items-center gap-2"
                     >
                       <Pause className="w-4 h-4" />
                       Pause
@@ -303,7 +303,7 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
                   ) : (
                     <button
                       onClick={resumeRecording}
-                      className="px-5 py-3 rounded-full bg-root-green/20 border border-root-green/40 text-leaf-green font-medium text-sm flex items-center gap-2"
+                      className="px-5 py-3 rounded-full bg-netflix-red/20 border border-netflix-red/40 text-netflix-red font-medium text-sm flex items-center gap-2"
                     >
                       <Play className="w-4 h-4 fill-current" />
                       Resume
@@ -312,7 +312,7 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
 
                   <button
                     onClick={stopRecording}
-                    className="px-6 py-3 rounded-full bg-red-500/20 border border-red-500/40 text-red-300 font-medium text-sm flex items-center gap-2 hover:bg-red-500/30"
+                    className="px-6 py-3 rounded-full bg-netflix-red text-white font-bold text-sm flex items-center gap-2 shadow-netflix-glow hover:bg-netflix-red-hover"
                   >
                     <Square className="w-4 h-4 fill-current" />
                     Finish Recording
@@ -328,7 +328,7 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
                       setAudioUrl(null);
                       setDuration(0);
                     }}
-                    className="p-3 rounded-full glass-card hover:bg-white/10 text-secondary-text hover:text-white"
+                    className="p-3 rounded-full ios27-pill hover:bg-white/10 text-netflix-gray hover:text-white"
                     title="Re-record"
                   >
                     <RotateCcw className="w-4 h-4" />
@@ -485,9 +485,9 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
               <button
                 disabled={!audioBlob || isProcessing}
                 onClick={handleProcessAI}
-                className="flex items-center gap-2 px-6 py-3 rounded-full bg-root-green hover:bg-leaf-green text-obsidian font-semibold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-glow"
+                className="flex items-center gap-2 px-6 py-3 rounded-full ios27-button-primary font-bold text-sm transition-all disabled:opacity-40 disabled:cursor-not-allowed shadow-netflix-glow hover:scale-105 active:scale-95"
               >
-                <Sparkles className="w-4 h-4" />
+                <Sparkles className="w-4 h-4 text-white" />
                 <span>Process with AI & Save to Archive</span>
               </button>
             </div>
@@ -496,69 +496,69 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
       ) : (
         /* Preservation & Transcription Studio Result */
         <div className="space-y-6">
-          <div className="glass-surface p-6 sm:p-8 rounded-3xl border border-root-green/30 shadow-glow space-y-6">
+          <div className="ios27-glass p-6 sm:p-8 rounded-3xl border border-netflix-red/30 shadow-2xl space-y-6">
             <div className="flex items-center justify-between">
               <div>
-                <span className="text-xs font-mono uppercase text-leaf-green">Archive Entry #{result.id}</span>
-                <h2 className="text-2xl font-semibold text-white mt-1">{result.title}</h2>
+                <span className="text-xs font-mono uppercase text-netflix-red font-bold">Archive Entry #{result.id}</span>
+                <h2 className="text-2xl font-bold text-white mt-1">{result.title}</h2>
               </div>
-              <div className="px-3.5 py-1.5 rounded-full bg-root-green/20 border border-root-green/40 text-leaf-green text-xs font-mono flex items-center gap-1.5">
+              <div className="px-3.5 py-1.5 rounded-full bg-netflix-red/20 border border-netflix-red/40 text-netflix-red text-xs font-mono font-bold flex items-center gap-1.5">
                 <Check className="w-3.5 h-3.5" />
                 <span>AI Confidence {(result.confidence * 100).toFixed(1)}%</span>
               </div>
             </div>
 
             {/* Split Screen Original vs Translation */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/5">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-white/10">
               {/* Original Oral Language */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-mono text-secondary-text">
-                  <span className="text-leaf-green font-semibold">ORIGINAL ORAL SPEECH ({result.language})</span>
+                <div className="flex items-center justify-between text-xs font-mono text-netflix-gray">
+                  <span className="text-netflix-red font-bold">ORIGINAL ORAL SPEECH ({result.language})</span>
                   <span>Immutable Archive</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/5 text-white/90 text-sm leading-relaxed font-sans">
+                <div className="p-4 rounded-2xl bg-black/60 border border-white/10 text-white/90 text-sm leading-relaxed font-sans">
                   {result.originalTranscript}
                 </div>
               </div>
 
               {/* Verified English Translation */}
               <div className="space-y-3">
-                <div className="flex items-center justify-between text-xs font-mono text-secondary-text">
-                  <span className="text-ai-violet font-semibold">INDIC-TRANS2 TRANSLATION (English)</span>
+                <div className="flex items-center justify-between text-xs font-mono text-netflix-gray">
+                  <span className="text-cultural-gold font-bold">INDIC-TRANS2 TRANSLATION (English)</span>
                   <span>Searchable Root</span>
                 </div>
-                <div className="p-4 rounded-2xl bg-black/40 border border-white/5 text-secondary-text text-sm leading-relaxed font-sans">
+                <div className="p-4 rounded-2xl bg-black/60 border border-white/10 text-netflix-light text-sm leading-relaxed font-sans">
                   {result.translationEn}
                 </div>
               </div>
             </div>
 
             {/* Extracted Vocabulary */}
-            <div className="pt-4 border-t border-white/5 space-y-3">
-              <span className="text-xs font-mono uppercase text-secondary-text block">
+            <div className="pt-4 border-t border-white/10 space-y-3">
+              <span className="text-xs font-mono uppercase text-netflix-gray block">
                 Extracted Cultural Vocabulary & Terms
               </span>
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 {result.vocabulary.map((v: any, idx: number) => (
                   <div key={idx} className="p-3 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                    <span className="text-sm font-semibold text-leaf-green block">{v.word}</span>
-                    <span className="text-xs text-secondary-text block">{v.meaning}</span>
+                    <span className="text-sm font-bold text-netflix-red block">{v.word}</span>
+                    <span className="text-xs text-netflix-gray block">{v.meaning}</span>
                   </div>
                 ))}
               </div>
             </div>
 
-            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+            <div className="flex items-center justify-between pt-4 border-t border-white/10">
               <button
                 onClick={() => setResult(null)}
-                className="text-xs text-secondary-text hover:text-white transition-colors"
+                className="text-xs text-netflix-gray hover:text-white transition-colors"
               >
                 ← Record Another Sample
               </button>
 
               <Link
                 href="/archive"
-                className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-root-green text-obsidian font-semibold text-xs transition-transform hover:scale-105"
+                className="flex items-center gap-2 px-5 py-2.5 rounded-full ios27-button-primary font-bold text-xs transition-transform hover:scale-105 shadow-netflix-glow"
               >
                 <span>View in Global Archive</span>
                 <ArrowRight className="w-3.5 h-3.5" />
@@ -571,23 +571,23 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
       {/* Progress modal */}
       {isProcessing && (
         <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-md flex items-center justify-center p-4">
-          <div className="glass-surface p-8 rounded-3xl max-w-md w-full border border-white/10 space-y-5 text-center">
-            <div className="w-12 h-12 rounded-2xl bg-root-green/20 border border-root-green/40 mx-auto flex items-center justify-center text-leaf-green animate-bounce">
+          <div className="ios27-glass p-8 rounded-3xl max-w-md w-full border border-white/15 space-y-5 text-center shadow-2xl">
+            <div className="w-12 h-12 rounded-2xl bg-netflix-red/20 border border-netflix-red/40 mx-auto flex items-center justify-center text-netflix-red animate-bounce">
               <Sparkles className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-white">AI Preservation Pipeline</h3>
-              <p className="text-xs text-secondary-text mt-1">{processingStage}</p>
+              <h3 className="text-lg font-bold text-white">AI Preservation Pipeline</h3>
+              <p className="text-xs text-netflix-gray mt-1">{processingStage}</p>
             </div>
 
             <div className="w-full bg-white/10 rounded-full h-2 overflow-hidden">
               <div
-                className="bg-root-green h-full rounded-full transition-all duration-300"
+                className="bg-netflix-red h-full rounded-full transition-all duration-300"
                 style={{ width: `${progress}%` }}
               />
             </div>
 
-            <span className="text-xs font-mono text-secondary-text">{progress}% complete</span>
+            <span className="text-xs font-mono text-netflix-gray">{progress}% complete</span>
           </div>
         </div>
       )}
