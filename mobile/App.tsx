@@ -68,7 +68,7 @@ export default function App() {
         )}
       </View>
 
-      {/* Floating Liquid Glass Capsule Bottom Bar */}
+      {/* Floating Apple Fitness Style Bottom Bar */}
       <View style={styles.floatingBarContainer}>
         <View style={styles.glassFloatingBar}>
           <TouchableOpacity
@@ -76,14 +76,14 @@ export default function App() {
             onPress={() => setCurrentTab("home")}
             activeOpacity={0.7}
           >
-            <View style={[styles.tabIconWrapper, currentTab === "home" && styles.activeTabWrapper]}>
+            <View style={[styles.tabIconWrapper, currentTab === "home" && { backgroundColor: "rgba(250, 17, 79, 0.2)" }]}>
               <SpatialIcon
                 name="home"
                 size={17}
-                color={currentTab === "home" ? "#E50914" : "#8E8E93"}
+                color={currentTab === "home" ? "#FA114F" : "#8E8E93"}
               />
             </View>
-            <Text style={[styles.tabLabel, currentTab === "home" && styles.activeTabLabel]}>Home</Text>
+            <Text style={[styles.tabLabel, currentTab === "home" && { color: "#FA114F", fontWeight: "800" }]}>Summary</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -91,14 +91,14 @@ export default function App() {
             onPress={() => setCurrentTab("archive")}
             activeOpacity={0.7}
           >
-            <View style={[styles.tabIconWrapper, currentTab === "archive" && styles.activeTabWrapper]}>
+            <View style={[styles.tabIconWrapper, currentTab === "archive" && { backgroundColor: "rgba(161, 254, 5, 0.2)" }]}>
               <SpatialIcon
                 name="archive"
                 size={17}
-                color={currentTab === "archive" ? "#E50914" : "#8E8E93"}
+                color={currentTab === "archive" ? "#A1FE05" : "#8E8E93"}
               />
             </View>
-            <Text style={[styles.tabLabel, currentTab === "archive" && styles.activeTabLabel]}>Archive</Text>
+            <Text style={[styles.tabLabel, currentTab === "archive" && { color: "#A1FE05", fontWeight: "800" }]}>Fitness+ Lore</Text>
           </TouchableOpacity>
 
           {/* Central Elevated Spatial Mic Button */}
@@ -107,12 +107,12 @@ export default function App() {
             onPress={() => setCurrentTab("record")}
             activeOpacity={0.85}
           >
-            <View style={styles.recordOrbOuter}>
-              <View style={styles.recordOrbInner}>
+            <View style={[styles.recordOrbOuter, { borderColor: "rgba(250, 17, 79, 0.4)" }]}>
+              <View style={[styles.recordOrbInner, { backgroundColor: "#FA114F" }]}>
                 <SpatialIcon name="mic" size={20} color="#FFFFFF" />
               </View>
             </View>
-            <Text style={[styles.tabLabel, currentTab === "record" && styles.activeTabLabel]}>Record</Text>
+            <Text style={[styles.tabLabel, currentTab === "record" && { color: "#FA114F", fontWeight: "800" }]}>Record</Text>
           </TouchableOpacity>
 
           {/* Day-to-Day Translate Tab */}
@@ -121,14 +121,14 @@ export default function App() {
             onPress={() => setCurrentTab("translate")}
             activeOpacity={0.7}
           >
-            <View style={[styles.tabIconWrapper, currentTab === "translate" && styles.activeTabWrapper]}>
+            <View style={[styles.tabIconWrapper, currentTab === "translate" && { backgroundColor: "rgba(0, 216, 246, 0.2)" }]}>
               <SpatialIcon
                 name="globe"
                 size={17}
-                color={currentTab === "translate" ? "#E50914" : "#8E8E93"}
+                color={currentTab === "translate" ? "#00D8F6" : "#8E8E93"}
               />
             </View>
-            <Text style={[styles.tabLabel, currentTab === "translate" && styles.activeTabLabel]}>Translate</Text>
+            <Text style={[styles.tabLabel, currentTab === "translate" && { color: "#00D8F6", fontWeight: "800" }]}>Translate</Text>
           </TouchableOpacity>
 
           <TouchableOpacity

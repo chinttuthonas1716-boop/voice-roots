@@ -1,8 +1,9 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { Play, Pause, Bookmark, Volume2, Sparkles, CheckCircle2, ChevronRight } from "lucide-react";
 import Link from "next/link";
+import { soundPlayer } from "@/lib/soundPlayer";
 
 export interface RecordingCardData {
   id: string;
@@ -21,6 +22,13 @@ export function RecordingCard({ item }: { item: RecordingCardData }) {
   const [isPlaying, setIsPlaying] = useState(false);
   const [isHovered, setIsHovered] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+
+  useEffect(() => {
+    const unsubscribe = soundPlayer.subscribe((state) => {
+      setIsPlaying(state.isPlaying && state.activeId === item.id);
+    });
+    return () => unsubscribe();
+  }, [item.id]);
 
   return (
     <div
@@ -77,9 +85,9 @@ export function RecordingCard({ item }: { item: RecordingCardData }) {
         <div className="pt-4 mt-4 border-t border-white/10 flex items-center justify-between relative z-10">
           <div className="flex items-center gap-2">
             <button
-              onClick={(e) => {
+              onClick={async (e) => {
                 e.stopPropagation();
-                setIsPlaying(!isPlaying);
+                await soundPlayer.toggle(item.id);
               }}
               className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-bold transition-all ${
                 isPlaying

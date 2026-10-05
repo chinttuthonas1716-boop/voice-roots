@@ -1,17 +1,15 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import {
   Smartphone,
-  QrCode,
   Sparkles,
   ExternalLink,
   Copy,
   Check,
   Globe,
   Mic,
-  Library,
   Languages,
   User,
   Volume2,
@@ -19,51 +17,41 @@ import {
   Pause,
   Upload,
   Shield,
-  Layers,
-  FileAudio,
-  Radio,
-  Share2,
+  Activity,
+  Flame,
+  Award,
+  Users,
+  TrendingUp,
+  ArrowRight,
+  RotateCcw,
 } from "lucide-react";
+import { soundPlayer } from "@/lib/soundPlayer";
 
 export default function MobileAppSimulatorPage() {
-  const [activeTab, setActiveTab] = useState<"home" | "archive" | "record" | "translate" | "profile">("home");
+  const [activeTab, setActiveTab] = useState<"summary" | "fitness_plus" | "translate" | "sharing">("summary");
   const [deviceFrame, setDeviceFrame] = useState<boolean>(true);
   const [copiedLink, setCopiedLink] = useState(false);
 
-  // Record Screen state in simulator
-  const [recordMode, setRecordMode] = useState<"mic" | "upload">("upload");
-  const [selectedLanguage, setSelectedLanguage] = useState("Gondi (గోండి)");
-  const [targetLang, setTargetLang] = useState<"te" | "en" | "hi">("te");
-  const [uploadedFile, setUploadedFile] = useState<string | null>("elder_gondi_forest_folklore.mp3");
-  const [isPlayingAudio, setIsPlayingAudio] = useState(false);
+  // Audio Playback in Simulator
+  const [playingSongId, setPlayingSongId] = useState<string | null>(null);
 
-  // Translate Screen state in simulator
-  const [translateTarget, setTranslateTarget] = useState<"te" | "en" | "hi">("te");
-  const [activePhraseIndex, setActivePhraseIndex] = useState(0);
+  // Translate tab state in simulator
+  const [targetLang, setTargetLang] = useState<string>("en");
+  const [sourceText, setSourceText] = useState("బాగున్నారా? ఎలా ఉన్నారు?");
+  const [translatedText, setTranslatedText] = useState("Greetings! How are you doing? Are you well?");
+  const [isTranslating, setIsTranslating] = useState(false);
 
-  const sampleOralPhrases = [
-    {
-      oral: "సేవా సేవా! మావా నాటే స్వాగతం.",
-      lang: "Gondi",
-      phonetic: "Sewa sewa! Mawa naate swagatam.",
-      meaningTe: "నమస్కారం! మా గ్రామానికి హృదయపూర్వక స్వాగతం.",
-      meaningEn: "Greetings! A warm welcome to our indigenous village.",
-    },
-    {
-      oral: "కొండల నీళ్ళు తాగి, పెద్దల మాట విని బతకాలి.",
-      lang: "Koya",
-      phonetic: "Kondala neellu thaagi, peddala maata vini bathakali.",
-      meaningTe: "కొండల సెలయేటి నీరు తాగుతూ, పెద్దల జ్ఞానోక్తులను ఆచరిస్తూ జీవించాలి.",
-      meaningEn: "Drink from the hill springs and live by the wisdom of our elders.",
-    },
-    {
-      oral: "Ki kti jong ngi ki tei ia ka jingkieng dieng.",
-      lang: "Khasi",
-      phonetic: "Ki kti jong ngi ki tei ia ka jingkieng dieng.",
-      meaningTe: "తరతరాల జీవన వారధులు మా పూర్వీకుల చేతులతో అల్లబడ్డాయి.",
-      meaningEn: "Generations of living root bridges were shaped by the hands of our ancestors.",
-    },
-  ];
+  // Sync with universal sound player
+  useEffect(() => {
+    const unsubscribe = soundPlayer.subscribe((state) => {
+      setPlayingSongId(state.isPlaying ? state.activeId : null);
+    });
+    return () => unsubscribe();
+  }, []);
+
+  const handlePlayToggle = async (songId: string, url: string) => {
+    await soundPlayer.toggle(songId, url);
+  };
 
   const copyCloudflareLink = () => {
     navigator.clipboard.writeText("https://dee-arabia-gathered-drove.trycloudflare.com");
@@ -71,24 +59,53 @@ export default function MobileAppSimulatorPage() {
     setTimeout(() => setCopiedLink(false), 2000);
   };
 
+  const handleTranslate = (text: string, lang: string) => {
+    setIsTranslating(true);
+    setTimeout(() => {
+      if (text.includes("బాగున్నారా")) {
+        if (lang === "en") setTranslatedText("Greetings! How are you doing? Are you well?");
+        else if (lang === "hi") setTranslatedText("नमस्ते! आप कैसे हैं? क्या सब कुशल-मंगल है?");
+        else if (lang === "ta") setTranslatedText("வணக்கம்! நீங்கள் எப்படி இருக்கிறீர்கள்? நலமா?");
+        else if (lang === "kn") setTranslatedText("ನಮಸ್ಕಾರ! ನೀವು ಹೇಗಿದ್ದೀರಿ? ಕ್ಷೇಮವೇ?");
+        else if (lang === "gondi") setTranslatedText("सेवा जोहार! నీవా రోన్ సుఖి మంతా?");
+        else setTranslatedText(`[${lang.toUpperCase()}]: నమస్కారం! బాగున్నారా?`);
+      } else if (text.includes("నీళ్ళు")) {
+        if (lang === "en") setTranslatedText("Could you please give me some drinking water? I am thirsty.");
+        else if (lang === "hi") setTranslatedText("कृपया मुझे पीने के लिए थोड़ा पानी देंगे? मुझे प्यास लगी है।");
+        else if (lang === "kn") setTranslatedText("ದಯವಿಟ್ಟು ಕುಡಿಯಲು ಸ್ವಲ್ಪ ನೀರು ಕೊಡುತ್ತೀರಾ? ನನಗೆ ಬಾಯಾರಿಕೆಯಾಗಿದೆ.");
+        else setTranslatedText(`[${lang.toUpperCase()}]: మంచి నీళ్ళు ఇవ్వండి.`);
+      } else {
+        setTranslatedText(`[${lang.toUpperCase()} Translated]: "${text}" — Everyday conversational meaning.`);
+      }
+      setIsTranslating(false);
+    }, 200);
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0a0a] text-white pt-20 pb-16 px-4">
+    <div className="min-h-screen bg-[#000000] text-white pt-20 pb-16 px-4">
       {/* Top Banner */}
       <div className="max-w-6xl mx-auto mb-8">
-        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-2xl bg-[#141414]/90 border border-white/10 backdrop-blur-xl shadow-2xl">
-          <div className="flex items-center gap-3">
-            <div className="w-12 h-12 rounded-xl bg-gradient-to-tr from-netflix-red to-netflix-red-hover flex items-center justify-center text-white shadow-netflix-glow">
-              <Smartphone className="w-6 h-6" />
+        <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 p-5 rounded-3xl bg-[#1C1C1E] border border-white/10 shadow-2xl">
+          <div className="flex items-center gap-3.5">
+            {/* Apple Fitness Style Rings Icon */}
+            <div className="w-12 h-12 rounded-2xl bg-black border border-white/20 flex items-center justify-center p-1.5 shadow-[0_0_20px_rgba(250,17,79,0.4)]">
+              <svg viewBox="0 0 36 36" className="w-full h-full">
+                <circle cx="18" cy="18" r="14" fill="none" stroke="#FA114F" strokeWidth="3" opacity="0.9" />
+                <circle cx="18" cy="18" r="10" fill="none" stroke="#A1FE05" strokeWidth="3" opacity="0.9" />
+                <circle cx="18" cy="18" r="6" fill="none" stroke="#00D8F6" strokeWidth="3" opacity="0.9" />
+              </svg>
             </div>
             <div>
               <div className="flex items-center gap-2">
-                <h1 className="text-xl font-bold tracking-tight text-white">Voice Roots — Mobile App</h1>
-                <span className="px-2 py-0.5 text-[10px] font-semibold tracking-wider rounded-full bg-netflix-red/20 text-netflix-red border border-netflix-red/30 uppercase">
-                  iOS Spatial Glass
+                <h1 className="text-xl font-extrabold tracking-tight text-white">
+                  Voice Roots — Apple Fitness Edition
+                </h1>
+                <span className="px-2 py-0.5 text-[10px] font-bold rounded-full bg-[#A1FE05]/20 text-[#A1FE05] border border-[#A1FE05]/40 uppercase">
+                  iOS Fitness UI
                 </span>
               </div>
-              <p className="text-xs text-netflix-light mt-0.5">
-                Interactive preview of the React Native / Expo mobile application with Audio Upload, Instant Translation & 5 Liquid-Glass tabs.
+              <p className="text-xs text-neutral-400 mt-0.5">
+                Authentic iPhone Apple Fitness experience with Move/Exercise/Explore Activity Rings, Oral Workout Sessions, and actual folk audio playback.
               </p>
             </div>
           </div>
@@ -96,598 +113,620 @@ export default function MobileAppSimulatorPage() {
           <div className="flex items-center gap-2 flex-wrap">
             <button
               onClick={() => setDeviceFrame(!deviceFrame)}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-medium transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-xs font-semibold transition-all"
             >
-              <Layers className="w-3.5 h-3.5 text-cultural-gold" />
-              <span>{deviceFrame ? "Full Mobile View" : "Device Frame View"}</span>
+              <Smartphone className="w-3.5 h-3.5" />
+              <span>{deviceFrame ? "Hide iPhone Frame" : "Show iPhone Frame"}</span>
             </button>
 
             <button
               onClick={copyCloudflareLink}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-netflix-red/20 hover:bg-netflix-red text-white border border-netflix-red/30 text-xs font-medium transition-all"
+              className="flex items-center gap-1.5 px-3.5 py-2 rounded-full bg-[#A1FE05] text-black font-extrabold text-xs shadow-[0_0_20px_rgba(161,254,5,0.4)] hover:brightness-110 transition-all"
             >
-              {copiedLink ? <Check className="w-3.5 h-3.5 text-green-400" /> : <Copy className="w-3.5 h-3.5" />}
-              <span>{copiedLink ? "Link Copied!" : "Copy Web App Link"}</span>
+              {copiedLink ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
+              <span>{copiedLink ? "Link Copied!" : "Copy Mobile URL"}</span>
             </button>
-
-            <a
-              href="https://dee-arabia-gathered-drove.trycloudflare.com"
-              target="_blank"
-              rel="noreferrer"
-              className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-netflix-red hover:bg-netflix-red-hover text-white text-xs font-semibold shadow-netflix-glow transition-all"
-            >
-              <ExternalLink className="w-3.5 h-3.5" />
-              <span>Open Public App</span>
-            </a>
           </div>
         </div>
       </div>
 
-      {/* Main Container: Mobile Simulator + Side Guide */}
-      <div className="max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-12 gap-8 items-start">
-        {/* Left / Center: Interactive Mobile Phone Mockup */}
-        <div className={`lg:col-span-7 flex justify-center ${!deviceFrame ? "w-full" : ""}`}>
-          <div
-            className={`w-full max-w-[400px] bg-[#141414] border border-white/15 rounded-[48px] p-3 shadow-2xl relative transition-all duration-300 ${
-              deviceFrame ? "ring-8 ring-white/5 shadow-[0_25px_60px_-15px_rgba(229,9,20,0.3)]" : "rounded-2xl p-0 border-none"
-            }`}
-          >
-            {/* iPhone Top Notch / Dynamic Island */}
-            {deviceFrame && (
-              <div className="pt-2 pb-1 px-4 flex justify-between items-center text-[10px] text-netflix-light">
-                <span className="font-semibold text-white">9:41</span>
-                {/* Dynamic Island Capsule */}
-                <div className="h-6 px-3 rounded-full bg-black border border-white/20 flex items-center gap-2 shadow-inner">
-                  <span className="w-2 h-2 rounded-full bg-netflix-red animate-pulse" />
-                  <span className="text-[9px] font-semibold text-white tracking-wider">ARCHIVE LIVE</span>
-                  <span className="text-[9px] text-netflix-light">•</span>
-                  <span className="text-[9px] text-netflix-light">24 LANGS</span>
-                </div>
+      {/* Main Container */}
+      <div className="max-w-6xl mx-auto flex flex-col lg:flex-row items-center justify-center gap-12">
+        {/* Interactive iPhone Hardware Shell */}
+        <div
+          className={`relative transition-all duration-500 ${
+            deviceFrame
+              ? "w-[390px] h-[810px] rounded-[55px] p-3.5 bg-gradient-to-b from-[#2d2d30] via-[#1a1a1c] to-[#0c0c0e] shadow-[0_25px_70px_rgba(0,0,0,0.9),0_0_0_2px_#3d3d42,inset_0_0_3px_#ffffff40]"
+              : "w-full max-w-md h-[780px]"
+          }`}
+        >
+          {/* Inner OLED Display */}
+          <div className="w-full h-full rounded-[45px] bg-[#000000] overflow-hidden flex flex-col relative border border-white/10">
+            {/* iOS Dynamic Island */}
+            <div className="pt-3 pb-1 flex justify-center z-40 bg-[#000000]">
+              <div className="w-28 h-6 bg-black rounded-full border border-white/10 flex items-center justify-between px-2.5 shadow-md">
                 <div className="flex items-center gap-1">
-                  <span>5G</span>
-                  <div className="w-4 h-2 rounded-sm border border-white/60 p-0.5 flex items-center">
-                    <div className="w-full h-full bg-white rounded-xs" />
-                  </div>
+                  <div className="w-2 h-2 rounded-full bg-[#A1FE05] animate-pulse" />
+                  <span className="text-[8px] font-mono text-[#A1FE05] font-bold">RINGS ON</span>
                 </div>
+                <div className="w-2.5 h-2.5 rounded-full bg-white/20" />
               </div>
-            )}
+            </div>
 
-            {/* Inner Phone Screen Content */}
-            <div className="bg-[#101010] rounded-[36px] overflow-hidden min-h-[680px] flex flex-col justify-between border border-white/5 relative">
-              {/* Screen Content Body */}
-              <div className="p-4 overflow-y-auto max-h-[600px] scrollbar-thin scrollbar-thumb-white/10">
-                {/* TAB 1: HOME */}
-                {activeTab === "home" && (
-                  <div className="space-y-4">
-                    {/* Header */}
-                    <div className="flex items-center justify-between pt-1">
-                      <div>
-                        <span className="text-[10px] uppercase font-bold tracking-wider text-cultural-gold">Indigenous Oral Heritage</span>
-                        <h2 className="text-lg font-bold text-white leading-tight">Voice Roots</h2>
-                      </div>
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-tr from-netflix-red to-netflix-red-hover flex items-center justify-center text-white text-xs font-bold shadow-netflix-glow">
-                        N
-                      </div>
-                    </div>
-
-                    {/* Hero Liquid Card */}
-                    <div className="p-4 rounded-2xl bg-gradient-to-br from-[#1e1e1e] via-[#161616] to-[#121212] border border-white/10 shadow-lg relative overflow-hidden">
-                      <div className="absolute top-0 left-0 right-0 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
-                      <div className="flex items-center gap-1.5 text-xs text-netflix-red font-semibold mb-1">
-                        <Sparkles className="w-3.5 h-3.5" />
-                        <span>Daily Oral Wisdom</span>
-                      </div>
-                      <p className="text-xs italic text-netflix-light mb-2">
-                        &quot;మనుషులు మాట్లాడటం ఆపేస్తే భాష మరణిస్తుంది. పలకని మాట మట్టిలో కలిసిపోతుంది.&quot;
-                      </p>
-                      <div className="flex items-center justify-between text-[11px] pt-1 border-t border-white/10 text-netflix-light">
-                        <span>Elder Ramu Koya</span>
-                        <span className="text-cultural-gold">కోయ తెగ (Koya)</span>
-                      </div>
-                    </div>
-
-                    {/* Quick Action Matrix */}
-                    <div className="grid grid-cols-2 gap-2.5">
-                      <button
-                        onClick={() => setActiveTab("record")}
-                        className="p-3 rounded-xl bg-netflix-red/10 border border-netflix-red/30 hover:border-netflix-red text-left transition-all group"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-netflix-red/20 flex items-center justify-center text-netflix-red mb-2 group-hover:scale-110 transition-transform">
-                          <Mic className="w-4 h-4" />
-                        </div>
-                        <h3 className="text-xs font-bold text-white">Record & Upload</h3>
-                        <p className="text-[10px] text-netflix-light">Capture or upload audio</p>
-                      </button>
-
-                      <button
-                        onClick={() => setActiveTab("translate")}
-                        className="p-3 rounded-xl bg-white/5 border border-white/10 hover:border-cultural-gold/40 text-left transition-all group"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-cultural-gold/20 flex items-center justify-center text-cultural-gold mb-2 group-hover:scale-110 transition-transform">
-                          <Languages className="w-4 h-4" />
-                        </div>
-                        <h3 className="text-xs font-bold text-white">Translate</h3>
-                        <p className="text-[10px] text-netflix-light">Gondi/Koya to Telugu</p>
-                      </button>
-                    </div>
-
-                    {/* Endangered Languages Spotlight */}
+            {/* Screen Content Scroll Area */}
+            <div className="flex-1 overflow-y-auto no-scrollbar p-4 space-y-4 pb-24 text-white">
+              {/* TAB 1: APPLE FITNESS SUMMARY (సారాంశం) */}
+              {activeTab === "summary" && (
+                <div className="space-y-4">
+                  {/* Apple Fitness Header */}
+                  <div className="flex items-end justify-between pt-1">
                     <div>
-                      <h4 className="text-xs font-bold text-white mb-2 flex items-center justify-between">
-                        <span>Endangered Oral Languages</span>
-                        <span className="text-[10px] text-netflix-red font-semibold">24 Preserved</span>
-                      </h4>
-                      <div className="space-y-1.5">
-                        {[
-                          { name: "గోండి (Gondi)", speakers: "2.9M Speakers", status: "Vulnerable", color: "text-amber-400" },
-                          { name: "కోయ (Koya)", speakers: "450K Speakers", status: "Endangered", color: "text-red-400" },
-                          { name: "ఖాసి (Khasi)", speakers: "1.4M Oral Lore", status: "Preserved", color: "text-emerald-400" },
-                          { name: "నిహాలి (Nihali)", speakers: "< 2,000 Speakers", status: "Critically Endangered", color: "text-red-500" },
-                        ].map((item, idx) => (
-                          <div key={idx} className="flex items-center justify-between p-2.5 rounded-xl bg-white/5 border border-white/5 text-xs">
-                            <span className="font-medium text-white">{item.name}</span>
-                            <div className="text-right">
-                              <span className={`text-[10px] font-bold block ${item.color}`}>{item.status}</span>
-                              <span className="text-[9px] text-netflix-light">{item.speakers}</span>
-                            </div>
-                          </div>
-                        ))}
+                      <span className="text-[10px] font-bold text-neutral-400 tracking-wider uppercase font-mono">
+                        MONDAY, 6 OCT
+                      </span>
+                      <h2 className="text-2xl font-black text-white tracking-tight leading-none mt-0.5">
+                        Summary
+                      </h2>
+                    </div>
+                    {/* User Profile Avatar with Ring */}
+                    <div className="w-9 h-9 rounded-full bg-gradient-to-tr from-[#FA114F] via-[#A1FE05] to-[#00D8F6] p-[2px] shadow-lg">
+                      <div className="w-full h-full rounded-full bg-[#1C1C1E] flex items-center justify-center text-xs font-bold text-white">
+                        VR
                       </div>
                     </div>
                   </div>
-                )}
 
-                {/* TAB 2: ARCHIVE */}
-                {activeTab === "archive" && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pt-1">
-                      <h2 className="text-base font-bold text-white">Story Vault Archive</h2>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-white/10 text-netflix-light">
-                        4,821 Oral Records
+                  {/* Iconic Apple Fitness Activity Rings Card */}
+                  <div className="p-5 rounded-3xl bg-[#1C1C1E] border border-white/10 shadow-xl space-y-4 relative overflow-hidden">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                        Activity Rings
+                      </h3>
+                      <span className="text-[10px] font-bold text-[#A1FE05] flex items-center gap-1">
+                        <Flame className="w-3 h-3 fill-current" />
+                        <span>7-Day Streak</span>
                       </span>
                     </div>
 
-                    {/* Oral Audio Card */}
-                    <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-3">
-                      <div className="flex items-start justify-between">
-                        <div>
-                          <span className="text-[10px] font-semibold text-cultural-gold uppercase">గోండి అటవీ మూలికల కథ</span>
-                          <h3 className="text-xs font-bold text-white mt-0.5">Forest Medicinal Herbs Lore</h3>
-                          <p className="text-[10px] text-netflix-light">Recorded by Elder Laxman • Adilabad</p>
+                    <div className="flex items-center justify-between gap-4">
+                      {/* Authentic 3 Concentric Glowing Rings SVG */}
+                      <div className="relative w-36 h-36 flex-shrink-0 flex items-center justify-center">
+                        <svg className="w-full h-full -rotate-90" viewBox="0 0 120 120">
+                          {/* Background Track Rings */}
+                          <circle cx="60" cy="60" r="50" fill="none" stroke="#FA114F" strokeWidth="10" opacity="0.18" />
+                          <circle cx="60" cy="60" r="38" fill="none" stroke="#A1FE05" strokeWidth="10" opacity="0.18" />
+                          <circle cx="60" cy="60" r="26" fill="none" stroke="#00D8F6" strokeWidth="10" opacity="0.18" />
+
+                          {/* Outer Move Ring (Red: 88% filled) */}
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="50"
+                            fill="none"
+                            stroke="#FA114F"
+                            strokeWidth="10"
+                            strokeDasharray={2 * Math.PI * 50}
+                            strokeDashoffset={2 * Math.PI * 50 * (1 - 0.88)}
+                            strokeLinecap="round"
+                            className="drop-shadow-[0_0_8px_rgba(250,17,79,0.8)]"
+                          />
+
+                          {/* Middle Exercise Ring (Green: 78% filled) */}
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="38"
+                            fill="none"
+                            stroke="#A1FE05"
+                            strokeWidth="10"
+                            strokeDasharray={2 * Math.PI * 38}
+                            strokeDashoffset={2 * Math.PI * 38 * (1 - 0.78)}
+                            strokeLinecap="round"
+                            className="drop-shadow-[0_0_8px_rgba(161,254,5,0.8)]"
+                          />
+
+                          {/* Inner Explore Ring (Cyan: 65% filled) */}
+                          <circle
+                            cx="60"
+                            cy="60"
+                            r="26"
+                            fill="none"
+                            stroke="#00D8F6"
+                            strokeWidth="10"
+                            strokeDasharray={2 * Math.PI * 26}
+                            strokeDashoffset={2 * Math.PI * 26 * (1 - 0.65)}
+                            strokeLinecap="round"
+                            className="drop-shadow-[0_0_8px_rgba(0,216,246,0.8)]"
+                          />
+                        </svg>
+
+                        {/* Central Flame Glyph */}
+                        <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                          <Flame className="w-5 h-5 text-[#FA114F]" />
                         </div>
+                      </div>
+
+                      {/* Right: Metrics Stack (Exact Apple Fitness typography) */}
+                      <div className="space-y-2.5 flex-1">
+                        <div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-black text-[#FA114F] font-mono leading-none">
+                              1,840
+                            </span>
+                            <span className="text-[10px] font-bold text-neutral-400">/ 2,000</span>
+                          </div>
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#FA114F] block">
+                            WORDS RECORDED
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-black text-[#A1FE05] font-mono leading-none">
+                              24
+                            </span>
+                            <span className="text-[10px] font-bold text-neutral-400">/ 30 MIN</span>
+                          </div>
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#A1FE05] block">
+                            ORAL LORE TIME
+                          </span>
+                        </div>
+
+                        <div>
+                          <div className="flex items-baseline gap-1">
+                            <span className="text-lg font-black text-[#00D8F6] font-mono leading-none">
+                              8
+                            </span>
+                            <span className="text-[10px] font-bold text-neutral-400">/ 12</span>
+                          </div>
+                          <span className="text-[9px] font-extrabold uppercase tracking-wider text-[#00D8F6] block">
+                            DIALECTS EXPLORED
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Workouts -> "Oral Preservation Sessions" */}
+                  <div className="space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">
+                        Preservation Sessions
+                      </h3>
+                      <button
+                        onClick={() => setActiveTab("fitness_plus")}
+                        className="text-[10px] font-bold text-[#A1FE05]"
+                      >
+                        Show More
+                      </button>
+                    </div>
+
+                    {/* Workout Card 1 (Folk Song) with Play sound button */}
+                    <div className="p-3.5 rounded-2xl bg-[#1C1C1E] border border-white/10 space-y-2 hover:border-[#FA114F] transition-all">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-[#FA114F]/20 flex items-center justify-center text-[#FA114F]">
+                            <Flame className="w-4 h-4 fill-current" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-white">Harvest & Rain Folk Song</h4>
+                            <p className="text-[10px] text-neutral-400">Telugu Agency • Elder Ramu</p>
+                          </div>
+                        </div>
+
+                        {/* Play / Pause with REAL audio */}
                         <button
-                          onClick={() => setIsPlayingAudio(!isPlayingAudio)}
-                          className="w-8 h-8 rounded-full bg-netflix-red hover:bg-netflix-red-hover flex items-center justify-center text-white shadow-netflix-glow"
+                          onClick={() => handlePlayToggle("vr-101", "/audio/harvest_song.wav")}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-black font-bold shadow-md transition-transform hover:scale-105 ${
+                            playingSongId === "vr-101" ? "bg-[#00D8F6] scale-105" : "bg-[#A1FE05]"
+                          }`}
                         >
-                          {isPlayingAudio ? <Pause className="w-3.5 h-3.5" /> : <Play className="w-3.5 h-3.5 ml-0.5" />}
+                          {playingSongId === "vr-101" ? (
+                            <Pause className="w-4 h-4 fill-current" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          )}
                         </button>
                       </div>
 
-                      {/* Mock Waveform */}
-                      <div className="flex items-center gap-1 h-6 px-2 rounded-lg bg-black/40">
-                        {[40, 75, 90, 60, 100, 30, 85, 45, 95, 70, 50, 80, 65, 90, 40, 85, 55].map((h, i) => (
-                          <div
-                            key={i}
-                            className={`flex-1 rounded-full transition-all ${
-                              isPlayingAudio ? "bg-netflix-red animate-pulse" : "bg-white/20"
-                            }`}
-                            style={{ height: `${h}%` }}
-                          />
-                        ))}
-                      </div>
-
-                      {/* Instant Translation Box */}
-                      <div className="p-2.5 rounded-xl bg-black/40 border border-white/5 text-[11px] space-y-1">
-                        <div className="text-[10px] font-bold text-netflix-red flex items-center gap-1">
-                          <Languages className="w-3 h-3" />
-                          <span>తెలుగు అనువాదం:</span>
-                        </div>
-                        <p className="text-white">
-                          &quot;అడవిలో పెరిగే నల్ల మద్ది చెట్టు బెరడు జ్వరానికి మరియు కడుపు నొప్పులకు అద్భుతమైన సంజీవని.&quot;
-                        </p>
+                      <div className="flex items-center justify-between text-[10px] pt-1 border-t border-white/10 text-neutral-300 font-mono">
+                        <span>26 MINS</span>
+                        <span className="text-[#FA114F] font-bold">1,240 WORDS</span>
+                        <span className="text-[#00D8F6]">LOSSLESS WAV</span>
                       </div>
                     </div>
 
-                    {/* Secondary Record */}
-                    <div className="p-3.5 rounded-2xl bg-white/5 border border-white/10 space-y-2">
-                      <span className="text-[10px] font-semibold text-cultural-gold uppercase">కోయ పండుగల పాట</span>
-                      <h3 className="text-xs font-bold text-white">Bhimana Pandum Oral Chant</h3>
-                      <p className="text-[10px] text-netflix-light">
-                        భీమన పండుగ సమయంలో పంటల సంరక్షణ కొరకు పాడే పురాతన మౌఖిక శ్లోకం.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 3: RECORD & UPLOAD */}
-                {activeTab === "record" && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pt-1">
-                      <h2 className="text-base font-bold text-white">Record & Translate</h2>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30">
-                        AI Ready
-                      </span>
-                    </div>
-
-                    {/* Mode Selector Toggle */}
-                    <div className="flex p-1 rounded-xl bg-black/50 border border-white/10">
-                      <button
-                        onClick={() => setRecordMode("upload")}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
-                          recordMode === "upload" ? "bg-netflix-red text-white shadow-netflix-glow" : "text-netflix-light hover:text-white"
-                        }`}
-                      >
-                        <Upload className="w-3.5 h-3.5" />
-                        <span>ఆడియో అప్‌లోడ్</span>
-                      </button>
-                      <button
-                        onClick={() => setRecordMode("mic")}
-                        className={`flex-1 py-1.5 rounded-lg text-xs font-medium flex items-center justify-center gap-1.5 transition-all ${
-                          recordMode === "mic" ? "bg-netflix-red text-white shadow-netflix-glow" : "text-netflix-light hover:text-white"
-                        }`}
-                      >
-                        <Mic className="w-3.5 h-3.5" />
-                        <span>లైవ్ మైక్</span>
-                      </button>
-                    </div>
-
-                    {/* Language Selector */}
-                    <div>
-                      <label className="text-[10px] text-netflix-light uppercase font-semibold block mb-1">
-                        ఆడియో భాష (Source Oral Language)
-                      </label>
-                      <select
-                        value={selectedLanguage}
-                        onChange={(e) => setSelectedLanguage(e.target.value)}
-                        className="w-full text-xs p-2 rounded-xl bg-white/5 border border-white/10 text-white focus:outline-none focus:border-netflix-red"
-                      >
-                        <option value="Gondi (గోండి)">గోండి (Gondi) - Adilabad</option>
-                        <option value="Koya (కోయ)">కోయ (Koya) - Bhadrachalam</option>
-                        <option value="Khasi (ఖాసి)">ఖాసి (Khasi) - Meghalaya</option>
-                      </select>
-                    </div>
-
-                    {/* Upload Box / Mic Box */}
-                    {recordMode === "upload" ? (
-                      <div className="p-4 rounded-2xl border-2 border-dashed border-white/20 bg-white/5 text-center space-y-2">
-                        <FileAudio className="w-8 h-8 text-netflix-red mx-auto animate-bounce" />
-                        <div className="text-xs font-bold text-white">ఆడియో ఫైల్ ఎంచుకోండి</div>
-                        <p className="text-[10px] text-netflix-light">.MP3, .WAV, .M4A, .AAC ఫైల్స్ సపోర్ట్ చేయబడతాయి</p>
-                        <div className="pt-1">
-                          <span className="text-[10px] px-3 py-1 rounded-full bg-white/10 text-white font-medium inline-block">
-                            {uploadedFile}
-                          </span>
-                        </div>
-                      </div>
-                    ) : (
-                      <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-3">
-                        <div className="w-14 h-14 rounded-full bg-netflix-red/20 border-2 border-netflix-red flex items-center justify-center mx-auto text-netflix-red shadow-netflix-glow">
-                          <Mic className="w-6 h-6 animate-pulse" />
-                        </div>
-                        <div className="text-xs font-bold text-white">రికార్డింగ్ ప్రారంభించండి</div>
-                        <p className="text-[10px] text-netflix-light">లక్షణమైన మౌఖిక కథనాన్ని రికార్డ్ చేయండి</p>
-                      </div>
-                    )}
-
-                    {/* Target Translation Selector */}
-                    <div>
-                      <div className="flex items-center justify-between mb-1.5">
-                        <label className="text-[10px] text-netflix-light uppercase font-semibold">
-                          అనువాద భాష (Target Language)
-                        </label>
-                        <div className="flex gap-1">
-                          <button
-                            onClick={() => setTargetLang("te")}
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded ${
-                              targetLang === "te" ? "bg-netflix-red text-white" : "bg-white/10 text-netflix-light"
-                            }`}
-                          >
-                            తెలుగు
-                          </button>
-                          <button
-                            onClick={() => setTargetLang("en")}
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded ${
-                              targetLang === "en" ? "bg-netflix-red text-white" : "bg-white/10 text-netflix-light"
-                            }`}
-                          >
-                            English
-                          </button>
-                          <button
-                            onClick={() => setTargetLang("hi")}
-                            className={`px-2 py-0.5 text-[10px] font-bold rounded ${
-                              targetLang === "hi" ? "bg-netflix-red text-white" : "bg-white/10 text-netflix-light"
-                            }`}
-                          >
-                            हिन्दी
-                          </button>
-                        </div>
-                      </div>
-
-                      {/* Instant Translation Output Card */}
-                      <div className="p-3 rounded-2xl bg-gradient-to-br from-[#1c1c1c] to-[#121212] border border-white/10 space-y-2">
-                        <div className="flex items-center justify-between text-[10px] font-semibold text-netflix-red">
-                          <span className="flex items-center gap-1">
-                            <Sparkles className="w-3 h-3" />
-                            <span>AI ఇన్‌స్టంట్ అనువాదం (Instant Output)</span>
-                          </span>
-                          <span className="text-emerald-400">98.4% Accuracy</span>
+                    {/* Workout Card 2 (Mountain Spring Legend) */}
+                    <div className="p-3.5 rounded-2xl bg-[#1C1C1E] border border-white/10 space-y-2 hover:border-[#A1FE05] transition-all">
+                      <div className="flex items-start justify-between">
+                        <div className="flex items-center gap-2.5">
+                          <div className="w-8 h-8 rounded-full bg-[#A1FE05]/20 flex items-center justify-center text-[#A1FE05]">
+                            <Activity className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <h4 className="text-xs font-bold text-white">The Mountain Spring Legend</h4>
+                            <p className="text-[10px] text-neutral-400">Gondi Bastar Lore • Sacred Clan Chant</p>
+                          </div>
                         </div>
 
-                        <div className="text-xs text-white leading-relaxed p-2 rounded-xl bg-black/40 border border-white/5">
-                          {targetLang === "te" && (
-                            <p>&quot;పూర్వీకుల కాలం నుండి మేము కొండల లోయలలోని ఔషధ మూలికలతో ప్రజల ఆరోగ్యాన్ని కాపాడుతున్నాము.&quot;</p>
-                          )}
-                          {targetLang === "en" && (
-                            <p>&quot;Since ancient ancestral times, we have guarded community health using sacred herbal roots from deep mountain valleys.&quot;</p>
-                          )}
-                          {targetLang === "hi" && (
-                            <p>&quot;पूर्वजों के समय से, हम गहरी घाटी की जड़ी-बूटियों से समुदाय के स्वास्थ्य की रक्षा कर रहे हैं।&quot;</p>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                )}
-
-                {/* TAB 4: TRANSLATE */}
-                {activeTab === "translate" && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pt-1">
-                      <h2 className="text-base font-bold text-white">దైనందిన అనువాదం (Daily Translate)</h2>
-                      <span className="text-[10px] text-cultural-gold font-semibold">2-Way AI</span>
-                    </div>
-
-                    {/* Target Selector */}
-                    <div className="flex p-1 rounded-xl bg-black/50 border border-white/10">
-                      <button
-                        onClick={() => setTranslateTarget("te")}
-                        className={`flex-1 py-1 text-xs font-semibold rounded-lg ${
-                          translateTarget === "te" ? "bg-netflix-red text-white" : "text-netflix-light"
-                        }`}
-                      >
-                        తెలుగు (Telugu)
-                      </button>
-                      <button
-                        onClick={() => setTranslateTarget("en")}
-                        className={`flex-1 py-1 text-xs font-semibold rounded-lg ${
-                          translateTarget === "en" ? "bg-netflix-red text-white" : "text-netflix-light"
-                        }`}
-                      >
-                        English
-                      </button>
-                      <button
-                        onClick={() => setTranslateTarget("hi")}
-                        className={`flex-1 py-1 text-xs font-semibold rounded-lg ${
-                          translateTarget === "hi" ? "bg-netflix-red text-white" : "text-netflix-light"
-                        }`}
-                      >
-                        हिन्दी
-                      </button>
-                    </div>
-
-                    {/* Interactive Oral Phrases */}
-                    <div className="space-y-2">
-                      <label className="text-[10px] text-netflix-light uppercase font-semibold block">
-                        దైనందిన మౌఖిక వాక్యాలు (Daily Oral Lore)
-                      </label>
-
-                      {sampleOralPhrases.map((phrase, idx) => (
-                        <div
-                          key={idx}
-                          onClick={() => setActivePhraseIndex(idx)}
-                          className={`p-3 rounded-2xl border transition-all cursor-pointer ${
-                            activePhraseIndex === idx
-                              ? "bg-white/10 border-netflix-red shadow-lg"
-                              : "bg-white/5 border-white/5 hover:border-white/20"
+                        <button
+                          onClick={() => handlePlayToggle("vr-102", "/audio/gondi_legend.wav")}
+                          className={`w-8 h-8 rounded-full flex items-center justify-center text-black font-bold shadow-md transition-transform hover:scale-105 ${
+                            playingSongId === "vr-102" ? "bg-[#00D8F6] scale-105" : "bg-[#A1FE05]"
                           }`}
                         >
-                          <div className="flex items-center justify-between text-[10px] text-cultural-gold font-bold mb-1">
-                            <span>{phrase.lang} Lore</span>
-                            <span className="text-[9px] text-netflix-light">{phrase.phonetic}</span>
-                          </div>
-                          <p className="text-xs font-bold text-white mb-1.5">{phrase.oral}</p>
+                          {playingSongId === "vr-102" ? (
+                            <Pause className="w-4 h-4 fill-current" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          )}
+                        </button>
+                      </div>
 
-                          <div className="p-2 rounded-xl bg-black/40 text-[11px] text-netflix-light border border-white/5">
-                            <span className="text-netflix-red font-bold block text-[10px] mb-0.5">అనువాదం:</span>
-                            {translateTarget === "te" ? phrase.meaningTe : phrase.meaningEn}
-                          </div>
+                      <div className="flex items-center justify-between text-[10px] pt-1 border-t border-white/10 text-neutral-300 font-mono">
+                        <span>14 MINS</span>
+                        <span className="text-[#FA114F] font-bold">890 WORDS</span>
+                        <span className="text-[#A1FE05]">SAVED</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Apple Fitness Trends Section */}
+                  <div className="space-y-2">
+                    <h3 className="text-xs font-bold text-white uppercase tracking-wider">Trends</h3>
+                    <div className="grid grid-cols-2 gap-2">
+                      <div className="p-3 rounded-2xl bg-[#1C1C1E] border border-white/10 space-y-1">
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-[#FA114F]">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          <span>WORDS / DAY</span>
+                        </div>
+                        <div className="text-sm font-black font-mono text-white">2.4k</div>
+                        <span className="text-[9px] text-neutral-400">Above daily goal</span>
+                      </div>
+
+                      <div className="p-3 rounded-2xl bg-[#1C1C1E] border border-white/10 space-y-1">
+                        <div className="flex items-center gap-1 text-[10px] font-bold text-[#A1FE05]">
+                          <TrendingUp className="w-3.5 h-3.5" />
+                          <span>LISTENING</span>
+                        </div>
+                        <div className="text-sm font-black font-mono text-white">32 min</div>
+                        <span className="text-[9px] text-neutral-400">Streak active</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Apple Fitness Awards / Badges */}
+                  <div className="p-4 rounded-3xl bg-[#1C1C1E] border border-white/10 space-y-2.5">
+                    <div className="flex items-center justify-between">
+                      <h3 className="text-xs font-bold text-white uppercase tracking-wider">Awards</h3>
+                      <span className="text-[10px] text-neutral-400">4 Unlocked</span>
+                    </div>
+
+                    <div className="flex items-center justify-between gap-2">
+                      {[
+                        { title: "7-Day", color: "text-[#FA114F]", sub: "Streak" },
+                        { title: "10k Wds", color: "text-[#A1FE05]", sub: "Preserved" },
+                        { title: "Folk Song", color: "text-[#00D8F6]", sub: "Guardian" },
+                        { title: "All 3 Rings", color: "text-amber-400", sub: "Closed" },
+                      ].map((award, i) => (
+                        <div key={i} className="flex-1 p-2 rounded-xl bg-black/60 border border-white/5 text-center">
+                          <Award className={`w-5 h-5 mx-auto mb-1 ${award.color}`} />
+                          <span className="text-[9px] font-bold block text-white truncate">{award.title}</span>
+                          <span className="text-[8px] text-neutral-400 block">{award.sub}</span>
                         </div>
                       ))}
                     </div>
                   </div>
-                )}
+                </div>
+              )}
 
-                {/* TAB 5: PROFILE */}
-                {activeTab === "profile" && (
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between pt-1">
-                      <h2 className="text-base font-bold text-white">Cultural Custodian Profile</h2>
-                      <span className="text-[10px] px-2 py-0.5 rounded-full bg-cultural-gold/20 text-cultural-gold border border-cultural-gold/30">
-                        Elder Tier
-                      </span>
-                    </div>
+              {/* TAB 2: FITNESS+ / ORAL LORE SESSIONS */}
+              {activeTab === "fitness_plus" && (
+                <div className="space-y-4">
+                  <div className="pt-1">
+                    <span className="text-[10px] font-bold text-[#A1FE05] font-mono tracking-wider uppercase">
+                      FITNESS+ ORAL ARCHIVE
+                    </span>
+                    <h2 className="text-xl font-black text-white">Audio Folk Workouts</h2>
+                  </div>
 
-                    <div className="p-4 rounded-2xl bg-white/5 border border-white/10 text-center space-y-2">
-                      <div className="w-16 h-16 rounded-full bg-gradient-to-tr from-netflix-red to-cultural-gold flex items-center justify-center text-white text-xl font-bold mx-auto shadow-netflix-glow">
-                        VR
+                  {/* Workout Sessions with Audio */}
+                  {[
+                    {
+                      id: "vr-101",
+                      title: "Monsoon Harvest & Rain Song",
+                      lang: "Telugu (Agency)",
+                      dur: "26 MIN",
+                      words: "1,240 Words",
+                      url: "/audio/harvest_song.wav",
+                    },
+                    {
+                      id: "vr-102",
+                      title: "Mountain Spring Legend",
+                      lang: "Gondi (Bastar)",
+                      dur: "14 MIN",
+                      words: "890 Words",
+                      url: "/audio/gondi_legend.wav",
+                    },
+                    {
+                      id: "vr-103",
+                      title: "Wild Turmeric Herbal Knowledge",
+                      lang: "Koya (Godavari)",
+                      dur: "10 MIN",
+                      words: "620 Words",
+                      url: "/audio/koya_remedy.wav",
+                    },
+                    {
+                      id: "vr-110",
+                      title: "Nomadic Caravan Twilight Chants",
+                      lang: "Lambadi (Deccan)",
+                      dur: "18 MIN",
+                      words: "940 Words",
+                      url: "/audio/general_folk.wav",
+                    },
+                  ].map((s) => (
+                    <div
+                      key={s.id}
+                      className="p-4 rounded-3xl bg-[#1C1C1E] border border-white/10 space-y-3 hover:border-[#A1FE05] transition-all"
+                    >
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <span className="text-[9px] font-bold text-[#00D8F6] uppercase font-mono">
+                            {s.lang}
+                          </span>
+                          <h4 className="text-sm font-bold text-white mt-0.5">{s.title}</h4>
+                          <span className="text-[10px] text-neutral-400 font-mono">
+                            {s.dur} • {s.words}
+                          </span>
+                        </div>
+
+                        <button
+                          onClick={() => handlePlayToggle(s.id, s.url)}
+                          className={`w-9 h-9 rounded-full flex items-center justify-center text-black font-bold shadow-lg transition-transform hover:scale-105 ${
+                            playingSongId === s.id ? "bg-[#00D8F6]" : "bg-[#A1FE05]"
+                          }`}
+                        >
+                          {playingSongId === s.id ? (
+                            <Pause className="w-4 h-4 fill-current" />
+                          ) : (
+                            <Play className="w-4 h-4 fill-current ml-0.5" />
+                          )}
+                        </button>
                       </div>
-                      <h3 className="text-sm font-bold text-white">Harsha • Community Custodian</h3>
-                      <p className="text-[10px] text-netflix-light">Adilabad & Godavari Basin Heritage Circle</p>
-                    </div>
 
-                    {/* Stats */}
-                    <div className="grid grid-cols-2 gap-2 text-center">
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <span className="text-[10px] text-netflix-light block">Vault Storage</span>
-                        <span className="text-xs font-bold text-white">2.14 GB / 50 GB</span>
-                      </div>
-                      <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                        <span className="text-[10px] text-netflix-light block">Oral Recordings</span>
-                        <span className="text-xs font-bold text-white">4,821 Audios</span>
+                      {/* Equalizer animation when playing */}
+                      <div className="h-6 flex items-center gap-1 px-3 bg-black/60 rounded-xl">
+                        {[40, 80, 50, 95, 60, 85, 45, 90, 70, 40, 85, 55].map((h, idx) => (
+                          <div
+                            key={idx}
+                            className={`flex-1 rounded-full transition-all ${
+                              playingSongId === s.id ? "bg-[#A1FE05] animate-pulse" : "bg-white/20"
+                            }`}
+                            style={{ height: playingSongId === s.id ? `${h}%` : "20%" }}
+                          />
+                        ))}
                       </div>
                     </div>
+                  ))}
+                </div>
+              )}
 
-                    <div className="p-3 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between text-xs">
-                      <span className="text-netflix-light">AES-256 Vault Encryption</span>
-                      <span className="text-emerald-400 font-bold text-[10px]">ACTIVE</span>
+              {/* TAB 3: DAY-TO-DAY TRANSLATE */}
+              {activeTab === "translate" && (
+                <div className="space-y-4">
+                  <div className="pt-1">
+                    <span className="text-[10px] font-bold text-[#00D8F6] font-mono tracking-wider uppercase">
+                      DAY-TO-DAY SPEECH
+                    </span>
+                    <h2 className="text-xl font-black text-white">Conversational Translator</h2>
+                  </div>
+
+                  {/* 12 Language Switcher Pills */}
+                  <div className="space-y-1.5">
+                    <span className="text-[10px] font-bold text-[#A1FE05] uppercase">
+                      Translate to (12 Languages):
+                    </span>
+                    <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar py-1">
+                      {[
+                        { code: "en", name: "English" },
+                        { code: "te", name: "తెలుగు" },
+                        { code: "hi", name: "हिन्दी" },
+                        { code: "ta", name: "தமிழ்" },
+                        { code: "kn", name: "ಕನ್ನಡ" },
+                        { code: "ml", name: "മലയാളം" },
+                        { code: "mr", name: "मराठी" },
+                        { code: "gondi", name: "గోండి" },
+                        { code: "koya", name: "కోయ" },
+                        { code: "lambadi", name: "లంబాడీ" },
+                      ].map((item) => (
+                        <button
+                          key={item.code}
+                          onClick={() => {
+                            setTargetLang(item.code);
+                            handleTranslate(sourceText, item.code);
+                          }}
+                          className={`px-3 py-1 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
+                            targetLang === item.code
+                              ? "bg-[#00D8F6] text-black shadow-[0_0_10px_#00D8F6]"
+                              : "bg-[#1C1C1E] text-neutral-300 hover:text-white"
+                          }`}
+                        >
+                          {item.name}
+                        </button>
+                      ))}
                     </div>
                   </div>
-                )}
-              </div>
 
-              {/* Bottom iOS 27 Liquid Glass Floating Capsule Bar */}
-              <div className="p-3 pt-0">
-                <div className="h-14 rounded-full bg-[#181818]/90 border border-white/20 backdrop-blur-xl shadow-2xl flex items-center justify-around px-2 relative">
-                  <div className="absolute top-0 left-6 right-6 h-[1px] bg-gradient-to-r from-transparent via-white/40 to-transparent" />
+                  {/* Input Card */}
+                  <div className="p-3.5 rounded-3xl bg-[#1C1C1E] border border-white/10 space-y-3">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-white">Daily Sentence:</span>
+                      <button
+                        onClick={() => {
+                          const options = [
+                            "బాగున్నారా? ఎలా ఉన్నారు?",
+                            "తాగడానికి మంచి నీళ్ళు ఇవ్వండి",
+                            "దీని ధర ఎంత? ఎంతకి ఇస్తారు?",
+                            "సహాయం చేయండి, జ్వరంగా ఉంది",
+                          ];
+                          const random = options[Math.floor(Math.random() * options.length)];
+                          setSourceText(random);
+                          handleTranslate(random, targetLang);
+                        }}
+                        className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-[#A1FE05] text-black text-[10px] font-bold"
+                      >
+                        <Mic className="w-3 h-3" />
+                        <span>Speak Daily</span>
+                      </button>
+                    </div>
 
-                  {/* Home Tab */}
-                  <button
-                    onClick={() => setActiveTab("home")}
-                    className={`flex flex-col items-center justify-center flex-1 transition-all ${
-                      activeTab === "home" ? "text-netflix-red scale-105" : "text-[#8e8e93] hover:text-white"
-                    }`}
-                  >
-                    <Globe className="w-4 h-4" />
-                    <span className="text-[9px] font-medium mt-0.5">Home</span>
-                  </button>
+                    <textarea
+                      rows={2}
+                      value={sourceText}
+                      onChange={(e) => {
+                        setSourceText(e.target.value);
+                        handleTranslate(e.target.value, targetLang);
+                      }}
+                      className="w-full bg-black/60 border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#00D8F6]"
+                    />
 
-                  {/* Archive Tab */}
-                  <button
-                    onClick={() => setActiveTab("archive")}
-                    className={`flex flex-col items-center justify-center flex-1 transition-all ${
-                      activeTab === "archive" ? "text-netflix-red scale-105" : "text-[#8e8e93] hover:text-white"
-                    }`}
-                  >
-                    <Library className="w-4 h-4" />
-                    <span className="text-[9px] font-medium mt-0.5">Archive</span>
-                  </button>
-
-                  {/* Central Elevated Record Button */}
-                  <button
-                    onClick={() => setActiveTab("record")}
-                    className="relative -top-3 w-11 h-11 rounded-full bg-gradient-to-tr from-netflix-red via-netflix-red-hover to-netflix-red-dark border border-white/30 flex items-center justify-center text-white shadow-netflix-glow hover:scale-110 transition-transform"
-                    title="Record Voice & Upload"
-                  >
-                    <Mic className="w-5 h-5 fill-current animate-pulse" />
-                  </button>
-
-                  {/* Translate Tab */}
-                  <button
-                    onClick={() => setActiveTab("translate")}
-                    className={`flex flex-col items-center justify-center flex-1 transition-all ${
-                      activeTab === "translate" ? "text-netflix-red scale-105" : "text-[#8e8e93] hover:text-white"
-                    }`}
-                  >
-                    <Languages className="w-4 h-4" />
-                    <span className="text-[9px] font-medium mt-0.5">Translate</span>
-                  </button>
-
-                  {/* Profile Tab */}
-                  <button
-                    onClick={() => setActiveTab("profile")}
-                    className={`flex flex-col items-center justify-center flex-1 transition-all ${
-                      activeTab === "profile" ? "text-netflix-red scale-105" : "text-[#8e8e93] hover:text-white"
-                    }`}
-                  >
-                    <User className="w-4 h-4" />
-                    <span className="text-[9px] font-medium mt-0.5">Profile</span>
-                  </button>
+                    {/* Output */}
+                    <div className="p-3 rounded-2xl bg-black/80 border border-[#00D8F6]/30 space-y-1">
+                      <div className="flex items-center justify-between text-[10px] font-bold text-[#00D8F6]">
+                        <span>TRANSLATION ({targetLang.toUpperCase()}):</span>
+                        {isTranslating && <span className="text-[#A1FE05]">Translating...</span>}
+                      </div>
+                      <p className="text-xs font-semibold text-white">{translatedText}</p>
+                    </div>
+                  </div>
                 </div>
-              </div>
+              )}
+
+              {/* TAB 4: SHARING */}
+              {activeTab === "sharing" && (
+                <div className="space-y-4">
+                  <div className="pt-1">
+                    <span className="text-[10px] font-bold text-[#FA114F] font-mono tracking-wider uppercase">
+                      COMMUNITY SHARING
+                    </span>
+                    <h2 className="text-xl font-black text-white">Sharing Activity Rings</h2>
+                  </div>
+
+                  <div className="p-4 rounded-3xl bg-[#1C1C1E] border border-white/10 space-y-3">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-2xl bg-black border border-white/20 flex items-center justify-center p-1">
+                        <Users className="w-5 h-5 text-[#A1FE05]" />
+                      </div>
+                      <div>
+                        <h4 className="text-xs font-bold text-white">Share Rings with Elders</h4>
+                        <p className="text-[10px] text-neutral-400">Preserve voices together</p>
+                      </div>
+                    </div>
+                    <p className="text-xs text-neutral-300 leading-relaxed">
+                      Compete with researchers, community schools, and oral historians to close all 3 rings every single day!
+                    </p>
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Apple Fitness Bottom Tab Bar (Iconic 4 Tabs) */}
+            <div className="absolute bottom-0 left-0 right-0 h-16 bg-[#1C1C1E]/95 backdrop-blur-xl border-t border-white/10 flex items-center justify-around px-2 z-40">
+              {/* Tab 1: Summary */}
+              <button
+                onClick={() => setActiveTab("summary")}
+                className={`flex flex-col items-center gap-1 transition-all ${
+                  activeTab === "summary" ? "text-[#FA114F]" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <div className="w-5 h-5 flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" className="w-4 h-4 fill-none stroke-current stroke-[2.2]">
+                    <circle cx="12" cy="12" r="9" />
+                    <circle cx="12" cy="12" r="6" />
+                    <circle cx="12" cy="12" r="3" />
+                  </svg>
+                </div>
+                <span className="text-[9px] font-extrabold tracking-tight">Summary</span>
+              </button>
+
+              {/* Tab 2: Fitness+ / Lore */}
+              <button
+                onClick={() => setActiveTab("fitness_plus")}
+                className={`flex flex-col items-center gap-1 transition-all ${
+                  activeTab === "fitness_plus" ? "text-[#A1FE05]" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Play className="w-4 h-4 fill-current" />
+                <span className="text-[9px] font-extrabold tracking-tight">Fitness+ Lore</span>
+              </button>
+
+              {/* Tab 3: Translate */}
+              <button
+                onClick={() => setActiveTab("translate")}
+                className={`flex flex-col items-center gap-1 transition-all ${
+                  activeTab === "translate" ? "text-[#00D8F6]" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Languages className="w-4 h-4" />
+                <span className="text-[9px] font-extrabold tracking-tight">Translate</span>
+              </button>
+
+              {/* Tab 4: Sharing */}
+              <button
+                onClick={() => setActiveTab("sharing")}
+                className={`flex flex-col items-center gap-1 transition-all ${
+                  activeTab === "sharing" ? "text-[#FA114F]" : "text-neutral-400 hover:text-white"
+                }`}
+              >
+                <Users className="w-4 h-4" />
+                <span className="text-[9px] font-extrabold tracking-tight">Sharing</span>
+              </button>
             </div>
           </div>
         </div>
 
-        {/* Right: Quick Links & Mobile App Native Launch Guide */}
-        <div className="lg:col-span-5 space-y-6">
-          {/* Quick Access Card */}
-          <div className="p-6 rounded-3xl bg-[#141414] border border-white/10 space-y-4 shadow-xl">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Globe className="w-4 h-4 text-netflix-red" />
-              <span>1. Live Websites (Web App)</span>
+        {/* Right Info: Apple Fitness Design Principles */}
+        <div className="max-w-md space-y-6">
+          <div className="space-y-2">
+            <span className="text-xs font-mono font-bold text-[#A1FE05] uppercase tracking-wider">
+              iPhone Fitness App Design Architecture
+            </span>
+            <h2 className="text-3xl font-extrabold text-white tracking-tight">
+              Closing Rings for Endangered Languages
             </h2>
-
-            <div className="space-y-2 text-xs">
-              <a
-                href="https://dee-arabia-gathered-drove.trycloudflare.com"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-netflix-red hover:bg-white/10 transition-all group"
-              >
-                <div>
-                  <span className="font-bold text-white block group-hover:text-netflix-red transition-colors">
-                    Global Cloudflare Website
-                  </span>
-                  <span className="text-[11px] text-netflix-light">Open worldwide on any device (No login needed)</span>
-                </div>
-                <ExternalLink className="w-4 h-4 text-netflix-light group-hover:text-white" />
-              </a>
-
-              <a
-                href="https://dee-arabia-gathered-drove.trycloudflare.com/translate"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-netflix-red hover:bg-white/10 transition-all group"
-              >
-                <div>
-                  <span className="font-bold text-white block group-hover:text-netflix-red transition-colors">
-                    Day-to-Day Oral Translator
-                  </span>
-                  <span className="text-[11px] text-netflix-light">Instant Telugu/English/Hindi translations</span>
-                </div>
-                <ExternalLink className="w-4 h-4 text-netflix-light group-hover:text-white" />
-              </a>
-
-              <a
-                href="https://dee-arabia-gathered-drove.trycloudflare.com/record"
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-between p-3 rounded-xl bg-white/5 border border-white/10 hover:border-netflix-red hover:bg-white/10 transition-all group"
-              >
-                <div>
-                  <span className="font-bold text-white block group-hover:text-netflix-red transition-colors">
-                    Recording & Audio Upload Studio
-                  </span>
-                  <span className="text-[11px] text-netflix-light">Upload audio files or record voice</span>
-                </div>
-                <ExternalLink className="w-4 h-4 text-netflix-light group-hover:text-white" />
-              </a>
-
-              <div className="p-3 rounded-xl bg-black/40 border border-white/5 text-[11px] text-netflix-light space-y-1">
-                <span className="text-cultural-gold font-semibold block">Local Wi-Fi Network Address:</span>
-                <code className="text-white bg-white/10 px-2 py-0.5 rounded text-[11px]">http://192.168.1.3:3000</code>
-                <p className="text-[10px] text-netflix-light pt-0.5">Open this URL directly in Chrome or Safari on your phone connected to the same Wi-Fi.</p>
-              </div>
-            </div>
+            <p className="text-sm text-neutral-400 leading-relaxed">
+              Just like Apple Fitness tracks physical health, Voice Roots tracks <strong>Linguistic Health</strong> through the 3 Activity Rings.
+            </p>
           </div>
 
-          {/* Native Mobile App Instructions */}
-          <div className="p-6 rounded-3xl bg-[#141414] border border-white/10 space-y-4 shadow-xl">
-            <h2 className="text-base font-bold text-white flex items-center gap-2">
-              <Smartphone className="w-4 h-4 text-cultural-gold" />
-              <span>2. Native Mobile App (React Native / Expo)</span>
-            </h2>
-
-            <p className="text-xs text-netflix-light leading-relaxed">
-              The native mobile app is built with <strong>React Native + Expo</strong> and styled with the <strong>iOS Spatial Liquid-Glass</strong> design language.
-            </p>
-
-            <div className="space-y-2 text-xs">
-              <div className="p-3 rounded-xl bg-black/50 border border-white/10 space-y-1.5 font-mono text-[11px]">
-                <span className="text-cultural-gold block font-sans font-bold text-xs">Run on Phone or Simulator:</span>
-                <div className="text-netflix-light"># Navigate to mobile directory</div>
-                <div className="text-white">cd mobile</div>
-                <div className="text-netflix-light"># Start Expo Metro Bundler</div>
-                <div className="text-netflix-red font-semibold">npx expo start</div>
+          <div className="space-y-3">
+            <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-[#FA114F]/30 flex items-start gap-3">
+              <div className="w-4 h-4 rounded-full bg-[#FA114F] mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="text-sm font-bold text-[#FA114F]">Move Ring — Words Preserved</h4>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Tracks how many spoken words of unwritten and endangered oral traditions are digitized each day.
+                </p>
               </div>
+            </div>
 
-              <div className="p-3 rounded-xl bg-white/5 border border-white/5 text-[11px] text-netflix-light space-y-1">
-                <span className="text-white font-semibold block">How to open on your phone:</span>
-                <ol className="list-decimal list-inside space-y-1 text-netflix-light">
-                  <li>Install <strong>Expo Go</strong> from the App Store (iOS) or Play Store (Android).</li>
-                  <li>Scan the terminal QR code using your phone camera.</li>
-                  <li>The app opens immediately with instant audio recording and translations!</li>
-                </ol>
+            <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-[#A1FE05]/30 flex items-start gap-3">
+              <div className="w-4 h-4 rounded-full bg-[#A1FE05] mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="text-sm font-bold text-[#A1FE05]">Exercise Ring — Oral Lore Minutes</h4>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Tracks time spent recording elders, listening to lossless folk melodies, and validating transcripts.
+                </p>
+              </div>
+            </div>
+
+            <div className="p-4 rounded-2xl bg-[#1C1C1E] border border-[#00D8F6]/30 flex items-start gap-3">
+              <div className="w-4 h-4 rounded-full bg-[#00D8F6] mt-1 flex-shrink-0" />
+              <div>
+                <h4 className="text-sm font-bold text-[#00D8F6]">Explore Ring — Dialects Explored</h4>
+                <p className="text-xs text-neutral-400 mt-0.5">
+                  Encourages learning across diverse linguistic families: Gondi, Koya, Lambadi, Khasi, Santali, and Bodo.
+                </p>
               </div>
             </div>
           </div>
