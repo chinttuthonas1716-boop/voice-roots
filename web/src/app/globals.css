@@ -3,66 +3,120 @@
 @tailwind utilities;
 
 :root {
-  --bg-obsidian: #0b0d0c;
-  --bg-surface: #171b19;
-  --primary-text: #f5f6f3;
-  --secondary-text: #a9b0ab;
-  --accent-root: #6faf8f;
-  --accent-leaf: #a7d7b5;
-  --accent-earth: #b89a72;
-  --accent-violet: #8f86d9;
+  --bg-obsidian: #060807;
+  --bg-obsidian-deep: #040504;
+  --color-root-emerald: #10b981;
+  --color-leaf-mint: #6ee7b7;
+  --color-ai-violet: #a78bfa;
+  --color-earth-gold: #f59e0b;
 }
 
 body {
   background-color: var(--bg-obsidian);
-  color: var(--primary-text);
-  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
+  color: #f8fafc;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", Roboto, sans-serif;
   overflow-x: hidden;
   -webkit-font-smoothing: antialiased;
+  background-image: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(16, 185, 129, 0.12), transparent),
+    radial-gradient(circle 600px at 100% 40%, rgba(167, 139, 250, 0.08), transparent),
+    radial-gradient(circle 800px at 0% 80%, rgba(245, 158, 11, 0.05), transparent);
+  background-attachment: fixed;
 }
 
-/* iOS 27 Liquid Glass & Surfaces */
-.glass-surface {
-  background: rgba(23, 27, 25, 0.65);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+/* ─── iOS 27 Liquid Glass Visual System ─────────────────────────────────── */
+.ios27-glass {
+  background: radial-gradient(120% 120% at 50% 0%, rgba(255, 255, 255, 0.09) 0%, rgba(255, 255, 255, 0.01) 100%), rgba(13, 17, 15, 0.72);
+  backdrop-filter: blur(36px) saturate(190%);
+  -webkit-backdrop-filter: blur(36px) saturate(190%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.7), inset 0 1px 1px 0 rgba(255, 255, 255, 0.2);
 }
 
-.glass-card {
-  background: rgba(255, 255, 255, 0.04);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.07);
-  transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+.ios27-floating-bar {
+  background: rgba(15, 20, 18, 0.75);
+  backdrop-filter: blur(32px) saturate(200%);
+  -webkit-backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 16px 40px -8px rgba(0, 0, 0, 0.65), inset 0 1px 1.5px 0 rgba(255, 255, 255, 0.3);
 }
 
-.glass-card:hover {
-  background: rgba(255, 255, 255, 0.07);
-  border-color: rgba(111, 175, 143, 0.35);
-  transform: translateY(-2px);
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.5);
+.ios27-pill {
+  background: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.glass-button {
-  background: rgba(111, 175, 143, 0.15);
-  border: 1px solid rgba(111, 175, 143, 0.35);
-  color: #a7d7b5;
-  backdrop-filter: blur(12px);
-  transition: all 0.2s ease;
+.ios27-pill:hover {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.25);
+  transform: translateY(-1.5px);
+  box-shadow: 0 8px 24px -4px rgba(0, 0, 0, 0.4);
 }
 
-.glass-button:hover {
-  background: rgba(111, 175, 143, 0.25);
-  border-color: rgba(111, 175, 143, 0.6);
-  color: #ffffff;
-  box-shadow: 0 0 20px -3px rgba(111, 175, 143, 0.4);
+.ios27-button-primary {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #040504;
+  font-weight: 600;
+  box-shadow: 0 8px 25px -4px rgba(16, 185, 129, 0.45), inset 0 1px 1px rgba(255, 255, 255, 0.4);
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ios27-button-primary:hover {
+  transform: translateY(-2px) scale(1.02);
+  box-shadow: 0 14px 35px -4px rgba(16, 185, 129, 0.6), inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  background: linear-gradient(135deg, #34d399 0%, #10b981 100%);
+}
+
+/* ─── Netflix Cinematic Card Zoom Animation ────────────────────────────── */
+.netflix-card-wrapper {
+  position: relative;
+  transition: transform 0.4s cubic-bezier(0.2, 0.9, 0.3, 1), z-index 0s;
+  z-index: 10;
+}
+
+.netflix-card-wrapper:hover {
+  transform: scale(1.08) translateY(-6px);
+  z-index: 40;
+}
+
+.netflix-card-surface {
+  background: linear-gradient(180deg, rgba(26, 33, 29, 0.85) 0%, rgba(13, 17, 15, 0.95) 100%);
+  backdrop-filter: blur(28px);
+  border: 1px solid rgba(255, 255, 255, 0.09);
+  border-radius: 1.25rem;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.7);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.netflix-card-wrapper:hover .netflix-card-surface {
+  border-color: rgba(52, 211, 153, 0.45);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.95), 0 0 30px -5px rgba(16, 185, 129, 0.3);
+}
+
+/* Netflix style subtle Ken Burns backdrop zoom */
+@keyframes kenburns {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.04) translateY(-1%); }
+  100% { transform: scale(1); }
+}
+
+.netflix-hero-bg {
+  animation: kenburns 22s ease-in-out infinite alternate;
+}
+
+/* ─── Equalizer Live Wave Animations ────────────────────────────────────── */
+.eq-bar {
+  border-radius: 9999px;
+  background: linear-gradient(180deg, #6ee7b7 0%, #10b981 100%);
 }
 
 /* Custom Scrollbars */
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 5px;
+  height: 5px;
 }
 
 ::-webkit-scrollbar-track {
@@ -75,10 +129,9 @@ body {
 }
 
 ::-webkit-scrollbar-thumb:hover {
-  background: rgba(255, 255, 255, 0.3);
+  background: rgba(52, 211, 153, 0.5);
 }
 
-/* Hide scrollbar for clean horizontal rows */
 .no-scrollbar::-webkit-scrollbar {
   display: none;
 }

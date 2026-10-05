@@ -367,16 +367,41 @@ export function RecordingStudio({ onSaved }: RecordingStudioProps) {
                 <select
                   value={language}
                   onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full bg-surface border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-root-green/50"
+                  className="w-full bg-surface-dark border border-white/10 rounded-xl px-4 py-2.5 text-sm text-white focus:outline-none focus:border-root-emerald/50"
                 >
-                  <option value="telugu">Telugu (తెలుగు)</option>
-                  <option value="gondi">Gondi (గోండీ / गोंडी)</option>
-                  <option value="koya">Koya (కోయ)</option>
-                  <option value="santali">Santali (ᱥᱟᱱᱛᱟᱲᱤ)</option>
-                  <option value="bhili">Bhili (भीली)</option>
-                  <option value="kannada">Kannada (ಕನ್ನಡ)</option>
-                  <option value="tamil">Tamil (தமிழ்)</option>
-                  <option value="hindi">Hindi (हिन्दी)</option>
+                  <optgroup label="Dravidian Oral Traditions">
+                    <option value="telugu">Telugu (తెలుగు)</option>
+                    <option value="gondi">Gondi (గోండీ / गोंडी)</option>
+                    <option value="koya">Koya (కోయ)</option>
+                    <option value="tulu">Tulu (ತುಳು)</option>
+                    <option value="toda">Toda (തോഡാ / Thōda)</option>
+                    <option value="kurukh">Kurukh / Oraon (कुड़ुख़)</option>
+                    <option value="kodava">Kodava (ಕೊಡವ)</option>
+                    <option value="badaga">Badaga (ಬಡಗ)</option>
+                    <option value="kannada">Kannada (ಕನ್ನಡ)</option>
+                    <option value="tamil">Tamil (தமிழ்)</option>
+                  </optgroup>
+                  <optgroup label="Austroasiatic & Munda Languages">
+                    <option value="santali">Santali (ᱥᱟᱱᱛᱟᱲᱤ)</option>
+                    <option value="ho">Ho (ᱦᱳ)</option>
+                    <option value="mundari">Mundari (ᱢᱩᱱᱰᱟᱨᱤ)</option>
+                    <option value="khasi">Khasi (Ka Ktien Khasi)</option>
+                    <option value="korku">Korku (कोरकू)</option>
+                  </optgroup>
+                  <optgroup label="Tibeto-Burman Traditions">
+                    <option value="bodo">Bodo (बर'/बड़ो)</option>
+                    <option value="garo">Garo (A·chik Ku·sik)</option>
+                    <option value="ao_naga">Ao Naga (Ao O)</option>
+                    <option value="mizo">Mizo (Mizo ṭawng)</option>
+                    <option value="lepcha">Lepcha (ᰛᰩᰵᰛᰧᰵ)</option>
+                    <option value="ladakhi">Ladakhi (ལ་དྭགས་སྐད་)</option>
+                  </optgroup>
+                  <optgroup label="Indo-Aryan & Tribal Contact">
+                    <option value="bhili">Bhili (भीली)</option>
+                    <option value="lambadi">Lambadi / Banjara (गोर बोली)</option>
+                    <option value="halbi">Halbi (हल्बी)</option>
+                    <option value="hindi">Hindi (हिन्दी)</option>
+                  </optgroup>
                 </select>
               </div>
 

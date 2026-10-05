@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import { Navbar } from "@/components/ui/Navbar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
 import { RecordingCard, RecordingCardData } from "@/components/archive/RecordingCard";
-import { Filter, Search, Sparkles, BookOpen, Mic } from "lucide-react";
+import { Search, Mic } from "lucide-react";
 import Link from "next/link";
 
 const ALL_ARCHIVE_ITEMS: RecordingCardData[] = [
@@ -57,6 +57,78 @@ const ALL_ARCHIVE_ITEMS: RecordingCardData[] = [
     confidence: 0.89,
   },
   {
+    id: "vr-105",
+    title: "Buffalo Chants and Sacred Dairy Rituals",
+    language: "Toda",
+    dialect: "Highland Pastoral Clan",
+    duration: "09:40",
+    type: "song",
+    community: "Nilgiri Pastoralists",
+    excerpt: "തോഡാ പാരമ്പര്യത്തിൽ കാട്ടുപോത്തുകളെയും പാൽശാലകളെയും പൂജിക്കുന്ന പാട്ടുകൾ...",
+    translationExcerpt: "Sacred pastoral prayer chants sung inside conical dairy temples honoring heirloom water buffalo breeds...",
+    confidence: 0.92,
+  },
+  {
+    id: "vr-106",
+    title: "Living Root Bridges Oral Engineering",
+    language: "Khasi",
+    dialect: "Sohra Variety",
+    duration: "13:10",
+    type: "traditional_knowledge",
+    community: "Cherrapunji Forest Guardians",
+    excerpt: "Ka jingshna ia ki jingkieng da ki thied dieng ha ki khlaw ba rben...",
+    translationExcerpt: "Elders narrating how aerial Ficus elastica ficus roots are guided across roaring gorges over seventy years...",
+    confidence: 0.95,
+  },
+  {
+    id: "vr-107",
+    title: "Paddofield Planting Rhythms (Bwisagu)",
+    language: "Bodo",
+    dialect: "Western Bodoland",
+    duration: "07:25",
+    type: "song",
+    community: "Kokrajhar Cultivators",
+    excerpt: "वैसागु बोथोरनि हाबा मावनाय आरो बारहुंखायाव मेथाय रोजाबनाय...",
+    translationExcerpt: "Folk chorus sung during pre-monsoon transplantation celebrating the arrival of the spring winds...",
+    confidence: 0.91,
+  },
+  {
+    id: "vr-108",
+    title: "Bhootada Kola Spirit Invocation",
+    language: "Tulu",
+    dialect: "Coastal Tulunadu",
+    duration: "15:50",
+    type: "song",
+    community: "Paddana Singers Guild",
+    excerpt: "ತುಳುನಾಡ ದೈವಾರಾಧನೆ ಪಡ್ಡಣ ಪದಗಳು ಮತ್ತು ಪುರಾಣ ಕಥೆಗಳು...",
+    translationExcerpt: "Epic oral ballads reciting the deeds of legendary protector spirits across coastal areca nut groves...",
+    confidence: 0.93,
+  },
+  {
+    id: "vr-109",
+    title: "Nomadic Embroidery Song & Caravan Tales",
+    language: "Lambadi",
+    dialect: "Telangana Tanda",
+    duration: "10:15",
+    type: "story",
+    community: "Banjara Tanda Matriarchs",
+    excerpt: "गोरमाटी कसीदाकारी और टांडा के पुराने सफर की यादें...",
+    translationExcerpt: "Oral verses describing the geometric mirror-work patterns stitched while caravans migrated along trade routes...",
+    confidence: 0.90,
+  },
+  {
+    id: "vr-110",
+    title: "Mountain Herb Gathering in High Passes",
+    language: "Ladakhi",
+    dialect: "Nubra Valley",
+    duration: "08:35",
+    type: "traditional_knowledge",
+    community: "Amchi Traditional Healers",
+    excerpt: "གངས་རིའི་སྨན་རྩྭ་འཐུ་སྟངས་དང་དུས་ཚོད་ངོས་འཛིན་གྱི་གནའ་བོའི་ཤེས་རབ...",
+    translationExcerpt: "The high-altitude gathering calendar of alpine medicinal botanicals under moonlit frost conditions...",
+    confidence: 0.94,
+  },
+  {
     id: "vr-201",
     title: "Seed Preservation in Mud Granaries",
     language: "Telugu",
@@ -80,30 +152,6 @@ const ALL_ARCHIVE_ITEMS: RecordingCardData[] = [
     translationExcerpt: "Forest apothecary practices for treating monsoon illnesses using bark extracts...",
     confidence: 0.92,
   },
-  {
-    id: "vr-203",
-    title: "Cloud Reading & Wind Signs for Sowing",
-    language: "Kannada",
-    dialect: "Deccan Plateau",
-    duration: "07:50",
-    type: "traditional_knowledge",
-    community: "Kaveri Farmers",
-    excerpt: "ಮಳೆ ಬರುವ ಮುನ್ನ ಬೀಸುವ ಗಾಳಿಯ ದಿಕ್ಕು ಮತ್ತು ಮೋಡಗಳ ಚಲನೆಯನ್ನು ಗುರುತಿಸುವುದು...",
-    translationExcerpt: "Reading seasonal wind shifts and thunder color to identify the exact morning for sowing ragi...",
-    confidence: 0.93,
-  },
-  {
-    id: "vr-301",
-    title: "Grandmother's Eclipse Tale",
-    language: "Telugu",
-    dialect: "Coastal Krishna",
-    duration: "05:18",
-    type: "story",
-    community: "Krishna Delta",
-    excerpt: "సూర్యగ్రహణం సమయంలో పాము ఆకాశాన్ని చుట్టుముట్టినట్లు ఉండే పాత కథ...",
-    translationExcerpt: "The coastal folklore describing astronomical eclipses through snake metaphors...",
-    confidence: 0.93,
-  },
 ];
 
 export default function ArchivePage() {
@@ -123,56 +171,69 @@ export default function ArchivePage() {
   });
 
   return (
-    <div className="min-h-screen bg-obsidian text-primary-text pb-24">
+    <div className="min-h-screen bg-obsidian text-text-primary pb-28">
       <Navbar />
 
-      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
+      <main className="pt-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-8">
         {/* Title */}
         <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 border-b border-white/5 pb-6">
           <div>
-            <span className="text-xs font-mono uppercase text-leaf-green">Living Language Repository</span>
-            <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight mt-1">
+            <span className="text-xs font-mono uppercase text-leaf-mint font-semibold">Living Oral Repository</span>
+            <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight mt-1">
               Digital Language Archive
             </h1>
-            <p className="text-secondary-text text-sm max-w-xl mt-1">
-              Browse 4,821 oral recordings preserved across 18 indigenous and regional linguistic traditions.
+            <p className="text-text-secondary text-sm sm:text-base max-w-2xl mt-1 leading-relaxed">
+              Explore 4,821 oral recordings preserved across 24 indigenous and regional linguistic traditions.
             </p>
           </div>
 
           <Link
             href="/record"
-            className="self-start sm:self-auto flex items-center gap-2 px-5 py-2.5 rounded-full bg-root-green text-obsidian font-semibold text-xs shadow-glow hover:scale-105 transition-all"
+            className="self-start sm:self-auto flex items-center gap-2 px-6 py-2.5 rounded-full ios27-button-primary text-xs shadow-emerald-glow"
           >
             <Mic className="w-3.5 h-3.5 fill-current" />
             <span>Contribute Voice</span>
           </Link>
         </div>
 
-        {/* Filter Controls Bar */}
-        <div className="glass-surface p-4 sm:p-5 rounded-2xl border border-white/5 space-y-4">
+        {/* Filter Controls Bar (iOS 27 Glass) */}
+        <div className="ios27-glass p-4 sm:p-6 rounded-3xl space-y-4 shadow-ios27-glass">
           {/* Search bar */}
           <div className="relative">
-            <Search className="w-4 h-4 text-secondary-text absolute left-3.5 top-1/2 -translate-y-1/2" />
+            <Search className="w-4 h-4 text-text-muted absolute left-3.5 top-1/2 -translate-y-1/2" />
             <input
               type="text"
-              placeholder="Filter by keyword, title, village name, or translated phrase..."
+              placeholder="Filter by keyword, title, village name, ritual, or translated phrase..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-secondary-text/50 focus:outline-none focus:border-root-green/50"
+              className="w-full bg-white/5 border border-white/10 rounded-xl pl-10 pr-4 py-2.5 text-xs text-white placeholder:text-text-muted focus:outline-none focus:border-root-emerald/50"
             />
           </div>
 
-          {/* Language Pills */}
+          {/* Language Pills (24 languages) */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
-            <span className="text-[11px] font-mono text-secondary-text mr-1">Language:</span>
-            {["all", "Telugu", "Gondi", "Koya", "Santali", "Bhili", "Kannada"].map((lang) => (
+            <span className="text-[11px] font-mono text-text-muted mr-1">Language:</span>
+            {[
+              "all",
+              "Telugu",
+              "Gondi",
+              "Koya",
+              "Tulu",
+              "Toda",
+              "Khasi",
+              "Bodo",
+              "Santali",
+              "Lambadi",
+              "Ladakhi",
+              "Bhili",
+            ].map((lang) => (
               <button
                 key={lang}
                 onClick={() => setSelectedLanguage(lang)}
                 className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
                   selectedLanguage.toLowerCase() === lang.toLowerCase()
-                    ? "bg-root-green text-obsidian font-semibold"
-                    : "bg-white/5 text-secondary-text hover:text-white hover:bg-white/10"
+                    ? "bg-root-emerald text-obsidian font-bold shadow-emerald-glow"
+                    : "ios27-pill text-text-secondary hover:text-white"
                 }`}
               >
                 {lang === "all" ? "All Languages" : lang}
@@ -182,9 +243,9 @@ export default function ArchivePage() {
 
           {/* Type Pills */}
           <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
-            <span className="text-[11px] font-mono text-secondary-text mr-1">Category:</span>
+            <span className="text-[11px] font-mono text-text-muted mr-1">Category:</span>
             {[
-              { id: "all", label: "All Types" },
+              { id: "all", label: "All Formats" },
               { id: "story", label: "Folk Stories" },
               { id: "song", label: "Songs & Chants" },
               { id: "traditional_knowledge", label: "Traditional Knowledge" },
@@ -195,8 +256,8 @@ export default function ArchivePage() {
                 onClick={() => setSelectedType(cat.id)}
                 className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
                   selectedType === cat.id
-                    ? "bg-leaf-green text-obsidian font-semibold"
-                    : "bg-white/5 text-secondary-text hover:text-white hover:bg-white/10"
+                    ? "bg-leaf-mint text-obsidian font-bold"
+                    : "ios27-pill text-text-secondary hover:text-white"
                 }`}
               >
                 {cat.label}
@@ -206,13 +267,13 @@ export default function ArchivePage() {
         </div>
 
         {/* Results Count */}
-        <div className="flex items-center justify-between text-xs font-mono text-secondary-text">
-          <span>Showing {filteredItems.length} preserved recordings</span>
+        <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+          <span>Showing {filteredItems.length} preserved oral recordings</span>
           <span>Verified against UNESCO Endangerment criteria</span>
         </div>
 
-        {/* Grid of Recordings */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {/* Grid of Recordings (Netflix-style Hover Zoom) */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
           {filteredItems.map((item) => (
             <div key={item.id} className="flex">
               <RecordingCard item={item} />

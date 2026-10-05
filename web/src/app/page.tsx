@@ -1,13 +1,12 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import Link from "next/link";
-import { Mic, Globe, Play, Sparkles, Shield, ArrowRight, BookOpen, Layers, Users } from "lucide-react";
+import { Mic, Globe, Play, Pause, Sparkles, Shield, ArrowRight, BookOpen, Volume2, Radio } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { ContentRow } from "@/components/archive/ContentRow";
 import { AIAssistant } from "@/components/ai/AIAssistant";
 
-// Mock datasets for Netflix-style discovery rows
 const FEATURED_STORIES = [
   {
     id: "vr-101",
@@ -128,222 +127,200 @@ const POPULAR_STORIES = [
 ];
 
 export default function HomePage() {
+  const [isPlayingHero, setIsPlayingHero] = useState(false);
+
   return (
-    <div className="min-h-screen bg-obsidian text-primary-text pb-24">
+    <div className="min-h-screen bg-obsidian text-text-primary pb-28">
       <Navbar />
 
-      {/* Hero Section — Cinematic & Spatial */}
-      <section className="relative pt-28 pb-16 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
-        {/* Ambient background glow */}
-        <div className="absolute top-10 left-1/2 -translate-x-1/2 w-[600px] h-[350px] bg-root-green/10 rounded-full blur-[120px] pointer-events-none" />
-        <div className="absolute top-40 right-10 w-[300px] h-[300px] bg-ai-violet/10 rounded-full blur-[100px] pointer-events-none" />
-
-        <div className="relative z-10 space-y-6 max-w-3xl">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/5 border border-white/10 text-leaf-green text-xs font-mono">
-            <span className="w-2 h-2 rounded-full bg-root-green animate-pulse" />
-            <span>AI-Driven Indigenous & Oral Language Preservation</span>
+      {/* Hero Section — iOS 27 Spatial & Netflix Billboard */}
+      <section className="relative pt-28 pb-12 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto overflow-hidden">
+        {/* Dynamic Island Status Capsule */}
+        <div className="flex justify-center mb-6">
+          <div className="inline-flex items-center gap-2.5 px-4 py-1.5 rounded-full ios27-pill shadow-ios27-pill text-xs font-mono">
+            <Radio className="w-3.5 h-3.5 text-root-emerald animate-pulse" />
+            <span className="text-leaf-mint font-medium">Archive Live</span>
+            <span className="text-text-muted">•</span>
+            <span className="text-text-secondary">4,821 Oral Narratives Digitized</span>
           </div>
+        </div>
 
-          <h1 className="text-4xl sm:text-6xl font-semibold tracking-tight text-white leading-[1.1]">
-            Rooting Oral Languages in <span className="text-transparent bg-clip-text bg-gradient-to-r from-leaf-green via-root-green to-ai-violet">Digital Text</span> with AI.
+        {/* Hero Title & Subtitle */}
+        <div className="text-center max-w-3xl mx-auto space-y-4">
+          <h1 className="text-4xl sm:text-6xl lg:text-7xl font-bold tracking-tight text-white leading-[1.08]">
+            Rooting Oral Languages in{" "}
+            <span className="text-transparent bg-clip-text bg-gradient-to-r from-leaf-mint via-root-emerald to-ai-violet">
+              Digital Text
+            </span>{" "}
+            with AI.
           </h1>
 
-          <p className="text-base sm:text-lg text-secondary-text max-w-2xl leading-relaxed">
-            Preserve voices. Grow languages. Transform spoken stories, conversations, dialects, and traditional knowledge into structured, searchable digital archives — without ever erasing the original human voice.
+          <p className="text-sm sm:text-lg text-text-secondary max-w-2xl mx-auto leading-relaxed">
+            Preserve voices. Grow languages. Transform spoken stories, tribal dialects, and elder memory into structured, searchable digital archives — without ever erasing the original human voice.
           </p>
 
-          <div className="flex flex-wrap items-center gap-4 pt-2">
+          {/* iOS 27 Action Buttons */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-3">
             <Link
               href="/record"
-              className="flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-root-green text-obsidian font-semibold text-sm hover:bg-leaf-green transition-all shadow-glow hover:scale-105 active:scale-95"
+              className="flex items-center gap-2 px-6 py-3 rounded-full ios27-button-primary text-sm shadow-emerald-glow"
             >
               <Mic className="w-4 h-4 fill-current" />
-              <span>Start Recording</span>
+              <span>Record a Voice</span>
             </Link>
 
             <Link
               href="/explore"
-              className="flex items-center gap-2 px-6 py-3.5 rounded-full glass-card hover:bg-white/10 text-white font-medium text-sm transition-all hover:scale-105"
+              className="flex items-center gap-2 px-6 py-3 rounded-full ios27-pill hover:bg-white/10 text-white font-medium text-sm transition-all"
             >
-              <Globe className="w-4 h-4 text-leaf-green" />
+              <Globe className="w-4 h-4 text-leaf-mint" />
               <span>Explore 18 Languages</span>
             </Link>
           </div>
         </div>
 
-        {/* Featured Title Banner (Netflix-inspired cinematic hero card) */}
-        <div className="mt-12 glass-surface p-6 sm:p-8 rounded-3xl border border-white/10 relative overflow-hidden shadow-glass">
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">
-            <div className="lg:col-span-8 space-y-3">
-              <div className="flex items-center gap-2">
-                <span className="px-2.5 py-0.5 rounded-full bg-root-green/20 border border-root-green/40 text-leaf-green text-xs font-mono">
-                  FEATURED ORAL NARRATIVE
+        {/* Netflix-style Cinematic Billboard Hero Feature Card */}
+        <div className="mt-12 rounded-3xl ios27-glass p-6 sm:p-10 relative overflow-hidden border border-white/10 shadow-ios27-glass">
+          {/* Ambient colorful backlight */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-gradient-to-bl from-root-emerald/20 via-ai-violet/10 to-transparent blur-3xl pointer-events-none" />
+          <div className="absolute bottom-0 left-0 w-80 h-80 bg-gradient-to-tr from-earth/15 to-transparent blur-3xl pointer-events-none" />
+
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center relative z-10">
+            <div className="lg:col-span-8 space-y-4">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="px-3 py-1 rounded-full bg-root-emerald/20 border border-root-emerald/40 text-leaf-mint text-xs font-mono font-semibold tracking-wider uppercase">
+                  Featured Masterwork
                 </span>
-                <span className="text-xs font-mono text-secondary-text">Telugu Tribal Dialect • 08:42</span>
+                <span className="text-xs font-mono text-text-muted">
+                  Telugu Tribal Dialect • 08:42 Duration • UNESCO Priority
+                </span>
               </div>
-              <h2 className="text-2xl sm:text-3xl font-semibold text-white">
+
+              <h2 className="text-2xl sm:text-4xl font-bold text-white tracking-tight leading-snug">
                 Traditional Harvest & Rain Song (వరి పంట సంప్రదాయ పాట)
               </h2>
-              <p className="text-sm text-secondary-text leading-relaxed line-clamp-2">
-                Recorded with community elders in the northern Agency tract. Sung antiphonally before the arrival of the monsoon season to invoke fertility and soil health.
+
+              <p className="text-sm sm:text-base text-text-secondary leading-relaxed max-w-2xl">
+                Recorded with elders in the northern Agency tract. Sung antiphonally prior to the first monsoon shower to invoke soil fertility and seed regeneration.
               </p>
-              <div className="flex items-center gap-3 pt-2">
+
+              {/* Action Buttons */}
+              <div className="flex flex-wrap items-center gap-3 pt-2">
+                <button
+                  onClick={() => setIsPlayingHero(!isPlayingHero)}
+                  className="flex items-center gap-2 px-6 py-2.5 rounded-full bg-white text-obsidian font-semibold text-xs transition-transform hover:scale-105 active:scale-95 shadow-lg"
+                >
+                  {isPlayingHero ? <Pause className="w-4 h-4 fill-current" /> : <Play className="w-4 h-4 fill-current" />}
+                  <span>{isPlayingHero ? "Pause Playback" : "Play Audio Recording"}</span>
+                </button>
+
                 <Link
                   href="/recordings/vr-101"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full bg-white text-obsidian font-semibold text-xs transition-transform hover:scale-105"
+                  className="flex items-center gap-2 px-5 py-2.5 rounded-full ios27-pill hover:bg-white/10 text-white text-xs font-medium"
                 >
-                  <Play className="w-3.5 h-3.5 fill-current" />
-                  <span>Listen to Recording</span>
-                </Link>
-                <Link
-                  href="/recordings/vr-101"
-                  className="flex items-center gap-2 px-5 py-2.5 rounded-full glass-card hover:bg-white/10 text-white text-xs font-medium"
-                >
-                  <BookOpen className="w-3.5 h-3.5 text-root-green" />
+                  <BookOpen className="w-3.5 h-3.5 text-root-glow" />
                   <span>View Verified Transcript</span>
                 </Link>
               </div>
             </div>
 
-            {/* Visualizer Art Snippet */}
-            <div className="lg:col-span-4 flex flex-col justify-center items-center p-6 rounded-2xl bg-black/40 border border-white/5 space-y-3">
-              <div className="flex items-center gap-1.5 h-16 w-full justify-center">
-                {[40, 65, 30, 85, 95, 60, 45, 75, 90, 50, 70, 35, 80, 60].map((h, i) => (
-                  <div
-                    key={i}
-                    className="w-1.5 bg-gradient-to-t from-root-green to-leaf-green rounded-full animate-wave-live"
-                    style={{
-                      height: `${h}%`,
-                      animationDelay: `${i * 0.1}s`,
-                    }}
-                  />
-                ))}
+            {/* Spatial Visualizer Art Frame */}
+            <div className="lg:col-span-4 flex flex-col justify-center items-center p-6 rounded-2xl bg-black/50 border border-white/10 space-y-4">
+              <span className="text-[11px] font-mono text-leaf-mint uppercase tracking-wider">
+                Live Acoustic Waveform
+              </span>
+
+              {/* Animated Equalizer Wave Bars */}
+              <div className="flex items-center gap-1.5 h-20 w-full justify-center">
+                {[35, 60, 25, 80, 95, 55, 40, 75, 90, 45, 65, 30, 85, 50, 70, 90, 35].map(
+                  (h, i) => (
+                    <div
+                      key={i}
+                      className="w-1.5 eq-bar animate-equalizer-1"
+                      style={{
+                        height: isPlayingHero ? `${h}%` : "20%",
+                        animationDuration: `${0.8 + (i % 4) * 0.3}s`,
+                        animationPlayState: isPlayingHero ? "running" : "paused",
+                      }}
+                    />
+                  )
+                )}
               </div>
-              <span className="text-[11px] font-mono text-secondary-text">Immutable High-Fidelity Audio + Word Timings</span>
+
+              <span className="text-[11px] font-mono text-text-muted text-center">
+                Lossless 48kHz / 24-bit PCM Archive Master
+              </span>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Global Preservation Statistics Bar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+      {/* Global Statistics Counter (iOS 27 Spatial Glass Pills) */}
+      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
         <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="glass-card p-4 rounded-2xl border border-white/5 text-center">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-white block">18</span>
-            <span className="text-xs text-secondary-text">Languages Preserved</span>
+          <div className="ios27-glass p-4 rounded-2xl text-center">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white block">18</span>
+            <span className="text-xs text-text-secondary">Languages Preserved</span>
           </div>
-          <div className="glass-card p-4 rounded-2xl border border-white/5 text-center">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-leaf-green block">4,821</span>
-            <span className="text-xs text-secondary-text">Recordings Archived</span>
+          <div className="ios27-glass p-4 rounded-2xl text-center">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-leaf-mint block">4,821</span>
+            <span className="text-xs text-text-secondary">Recordings Archived</span>
           </div>
-          <div className="glass-card p-4 rounded-2xl border border-white/5 text-center">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-earth block">1.2M</span>
-            <span className="text-xs text-secondary-text">Words Digitized</span>
+          <div className="ios27-glass p-4 rounded-2xl text-center">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-earth-gold block">1.2M</span>
+            <span className="text-xs text-text-secondary">Words Digitized</span>
           </div>
-          <div className="glass-card p-4 rounded-2xl border border-white/5 text-center">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-ai-violet block">682</span>
-            <span className="text-xs text-secondary-text">Community Contributors</span>
+          <div className="ios27-glass p-4 rounded-2xl text-center">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-ai-violet block">682</span>
+            <span className="text-xs text-text-secondary">Community Contributors</span>
           </div>
-          <div className="glass-card p-4 rounded-2xl border border-white/5 text-center col-span-2 sm:col-span-1">
-            <span className="text-2xl sm:text-3xl font-bold font-mono text-white block">347h</span>
-            <span className="text-xs text-secondary-text">Audio Preserved</span>
+          <div className="ios27-glass p-4 rounded-2xl text-center col-span-2 sm:col-span-1">
+            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white block">347h</span>
+            <span className="text-xs text-text-secondary">Audio Preserved</span>
           </div>
         </div>
       </section>
 
-      {/* Netflix-style Content Rows */}
-      <section className="space-y-10 py-8">
+      {/* Netflix Horizontal Discovery Rows with Zoom Animation */}
+      <section className="space-y-12 py-8">
         <ContentRow
           title="Voices of the Village"
-          subtitle="Recent community-contributed oral narratives and seasonal stories"
+          subtitle="Community oral narratives, seasonal celebrations, and elder songs"
           items={FEATURED_STORIES}
         />
 
         <ContentRow
           title="Traditional Knowledge & Ethno-Ecology"
-          subtitle="Agricultural wisdom, seed conservation, and native botanical remedies"
+          subtitle="Indigenous agricultural wisdom, seed conservation, and native botanical remedies"
           items={TRADITIONAL_KNOWLEDGE}
         />
 
         <ContentRow
           title="Folk Stories & Chants"
-          subtitle="Ancient oral mythologies and genealogies passed through speech"
+          subtitle="Sacred spoken mythologies and oral genealogies passed down across generations"
           items={POPULAR_STORIES}
         />
       </section>
 
-      {/* How Voice Roots Works (4-Step Pipeline) */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16">
-        <div className="text-center space-y-2 mb-12">
-          <span className="text-xs font-mono uppercase text-leaf-green">The Preservation Pipeline</span>
-          <h2 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
-            How Voice Roots Works
-          </h2>
-          <p className="text-secondary-text text-sm max-w-xl mx-auto">
-            A responsible, community-centered workflow that combines state-of-the-art open-source AI with strict human verification.
-          </p>
-        </div>
-
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          <div className="glass-surface p-6 rounded-3xl border border-white/5 space-y-3 relative group">
-            <div className="w-10 h-10 rounded-2xl bg-root-green/20 border border-root-green/40 flex items-center justify-center text-leaf-green font-mono font-bold text-sm">
-              01
-            </div>
-            <h3 className="font-semibold text-white text-lg">Speak & Consent</h3>
-            <p className="text-xs text-secondary-text leading-relaxed">
-              Record dialect conversations or folk narratives directly in the browser or mobile app. Speakers retain full consent and copyright control.
-            </p>
-          </div>
-
-          <div className="glass-surface p-6 rounded-3xl border border-white/5 space-y-3 relative group">
-            <div className="w-10 h-10 rounded-2xl bg-ai-violet/20 border border-ai-violet/40 flex items-center justify-center text-ai-violet font-mono font-bold text-sm">
-              02
-            </div>
-            <h3 className="font-semibold text-white text-lg">Understand</h3>
-            <p className="text-xs text-secondary-text leading-relaxed">
-              Open speech models (Whisper + IndicConformer) perform voice activity detection, language ID, and speech-to-text with speaker separation.
-            </p>
-          </div>
-
-          <div className="glass-surface p-6 rounded-3xl border border-white/5 space-y-3 relative group">
-            <div className="w-10 h-10 rounded-2xl bg-earth/20 border border-earth/40 flex items-center justify-center text-earth font-mono font-bold text-sm">
-              03
-            </div>
-            <h3 className="font-semibold text-white text-lg">Preserve</h3>
-            <p className="text-xs text-secondary-text leading-relaxed">
-              Original voice audio is preserved immutably alongside the AI transcript, human corrections, and IndicTrans2 multilingual translations.
-            </p>
-          </div>
-
-          <div className="glass-surface p-6 rounded-3xl border border-white/5 space-y-3 relative group">
-            <div className="w-10 h-10 rounded-2xl bg-leaf-green/20 border border-leaf-green/40 flex items-center justify-center text-leaf-green font-mono font-bold text-sm">
-              04
-            </div>
-            <h3 className="font-semibold text-white text-lg">Connect & Search</h3>
-            <p className="text-xs text-secondary-text leading-relaxed">
-              Semantic vector embeddings allow natural language search across meanings, while the RAG assistant answers cultural queries grounded in real transcripts.
-            </p>
-          </div>
-        </div>
-      </section>
-
-      {/* Model Lab Highlight for Researchers */}
+      {/* Model Lab Highlight Banner */}
       <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="glass-surface p-8 rounded-3xl border border-root-green/30 bg-gradient-to-r from-surface to-surface-raised flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="ios27-glass p-8 sm:p-10 rounded-3xl border border-root-emerald/30 bg-gradient-to-r from-surface-dark via-surface-dark to-surface-glass flex flex-col md:flex-row items-center justify-between gap-6 shadow-ios27-glass">
           <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 text-xs font-mono text-leaf-green">
+            <div className="inline-flex items-center gap-2 text-xs font-mono text-leaf-mint">
               <Sparkles className="w-3.5 h-3.5" />
-              <span>Academic Capstone & Linguistic Research Track</span>
+              <span>Voice Roots Model Lab & Linguistic Research Track</span>
             </div>
-            <h3 className="text-2xl font-semibold text-white">Voice Roots Model Lab</h3>
-            <p className="text-xs sm:text-sm text-secondary-text leading-relaxed">
-              Benchmark multilingual ASR models against consent-verified oral language datasets. Inspect real WER/CER error rates across Whisper, IndicConformer, and fine-tuned community checkpoints.
+            <h3 className="text-2xl font-bold text-white tracking-tight">
+              Benchmarking Open-Source Multilingual Models
+            </h3>
+            <p className="text-xs sm:text-sm text-text-secondary leading-relaxed">
+              Evaluating Word Error Rate (WER) and Character Error Rate (CER) across OpenAI Whisper, AI4Bharat IndicConformer, and fine-tuned community checkpoints.
             </p>
           </div>
 
           <Link
             href="/research"
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-white/10 hover:bg-white/15 text-white font-medium text-xs whitespace-nowrap border border-white/15 transition-transform hover:scale-105"
+            className="flex items-center gap-2 px-6 py-3 rounded-full ios27-button-primary text-xs whitespace-nowrap self-start md:self-auto"
           >
             <span>Open Model Lab</span>
             <ArrowRight className="w-3.5 h-3.5" />
@@ -351,7 +328,7 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Floating AI Assistant */}
+      {/* Floating Grounded AI Assistant */}
       <AIAssistant />
     </div>
   );

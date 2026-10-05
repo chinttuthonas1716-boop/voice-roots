@@ -1,18 +1,31 @@
 "use client";
 
-import React from "react";
+import React, { useState } from "react";
 import { Navbar } from "@/components/ui/Navbar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
-import { Globe, ArrowRight, Mic, BookOpen, Volume2 } from "lucide-react";
+import { Globe, ArrowRight, Sparkles, Filter, ShieldCheck } from "lucide-react";
 import Link from "next/link";
 
-const LANGUAGES_DATA = [
+export interface LanguageItem {
+  name: string;
+  nativeName: string;
+  family: "Dravidian" | "Austroasiatic" | "Tibeto-Burman" | "Indo-Aryan";
+  region: string;
+  status: string;
+  recordings: number;
+  words: string;
+  hours: string;
+  dialects: string[];
+}
+
+const LANGUAGES_DATA: LanguageItem[] = [
+  // ─── Dravidian Languages ───────────────────────────────────────────────
   {
     name: "Telugu",
     nativeName: "తెలుగు",
     family: "Dravidian",
     region: "Andhra Pradesh & Telangana",
-    status: "Active (Rich Dialectal Variation)",
+    status: "Active (Rich Dialects)",
     recordings: 1248,
     words: "84.9K",
     hours: "78.4h",
@@ -21,7 +34,7 @@ const LANGUAGES_DATA = [
   {
     name: "Gondi",
     nativeName: "గోండీ / गोंडी",
-    family: "South-Central Dravidian",
+    family: "Dravidian",
     region: "Central India (MP, Chhattisgarh, Telangana)",
     status: "Vulnerable / Under-resourced",
     recordings: 890,
@@ -41,26 +54,59 @@ const LANGUAGES_DATA = [
     dialects: ["Dora Koya", "Gutta Koya"],
   },
   {
-    name: "Santali",
-    nativeName: "ᱥᱟᱱᱛᱟᱲᱤ",
-    family: "Austroasiatic (Munda)",
-    region: "Jharkhand, Odisha, West Bengal",
-    status: "Official Recognized",
-    recordings: 532,
-    words: "38.2K",
-    hours: "42.0h",
-    dialects: ["Mayurbhanj", "Dumka"],
+    name: "Tulu",
+    nativeName: "ತುಳು",
+    family: "Dravidian",
+    region: "Coastal Karnataka & Northern Kerala (Tulunadu)",
+    status: "Vulnerable Oral Tradition",
+    recordings: 430,
+    words: "28.6K",
+    hours: "34.5h",
+    dialects: ["Common Tulu", "Brahmin Tulu", "Jain Tulu"],
   },
   {
-    name: "Bhili",
-    nativeName: "भीली",
-    family: "Indo-Aryan",
-    region: "Rajasthan, Gujarat, MP, Maharashtra",
-    status: "Under-resourced",
-    recordings: 472,
-    words: "29.4K",
-    hours: "38.5h",
-    dialects: ["Wagdi", "Rathavi", "Ahirani"],
+    name: "Toda",
+    nativeName: "തോഡാ / Thōda",
+    family: "Dravidian",
+    region: "Nilgiri Hills, Tamil Nadu",
+    status: "Critically Endangered",
+    recordings: 185,
+    words: "12.4K",
+    hours: "18.2h",
+    dialects: ["Highland Pastoral Clan Variety"],
+  },
+  {
+    name: "Kurukh (Oraon)",
+    nativeName: "कुड़ुख़ / ᱳᱨᱟᱶ",
+    family: "Dravidian",
+    region: "Chhota Nagpur Plateau (Jharkhand, Odisha, Chhattisgarh)",
+    status: "Vulnerable",
+    recordings: 340,
+    words: "22.8K",
+    hours: "27.4h",
+    dialects: ["Ranchi Kurukh", "Sambalpur Kurukh"],
+  },
+  {
+    name: "Kodava",
+    nativeName: "ಕೊಡವ ತಕ್ಕ್",
+    family: "Dravidian",
+    region: "Coorg (Kodagu), Karnataka",
+    status: "Endangered Oral Language",
+    recordings: 260,
+    words: "19.3K",
+    hours: "22.8h",
+    dialects: ["Madikeri", "Virajpet"],
+  },
+  {
+    name: "Badaga",
+    nativeName: "ಬಡಗ / Baḍaga",
+    family: "Dravidian",
+    region: "Nilgiris, Tamil Nadu",
+    status: "Endangered",
+    recordings: 210,
+    words: "16.1K",
+    hours: "19.0h",
+    dialects: ["Kotagiri", "Coonoor"],
   },
   {
     name: "Kannada",
@@ -73,96 +119,327 @@ const LANGUAGES_DATA = [
     hours: "32.8h",
     dialects: ["Kundagannada", "Havyaka", "Arebhashe"],
   },
+  {
+    name: "Tamil",
+    nativeName: "தமிழ்",
+    family: "Dravidian",
+    region: "Tamil Nadu & Puducherry",
+    status: "Active (Rich Dialects)",
+    recordings: 520,
+    words: "41.0K",
+    hours: "39.2h",
+    dialects: ["Kongu", "Tirunelveli", "Madurai Rural"],
+  },
+
+  // ─── Austroasiatic / Munda Languages ──────────────────────────────────
+  {
+    name: "Santali",
+    nativeName: "ᱥᱟᱱᱛᱟᱲᱤ",
+    family: "Austroasiatic",
+    region: "Jharkhand, Odisha, West Bengal, Assam",
+    status: "Recognized Indigenous",
+    recordings: 532,
+    words: "38.2K",
+    hours: "42.0h",
+    dialects: ["Mayurbhanj", "Dumka", "Chhota Nagpur"],
+  },
+  {
+    name: "Ho",
+    nativeName: "ᱦᱳ / Ho",
+    family: "Austroasiatic",
+    region: "Kolhan Region (Jharkhand & Odisha)",
+    status: "Vulnerable",
+    recordings: 310,
+    words: "21.4K",
+    hours: "26.1h",
+    dialects: ["Chaibasa", "Singhbhum"],
+  },
+  {
+    name: "Mundari",
+    nativeName: "ᱢᱩᱱᱰᱟᱨᱤ",
+    family: "Austroasiatic",
+    region: "Jharkhand, Odisha, Bihar",
+    status: "Vulnerable",
+    recordings: 295,
+    words: "20.1K",
+    hours: "24.6h",
+    dialects: ["Hasada", "Naguri", "Tamar"],
+  },
+  {
+    name: "Khasi",
+    nativeName: "Ka Ktien Khasi",
+    family: "Austroasiatic",
+    region: "Khasi & Jaintia Hills, Meghalaya",
+    status: "Vulnerable Oral Tradition",
+    recordings: 380,
+    words: "25.7K",
+    hours: "31.2h",
+    dialects: ["Sohra", "Maram", "War"],
+  },
+  {
+    name: "Korku",
+    nativeName: "कोरकू / Korku",
+    family: "Austroasiatic",
+    region: "Satpura Range & Melghat (MP, Maharashtra)",
+    status: "Endangered Isolate Pocket",
+    recordings: 195,
+    words: "14.2K",
+    hours: "17.8h",
+    dialects: ["Muwasi", "Bawaria"],
+  },
+
+  // ─── Tibeto-Burman Languages ──────────────────────────────────────────
+  {
+    name: "Bodo",
+    nativeName: "बर'/बड़ो",
+    family: "Tibeto-Burman",
+    region: "Bodoland, Assam & Northeast",
+    status: "Recognized Indigenous",
+    recordings: 410,
+    words: "29.8K",
+    hours: "33.4h",
+    dialects: ["Western Bodo", "Eastern Chhatgari"],
+  },
+  {
+    name: "Garo",
+    nativeName: "A·chik Ku·sik",
+    family: "Tibeto-Burman",
+    region: "Garo Hills, Meghalaya & Assam",
+    status: "Vulnerable",
+    recordings: 320,
+    words: "22.5K",
+    hours: "28.0h",
+    dialects: ["Ambeng", "Matchi", "Chibok"],
+  },
+  {
+    name: "Ao Naga",
+    nativeName: "Ao O",
+    family: "Tibeto-Burman",
+    region: "Mokokchung District, Nagaland",
+    status: "Vulnerable Oral Tradition",
+    recordings: 245,
+    words: "17.9K",
+    hours: "21.5h",
+    dialects: ["Chungli", "Mongsen"],
+  },
+  {
+    name: "Mizo",
+    nativeName: "Mizo ṭawng",
+    family: "Tibeto-Burman",
+    region: "Mizoram, Manipur, Tripura",
+    status: "Active Indigenous",
+    recordings: 390,
+    words: "28.1K",
+    hours: "32.0h",
+    dialects: ["Lushai Standard", "Ralte", "Hmar"],
+  },
+  {
+    name: "Lepcha",
+    nativeName: "ᰛᰩᰵᰛᰧᰵ / Róng",
+    family: "Tibeto-Burman",
+    region: "Sikkim & Darjeeling Hills",
+    status: "Endangered Indigenous",
+    recordings: 165,
+    words: "11.8K",
+    hours: "15.4h",
+    dialects: ["Dzongu Forest Clan", "Ilam"],
+  },
+  {
+    name: "Ladakhi",
+    nativeName: "ལ་དྭགས་སྐད་ / Bhoti",
+    family: "Tibeto-Burman",
+    region: "Ladakh (Highland Himalayas)",
+    status: "Vulnerable",
+    recordings: 275,
+    words: "18.6K",
+    hours: "23.2h",
+    dialects: ["Central Ladakhi", "Nubra", "Changthang"],
+  },
+
+  // ─── Indo-Aryan & Contact Oral Traditions ─────────────────────────────
+  {
+    name: "Bhili",
+    nativeName: "भीली",
+    family: "Indo-Aryan",
+    region: "Rajasthan, Gujarat, MP, Maharashtra",
+    status: "Under-resourced Tribal",
+    recordings: 472,
+    words: "29.4K",
+    hours: "38.5h",
+    dialects: ["Wagdi", "Rathavi", "Ahirani"],
+  },
+  {
+    name: "Lambadi (Banjara)",
+    nativeName: "गोर बोली / गोरमाटी",
+    family: "Indo-Aryan",
+    region: "Telangana, Andhra Pradesh, Karnataka, Maharashtra",
+    status: "Endangered Nomadic Oral",
+    recordings: 360,
+    words: "24.7K",
+    hours: "29.8h",
+    dialects: ["Telangana Tanda", "Karnataka Tanda"],
+  },
+  {
+    name: "Halbi",
+    nativeName: "हल्बी / Halbi",
+    family: "Indo-Aryan",
+    region: "Bastar & Dandakaranya, Chhattisgarh",
+    status: "Tribal Contact Language",
+    recordings: 315,
+    words: "21.0K",
+    hours: "25.6h",
+    dialects: ["Bastar Halbi", "Kanker"],
+  },
 ];
 
 export default function ExplorePage() {
+  const [selectedFamily, setSelectedFamily] = useState<string>("all");
+  const [searchFilter, setSearchFilter] = useState<string>("");
+
+  const filteredLanguages = LANGUAGES_DATA.filter((lang) => {
+    const matchesFamily = selectedFamily === "all" || lang.family === selectedFamily;
+    const matchesSearch =
+      searchFilter === "" ||
+      lang.name.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      lang.nativeName.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      lang.region.toLowerCase().includes(searchFilter.toLowerCase()) ||
+      lang.dialects.some((d) => d.toLowerCase().includes(searchFilter.toLowerCase()));
+    return matchesFamily && matchesSearch;
+  });
+
   return (
-    <div className="min-h-screen bg-obsidian text-primary-text pb-24">
+    <div className="min-h-screen bg-obsidian text-text-primary pb-28">
       <Navbar />
 
-      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+      <main className="pt-28 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto space-y-10">
+        {/* Header */}
         <div className="space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-root-green/10 border border-root-green/30 text-leaf-green text-xs font-mono">
-            <Globe className="w-3.5 h-3.5" />
-            <span>Preserved Language Directory</span>
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full ios27-pill text-leaf-mint text-xs font-mono">
+            <Globe className="w-3.5 h-3.5 text-root-emerald" />
+            <span>24 Preserved Indigenous & Oral Linguistic Traditions</span>
           </div>
 
-          <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight">
-            Explore Oral Linguistic Traditions
+          <h1 className="text-3xl sm:text-5xl font-bold text-white tracking-tight">
+            Explore Oral Linguistic Heritage
           </h1>
 
-          <p className="text-secondary-text text-sm sm:text-base max-w-2xl leading-relaxed">
-            Every language page contains verified folk recordings, acoustic speech samples, dialectal lexical terms, and native speaker contributions.
+          <p className="text-text-secondary text-sm sm:text-base max-w-3xl leading-relaxed">
+            Every linguistic tradition contains verified oral speech samples, unwritten dialects, seasonal folklore, and native speaker contributions across four distinct language families.
           </p>
         </div>
 
+        {/* Filter Controls (iOS 27 Glass Capsule Bar) */}
+        <div className="ios27-glass p-4 sm:p-5 rounded-2xl space-y-4 shadow-ios27-glass">
+          {/* Search bar */}
+          <div className="relative">
+            <input
+              type="text"
+              placeholder="Search by language, script, region (e.g. Bastar, Nilgiris, Ladakh, Agency)..."
+              value={searchFilter}
+              onChange={(e) => setSearchFilter(e.target.value)}
+              className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-2.5 text-xs text-white placeholder:text-text-muted focus:outline-none focus:border-root-emerald/50"
+            />
+          </div>
+
+          {/* Language Family Filter Pills */}
+          <div className="flex items-center gap-2 overflow-x-auto no-scrollbar text-xs">
+            <span className="text-[11px] font-mono text-text-muted mr-1">Family:</span>
+            {[
+              { id: "all", label: "All 24 Traditions" },
+              { id: "Dravidian", label: "Dravidian (10)" },
+              { id: "Austroasiatic", label: "Austroasiatic / Munda (5)" },
+              { id: "Tibeto-Burman", label: "Tibeto-Burman (6)" },
+              { id: "Indo-Aryan", label: "Indo-Aryan Tribal (3)" },
+            ].map((fam) => (
+              <button
+                key={fam.id}
+                onClick={() => setSelectedFamily(fam.id)}
+                className={`px-3 py-1.5 rounded-full whitespace-nowrap transition-all ${
+                  selectedFamily === fam.id
+                    ? "bg-root-emerald text-obsidian font-bold shadow-emerald-glow"
+                    : "ios27-pill text-text-secondary hover:text-white"
+                }`}
+              >
+                {fam.label}
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Languages Count & Grid */}
+        <div className="flex items-center justify-between text-xs font-mono text-text-muted">
+          <span>Showing {filteredLanguages.length} documented oral languages</span>
+          <span>Informed Consent Protocol Enforced</span>
+        </div>
+
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          {LANGUAGES_DATA.map((lang) => (
+          {filteredLanguages.map((lang) => (
             <div
               key={lang.name}
-              className="glass-card p-6 rounded-3xl border border-white/5 hover:border-root-green/30 space-y-5 flex flex-col justify-between"
+              className="netflix-card-wrapper"
             >
-              <div className="space-y-3">
-                <div className="flex items-center justify-between">
-                  <span className="text-2xl font-bold text-white">{lang.name}</span>
-                  <span className="text-lg font-serif text-leaf-green">{lang.nativeName}</span>
-                </div>
+              <div className="netflix-card-surface p-6 flex flex-col justify-between h-full space-y-5">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="text-xl font-bold text-white tracking-tight">{lang.name}</h3>
+                      <span className="text-[11px] font-mono text-root-glow">{lang.family} Family</span>
+                    </div>
+                    <span className="text-lg font-serif text-leaf-mint">{lang.nativeName}</span>
+                  </div>
 
-                <div className="space-y-1 text-xs">
-                  <div className="flex justify-between text-secondary-text">
-                    <span>Language Family:</span>
-                    <span className="text-white">{lang.family}</span>
+                  <div className="space-y-1 text-xs">
+                    <div className="flex justify-between text-text-secondary">
+                      <span>Region:</span>
+                      <span className="text-white text-right max-w-[65%] truncate">{lang.region}</span>
+                    </div>
+                    <div className="flex justify-between text-text-secondary">
+                      <span>UNESCO Status:</span>
+                      <span className="text-earth-gold font-mono">{lang.status}</span>
+                    </div>
                   </div>
-                  <div className="flex justify-between text-secondary-text">
-                    <span>Geographic Region:</span>
-                    <span className="text-white text-right max-w-[60%] truncate">{lang.region}</span>
-                  </div>
-                  <div className="flex justify-between text-secondary-text">
-                    <span>Status:</span>
-                    <span className="text-earth font-mono">{lang.status}</span>
-                  </div>
-                </div>
 
-                <div className="pt-2">
-                  <span className="text-[11px] font-mono uppercase text-secondary-text block mb-1">
-                    Recorded Dialects:
-                  </span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {lang.dialects.map((d, dIdx) => (
-                      <span
-                        key={dIdx}
-                        className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-secondary-text border border-white/5"
-                      >
-                        {d}
-                      </span>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="pt-4 border-t border-white/5 space-y-4">
-                <div className="grid grid-cols-3 text-center text-xs">
-                  <div>
-                    <span className="font-mono font-bold text-white block">{lang.recordings}</span>
-                    <span className="text-[10px] text-secondary-text">Recordings</span>
-                  </div>
-                  <div>
-                    <span className="font-mono font-bold text-leaf-green block">{lang.words}</span>
-                    <span className="text-[10px] text-secondary-text">Words</span>
-                  </div>
-                  <div>
-                    <span className="font-mono font-bold text-earth block">{lang.hours}</span>
-                    <span className="text-[10px] text-secondary-text">Audio</span>
+                  <div className="pt-2">
+                    <span className="text-[11px] font-mono uppercase text-text-muted block mb-1">
+                      Documented Dialects:
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {lang.dialects.map((d, dIdx) => (
+                        <span
+                          key={dIdx}
+                          className="px-2 py-0.5 rounded-full bg-white/5 text-[10px] text-text-secondary border border-white/5"
+                        >
+                          {d}
+                        </span>
+                      ))}
+                    </div>
                   </div>
                 </div>
 
-                <Link
-                  href={`/archive`}
-                  className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl bg-white/5 hover:bg-root-green/20 hover:text-leaf-green text-xs font-semibold text-white transition-all"
-                >
-                  <span>Explore {lang.name} Archive</span>
-                  <ArrowRight className="w-3.5 h-3.5" />
-                </Link>
+                <div className="pt-4 border-t border-white/5 space-y-4">
+                  <div className="grid grid-cols-3 text-center text-xs">
+                    <div>
+                      <span className="font-mono font-bold text-white block">{lang.recordings}</span>
+                      <span className="text-[10px] text-text-muted">Voices</span>
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-leaf-mint block">{lang.words}</span>
+                      <span className="text-[10px] text-text-muted">Words</span>
+                    </div>
+                    <div>
+                      <span className="font-mono font-bold text-earth-gold block">{lang.hours}</span>
+                      <span className="text-[10px] text-text-muted">Audio</span>
+                    </div>
+                  </div>
+
+                  <Link
+                    href={`/archive`}
+                    className="w-full flex items-center justify-center gap-1.5 py-2.5 rounded-xl ios27-pill hover:bg-root-emerald hover:text-obsidian text-xs font-semibold text-white transition-all group"
+                  >
+                    <span>Browse {lang.name} Archive</span>
+                    <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                  </Link>
+                </div>
               </div>
             </div>
           ))}
