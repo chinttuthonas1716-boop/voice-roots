@@ -5,30 +5,49 @@ import {
   View,
   SafeAreaView,
   TouchableOpacity,
-  ScrollView,
   StatusBar,
 } from "react-native";
 import { HomeScreen } from "./screens/HomeScreen";
 import { RecordScreen } from "./screens/RecordScreen";
 import { ArchiveScreen } from "./screens/ArchiveScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
+import { LoginScreen } from "./screens/LoginScreen";
 
 export default function App() {
+  const [currentUser, setCurrentUser] = useState<any | null>(null);
   const [currentTab, setCurrentTab] = useState<"home" | "record" | "archive" | "profile">("home");
+
+  // Show login screen if user is not authenticated
+  if (!currentUser) {
+    return (
+      <SafeAreaView style={styles.container}>
+        <StatusBar barStyle="light-content" backgroundColor="#141414" />
+        <LoginScreen
+          onLoginSuccess={(user) => setCurrentUser(user)}
+          onSkip={() => setCurrentUser({ name: "Community Guest", role: "guest" })}
+        />
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0B0D0C" />
+      <StatusBar barStyle="light-content" backgroundColor="#141414" />
 
       {/* Screen Content */}
       <View style={styles.screenContainer}>
         {currentTab === "home" && <HomeScreen onNavigateRecord={() => setCurrentTab("record")} />}
         {currentTab === "record" && <RecordScreen />}
         {currentTab === "archive" && <ArchiveScreen />}
-        {currentTab === "profile" && <ProfileScreen />}
+        {currentTab === "profile" && (
+          <ProfileScreen
+            user={currentUser}
+            onLogout={() => setCurrentUser(null)}
+          />
+        )}
       </View>
 
-      {/* iOS 27 Liquid Glass Bottom Bar */}
+      {/* Netflix Cinematic Glass Bottom Bar */}
       <View style={styles.tabBar}>
         <TouchableOpacity
           style={styles.tabItem}
@@ -75,7 +94,7 @@ export default function App() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#0B0D0C",
+    backgroundColor: "#141414",
   },
   screenContainer: {
     flex: 1,
@@ -83,9 +102,9 @@ const styles = StyleSheet.create({
   tabBar: {
     flexDirection: "row",
     height: 74,
-    backgroundColor: "rgba(23, 27, 25, 0.9)",
+    backgroundColor: "rgba(20, 20, 20, 0.95)",
     borderTopWidth: 1,
-    borderTopColor: "rgba(255, 255, 255, 0.08)",
+    borderTopColor: "rgba(255, 255, 255, 0.1)",
     paddingBottom: 16,
     paddingTop: 8,
     alignItems: "center",
@@ -105,24 +124,29 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     fontSize: 11,
-    color: "#A9B0AB",
+    color: "#AAAAAA",
     marginTop: 2,
     fontWeight: "500",
   },
   activeTabLabel: {
-    color: "#A7D7B5",
-    fontWeight: "600",
+    color: "#E50914",
+    fontWeight: "700",
   },
   recordCircle: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: "rgba(111, 175, 143, 0.2)",
-    borderWidth: 1,
-    borderColor: "#6FAF8F",
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: "#E50914",
+    borderWidth: 2,
+    borderColor: "#FFFFFF",
     alignItems: "center",
     justifyContent: "center",
-    marginTop: -12,
+    marginTop: -14,
+    shadowColor: "#E50914",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.6,
+    shadowRadius: 10,
+    elevation: 6,
   },
   recordIcon: {
     fontSize: 22,

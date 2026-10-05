@@ -77,8 +77,16 @@ export function Navbar() {
             </Link>
 
             <Link
+              href="/login"
+              className="hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 text-netflix-light hover:text-white text-xs font-medium transition-all"
+            >
+              <User className="w-3.5 h-3.5" />
+              <span>Sign In</span>
+            </Link>
+
+            <Link
               href="/dashboard"
-              className="w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-netflix-gray hover:text-white transition-all hover:scale-105"
+              className="sm:hidden w-8 h-8 rounded-full bg-white/5 hover:bg-white/10 border border-white/10 flex items-center justify-center text-netflix-gray hover:text-white transition-all hover:scale-105"
               title="Profile Dashboard"
             >
               <User className="w-3.5 h-3.5" />

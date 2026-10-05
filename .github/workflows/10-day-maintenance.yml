@@ -1,0 +1,85 @@
+name: 10-Day Automated Bug Fixing & Health Maintenance
+
+on:
+  schedule:
+    # Runs every 10 days at 00:00 UTC
+    - cron: '0 0 */10 * *'
+  workflow_dispatch:
+    inputs:
+      force_audit:
+        description: 'Force immediate 10-day maintenance scan'
+        required: false
+        default: 'true'
+
+permissions:
+  contents: write
+  issues: write
+  pull-requests: write
+
+jobs:
+  maintenance-and-audit:
+    name: 10-Day System Diagnostics & Bug Check
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Codebase
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: 'npm'
+          cache-dependency-path: 'web/package-lock.json'
+
+      - name: Set up Python 3.11
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+
+      - name: Install Web Dependencies
+        run: |
+          npm ci --prefix web
+
+      - name: Run Build & Type Diagnostics
+        id: build_check
+        continue-on-error: true
+        run: |
+          npm run build --prefix web
+
+      - name: Run Security & Dependency Audit
+        id: audit_check
+        continue-on-error: true
+        run: |
+          npm audit --prefix web --audit-level=moderate || true
+
+      - name: Execute 10-Day Maintenance Cycle Diagnostics
+        id: diagnostics
+        run: |
+          python3 scripts/maintenance_cycle.py --check
+
+      - name: Generate Maintenance Report & Check User Approval Status
+        run: |
+          echo "### 🛠️ 10-Day Health Maintenance Summary" >> $GITHUB_STEP_SUMMARY
+          cat MAINTENANCE.md >> $GITHUB_STEP_SUMMARY
+
+      - name: Create Approval Issue for Pending Bug Fixes
+        if: steps.build_check.outcome == 'failure' || steps.audit_check.outcome == 'failure'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            let bodyContent = "## ⚠️ 10-Day Maintenance Alert: Issues Detected\n\n";
+            bodyContent += "The automated 10-day maintenance cycle found items requiring your review and approval.\n\n";
+            if (fs.existsSync('MAINTENANCE.md')) {
+              bodyContent += fs.readFileSync('MAINTENANCE.md', 'utf8');
+            }
+            bodyContent += "\n\n### 🛡️ Approval Protocol:\nNo fixes will be merged or applied automatically. Please review the proposed changes and comment `/approve` or merge the maintenance PR to proceed.";
+            
+            await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: `[Awaiting Approval] 10-Day Maintenance & Bug Improvement Report - ${new Date().toISOString().split('T')[0]}`,
+              body: bodyContent,
+              labels: ['maintenance', 'needs-user-approval']
+            });
