@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { SpatialIcon } from "../components/SpatialIcon";
 
 export function HomeScreen({ onNavigateRecord }: { onNavigateRecord: () => void }) {
   return (
@@ -23,7 +24,7 @@ export function HomeScreen({ onNavigateRecord }: { onNavigateRecord: () => void 
       >
         <View style={styles.specularShine} />
         <View style={styles.micOrb}>
-          <Text style={{ fontSize: 32 }}>🎙️</Text>
+          <SpatialIcon name="mic" size={32} color="#FFFFFF" />
         </View>
         <Text style={styles.recordHeroText}>Tap to Record Voice</Text>
         <Text style={styles.recordHeroSub}>Instant Language Detection & AI Transcription</Text>
@@ -42,6 +43,37 @@ export function HomeScreen({ onNavigateRecord }: { onNavigateRecord: () => void 
         <View style={styles.statCapsule}>
           <Text style={[styles.statNum, { color: "#E5A93C" }]}>1.2M</Text>
           <Text style={styles.statLabel}>Words</Text>
+        </View>
+      </View>
+
+      {/* iOS 27 Spatial Feature Capabilities */}
+      <View style={styles.featuresSection}>
+        <View style={styles.sectionHeader}>
+          <View style={styles.redPillIndicator} />
+          <Text style={styles.sectionTitle}>Spatial AI Preservation Capabilities</Text>
+        </View>
+
+        <View style={styles.featureGrid}>
+          <View style={styles.featureCard}>
+            <SpatialIcon name="waveform" glassVessel glow vesselSize={44} size={20} color="#E50914" />
+            <Text style={styles.featureName}>Neural Audio</Text>
+            <Text style={styles.featureDesc}>Lossless 48kHz acoustic phonetics</Text>
+          </View>
+          <View style={styles.featureCard}>
+            <SpatialIcon name="globe" glassVessel vesselSize={44} size={20} color="#E5A93C" />
+            <Text style={styles.featureName}>24 Dialects</Text>
+            <Text style={styles.featureDesc}>Unwritten oral tradition mapping</Text>
+          </View>
+          <View style={styles.featureCard}>
+            <SpatialIcon name="shield" glassVessel vesselSize={44} size={20} color="#FFFFFF" />
+            <Text style={styles.featureName}>Sovereignty</Text>
+            <Text style={styles.featureDesc}>Clan-owned licensing & permissions</Text>
+          </View>
+          <View style={styles.featureCard}>
+            <SpatialIcon name="sparkles" glassVessel vesselSize={44} size={20} color="#E50914" />
+            <Text style={styles.featureName}>IndicTrans2</Text>
+            <Text style={styles.featureDesc}>Tribal-to-Standard language translation</Text>
+          </View>
         </View>
       </View>
 
@@ -64,7 +96,7 @@ export function HomeScreen({ onNavigateRecord }: { onNavigateRecord: () => void 
               <Text style={styles.storyMeta}>{item.lang} • {item.dur}</Text>
             </View>
             <View style={styles.playGlassBtn}>
-              <Text style={{ fontSize: 13, color: "#FFFFFF" }}>▶</Text>
+              <SpatialIcon name="play" size={13} color="#FFFFFF" />
             </View>
           </TouchableOpacity>
         ))}
@@ -250,5 +282,37 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 3 },
     shadowOpacity: 0.5,
     shadowRadius: 8,
+  },
+  featuresSection: {
+    marginBottom: 20,
+  },
+  featureGrid: {
+    flexDirection: "row",
+    flexWrap: "wrap",
+    gap: 10,
+  },
+  featureCard: {
+    width: "48%",
+    backgroundColor: "rgba(28, 28, 28, 0.72)",
+    borderRadius: 20,
+    padding: 14,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 8,
+  },
+  featureName: {
+    color: "#FFFFFF",
+    fontSize: 13,
+    fontWeight: "700",
+    marginTop: 10,
+  },
+  featureDesc: {
+    color: "#8E8E93",
+    fontSize: 10,
+    marginTop: 3,
+    lineHeight: 14,
   },
 });

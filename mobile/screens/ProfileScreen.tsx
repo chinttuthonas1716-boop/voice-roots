@@ -1,5 +1,6 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { SpatialIcon } from "../components/SpatialIcon";
 
 interface ProfileScreenProps {
   user?: any;
@@ -13,6 +14,7 @@ export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.badgePill}>
+        <SpatialIcon name="shield" size={11} color="#E50914" />
         <Text style={styles.badge}>VERIFIED CITIZEN ARCHIVIST</Text>
       </View>
 
@@ -24,8 +26,13 @@ export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
       {/* Impact Liquid Glass Card */}
       <View style={styles.glassCard}>
         <View style={styles.specularShine} />
-        <Text style={styles.cardTitle}>Your Preserved Contributions</Text>
-        <Text style={styles.metric}>24 Stories Recorded • 8.4 Hours Archived</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 10 }}>
+          <SpatialIcon name="waveform" glassVessel glow vesselSize={42} size={18} color="#E50914" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>Your Preserved Contributions</Text>
+            <Text style={styles.metric}>24 Stories Recorded • 8.4 Hours Archived</Text>
+          </View>
+        </View>
         <Text style={styles.desc}>
           All 24 recordings include formal informed consent and are accessible to linguistic researchers studying indigenous phonetic shifts.
         </Text>
@@ -33,7 +40,13 @@ export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
 
       {/* Sovereignty Card */}
       <View style={styles.glassCard}>
-        <Text style={styles.cardTitle}>Ethical Data Sovereignty</Text>
+        <View style={{ flexDirection: "row", alignItems: "center", gap: 12, marginBottom: 10 }}>
+          <SpatialIcon name="shield" glassVessel vesselSize={42} size={18} color="#E5A93C" />
+          <View style={{ flex: 1 }}>
+            <Text style={styles.cardTitle}>Ethical Data Sovereignty</Text>
+            <Text style={[styles.metric, { color: "#E5A93C" }]}>Clan-Protected Audio Ownership</Text>
+          </View>
+        </View>
         <Text style={styles.desc}>
           You retain full ownership of your oral contributions. You can revoke, unlist, or modify access permissions to your audio files at any time.
         </Text>
@@ -60,6 +73,9 @@ const styles = StyleSheet.create({
     paddingBottom: 110, // clearance for floating glass tab bar
   },
   badgePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     alignSelf: "flex-start",
     backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderWidth: 1,

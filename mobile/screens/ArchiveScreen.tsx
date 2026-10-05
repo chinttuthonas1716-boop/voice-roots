@@ -1,10 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { SpatialIcon } from "../components/SpatialIcon";
 
 export function ArchiveScreen() {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.badgePill}>
+        <SpatialIcon name="archive" size={11} color="#E50914" />
         <Text style={styles.badge}>24 ORAL TRADITIONS</Text>
       </View>
       <Text style={styles.title}>Digital Language Archive</Text>
@@ -25,7 +27,10 @@ export function ArchiveScreen() {
       ].map((item, idx) => (
         <TouchableOpacity key={idx} style={styles.glassCard} activeOpacity={0.75}>
           <View style={styles.cardHeader}>
-            <Text style={styles.langName}>{item.lang}</Text>
+            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
+              <SpatialIcon name="globe" size={16} color="#E50914" />
+              <Text style={styles.langName}>{item.lang}</Text>
+            </View>
             <View style={styles.familyPill}>
               <Text style={styles.familyText}>{item.family}</Text>
             </View>
@@ -56,6 +61,9 @@ const styles = StyleSheet.create({
     paddingBottom: 110, // clearance for floating glass tab bar
   },
   badgePill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     alignSelf: "flex-start",
     backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderWidth: 1,

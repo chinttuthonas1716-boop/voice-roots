@@ -13,10 +13,14 @@ import { RecordScreen } from "./screens/RecordScreen";
 import { ArchiveScreen } from "./screens/ArchiveScreen";
 import { ProfileScreen } from "./screens/ProfileScreen";
 import { LoginScreen } from "./screens/LoginScreen";
+import { TranslateScreen } from "./screens/TranslateScreen";
+import { SpatialIcon } from "./components/SpatialIcon";
 
 export default function App() {
   const [currentUser, setCurrentUser] = useState<any | null>(null);
-  const [currentTab, setCurrentTab] = useState<"home" | "record" | "archive" | "profile">("home");
+  const [currentTab, setCurrentTab] = useState<
+    "home" | "record" | "archive" | "translate" | "profile"
+  >("home");
 
   // Show login screen if user is not authenticated
   if (!currentUser) {
@@ -50,6 +54,7 @@ export default function App() {
         {currentTab === "home" && <HomeScreen onNavigateRecord={() => setCurrentTab("record")} />}
         {currentTab === "record" && <RecordScreen />}
         {currentTab === "archive" && <ArchiveScreen />}
+        {currentTab === "translate" && <TranslateScreen />}
         {currentTab === "profile" && (
           <ProfileScreen
             user={currentUser}
@@ -67,7 +72,11 @@ export default function App() {
             activeOpacity={0.7}
           >
             <View style={[styles.tabIconWrapper, currentTab === "home" && styles.activeTabWrapper]}>
-              <Text style={styles.tabIcon}>🏠</Text>
+              <SpatialIcon
+                name="home"
+                size={17}
+                color={currentTab === "home" ? "#E50914" : "#8E8E93"}
+              />
             </View>
             <Text style={[styles.tabLabel, currentTab === "home" && styles.activeTabLabel]}>Home</Text>
           </TouchableOpacity>
@@ -78,7 +87,11 @@ export default function App() {
             activeOpacity={0.7}
           >
             <View style={[styles.tabIconWrapper, currentTab === "archive" && styles.activeTabWrapper]}>
-              <Text style={styles.tabIcon}>📚</Text>
+              <SpatialIcon
+                name="archive"
+                size={17}
+                color={currentTab === "archive" ? "#E50914" : "#8E8E93"}
+              />
             </View>
             <Text style={[styles.tabLabel, currentTab === "archive" && styles.activeTabLabel]}>Archive</Text>
           </TouchableOpacity>
@@ -91,10 +104,26 @@ export default function App() {
           >
             <View style={styles.recordOrbOuter}>
               <View style={styles.recordOrbInner}>
-                <Text style={styles.recordIcon}>🎙️</Text>
+                <SpatialIcon name="mic" size={20} color="#FFFFFF" />
               </View>
             </View>
             <Text style={[styles.tabLabel, currentTab === "record" && styles.activeTabLabel]}>Record</Text>
+          </TouchableOpacity>
+
+          {/* Day-to-Day Translate Tab */}
+          <TouchableOpacity
+            style={styles.tabItem}
+            onPress={() => setCurrentTab("translate")}
+            activeOpacity={0.7}
+          >
+            <View style={[styles.tabIconWrapper, currentTab === "translate" && styles.activeTabWrapper]}>
+              <SpatialIcon
+                name="globe"
+                size={17}
+                color={currentTab === "translate" ? "#E50914" : "#8E8E93"}
+              />
+            </View>
+            <Text style={[styles.tabLabel, currentTab === "translate" && styles.activeTabLabel]}>Translate</Text>
           </TouchableOpacity>
 
           <TouchableOpacity
@@ -103,7 +132,11 @@ export default function App() {
             activeOpacity={0.7}
           >
             <View style={[styles.tabIconWrapper, currentTab === "profile" && styles.activeTabWrapper]}>
-              <Text style={styles.tabIcon}>👤</Text>
+              <SpatialIcon
+                name="profile"
+                size={17}
+                color={currentTab === "profile" ? "#E50914" : "#8E8E93"}
+              />
             </View>
             <Text style={[styles.tabLabel, currentTab === "profile" && styles.activeTabLabel]}>Profile</Text>
           </TouchableOpacity>

@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mic, Search, Globe, Library, Sparkles, User, Share2 } from "lucide-react";
+import { Mic, Search, Globe, Library, Sparkles, User, Share2, Languages } from "lucide-react";
 import { ShareModal } from "./ShareModal";
 
 export function Navbar() {
@@ -46,6 +46,13 @@ export function Navbar() {
             >
               <Search className="w-3.5 h-3.5 text-netflix-red" />
               <span>Semantic Search</span>
+            </Link>
+            <Link
+              href="/translate"
+              className="px-3 py-1.5 rounded-full hover:text-white hover:bg-white/10 transition-all flex items-center gap-1.5"
+            >
+              <Languages className="w-3.5 h-3.5 text-netflix-red" />
+              <span>Translate</span>
             </Link>
             <Link
               href="/research"

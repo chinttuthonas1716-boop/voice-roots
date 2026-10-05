@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from "react-native";
+import { SpatialIcon } from "../components/SpatialIcon";
 
 interface LoginScreenProps {
   onLoginSuccess: (user: any) => void;
@@ -87,19 +88,22 @@ export function LoginScreen({ onLoginSuccess, onSkip }: LoginScreenProps) {
                 style={styles.demoPill}
                 onPress={() => handleQuickDemo("contributor", "Elder Speaker")}
               >
-                <Text style={styles.demoPillText}>👴 Elder</Text>
+                <SpatialIcon name="profile" size={13} color="#FFFFFF" />
+                <Text style={styles.demoPillText}>Elder</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.demoPill}
                 onPress={() => handleQuickDemo("researcher", "Linguist")}
               >
-                <Text style={styles.demoPillText}>🔬 Linguist</Text>
+                <SpatialIcon name="sparkles" size={13} color="#E50914" />
+                <Text style={styles.demoPillText}>Linguist</Text>
               </TouchableOpacity>
               <TouchableOpacity
                 style={styles.demoPill}
                 onPress={() => handleQuickDemo("moderator", "Clan Moderator")}
               >
-                <Text style={styles.demoPillText}>🛡️ Moderator</Text>
+                <SpatialIcon name="shield" size={13} color="#E5A93C" />
+                <Text style={styles.demoPillText}>Moderator</Text>
               </TouchableOpacity>
             </View>
           </View>
@@ -110,16 +114,26 @@ export function LoginScreen({ onLoginSuccess, onSkip }: LoginScreenProps) {
               onPress={() => setAuthType("phone")}
               style={[styles.methodBtn, authType === "phone" && styles.methodBtnActive]}
             >
+              <SpatialIcon
+                name="waveform"
+                size={12}
+                color={authType === "phone" ? "#FFFFFF" : "#AAAAAA"}
+              />
               <Text style={[styles.methodText, authType === "phone" && styles.methodTextActive]}>
-                📱 Phone OTP
+                Phone OTP
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
               onPress={() => setAuthType("email")}
               style={[styles.methodBtn, authType === "email" && styles.methodBtnActive]}
             >
+              <SpatialIcon
+                name="lock"
+                size={12}
+                color={authType === "email" ? "#FFFFFF" : "#AAAAAA"}
+              />
               <Text style={[styles.methodText, authType === "email" && styles.methodTextActive]}>
-                ✉️ Email
+                Email
               </Text>
             </TouchableOpacity>
           </View>

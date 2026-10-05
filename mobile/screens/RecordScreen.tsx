@@ -1,69 +1,338 @@
 import React, { useState } from "react";
-import { StyleSheet, Text, View, TouchableOpacity } from "react-native";
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  ScrollView,
+  Platform,
+} from "react-native";
+import { SpatialIcon } from "../components/SpatialIcon";
+
+interface AudioPreset {
+  name: string;
+  lang: string;
+  dialect: string;
+  duration: string;
+  size: string;
+  originalText: string;
+  translations: {
+    te: string;
+    en: string;
+    hi: string;
+  };
+}
+
+const SAMPLE_PRESETS: AudioPreset[] = [
+  {
+    name: "gondi_elder_harvest_legend.wav",
+    lang: "Gondi",
+    dialect: "Mandla Hill Variety (Bastar)",
+    duration: "02:34",
+    size: "4.2 MB",
+    originalText:
+      "पहाड़ की चोटी पर बहने वाले झरने के पीछे हमारे पुरखों की एक पुरानी कहानी है। जब सूखा पड़ता था, तो हमारे गाँव के बुजुर्ग इस गीत को गाकर वर्षा देव को प्रसन्न करते थे।",
+    translations: {
+      te: "కొండ శిఖరంపై ప్రవహించే ఊట వెనుక మా పూర్వీకుల పురాతన కథ దాగి ఉంది. కరవు వచ్చినప్పుడు గ్రామ పెద్దలు ఈ పవిత్ర గీతాన్ని పాడి వరుణ దేవుని ప్రార్థించేవారు.",
+      en: "Behind the perennial spring flowing on the mountain peak lies an ancient tale of our ancestors. Whenever drought descended, the village elders would sing this sacred chant to invoke the rain deity.",
+      hi: "पहाड़ की चोटी पर बहने वाले झरने के पीछे हमारे पुरखों की एक प्राचीन कथा है। जब सूखा पड़ता था, तो गाँव के बुजुर्ग इस गीत को गाकर वर्षा देव को प्रसन्न करते थे।",
+    },
+  },
+  {
+    name: "koya_forest_healing_lore.mp3",
+    lang: "Koya",
+    dialect: "Godavari River Valley",
+    duration: "03:15",
+    size: "3.1 MB",
+    originalText:
+      "అడవిలో దొరికే వేప, పసుపు వేర్లతో జ్వరాలు తగ్గించే సాంప్రదాయ వైద్య విధానం. ఈ మూలికలను వర్షాకాలంలో సేకరించి ఎండబెట్టి భద్రపరుస్తాము.",
+    translations: {
+      te: "అడవిలో లభించే వేప, అడవి పసుపు వేర్లతో జ్వరాలను నయం చేసే సాంప్రదాయ వైద్య జ్ఞానం. వీటిని పెద్దల ఆశీస్సులతో సేకరించి భద్రపరుస్తారు.",
+      en: "How wild neem and indigenous turmeric roots are formulated into seasonal fever remedies. These herbs are gathered during early monsoons and dried according to clan protocols.",
+      hi: "जंगल में मिलने वाले नीम और हल्दी की जड़ों से मौसमी बुखार का इलाज करने का पारंपरिक ज्ञान। इन जड़ी-बूटियों को मानसून के शुरू में इकट्ठा करके सुखाया जाता है।",
+    },
+  },
+  {
+    name: "khasi_living_root_bridges.m4a",
+    lang: "Khasi",
+    dialect: "Sohra Valley (Cherrapunji)",
+    duration: "04:10",
+    size: "5.8 MB",
+    originalText:
+      "Ka jingshna ia ki jingkieng da ki thied dieng ha ki khlaw ba rben. Ki kpa tymmen ki la hikai ia ngi ban pyniaid ia ki thied Ficus elastica ban long jingkieng.",
+    translations: {
+      te: "నదుల మీదుగా మర్రి వేర్లను డెబ్బై ఏళ్ల పాటు పెంచి శతాబ్దాల పాటు నిలిచే సజీవ వేరు వంతెనలను నిర్మించే సాంప్రదాయ ఖాసీ ఇంజనీరింగ్ జ్ఞానం.",
+      en: "Elders narrating how aerial Ficus elastica roots are guided across roaring gorges over seventy years to create living bridges that endure for centuries.",
+      hi: "बुजुर्ग बताते हैं कि कैसे जीवित फिकस पेड़ों की जड़ों को गहरी घाटियों के पार निर्देशित कर ऐसे जीवित पुल बनाए जाते हैं जो सदियों तक टिकते हैं।",
+    },
+  },
+];
 
 export function RecordScreen() {
+  const [mode, setMode] = useState<"record" | "upload">("upload");
   const [isRecording, setIsRecording] = useState(false);
+  const [selectedPreset, setSelectedPreset] = useState<AudioPreset>(SAMPLE_PRESETS[0]);
+  const [targetLang, setTargetLang] = useState<"te" | "en" | "hi">("te");
+  const [isTranslating, setIsTranslating] = useState(false);
+  const [translatedResult, setTranslatedResult] = useState<string | null>(
+    SAMPLE_PRESETS[0].translations.te
+  );
+  const [savedSuccess, setSavedSuccess] = useState(false);
 
   const toggleRecord = () => {
-    setIsRecording(!isRecording);
+    if (!isRecording) {
+      setIsRecording(true);
+      setTranslatedResult(null);
+    } else {
+      setIsRecording(false);
+      // Auto translate recorded audio
+      runTranslation(targetLang, selectedPreset);
+    }
+  };
+
+  const handleSelectPreset = (preset: AudioPreset) => {
+    setSelectedPreset(preset);
+    runTranslation(targetLang, preset);
+  };
+
+  const runTranslation = (lang: "te" | "en" | "hi", preset: AudioPreset) => {
+    setIsTranslating(true);
+    setSavedSuccess(false);
+    setTimeout(() => {
+      setTranslatedResult(preset.translations[lang]);
+      setIsTranslating(false);
+    }, 450);
+  };
+
+  const handleLangChange = (lang: "te" | "en" | "hi") => {
+    setTargetLang(lang);
+    runTranslation(lang, selectedPreset);
   };
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       {/* Header Info */}
       <View style={styles.topInfo}>
         <View style={styles.pillBadge}>
-          <Text style={styles.badge}>CONSENT VERIFIED</Text>
+          <SpatialIcon name="shield" size={11} color="#E50914" />
+          <Text style={styles.badge}>AI ORAL TRANSLATION ENGINE</Text>
         </View>
-        <Text style={styles.title}>Live Oral Voice Capture</Text>
+        <Text style={styles.title}>Audio Upload & Translation</Text>
         <Text style={styles.sub}>
-          Lossless 48kHz acoustic capture. Original human voice is permanently protected.
+          Upload oral audio or record your voice. Instant translation in Telugu, English & Hindi.
         </Text>
       </View>
 
-      {/* Spatial Visualizer Liquid Glass Center */}
-      <View style={styles.visualizerGlassBox}>
-        <View style={styles.specularShine} />
+      {/* Mode Switcher: Record vs Upload */}
+      <View style={styles.modeContainer}>
+        <TouchableOpacity
+          style={[styles.modeTab, mode === "upload" && styles.modeTabActive]}
+          onPress={() => setMode("upload")}
+          activeOpacity={0.8}
+        >
+          <SpatialIcon
+            name="archive"
+            size={14}
+            color={mode === "upload" ? "#FFFFFF" : "#8E8E93"}
+          />
+          <Text style={[styles.modeTabText, mode === "upload" && styles.modeTabTextActive]}>
+            Upload Audio File
+          </Text>
+        </TouchableOpacity>
 
-        <Text style={styles.timer}>
-          {isRecording ? "00:02:41" : "00:00:00"}
-        </Text>
+        <TouchableOpacity
+          style={[styles.modeTab, mode === "record" && styles.modeTabActive]}
+          onPress={() => setMode("record")}
+          activeOpacity={0.8}
+        >
+          <SpatialIcon
+            name="mic"
+            size={14}
+            color={mode === "record" ? "#FFFFFF" : "#8E8E93"}
+          />
+          <Text style={[styles.modeTabText, mode === "record" && styles.modeTabTextActive]}>
+            Record Live Voice
+          </Text>
+        </TouchableOpacity>
+      </View>
 
-        <View style={styles.waveformContainer}>
-          {[30, 60, 90, 45, 80, 100, 60, 40, 75, 95, 50, 85, 30, 65, 45].map((h, i) => (
-            <View
-              key={i}
-              style={[
-                styles.waveBar,
-                { height: isRecording ? `${h}%` : "15%" },
-                isRecording && styles.activeWave,
-              ]}
-            />
-          ))}
+      {/* Target Language Switcher */}
+      <View style={styles.targetLangSection}>
+        <Text style={styles.sectionLabel}>TRANSLATE AUDIO TO (అనువాదం):</Text>
+        <View style={styles.langPillsRow}>
+          <TouchableOpacity
+            style={[styles.langPill, targetLang === "te" && styles.langPillActive]}
+            onPress={() => handleLangChange("te")}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.langPillText, targetLang === "te" && styles.langPillTextActive]}>
+              తెలుగు (Telugu)
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.langPill, targetLang === "en" && styles.langPillActive]}
+            onPress={() => handleLangChange("en")}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.langPillText, targetLang === "en" && styles.langPillTextActive]}>
+              English
+            </Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity
+            style={[styles.langPill, targetLang === "hi" && styles.langPillActive]}
+            onPress={() => handleLangChange("hi")}
+            activeOpacity={0.8}
+          >
+            <Text style={[styles.langPillText, targetLang === "hi" && styles.langPillTextActive]}>
+              हिन्दी (Hindi)
+            </Text>
+          </TouchableOpacity>
         </View>
+      </View>
 
-        <View style={styles.statusPill}>
-          <View style={[styles.statusDot, isRecording && styles.statusDotRecording]} />
-          <Text style={styles.statusLabel}>
-            {isRecording ? "RECORDING LIVE AUDIO" : "READY TO RECORD"}
+      {/* MODE 1: UPLOAD AUDIO FILES */}
+      {mode === "upload" && (
+        <View style={styles.uploadSection}>
+          <Text style={styles.sectionLabel}>SELECT AUDIO FILE TO TRANSLATE:</Text>
+
+          {SAMPLE_PRESETS.map((preset, idx) => {
+            const isSelected = selectedPreset.name === preset.name;
+            return (
+              <TouchableOpacity
+                key={idx}
+                style={[styles.presetCard, isSelected && styles.presetCardSelected]}
+                onPress={() => handleSelectPreset(preset)}
+                activeOpacity={0.8}
+              >
+                <View style={styles.presetTop}>
+                  <SpatialIcon
+                    name="waveform"
+                    glassVessel
+                    glow={isSelected}
+                    vesselSize={38}
+                    size={16}
+                    color={isSelected ? "#E50914" : "#FFFFFF"}
+                  />
+                  <View style={{ flex: 1, marginLeft: 12 }}>
+                    <Text style={[styles.presetName, isSelected && { color: "#FFFFFF" }]}>
+                      {preset.name}
+                    </Text>
+                    <Text style={styles.presetMeta}>
+                      {preset.lang} • {preset.duration} • {preset.size}
+                    </Text>
+                  </View>
+                  <View style={[styles.checkCircle, isSelected && styles.checkCircleActive]}>
+                    <Text style={{ color: "#FFFFFF", fontSize: 10, fontWeight: "bold" }}>
+                      {isSelected ? "✓" : ""}
+                    </Text>
+                  </View>
+                </View>
+              </TouchableOpacity>
+            );
+          })}
+        </View>
+      )}
+
+      {/* MODE 2: LIVE VOICE RECORDING */}
+      {mode === "record" && (
+        <View style={styles.visualizerGlassBox}>
+          <View style={styles.specularShine} />
+
+          <Text style={styles.timer}>{isRecording ? "00:02:41" : "00:00:00"}</Text>
+
+          <View style={styles.waveformContainer}>
+            {[30, 60, 90, 45, 80, 100, 60, 40, 75, 95, 50, 85, 30, 65, 45].map((h, i) => (
+              <View
+                key={i}
+                style={[
+                  styles.waveBar,
+                  { height: isRecording ? `${h}%` : "15%" },
+                  isRecording && styles.activeWave,
+                ]}
+              />
+            ))}
+          </View>
+
+          <TouchableOpacity
+            onPress={toggleRecord}
+            style={[styles.bigRecordButton, isRecording && styles.recordingActiveBtn]}
+            activeOpacity={0.85}
+          >
+            {isRecording ? (
+              <View style={{ width: 24, height: 24, backgroundColor: "#FFFFFF", borderRadius: 4 }} />
+            ) : (
+              <SpatialIcon name="mic" size={32} color="#FFFFFF" />
+            )}
+          </TouchableOpacity>
+
+          <Text style={styles.recordInstruction}>
+            {isRecording ? "Tap Stop to Finish & Translate" : "Tap to Record Voice for Translation"}
           </Text>
         </View>
-      </View>
+      )}
 
-      {/* Action Button */}
-      <View style={styles.controlBox}>
-        <TouchableOpacity
-          onPress={toggleRecord}
-          style={[styles.bigRecordButton, isRecording && styles.recordingActiveBtn]}
-          activeOpacity={0.85}
-        >
-          <Text style={{ fontSize: 30, color: "#FFFFFF" }}>{isRecording ? "⏹" : "🎙️"}</Text>
-        </TouchableOpacity>
-        <Text style={styles.btnInstruction}>
-          {isRecording ? "Tap to Finish & Save Recording" : "Tap to Begin Recording"}
-        </Text>
+      {/* TRANSLATION OUTPUT RESULT CARD */}
+      <View style={styles.translationGlassCard}>
+        <View style={styles.specularShine} />
+
+        <View style={styles.resultHeader}>
+          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
+            <SpatialIcon name="sparkles" size={14} color="#E50914" />
+            <Text style={styles.resultTitle}>
+              TRANSLATION ({targetLang === "te" ? "తెలుగు" : targetLang === "en" ? "ENGLISH" : "HINDI"})
+            </Text>
+          </View>
+          <Text style={styles.modelTag}>IndicTrans2 AI</Text>
+        </View>
+
+        {isTranslating ? (
+          <View style={styles.loadingBox}>
+            <Text style={styles.loadingText}>Translating audio speech with AI...</Text>
+          </View>
+        ) : (
+          <>
+            {/* Original Spoken Text */}
+            <View style={styles.speechBox}>
+              <Text style={styles.boxLabel}>ORIGINAL SPOKEN SPEECH ({selectedPreset.lang}):</Text>
+              <Text style={styles.originalSpeechText}>{selectedPreset.originalText}</Text>
+            </View>
+
+            {/* Translated Output */}
+            <View style={styles.translatedBox}>
+              <Text style={[styles.boxLabel, { color: "#E5A93C" }]}>
+                TRANSLATED SPEECH ({targetLang === "te" ? "తెలుగు అనువాదం" : targetLang.toUpperCase()}):
+              </Text>
+              <Text style={styles.translatedSpeechText}>{translatedResult}</Text>
+            </View>
+
+            {/* Action Bar: Listen & Save */}
+            <View style={styles.cardActions}>
+              <TouchableOpacity
+                style={styles.listenBtn}
+                onPress={() => alert(`Playing audio in ${selectedPreset.lang}`)}
+                activeOpacity={0.8}
+              >
+                <SpatialIcon name="play" size={12} color="#FFFFFF" />
+                <Text style={styles.listenBtnText}>Listen Audio</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={[styles.saveBtn, savedSuccess && styles.saveBtnSuccess]}
+                onPress={() => setSavedSuccess(true)}
+                activeOpacity={0.8}
+              >
+                <SpatialIcon name="shield" size={12} color="#FFFFFF" />
+                <Text style={styles.saveBtnText}>
+                  {savedSuccess ? "Saved in Archive ✓" : "Save to Archive"}
+                </Text>
+              </TouchableOpacity>
+            </View>
+          </>
+        )}
       </View>
-    </View>
+    </ScrollView>
   );
 }
 
@@ -71,15 +340,19 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: "#141414",
-    paddingHorizontal: 20,
+  },
+  content: {
+    paddingHorizontal: 18,
     paddingTop: 12,
     paddingBottom: 110, // clearance for floating glass tab bar
-    justifyContent: "space-between",
   },
   topInfo: {
-    marginTop: 8,
+    marginBottom: 14,
   },
   pillBadge: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
     alignSelf: "flex-start",
     backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderWidth: 1,
@@ -108,19 +381,123 @@ const styles = StyleSheet.create({
     marginTop: 4,
     lineHeight: 16,
   },
+  modeContainer: {
+    flexDirection: "row",
+    backgroundColor: "rgba(0, 0, 0, 0.6)",
+    borderRadius: 99,
+    padding: 3,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  modeTab: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    paddingVertical: 10,
+    borderRadius: 99,
+  },
+  modeTabActive: {
+    backgroundColor: "#E50914",
+  },
+  modeTabText: {
+    color: "#8E8E93",
+    fontSize: 11,
+    fontWeight: "600",
+  },
+  modeTabTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  targetLangSection: {
+    marginBottom: 16,
+  },
+  sectionLabel: {
+    fontSize: 10,
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+    color: "#8E8E93",
+    marginBottom: 8,
+    letterSpacing: 0.5,
+  },
+  langPillsRow: {
+    flexDirection: "row",
+    gap: 8,
+  },
+  langPill: {
+    flex: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
+    paddingVertical: 8,
+    borderRadius: 12,
+    alignItems: "center",
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  langPillActive: {
+    backgroundColor: "rgba(229, 9, 20, 0.2)",
+    borderColor: "#E50914",
+  },
+  langPillText: {
+    fontSize: 11,
+    color: "#8E8E93",
+    fontWeight: "600",
+  },
+  langPillTextActive: {
+    color: "#FFFFFF",
+    fontWeight: "700",
+  },
+  uploadSection: {
+    marginBottom: 16,
+  },
+  presetCard: {
+    backgroundColor: "rgba(28, 28, 28, 0.75)",
+    borderRadius: 18,
+    padding: 12,
+    marginBottom: 8,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.1)",
+  },
+  presetCardSelected: {
+    borderColor: "rgba(229, 9, 20, 0.6)",
+    backgroundColor: "rgba(35, 25, 25, 0.85)",
+  },
+  presetTop: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
+  presetName: {
+    fontSize: 12,
+    fontWeight: "700",
+    color: "#E5E5E5",
+  },
+  presetMeta: {
+    fontSize: 10,
+    color: "#8E8E93",
+    marginTop: 2,
+    fontFamily: "monospace",
+  },
+  checkCircle: {
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.2)",
+    alignItems: "center",
+    justifyContent: "center",
+  },
+  checkCircleActive: {
+    backgroundColor: "#E50914",
+    borderColor: "#E50914",
+  },
   visualizerGlassBox: {
     backgroundColor: "rgba(32, 32, 32, 0.72)",
-    borderRadius: 28,
-    padding: 24,
+    borderRadius: 24,
+    padding: 20,
     alignItems: "center",
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.14)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.85,
-    shadowRadius: 24,
-    position: "relative",
-    overflow: "hidden",
+    marginBottom: 16,
   },
   specularShine: {
     position: "absolute",
@@ -131,81 +508,158 @@ const styles = StyleSheet.create({
     backgroundColor: "rgba(255, 255, 255, 0.3)",
   },
   timer: {
-    fontSize: 36,
+    fontSize: 28,
     fontWeight: "800",
     fontFamily: "monospace",
     color: "#FFFFFF",
-    marginBottom: 24,
+    marginBottom: 16,
   },
   waveformContainer: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "center",
     gap: 5,
-    height: 70,
+    height: 48,
     width: "100%",
+    marginBottom: 18,
   },
   waveBar: {
-    width: 6,
-    borderRadius: 3,
+    width: 5,
+    borderRadius: 2.5,
     backgroundColor: "rgba(255, 255, 255, 0.15)",
   },
   activeWave: {
     backgroundColor: "#E50914",
   },
-  statusPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    backgroundColor: "rgba(0, 0, 0, 0.5)",
-    paddingHorizontal: 14,
-    paddingVertical: 6,
-    borderRadius: 99,
-    marginTop: 24,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
-  },
-  statusDot: {
-    width: 6,
-    height: 6,
-    borderRadius: 3,
-    backgroundColor: "#AAAAAA",
-    marginRight: 6,
-  },
-  statusDotRecording: {
-    backgroundColor: "#E50914",
-  },
-  statusLabel: {
-    fontSize: 10,
-    color: "#FFFFFF",
-    fontWeight: "700",
-    fontFamily: "monospace",
-    letterSpacing: 0.8,
-  },
-  controlBox: {
-    alignItems: "center",
-    marginBottom: 10,
-  },
   bigRecordButton: {
-    width: 84,
-    height: 84,
-    borderRadius: 42,
+    width: 68,
+    height: 68,
+    borderRadius: 34,
     backgroundColor: "#E50914",
     alignItems: "center",
     justifyContent: "center",
     shadowColor: "#E50914",
-    shadowOffset: { width: 0, height: 8 },
+    shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.65,
-    shadowRadius: 20,
-    elevation: 10,
+    shadowRadius: 16,
+    elevation: 8,
   },
   recordingActiveBtn: {
     backgroundColor: "#B81D24",
     transform: [{ scale: 1.05 }],
   },
-  btnInstruction: {
+  recordInstruction: {
+    fontSize: 11,
     color: "#AAAAAA",
+    marginTop: 10,
+  },
+  translationGlassCard: {
+    backgroundColor: "rgba(26, 26, 26, 0.85)",
+    borderRadius: 22,
+    padding: 18,
+    borderWidth: 1,
+    borderColor: "rgba(229, 9, 20, 0.35)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.7,
+    shadowRadius: 16,
+  },
+  resultHeader: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    marginBottom: 12,
+  },
+  resultTitle: {
     fontSize: 12,
-    marginTop: 12,
-    fontWeight: "500",
+    fontWeight: "800",
+    color: "#E50914",
+    letterSpacing: 0.5,
+  },
+  modelTag: {
+    fontSize: 10,
+    color: "#E5A93C",
+    fontFamily: "monospace",
+  },
+  loadingBox: {
+    paddingVertical: 30,
+    alignItems: "center",
+  },
+  loadingText: {
+    fontSize: 12,
+    color: "#AAAAAA",
+  },
+  speechBox: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 10,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.08)",
+  },
+  boxLabel: {
+    fontSize: 9,
+    fontFamily: Platform.OS === "ios" ? "Courier" : "monospace",
+    color: "#8E8E93",
+    marginBottom: 4,
+    fontWeight: "700",
+  },
+  originalSpeechText: {
+    fontSize: 12,
+    color: "#E5E5E5",
+    lineHeight: 18,
+  },
+  translatedBox: {
+    backgroundColor: "rgba(0, 0, 0, 0.5)",
+    padding: 12,
+    borderRadius: 14,
+    marginBottom: 14,
+    borderWidth: 1,
+    borderColor: "rgba(229, 169, 60, 0.25)",
+  },
+  translatedSpeechText: {
+    fontSize: 13,
+    color: "#FFFFFF",
+    fontWeight: "600",
+    lineHeight: 20,
+  },
+  cardActions: {
+    flexDirection: "row",
+    gap: 10,
+  },
+  listenBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    paddingVertical: 10,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "rgba(255, 255, 255, 0.12)",
+  },
+  listenBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
+  },
+  saveBtn: {
+    flex: 1,
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "center",
+    gap: 6,
+    backgroundColor: "#E50914",
+    paddingVertical: 10,
+    borderRadius: 12,
+  },
+  saveBtnSuccess: {
+    backgroundColor: "#2E7D32",
+  },
+  saveBtnText: {
+    color: "#FFFFFF",
+    fontSize: 11,
+    fontWeight: "700",
   },
 });
