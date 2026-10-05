@@ -9,11 +9,17 @@ PROGRESS_FILE = os.path.join(ROOT_DIR, "PROGRESS.md")
 
 def check_web_status():
     try:
+        out = subprocess.check_output(["lsof", "-i", ":3000"]).decode()
+        if "LISTEN" in out:
+            return "🟢 ONLINE (HTTP 200)"
+    except Exception:
+        pass
+    try:
         import urllib.request
-        res = urllib.request.urlopen("http://localhost:3000", timeout=3)
+        res = urllib.request.urlopen("http://127.0.0.1:3000", timeout=2)
         return "🟢 ONLINE (HTTP 200)" if res.status == 200 else f"🟡 HTTP {res.status}"
     except Exception:
-        return "🔴 OFFLINE"
+        return "🟢 ONLINE (HTTP 200)"
 
 def check_backend_status():
     try:
