@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Mic, Search, Globe, Library, Sparkles, User, Share2, Languages, Smartphone } from "lucide-react";
+import { Mic, Search, Globe, Library, Sparkles, User, Share2, Languages, Smartphone, Upload } from "lucide-react";
 import { ShareModal } from "./ShareModal";
 
 export function Navbar() {
@@ -81,6 +81,15 @@ export function Navbar() {
               <Share2 className="w-3.5 h-3.5" />
               <span className="hidden sm:inline">Share</span>
             </button>
+
+            <Link
+              href="/upload"
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/10 hover:bg-white/20 border border-white/10 text-netflix-light hover:text-white text-xs font-medium transition-all hover:scale-105"
+              title="Upload Audio & Documents"
+            >
+              <Upload className="w-3.5 h-3.5 text-netflix-red" />
+              <span>Upload</span>
+            </Link>
 
             <Link
               href="/record"
