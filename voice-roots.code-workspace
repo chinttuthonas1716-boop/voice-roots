@@ -1,0 +1,38 @@
+{
+  "folders": [
+    {
+      "name": "🌱 Voice Roots (Root)",
+      "path": "."
+    },
+    {
+      "name": "🌐 Web (Next.js)",
+      "path": "web"
+    },
+    {
+      "name": "⚙️ Backend (FastAPI)",
+      "path": "backend"
+    },
+    {
+      "name": "📱 Mobile (React Native)",
+      "path": "mobile"
+    },
+    {
+      "name": "🧠 AI & ML",
+      "path": "ai"
+    }
+  ],
+  "settings": {
+    "files.exclude": {
+      "**/.git": true,
+      "**/.DS_Store": true,
+      "**/__pycache__": true,
+      "**/.pytest_cache": true,
+      "**/node_modules": false
+    },
+    "python.analysis.extraPaths": [
+      "${workspaceFolder}/backend"
+    ],
+    "editor.formatOnSave": true,
+    "editor.tabSize": 2
+  }
+}
