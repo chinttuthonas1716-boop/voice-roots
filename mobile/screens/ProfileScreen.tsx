@@ -13,7 +13,7 @@ export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
       <View style={styles.badgePill}>
-        <Text style={styles.badge}>VERIFIED PROFILE</Text>
+        <Text style={styles.badge}>VERIFIED CITIZEN ARCHIVIST</Text>
       </View>
 
       <Text style={styles.title}>{userName}</Text>
@@ -21,8 +21,9 @@ export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
         {userRole.toUpperCase()} • VOICE ROOTS ARCHIVE
       </Text>
 
-      {/* Impact Card */}
-      <View style={styles.card}>
+      {/* Impact Liquid Glass Card */}
+      <View style={styles.glassCard}>
+        <View style={styles.specularShine} />
         <Text style={styles.cardTitle}>Your Preserved Contributions</Text>
         <Text style={styles.metric}>24 Stories Recorded • 8.4 Hours Archived</Text>
         <Text style={styles.desc}>
@@ -31,7 +32,7 @@ export function ProfileScreen({ user, onLogout }: ProfileScreenProps) {
       </View>
 
       {/* Sovereignty Card */}
-      <View style={styles.card}>
+      <View style={styles.glassCard}>
         <Text style={styles.cardTitle}>Ethical Data Sovereignty</Text>
         <Text style={styles.desc}>
           You retain full ownership of your oral contributions. You can revoke, unlist, or modify access permissions to your audio files at any time.
@@ -54,29 +55,32 @@ const styles = StyleSheet.create({
     backgroundColor: "#141414",
   },
   content: {
-    padding: 20,
+    paddingHorizontal: 18,
+    paddingTop: 12,
+    paddingBottom: 110, // clearance for floating glass tab bar
   },
   badgePill: {
     alignSelf: "flex-start",
-    backgroundColor: "rgba(229, 9, 20, 0.15)",
+    backgroundColor: "rgba(255, 255, 255, 0.08)",
     borderWidth: 1,
-    borderColor: "rgba(229, 9, 20, 0.4)",
-    paddingHorizontal: 10,
-    paddingVertical: 4,
+    borderColor: "rgba(255, 255, 255, 0.14)",
+    paddingHorizontal: 12,
+    paddingVertical: 5,
     borderRadius: 99,
     marginBottom: 8,
   },
   badge: {
     color: "#E50914",
     fontSize: 10,
-    fontWeight: "700",
-    letterSpacing: 1,
+    fontWeight: "800",
+    letterSpacing: 0.8,
+    fontFamily: "monospace",
   },
   title: {
-    fontSize: 26,
+    fontSize: 28,
     fontWeight: "800",
     color: "#FFFFFF",
-    letterSpacing: -0.5,
+    letterSpacing: -0.6,
   },
   roleTag: {
     fontSize: 11,
@@ -86,13 +90,27 @@ const styles = StyleSheet.create({
     marginBottom: 20,
     letterSpacing: 1,
   },
-  card: {
-    backgroundColor: "#1C1C1C",
-    borderRadius: 20,
-    padding: 18,
+  glassCard: {
+    backgroundColor: "rgba(28, 28, 28, 0.72)",
+    borderRadius: 22,
+    padding: 20,
     marginBottom: 14,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: "rgba(255, 255, 255, 0.12)",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    position: "relative",
+    overflow: "hidden",
+  },
+  specularShine: {
+    position: "absolute",
+    top: 0,
+    left: 20,
+    right: 20,
+    height: 1,
+    backgroundColor: "rgba(255, 255, 255, 0.25)",
   },
   cardTitle: {
     fontSize: 16,
@@ -116,7 +134,7 @@ const styles = StyleSheet.create({
     paddingVertical: 14,
     borderRadius: 99,
     alignItems: "center",
-    marginTop: 10,
+    marginTop: 8,
     borderWidth: 1,
     borderColor: "rgba(255, 255, 255, 0.12)",
   },
