@@ -100,7 +100,7 @@ async function runE2EUserJourneyTests() {
 
     const translateRes = await makeRequest("/translate");
     assert(translateRes.statusCode === 200, "Everyday Conversations (/translate) loads with HTTP 200 OK");
-    assert(translateRes.body.includes("Everyday Conversations") || translateRes.body.includes("Dialogue"), "Conversations page renders structured categories");
+    assert(translateRes.body.includes("Conversations") || translateRes.body.includes("Dialogue"), "Conversations page renders structured categories");
 
     const uploadRes = await makeRequest("/upload");
     assert(uploadRes.statusCode === 200, "Upload studio page (/upload) loads with HTTP 200 OK");

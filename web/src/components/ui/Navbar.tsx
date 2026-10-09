@@ -33,8 +33,8 @@ import { syncOfflineQueue, getOfflineQueue } from "@/lib/offlineSync";
 
 const desktopLinks = [
   { href: "/", label: "Home", icon: Compass },
-  { href: "/translate", label: "Everyday Conversations", icon: MessageSquare },
-  { href: "/upload", label: "Audio Transcription & Translation", icon: Cpu },
+  { href: "/translate", label: "Conversations", icon: MessageSquare },
+  { href: "/upload", label: "Transcribe", icon: Cpu },
   { href: "/explore", label: "Explore", icon: Compass },
   { href: "/archive", label: "Archive", icon: BookOpen },
   { href: "/preserve", label: "Preserve", icon: Mic },
@@ -163,30 +163,30 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setIsQrModalOpen(true)}
-              className="hidden lg:inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-3 py-1.5 text-xs font-semibold text-white hover:bg-white/10 transition"
+              className="hidden xl:inline-flex min-h-[34px] h-[34px] items-center gap-1.5 rounded-full border border-white/12 bg-white/5 px-2.5 text-xs font-semibold text-white hover:bg-white/10 transition"
               title="Scan QR Code on Phone"
             >
-              <QrCode className="h-4 w-4 text-[#F9B17A]" />
+              <QrCode className="h-3.5 w-3.5 text-[#F9B17A]" />
               <span>QR Code</span>
             </button>
 
             <Link
               href="/search"
-              className="hidden sm:inline-flex min-h-10 items-center justify-center h-10 w-10 rounded-full border border-white/12 bg-white/5 text-white hover:bg-white/10 transition"
+              className="hidden lg:inline-flex min-h-[34px] h-[34px] w-[34px] items-center justify-center rounded-full border border-white/12 bg-white/5 text-white hover:bg-white/10 transition"
               title="Search Oral Heritage"
             >
-              <Search className="h-4 w-4 text-[#D9D9E2]" />
+              <Search className="h-3.5 w-3.5 text-[#D9D9E2]" />
             </Link>
 
             <AppLanguageSelector />
 
             <Link
               href="/preserve"
-              className="hidden sm:inline-flex vr-button vr-button-primary !min-h-10 !py-1 !px-3.5 text-xs sm:text-sm font-bold whitespace-nowrap"
+              className="hidden sm:inline-flex vr-button vr-button-primary !min-h-[34px] !h-[34px] !py-0 !px-3 text-xs font-bold whitespace-nowrap"
             >
-              <Mic className="h-4 w-4 stroke-[2.2]" />
-              <span className="hidden md:inline">Preserve a Voice</span>
-              <span className="md:hidden">Preserve</span>
+              <Mic className="h-3.5 w-3.5 stroke-[2.2]" />
+              <span className="hidden xl:inline">Preserve a Voice</span>
+              <span className="xl:hidden">Preserve</span>
             </Link>
 
             {/* AUTHENTICATION CONTROLS (LOG IN / SIGN UP OR USER PROFILE MENU) */}
@@ -196,18 +196,18 @@ export function Navbar() {
                 <button
                   type="button"
                   onClick={() => setUserMenuOpen(!userMenuOpen)}
-                  className="inline-flex min-h-10 items-center gap-1.5 sm:gap-2 rounded-full border border-[#F9B17A]/40 bg-[rgba(66,71,108,0.4)] pl-1.5 pr-2.5 py-1 text-xs font-semibold text-white hover:border-[#F9B17A] transition"
+                  className="inline-flex min-h-[34px] h-[34px] items-center gap-1.5 sm:gap-2 rounded-full border border-[#F9B17A]/40 bg-[rgba(66,71,108,0.4)] pl-1.5 pr-2.5 py-0 text-xs font-semibold text-white hover:border-[#F9B17A] transition"
                   aria-label="User account menu"
                   aria-expanded={userMenuOpen}
                 >
-                  <span className="grid h-7 w-7 place-items-center rounded-full bg-[#F9B17A] text-[#242942] text-xs font-black shadow">
+                  <span className="grid h-6 w-6 place-items-center rounded-full bg-[#F9B17A] text-[#242942] text-[11px] font-black shadow">
                     {user.avatarInitials}
                   </span>
                   <span className="hidden xl:inline max-w-[100px] truncate text-left font-medium">
                     {user.name.split(" ")[0]}
                   </span>
                   <ChevronDown
-                    className={`h-3.5 w-3.5 text-[#A9AEC5] transition-transform ${
+                    className={`h-3 w-3 text-[#A9AEC5] transition-transform ${
                       userMenuOpen ? "rotate-180" : ""
                     }`}
                   />
@@ -268,15 +268,15 @@ export function Navbar() {
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   href="/login"
-                  className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[#F9B17A]/50 bg-[#F9B17A]/15 px-3 sm:px-3.5 py-1.5 text-xs font-bold text-[#F9B17A] hover:bg-[#F9B17A]/25 transition whitespace-nowrap shadow-sm"
+                  className="inline-flex min-h-[34px] h-[34px] items-center gap-1.5 rounded-full border border-[#F9B17A] bg-[#F9B17A] px-3.5 py-1 text-xs font-bold text-[#242942] hover:bg-[#F9B17A]/85 transition whitespace-nowrap shadow-md"
                   title="Sign in to your account"
                 >
-                  <LogIn className="h-3.5 w-3.5 text-[#F9B17A]" />
+                  <LogIn className="h-3.5 w-3.5 text-[#242942]" />
                   <span>Log In</span>
                 </Link>
                 <Link
                   href="/register"
-                  className="hidden sm:inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-white/20 transition shadow-sm whitespace-nowrap"
+                  className="hidden sm:inline-flex min-h-[34px] h-[34px] items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-semibold text-white hover:bg-white/20 transition shadow-sm whitespace-nowrap"
                   title="Create a free account"
                 >
                   <UserPlus className="h-3.5 w-3.5 text-white" />
@@ -289,7 +289,7 @@ export function Navbar() {
             <button
               type="button"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden inline-flex min-h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/5 text-white hover:bg-white/10 transition"
+              className="md:hidden inline-flex min-h-[34px] h-[34px] w-[34px] items-center justify-center rounded-full border border-white/15 bg-white/5 text-white hover:bg-white/10 transition"
               aria-label="Toggle navigation menu"
             >
               {mobileMenuOpen ? (

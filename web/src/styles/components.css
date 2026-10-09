@@ -138,38 +138,40 @@
 /* 7. Desktop Navigation */
 .desktop-nav {
   position: sticky;
-  top: 16px;
+  top: 10px;
   z-index: 900;
-  width: min(calc(100% - 40px), 1440px);
-  margin: 16px auto 0;
-  min-height: 72px;
-  padding: 10px 18px;
+  width: min(calc(100% - 24px), 1440px);
+  margin: 10px auto 0;
+  min-height: 54px;
+  padding: 6px 14px;
   display: flex;
   align-items: center;
-  background: rgba(45, 50, 80, 0.78);
-  border: 1px solid rgba(255, 255, 255, 0.12);
+  background: rgba(45, 50, 80, 0.88);
+  border: 1px solid rgba(255, 255, 255, 0.14);
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
-  border-radius: 24px;
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.22);
+  border-radius: 20px;
+  box-shadow: 0 8px 30px rgba(0, 0, 0, 0.26);
 }
 .desktop-nav-links {
   display: flex;
   align-items: center;
-  gap: 6px;
+  gap: 3px;
   margin-left: auto;
+  margin-right: 8px;
 }
 .desktop-nav-link {
-  padding: 10px 16px;
+  padding: 6px 10px;
   border-radius: 999px;
   color: var(--vr-text-secondary);
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   text-decoration: none;
   transition: var(--vr-transition);
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: 5px;
+  white-space: nowrap;
 }
 .desktop-nav-link:hover,
 .desktop-nav-link.active {
@@ -179,11 +181,11 @@
 @media (max-width: 767px) {
   .desktop-nav {
     display: flex;
-    min-height: 56px;
-    padding: 8px 12px;
-    margin: 8px auto 0;
+    min-height: 48px;
+    padding: 6px 10px;
+    margin: 6px auto 0;
     width: calc(100% - 16px);
-    gap: 8px;
+    gap: 6px;
   }
 }
 
@@ -191,20 +193,20 @@
 .vr-logo {
   display: flex;
   align-items: center;
-  gap: 11px;
+  gap: 9px;
   flex-shrink: 0;
   white-space: nowrap;
   text-decoration: none;
 }
 .vr-logo-mark {
-  width: 42px;
-  height: 42px;
+  width: 36px;
+  height: 36px;
   display: grid;
   place-items: center;
-  border-radius: 14px;
+  border-radius: 12px;
   background: rgba(249, 177, 122, 0.12);
   border: 1px solid rgba(249, 177, 122, 0.3);
-  font-size: 20px;
+  font-size: 18px;
 }
 .vr-logo-text {
   display: flex;
@@ -212,15 +214,15 @@
 }
 .vr-logo-text strong {
   color: white;
-  font-size: 16px;
-  letter-spacing: 0.08em;
+  font-size: 15px;
+  letter-spacing: 0.06em;
   white-space: nowrap;
   font-weight: 700;
 }
 .vr-logo-text span {
-  margin-top: 2px;
+  margin-top: 1px;
   color: var(--vr-text-muted);
-  font-size: 11px;
+  font-size: 10px;
   white-space: nowrap;
 }
 
