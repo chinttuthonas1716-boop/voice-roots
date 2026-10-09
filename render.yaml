@@ -1,0 +1,14 @@
+services:
+  - type: web
+    name: voice-roots
+    runtime: node
+    region: singapore
+    plan: free
+    rootDir: web
+    buildCommand: npm install && npm run build
+    startCommand: npm run start -- -p $PORT -H 0.0.0.0
+    envVars:
+      - key: NODE_VERSION
+        value: "20"
+      - key: NODE_ENV
+        value: production
