@@ -172,7 +172,7 @@ export function Navbar() {
 
             <Link
               href="/search"
-              className="inline-flex min-h-10 items-center justify-center h-10 w-10 rounded-full border border-white/12 bg-white/5 text-white hover:bg-white/10 transition"
+              className="hidden sm:inline-flex min-h-10 items-center justify-center h-10 w-10 rounded-full border border-white/12 bg-white/5 text-white hover:bg-white/10 transition"
               title="Search Oral Heritage"
             >
               <Search className="h-4 w-4 text-[#D9D9E2]" />
@@ -182,11 +182,11 @@ export function Navbar() {
 
             <Link
               href="/preserve"
-              className="vr-button vr-button-primary !min-h-10 !py-1 !px-3.5 text-xs sm:text-sm font-bold whitespace-nowrap"
+              className="hidden sm:inline-flex vr-button vr-button-primary !min-h-10 !py-1 !px-3.5 text-xs sm:text-sm font-bold whitespace-nowrap"
             >
               <Mic className="h-4 w-4 stroke-[2.2]" />
-              <span className="hidden sm:inline">Preserve a Voice</span>
-              <span className="sm:hidden">Preserve</span>
+              <span className="hidden md:inline">Preserve a Voice</span>
+              <span className="md:hidden">Preserve</span>
             </Link>
 
             {/* AUTHENTICATION CONTROLS (LOG IN / SIGN UP OR USER PROFILE MENU) */}
@@ -264,11 +264,11 @@ export function Navbar() {
                 )}
               </div>
             ) : (
-              /* Unauthenticated: Visible Log In & Sign Up buttons */
+              /* Unauthenticated: Prominently Visible Log In & Sign Up buttons */
               <div className="flex items-center gap-1.5 sm:gap-2">
                 <Link
                   href="/login"
-                  className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/15 bg-white/5 px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-white/10 hover:border-white/25 transition whitespace-nowrap"
+                  className="inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[#F9B17A]/50 bg-[#F9B17A]/15 px-3 sm:px-3.5 py-1.5 text-xs font-bold text-[#F9B17A] hover:bg-[#F9B17A]/25 transition whitespace-nowrap shadow-sm"
                   title="Sign in to your account"
                 >
                   <LogIn className="h-3.5 w-3.5 text-[#F9B17A]" />
@@ -276,10 +276,10 @@ export function Navbar() {
                 </Link>
                 <Link
                   href="/register"
-                  className="hidden sm:inline-flex min-h-10 items-center gap-1.5 rounded-full border border-[#F9B17A]/40 bg-[#F9B17A]/15 px-3 sm:px-3.5 py-1.5 text-xs font-bold text-[#F9B17A] hover:bg-[#F9B17A]/25 transition shadow-sm whitespace-nowrap"
+                  className="hidden sm:inline-flex min-h-10 items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 sm:px-3.5 py-1.5 text-xs font-semibold text-white hover:bg-white/20 transition shadow-sm whitespace-nowrap"
                   title="Create a free account"
                 >
-                  <UserPlus className="h-3.5 w-3.5" />
+                  <UserPlus className="h-3.5 w-3.5 text-white" />
                   <span>Sign Up</span>
                 </Link>
               </div>
@@ -405,6 +405,18 @@ export function Navbar() {
                   </Link>
                 );
               })}
+              <Link
+                href="/search"
+                onClick={() => setMobileMenuOpen(false)}
+                className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${
+                  pathname === "/search"
+                    ? "bg-[#4E9F76] text-[#0C0908] font-bold"
+                    : "text-[#D9D9E2] hover:bg-white/10 hover:text-white"
+                }`}
+              >
+                <Search className={`h-4 w-4 ${pathname === "/search" ? "text-[#0C0908]" : "text-[#F9B17A]"}`} />
+                <span>Search Oral Heritage</span>
+              </Link>
             </div>
           </div>
         )}

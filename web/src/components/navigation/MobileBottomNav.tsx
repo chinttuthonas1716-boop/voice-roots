@@ -1,19 +1,42 @@
 "use client";
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Mic, BookOpen, User, MessageSquare, Cpu } from "lucide-react";
+import { Home, Compass, Mic, BookOpen, User, MessageSquare, Cpu, LogIn } from "lucide-react";
+import { getCurrentUser, type UserProfile } from "@/lib/auth";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
+  const [user, setUser] = useState<UserProfile | null>(null);
+
+  useEffect(() => {
+    setUser(getCurrentUser());
+    const handleAuthChange = (e: any) => {
+      if (e && e.detail !== undefined) {
+        setUser(e.detail);
+      } else {
+        setUser(getCurrentUser());
+      }
+    };
+    window.addEventListener("vr-auth-changed", handleAuthChange);
+    window.addEventListener("storage", handleAuthChange);
+    return () => {
+      window.removeEventListener("vr-auth-changed", handleAuthChange);
+      window.removeEventListener("storage", handleAuthChange);
+    };
+  }, []);
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
     { label: "Conversations", href: "/translate", icon: MessageSquare },
     { label: "Transcribe", href: "/upload", icon: Cpu, isCenter: true },
-    { label: "Explore", href: "/explore", icon: Compass },
     { label: "Archive", href: "/archive", icon: BookOpen },
+    {
+      label: user ? "Profile" : "Log In",
+      href: user ? "/profile" : "/login",
+      icon: user ? User : LogIn,
+    },
   ];
 
   return (

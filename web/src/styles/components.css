@@ -178,7 +178,12 @@
 }
 @media (max-width: 767px) {
   .desktop-nav {
-    display: none;
+    display: flex;
+    min-height: 56px;
+    padding: 8px 12px;
+    margin: 8px auto 0;
+    width: calc(100% - 16px);
+    gap: 8px;
   }
 }
 

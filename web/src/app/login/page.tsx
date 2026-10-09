@@ -16,6 +16,7 @@ import {
   X,
   User,
 } from "lucide-react";
+import { Navbar } from "@/components/ui/Navbar";
 import {
   getCurrentUser,
   loginUser,
@@ -175,114 +176,90 @@ export default function LoginPage() {
   };
 
   return (
-    <div
-      className="min-h-screen flex flex-col justify-center items-center px-4 py-12 sm:px-6 lg:px-8 selection:bg-[#F9B17A]/30 selection:text-white"
-      style={{
-        backgroundColor: "#2D3250",
-        backgroundImage: "radial-gradient(ellipse 70% 50% at 50% 30%, rgba(66, 71, 108, 0.45), transparent 75%)",
-      }}
-    >
-      {/* Brand Header */}
-      <div className="text-center mb-8 space-y-2">
-        <Link
-          href="/"
-          className="inline-flex items-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-98"
-          style={{ whiteSpace: "nowrap" }}
-          aria-label="Voice Roots home"
-        >
-          <span
-            className="grid h-10 w-10 place-items-center rounded-2xl text-xl shadow-lg border"
-            style={{
-              backgroundColor: "rgba(255, 255, 255, 0.08)",
-              borderColor: "rgba(255, 255, 255, 0.14)",
-            }}
-          >
-            🌿
-          </span>
-          <span
-            className="text-2xl font-bold tracking-[0.04em] text-white"
+    <div className="vr-app flex flex-col justify-between min-h-screen">
+      <Navbar />
+
+      <main className="flex-1 flex flex-col justify-center items-center px-4 py-8 sm:px-6 lg:px-8 selection:bg-[#F9B17A]/30 selection:text-white">
+        {/* Brand Header */}
+        <div className="text-center mb-6 space-y-2">
+          <Link
+            href="/"
+            className="inline-flex items-center gap-2.5 transition-transform hover:scale-[1.02] active:scale-98"
             style={{ whiteSpace: "nowrap" }}
+            aria-label="Voice Roots home"
           >
-            VOICE ROOTS
-          </span>
-        </Link>
-        <p
-          className="text-xs sm:text-sm font-medium tracking-wide"
-          style={{ color: "#A9AEC5", whiteSpace: "nowrap" }}
+            <span
+              className="grid h-10 w-10 place-items-center rounded-2xl text-xl shadow-lg border"
+              style={{
+                backgroundColor: "rgba(255, 255, 255, 0.08)",
+                borderColor: "rgba(255, 255, 255, 0.14)",
+              }}
+            >
+              🌿
+            </span>
+            <span
+              className="text-2xl font-bold tracking-[0.04em] text-white"
+              style={{ whiteSpace: "nowrap" }}
+            >
+              VOICE ROOTS
+            </span>
+          </Link>
+          <p
+            className="text-xs sm:text-sm font-medium tracking-wide"
+            style={{ color: "#A9AEC5", whiteSpace: "nowrap" }}
+          >
+            Oral heritage, kept in community hands
+          </p>
+        </div>
+
+        {/* Main Login Card */}
+        <div
+          className="w-full max-w-[460px] p-6 sm:p-10 transition-all duration-300"
+          style={{
+            backgroundColor: "rgba(255, 255, 255, 0.07)",
+            borderColor: "rgba(255, 255, 255, 0.12)",
+            borderWidth: "1px",
+            borderStyle: "solid",
+            backdropFilter: "blur(24px)",
+            WebkitBackdropFilter: "blur(24px)",
+            borderRadius: "28px",
+            boxShadow: "0 20px 60px rgba(0, 0, 0, 0.25)",
+          }}
         >
-          Oral heritage, kept in community hands
-        </p>
-      </div>
-
-      {/* Main Login Card */}
-      <div
-        className="w-full max-w-[460px] p-6 sm:p-10 transition-all duration-300"
-        style={{
-          backgroundColor: "rgba(255, 255, 255, 0.07)",
-          borderColor: "rgba(255, 255, 255, 0.12)",
-          borderWidth: "1px",
-          borderStyle: "solid",
-          backdropFilter: "blur(24px)",
-          WebkitBackdropFilter: "blur(24px)",
-          borderRadius: "28px",
-          boxShadow: "0 20px 60px rgba(0, 0, 0, 0.25)",
-        }}
-      >
-        {/* If already authenticated */}
-        {currentUser ? (
-          <div className="space-y-6 text-center py-2">
-            <div className="mx-auto grid h-16 w-16 place-items-center rounded-2xl bg-[#42476C] border border-white/10 text-2xl font-bold text-[#F9B17A] shadow-lg">
-              {currentUser.avatarInitials}
-            </div>
-
-            <div className="space-y-1">
-              <span className="inline-block px-3 py-1 text-[11px] font-semibold uppercase tracking-wider rounded-full bg-[#F9B17A]/15 text-[#F9B17A] border border-[#F9B17A]/30">
-                {currentUser.roleTitle || "Active Custodian"}
-              </span>
-              <h2 className="text-2xl font-bold text-white pt-1">
-                {currentUser.name}
-              </h2>
-              <p className="text-xs text-[#A9AEC5]">{currentUser.email}</p>
-            </div>
-
-            <div className="rounded-2xl p-4 bg-[#242942]/60 border border-white/10 text-left space-y-2 text-xs text-[#D9D9E2]">
-              <div className="flex justify-between">
-                <span className="text-[#A9AEC5]">Community:</span>
-                <span className="font-semibold text-white">{currentUser.clanOrCommunity}</span>
+          {/* If already authenticated, show friendly session banner at the top */}
+          {currentUser && (
+            <div className="mb-6 p-3.5 rounded-2xl bg-[#42476C]/70 border border-[#F9B17A]/30 flex items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-2.5 min-w-0">
+                <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#F9B17A] text-[#242942] font-black text-xs shrink-0 shadow">
+                  {currentUser.avatarInitials}
+                </span>
+                <div className="min-w-0 text-left">
+                  <p className="text-white font-bold truncate leading-tight">{currentUser.name}</p>
+                  <p className="text-[#A9AEC5] text-[10px] truncate leading-tight">
+                    Signed in ({currentUser.email})
+                  </p>
+                </div>
               </div>
-              <div className="flex justify-between">
-                <span className="text-[#A9AEC5]">Contributions:</span>
-                <span className="font-semibold text-[#F9B17A]">{currentUser.contributionsCount} Preserved</span>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <Link
+                  href="/profile"
+                  className="px-2.5 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-white font-semibold text-[11px] transition whitespace-nowrap"
+                >
+                  Profile
+                </Link>
+                <button
+                  type="button"
+                  onClick={handleLogout}
+                  className="px-2.5 py-1.5 rounded-xl bg-red-500/20 hover:bg-red-500/30 text-red-200 font-semibold text-[11px] transition whitespace-nowrap"
+                  title="Sign out of current account"
+                >
+                  Sign Out
+                </button>
               </div>
             </div>
+          )}
 
-            <div className="space-y-3 pt-2">
-              <button
-                type="button"
-                onClick={() => router.push("/home")}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl font-bold transition-all active:scale-98 shadow-md"
-                style={{
-                  backgroundColor: "#F9B17A",
-                  color: "#242942",
-                  height: "54px",
-                }}
-              >
-                <span>Continue to Home</span>
-                <ArrowRight className="h-4 w-4" />
-              </button>
-
-              <button
-                type="button"
-                onClick={handleLogout}
-                className="w-full flex items-center justify-center gap-2 rounded-2xl font-medium text-xs text-[#A9AEC5] hover:text-white transition py-2"
-              >
-                <LogOut className="h-3.5 w-3.5" />
-                <span>Sign in with a different account</span>
-              </button>
-            </div>
-          </div>
-        ) : (
-          /* Normal Sign In Form */
+          {/* Normal Sign In Form - Always Rendered & Visible */}
           <div className="space-y-6">
             {/* Card Header */}
             <div className="space-y-1.5">
@@ -580,11 +557,9 @@ export default function LoginPage() {
               </Link>
             </div>
           </div>
-        )}
-      </div>
+        </div>
 
-      {/* Guest Explorer Link */}
-      {!currentUser && (
+        {/* Guest Explorer Link */}
         <div className="mt-6 text-center">
           <button
             type="button"
@@ -595,7 +570,7 @@ export default function LoginPage() {
             Or browse publicly as a <span style={{ color: "#F9B17A" }}>Guest Explorer →</span>
           </button>
         </div>
-      )}
+      </main>
 
       {/* Forgot Password Modal */}
       {showForgotModal && (
