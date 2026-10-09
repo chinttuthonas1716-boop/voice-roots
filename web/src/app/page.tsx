@@ -17,6 +17,8 @@ import {
   CheckCircle2,
   Languages,
   Clock,
+  MessageSquare,
+  Cpu,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { LocationLanguageBanner } from "@/components/ui/LocationLanguageBanner";
@@ -279,6 +281,71 @@ export default function HomePage() {
               <p className="text-xs text-[#A9AEC5] leading-relaxed">
                 Manage your community recordings, view cryptographic passports, and verify provenance.
               </p>
+            </Link>
+          </div>
+        </section>
+
+        {/* CORE WORKFLOWS: CONVERSATIONS & TRANSCRIPTION */}
+        <section aria-label="Core Workflows" className="max-w-[1360px] mx-auto px-6 mb-16">
+          <div className="flex items-center justify-between mb-6">
+            <div>
+              <span className="eyebrow">ESSENTIAL WORKFLOWS</span>
+              <h2 className="text-2xl sm:text-3xl font-extrabold text-white mt-1">
+                Everyday Speech & Multilingual Intelligence
+              </h2>
+            </div>
+          </div>
+          <div className="grid md:grid-cols-2 gap-6">
+            <Link
+              href="/translate"
+              className="p-8 rounded-3xl bg-gradient-to-br from-[rgba(66,71,108,0.4)] to-[rgba(36,41,66,0.5)] border border-white/10 hover:border-[#F9B17A]/50 transition group shadow-xl flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 text-[#F9B17A] grid place-items-center group-hover:scale-105 transition-transform">
+                    <MessageSquare className="w-6 h-6 stroke-[2]" />
+                  </div>
+                  <span className="text-[10px] font-bold text-[#F9B17A] tracking-wider uppercase bg-[#F9B17A]/10 border border-[#F9B17A]/20 px-3 py-1 rounded-full">
+                    10 Interactive Categories
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-[#F9B17A] transition-colors">
+                  Everyday Conversations
+                </h3>
+                <p className="text-xs sm:text-sm text-[#A9AEC5] leading-relaxed mb-6">
+                  Master day-to-day bilingual dialogues for Greetings, College, Food, Shopping, Travel, and Healthcare across Telugu, English, Hindi, and Gondi with transliteration and pronunciation guidance.
+                </p>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-white/10 text-xs font-semibold text-[#F9B17A]">
+                <span>Explore Conversations & Audio</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
+            </Link>
+
+            <Link
+              href="/upload"
+              className="p-8 rounded-3xl bg-gradient-to-br from-[rgba(66,71,108,0.4)] to-[rgba(36,41,66,0.5)] border border-white/10 hover:border-[#F9B17A]/50 transition group shadow-xl flex flex-col justify-between"
+            >
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <div className="w-12 h-12 rounded-xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 text-[#F9B17A] grid place-items-center group-hover:scale-105 transition-transform">
+                    <Cpu className="w-6 h-6 stroke-[2]" />
+                  </div>
+                  <span className="text-[10px] font-bold text-[#F9B17A] tracking-wider uppercase bg-[#F9B17A]/10 border border-[#F9B17A]/20 px-3 py-1 rounded-full">
+                    AI Speech-to-Text & Translation
+                  </span>
+                </div>
+                <h3 className="text-xl sm:text-2xl font-bold text-white mb-2 group-hover:text-[#F9B17A] transition-colors">
+                  Audio Transcription & Translation
+                </h3>
+                <p className="text-xs sm:text-sm text-[#A9AEC5] leading-relaxed mb-6">
+                  Upload acoustic audio files (WAV, MP3, M4A, WebM), play original recordings, transcribe speech in the source language, edit the transcript, and translate to your target language.
+                </p>
+              </div>
+              <div className="flex items-center justify-between pt-4 border-t border-white/10 text-xs font-semibold text-[#F9B17A]">
+                <span>Launch Audio Pipeline</span>
+                <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+              </div>
             </Link>
           </div>
         </section>

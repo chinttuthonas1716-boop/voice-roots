@@ -3,17 +3,17 @@
 import React from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Mic, BookOpen, User } from "lucide-react";
+import { Home, Compass, Mic, BookOpen, User, MessageSquare, Cpu } from "lucide-react";
 
 export function MobileBottomNav() {
   const pathname = usePathname();
 
   const navItems = [
     { label: "Home", href: "/", icon: Home },
+    { label: "Conversations", href: "/translate", icon: MessageSquare },
+    { label: "Transcribe", href: "/upload", icon: Cpu, isCenter: true },
     { label: "Explore", href: "/explore", icon: Compass },
-    { label: "Preserve", href: "/preserve", icon: Mic, isCenter: true },
     { label: "Archive", href: "/archive", icon: BookOpen },
-    { label: "Profile", href: "/profile", icon: User },
   ];
 
   return (

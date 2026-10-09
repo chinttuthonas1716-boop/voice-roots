@@ -14,6 +14,10 @@ import {
   QrCode,
   Search,
   Languages,
+  MessageSquare,
+  Cpu,
+  Menu,
+  X,
 } from "lucide-react";
 import { VoiceRootsLogo } from "@/components/ui/VoiceRootsLogo";
 import { AppLanguageSelector } from "@/components/ui/AppLanguageSelector";
@@ -24,10 +28,11 @@ import { syncOfflineQueue, getOfflineQueue } from "@/lib/offlineSync";
 
 const desktopLinks = [
   { href: "/", label: "Home", icon: Compass },
+  { href: "/translate", label: "Everyday Conversations", icon: MessageSquare },
+  { href: "/upload", label: "Audio Transcription & Translation", icon: Cpu },
   { href: "/explore", label: "Explore", icon: Compass },
   { href: "/archive", label: "Archive", icon: BookOpen },
   { href: "/preserve", label: "Preserve", icon: Mic },
-  { href: "/about", label: "About", icon: Sparkles },
 ];
 
 export function Navbar() {
@@ -37,6 +42,7 @@ export function Navbar() {
   const [online, setOnline] = useState(true);
   const [syncing, setSyncing] = useState(false);
   const [pendingCount, setPendingCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     setUser(getCurrentUser());
@@ -162,8 +168,45 @@ export function Navbar() {
                 </>
               )}
             </Link>
+
+            {/* Mobile Menu Hamburger Button */}
+            <button
+              type="button"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              className="md:hidden inline-flex min-h-10 w-10 items-center justify-center rounded-full border border-white/12 bg-white/5 text-white hover:bg-white/10 transition"
+              aria-label="Toggle navigation menu"
+            >
+              {mobileMenuOpen ? <X className="h-4 w-4 text-[#F9B17A]" /> : <Menu className="h-4 w-4 text-[#D9D9E2]" />}
+            </button>
           </div>
         </div>
+
+        {/* Responsive Mobile Navigation Drawer */}
+        {mobileMenuOpen && (
+          <div className="md:hidden mt-2 rounded-2xl border border-white/15 bg-[#1C1512]/95 p-4 shadow-2xl backdrop-blur-2xl space-y-2 animate-fade-in">
+            <div className="text-[10px] font-mono uppercase tracking-wider text-[#C4B5A5] px-3 py-1">
+              Main Navigation
+            </div>
+            {desktopLinks.map(({ href, label, icon: Icon }) => {
+              const isActive = pathname === href;
+              return (
+                <Link
+                  key={href}
+                  href={href}
+                  onClick={() => setMobileMenuOpen(false)}
+                  className={`flex items-center gap-3 rounded-xl px-3.5 py-2.5 text-xs font-semibold transition ${
+                    isActive
+                      ? "bg-[#4E9F76] text-[#0C0908] font-bold"
+                      : "text-[#D9D9E2] hover:bg-white/10 hover:text-white"
+                  }`}
+                >
+                  <Icon className={`h-4 w-4 ${isActive ? "text-[#0C0908]" : "text-[#F9B17A]"}`} />
+                  <span>{label}</span>
+                </Link>
+              );
+            })}
+          </div>
+        )}
       </header>
 
       <QRCodeModal isOpen={isQrModalOpen} onClose={() => setIsQrModalOpen(false)} />

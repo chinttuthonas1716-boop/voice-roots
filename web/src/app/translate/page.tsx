@@ -18,9 +18,23 @@ import {
   ChevronDown,
   Globe,
   Trees,
+  Search,
+  MessageSquare,
+  GraduationCap,
+  Briefcase,
+  Play,
+  RotateCcw,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
+import {
+  STRUCTURED_DIALOGUES,
+  DAY_TO_DAY_PHRASES,
+  CONVERSATION_CATEGORIES,
+  type ConversationDialogue,
+  type ConversationPhrase,
+  findMatchingPhrase,
+} from "@/lib/conversations";
 
 interface SourceLanguage {
   code: string;
@@ -38,23 +52,7 @@ const SOURCE_LANGS: SourceLanguage[] = [
     native: "తెలుగు",
     speechCode: "te-IN",
     category: "regional",
-    placeholder: "ఉదాహరణ: 'బాగున్నారా?', 'మంచి నీళ్ళు ఇవ్వండి', 'దీని ధర ఎంత?'...",
-  },
-  {
-    code: "gondi",
-    name: "Gondi",
-    native: "గోండీ (Gondi)",
-    speechCode: "te-IN",
-    category: "indigenous",
-    placeholder: "ఉదాహరణ: 'సేవా జోహార్', 'బాబో బాటో', 'ఏర్ మాయుం'...",
-  },
-  {
-    code: "koya",
-    name: "Koya",
-    native: "కోయ (Koya)",
-    speechCode: "te-IN",
-    category: "indigenous",
-    placeholder: "ఉదాహరణ: 'ఈ మూలిక వేరు జ్వరానికి మంచిది'...",
+    placeholder: "ఉదాహరణ: 'నమస్కారం, మీరు బాగున్నారా?', 'మంచి నీళ్ళు ఇవ్వండి'...",
   },
   {
     code: "hi",
@@ -62,71 +60,7 @@ const SOURCE_LANGS: SourceLanguage[] = [
     native: "हिन्दी",
     speechCode: "hi-IN",
     category: "regional",
-    placeholder: "उदाहरण: 'आप कैसे हैं?', 'मुझे पानी चाहिए', 'इसका दाम क्या है?'...",
-  },
-  {
-    code: "ta",
-    name: "Tamil",
-    native: "தமிழ்",
-    speechCode: "ta-IN",
-    category: "regional",
-    placeholder: "உதாரணம்: 'எப்படி இருக்கிறீர்கள்?', 'குடிநீர் கிடைக்குமா?'...",
-  },
-  {
-    code: "kn",
-    name: "Kannada",
-    native: "ಕನ್ನಡ",
-    speechCode: "kn-IN",
-    category: "regional",
-    placeholder: "ಉದಾಹರಣೆ: 'ನೀವು ಹೇಗಿದ್ದೀರಾ?', 'ದಯವಿಟ್ಟು ನೀರು ಕೊಡಿ'...",
-  },
-  {
-    code: "ml",
-    name: "Malayalam",
-    native: "മലയാളം",
-    speechCode: "ml-IN",
-    category: "regional",
-    placeholder: "ഉദാഹരണം: 'സുഖമാണോ?', 'കുടിവെള്ളം ലഭിക്കുമോ?'...",
-  },
-  {
-    code: "mr",
-    name: "Marathi",
-    native: "मराठी",
-    speechCode: "mr-IN",
-    category: "regional",
-    placeholder: "उदाहरण: 'तुम्ही कसे आहात?', 'मला पाणी हवे आहे'...",
-  },
-  {
-    code: "or",
-    name: "Odia",
-    native: "ଓଡ଼ିଆ",
-    speechCode: "or-IN",
-    category: "regional",
-    placeholder: "ଉଦାହରଣ: 'ଆପଣ କେମିତି ଅଛନ୍ତି?', 'ଏହାର ମୂଲ୍ୟ କେତେ?'...",
-  },
-  {
-    code: "bn",
-    name: "Bengali",
-    native: "বাংলা",
-    speechCode: "bn-IN",
-    category: "regional",
-    placeholder: "উদাহরণ: 'আপনি কেমন আছেন?', 'একটু জল দেবেন?'...",
-  },
-  {
-    code: "sat",
-    name: "Santhali",
-    native: "ᱥᱟᱱᱛᱟᱲᱤ",
-    speechCode: "hi-IN",
-    category: "indigenous",
-    placeholder: "ᱡᱚᱦᱟᱨ (Johar), ᱪᱮᱫ ᱞᱮᱠᱟ ᱢᱮᱱᱟᱜ ᱵᱤᱱᱟ?...",
-  },
-  {
-    code: "lam",
-    name: "Lambadi / Banjara",
-    native: "లంబాడీ (Banjara)",
-    speechCode: "te-IN",
-    category: "indigenous",
-    placeholder: "ఉదాహరణ: 'రామ్ రామ్ బాపూ', 'తాండా సగా'...",
+    placeholder: "उदाहरण: 'नमस्ते, आप कैसे हैं?', 'मुझे पानी चाहिए'...",
   },
   {
     code: "en",
@@ -134,7 +68,55 @@ const SOURCE_LANGS: SourceLanguage[] = [
     native: "English",
     speechCode: "en-US",
     category: "standard",
-    placeholder: "e.g., 'Hello, how are you?', 'Could I get water?', 'What is the price?'...",
+    placeholder: "e.g., 'Hello, how are you?', 'Could I get water?'...",
+  },
+  {
+    code: "ta",
+    name: "Tamil",
+    native: "தமிழ்",
+    speechCode: "ta-IN",
+    category: "regional",
+    placeholder: "உதாரணம்: 'வணக்கம், எப்படி இருக்கிறீர்கள்?'...",
+  },
+  {
+    code: "kn",
+    name: "Kannada",
+    native: "ಕನ್ನಡ",
+    speechCode: "kn-IN",
+    category: "regional",
+    placeholder: "ಉದಾಹರಣೆ: 'ನಮಸ್ಕಾರ, ನೀವು ಹೇಗಿದ್ದೀರಿ?'...",
+  },
+  {
+    code: "ml",
+    name: "Malayalam",
+    native: "മലയാളം",
+    speechCode: "ml-IN",
+    category: "regional",
+    placeholder: "ഉദാഹരണം: 'നമസ്കാരം, സുഖമാണോ?'...",
+  },
+  {
+    code: "gondi",
+    name: "Gondi",
+    native: "గోండీ (Gondi)",
+    speechCode: "te-IN",
+    category: "indigenous",
+    placeholder: "ఉదాహరణ: 'సేవా జోహార్, బాబో బాటో'...",
+  },
+  {
+    code: "koya",
+    name: "Koya",
+    native: "కోయ (Koya)",
+    speechCode: "te-IN",
+    category: "indigenous",
+    placeholder: "ఉదాహరణ: 'జోహార్! అందరూ క్షేమమేనా?'...",
+  },
+  {
+    code: "lam",
+    name: "Lambadi / Banjara",
+    native: "లంబాడీ (Banjara)",
+    speechCode: "te-IN",
+    category: "indigenous",
+    placeholder: "ఉదాహరణ: 'రామ్ రామ్ బావ, కైసో ఛే?'...",
   },
 ];
 
@@ -149,115 +131,6 @@ const TARGET_LANGS = [
   { code: "bn", name: "Bengali", label: "বাংলা", speechCode: "bn-IN" },
 ] as const;
 
-interface DayPhrase {
-  category: string;
-  te: string;
-  en: string;
-  hi: string;
-  ta: string;
-  kn: string;
-  ml: string;
-  mr?: string;
-  bn?: string;
-  gondi?: string;
-  koya?: string;
-  sat?: string;
-  lam?: string;
-}
-
-const DAILY_PHRASES: DayPhrase[] = [
-  {
-    category: "Greetings (మర్యాదపూర్వక పలకరింపులు)",
-    te: "నమస్కారం, మీరు బాగున్నారా?",
-    en: "Hello, how are you doing?",
-    hi: "नमस्ते, आप कैसे हैं?",
-    ta: "வணக்கம், நீங்கள் எப்படி இருக்கிறீர்கள்?",
-    kn: "ನಮಸ್ಕಾರ, ನೀವು ಹೇಗಿದ್ದೀರಾ?",
-    ml: "നമസ്കാരം, സുഖമാണോ?",
-    mr: "नमस्कार, तुम्ही कसे आहात?",
-    bn: "নমস্কার, আপনি কেমন আছেন?",
-    gondi: "సేవా జోహార్, బాబో బాటో?",
-    koya: "జోహార్, అందరూ సుఖంగా ఉన్నారా?",
-    sat: "ᱡᱚᱦᱟᱨ, ᱪᱮᱫ ᱞᱮᱠᱟ ᱢᱮᱱᱟᱜ ᱵᱤᱱᱟ?",
-    lam: "రామ్ రామ్ బావ, కైసో చే?",
-  },
-  {
-    category: "Food & Water (ఆహారం & త్రాగునీరు)",
-    te: "దయచేసి మంచి నీళ్ళు లేదా తాజా భోజనం దొరుకుతుందా?",
-    en: "Could I please get some drinking water or a fresh meal?",
-    hi: "कृपया क्या मुझे पीने का पानी या भोजन मिल सकता है?",
-    ta: "தயவுசெய்து குடிநீர் அல்லது உணவு கிடைக்குமா?",
-    kn: "ದಯವಿಟ್ಟು ಕುಡಿಯುವ ನೀರು ಅಥವಾ ಊಟ ಸಿಗುತ್ತದೆಯೇ?",
-    ml: "കുടിവെള്ളമോ ഭക്ഷണമോ ലഭിക്കുമോ?",
-    mr: "कृपया पिण्याचे पाणी किंवा जेवण मिळू शकेल का?",
-    bn: "দয়া করে একটু খাবার জল বা খাবার পাওয়া যাবে?",
-    gondi: "ఏర్ మాయుం ఆహార్ దొరుకుతుందా?",
-    koya: "ఈ రాత్రికి తాజా అంబలి లేదా నీరు ఇవ్వండి.",
-    sat: "ᱫᱟᱜ ᱟᱨ ᱡᱚᱢᱟᱜ ᱧᱟᱢᱚᱜ-ᱟ?",
-    lam: "పాణి ఓర్ రోటీ మళ్సే కా?",
-  },
-  {
-    category: "Directions & Travel (దారి & ప్రయాణం)",
-    te: "మా ఊరి చెరువు వైపు వెళ్ళడానికి సరైన దారి ఎక్కడ?",
-    en: "Which is the correct way towards our village lake?",
-    hi: "गाँव के तालाब की ओर जाने का सही रास्ता कौन सा है?",
-    ta: "கிராமத்துக் குளம் செல்லும் வழி எது?",
-    kn: "ಹಳ್ಳಿಯ ಕೆರೆಯ ಕಡೆಗೆ ಹೋಗುವ ದಾರಿ ಯಾವುದು?",
-    ml: "ഗ്രാമത്തിലെ കുളത്തിലേക്കുള്ള വഴി ഏതാണ്?",
-    mr: "गावातील तलावाकडे जाणारा योग्य रस्ता कोणता आहे?",
-    bn: "গ্রামের পুকুরের দিকে যাওয়ার সঠিক রাস্তা কোনটি?",
-    gondi: "సగా దారో బాబో గుట్ట వైపు?",
-    koya: "ఏటి ఒడ్డున ఉన్న చెట్టు దారిన నడవండి.",
-    sat: "ᱟᱹᱛᱩ ᱯᱩᱠᱷᱨᱤ ᱥᱮᱫ ᱥᱮᱱᱚᱜ ᱦᱚᱨ ᱚᱠᱟ ᱴᱟᱜ?",
-    lam: "గోరార్ వాటె కిదర్ ఛే?",
-  },
-  {
-    category: "Market & Trade (సంత & కొనుగోలు)",
-    te: "ఈ అడవి పసుపు మరియు తాజా తేనె ధర ఎంత?",
-    en: "What is the price of this wild turmeric and fresh forest honey?",
-    hi: "इस जंगली हल्दी और शुद्ध शहद का क्या मूल्य है?",
-    ta: "இந்த காட்டு மஞ்சள் மற்றும் சுத்தமான தேனின் விலை என்ன?",
-    kn: "ಈ ಕಾಡು ಅರಿಶಿನ ಮತ್ತು ಜೇನುತುಪ್ಪದ ಬೆಲೆ ಎಷ್ಟು?",
-    ml: "ഈ കാട്ടു മഞ്ഞളിനും തേനിനും എത്രയാണ് വില?",
-    mr: "या रानटी हळदीचा आणि ताज्या मधाचा भाव काय आहे?",
-    bn: "এই বুনো হলুদ এবং তাজা মধুর দাম কত?",
-    gondi: "ఏర్ తేనె మూలిక బాట్ మూల్యం?",
-    koya: "కొండ తేనె బుట్ట వెల ఎంత చెబుతున్నారు?",
-    sat: "ᱱᱚᱣᱟ ᱵᱤᱨ ᱥᱟᱥᱟᱝ ᱟᱨ ᱧᱮᱞᱮ ᱨᱟᱥᱟ ᱨᱮᱱᱟᱜ ᱫᱟᱢ ᱛᱤᱱᱟᱹᱜ?",
-    lam: "ఈ హళదీ నే మహుడార్ దామ్ కిత్తో?",
-  },
-  {
-    category: "Health & Healing (ఆరోగ్యం & నాటువైద్యం)",
-    te: "వర్షాకాలపు జ్వరానికి ఈ మూలికా వేరు కషాయం త్రాగండి.",
-    en: "Drink this herbal root decoction for monsoon seasonal fever.",
-    hi: "बरसाती बुखार के लिए यह जड़ी-बूटी का काढ़ा पिएं।",
-    ta: "மழைக்கால காய்ச்சலுக்கு இந்த மூலிகைக் குடிநீரைக் குடியுங்கள்.",
-    kn: "ಮಳೆಗಾಲದ ಜ್ವರಕ್ಕೆ ಈ ಗಿಡಮೂಲಿಕೆಯ ಕಷಾಯವನ್ನು ಕುಡಿಯಿರಿ.",
-    ml: "മഴക്കാലത്തെ പനിക്ക് ഈ ഔഷധ കഷായം കുടിക്കുക.",
-    mr: "पावसाळी तापासाठी हा वनौषधी मुळांचा काढा प्या.",
-    bn: "বর্ষার জ্বরের জন্য এই ভেষজ শিকড়ের ক্বাথ খান।",
-    gondi: "మారంగ్ జ్వరం కాపాడే పెనోళ్ళ మూలిక.",
-    koya: "ఈ మూలిక వేరుతో జ్వరం వెంటనే తగ్గుతుంది.",
-    sat: "ᱡᱟᱹᱯᱩᱫ ᱨᱩᱣᱟᱹ ᱞᱟᱹᱜᱤᱫ ᱱᱚᱣᱟ ᱨᱟᱱ ᱨᱮᱦᱮᱫ ᱧᱩᱭ ᱢᱮ.",
-    lam: "తాప ఆయే తో ఈ జడీ బూటీ పివో.",
-  },
-  {
-    category: "Elders & Wisdom (పెద్దల ఆశీర్వాదం)",
-    te: "మా పూర్వీకుల సాంప్రదాయాలను గౌరవిస్తూ ముందుకు సాగాలి.",
-    en: "We must progress while revering the traditions of our ancestors.",
-    hi: "हमें अपने पूर्वजों की परंपराओं का सम्मान करते हुए आगे बढ़ना चाहिए।",
-    ta: "முன்னோர்களின் பாரம்பரியத்தை மதித்து நாம் முன்னேற வேண்டும்.",
-    kn: "ಹಿರಿಯರ ಪರಂಪರೆಯನ್ನು ಗೌರವಿಸುತ್ತಾ ನಾವು ಸಾಗಬೇಕು.",
-    ml: "പൂർവ്വികരുടെ പാരമ്പര്യത്തെ മാനിച്ച് മുന്നോട്ട് പോകണം.",
-    mr: "आपल्या पूर्वजांच्या परंपरांचा आदर करत पुढे गेले पाहिजे.",
-    bn: "পূর্বপুরুষদের ঐতিহ্যকে সম্মান জানিয়ে এগিয়ে যেতে হবে।",
-    gondi: "పెనోళ్ళ సగా వారసత్వం ఎల్లప్పుడూ నిలవాలి.",
-    koya: "పెద్దల మాట చల్లని నీడ లాంటిది.",
-    sat: "ᱦᱟᱯᱲᱟᱢ ᱠᱚᱣᱟᱜ ᱟᱹᱨᱤᱪᱟᱹᱞᱤ ᱢᱟᱱᱟᱣ ᱠᱟᱛᱮ ᱞᱟᱦᱟᱜ ᱦᱩᱭᱩᱜ-ᱟ.",
-    lam: "మోటేరార్ బోల్ ఆఖే తాండా రో నూర్ ఛే.",
-  },
-];
-
 export default function DayToDayTranslationPage() {
   const [inputText, setInputText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
@@ -267,60 +140,59 @@ export default function DayToDayTranslationPage() {
   const [isListening, setIsListening] = useState(false);
   const [copied, setCopied] = useState(false);
   const [isPlayingAudio, setIsPlayingAudio] = useState(false);
-  const [isSourceDropdownOpen, setIsSourceDropdownOpen] = useState(false);
+  const [speakingTurnId, setSpeakingTurnId] = useState<string | null>(null);
+  const [translationError, setTranslationError] = useState<string | null>(null);
 
-  const activeSourceObj =
-    SOURCE_LANGS.find((l) => l.code === sourceLang) || SOURCE_LANGS[0];
-  const activeTargetObj =
-    TARGET_LANGS.find((l) => l.code === targetLang) || TARGET_LANGS[0];
+  // Category filter for Day-to-Day Conversations module
+  const [selectedCategory, setSelectedCategory] = useState<string>("All");
+  const [searchQuery, setSearchQuery] = useState("");
+  const [showTransliteration, setShowTransliteration] = useState(true);
+
+  const activeSourceObj = SOURCE_LANGS.find((l) => l.code === sourceLang) || SOURCE_LANGS[0];
+  const activeTargetObj = TARGET_LANGS.find((l) => l.code === targetLang) || TARGET_LANGS[0];
 
   // Perform translation
   const performTranslation = async (textToTranslate: string, target: string, source: string) => {
     if (!textToTranslate.trim()) {
       setTranslatedText("");
+      setTranslationError(null);
       return;
     }
 
     setIsTranslating(true);
+    setTranslationError(null);
 
-    // 1. Instant check in offline everyday phrases
-    const clean = textToTranslate.trim().toLowerCase();
-    const match = DAILY_PHRASES.find((p) => {
-      const srcVal = (p as any)[source];
-      if (srcVal && srcVal.toLowerCase().includes(clean)) return true;
-      return (
-        p.te.toLowerCase().includes(clean) ||
-        p.en.toLowerCase().includes(clean) ||
-        p.hi.toLowerCase().includes(clean)
-      );
-    });
-
+    // 1. Instant local corpus matching
+    const match = findMatchingPhrase(textToTranslate, source);
     if (match) {
-      const result = (match as any)[target] || match.en;
-      setTranslatedText(result);
-      setIsTranslating(false);
-      return;
+      const matchResult = (match as any)[target] || match.en;
+      if (matchResult) {
+        setTranslatedText(matchResult);
+        setIsTranslating(false);
+        return;
+      }
     }
 
-    // 2. Fetch from active translate API
+    // 2. Fetch from /api/translate endpoint
     try {
       const res = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: textToTranslate,
+          text: textToTranslate.trim(),
           sourceLanguage: source,
           targetLanguage: target,
         }),
       });
+
       const data = await res.json();
-      if (data.translation) {
+      if (res.ok && data.success && data.translation) {
         setTranslatedText(data.translation);
       } else {
-        setTranslatedText(`[${target.toUpperCase()}]: ${textToTranslate}`);
+        setTranslationError(data.error || "Translation unavailable for this phrase.");
       }
-    } catch (e) {
-      setTranslatedText(`Translated: ${textToTranslate}`);
+    } catch (e: any) {
+      setTranslationError("Network error while connecting to translation service.");
     } finally {
       setIsTranslating(false);
     }
@@ -331,25 +203,21 @@ export default function DayToDayTranslationPage() {
       if (inputText.trim()) {
         performTranslation(inputText, targetLang, sourceLang);
       }
-    }, 350);
+    }, 400);
     return () => clearTimeout(timer);
   }, [inputText, targetLang, sourceLang]);
 
   // Swap Source and Target Languages
   const handleSwapLanguages = () => {
-    const newTarget = sourceLang;
-    const newSource = targetLang;
-    const newTargetMatch = TARGET_LANGS.find((l) => l.code === newTarget);
-    const newSourceMatch = SOURCE_LANGS.find((l) => l.code === newSource);
+    const prevSource = sourceLang;
+    const prevTarget = targetLang;
 
-    if (newSourceMatch) {
-      setSourceLang(newSource);
-    }
-    if (newTargetMatch) {
-      setTargetLang(newTarget);
-    }
+    const newTargetMatch = TARGET_LANGS.find((l) => l.code === prevSource);
+    const newSourceMatch = SOURCE_LANGS.find((l) => l.code === prevTarget);
 
-    // Swap texts if translated text exists
+    if (newSourceMatch) setSourceLang(prevTarget);
+    if (newTargetMatch) setTargetLang(prevSource);
+
     if (translatedText) {
       setInputText(translatedText);
       setTranslatedText("");
@@ -362,7 +230,7 @@ export default function DayToDayTranslationPage() {
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      alert("Speech recognition is not supported in this browser. Please type your phrase.");
+      alert("Speech recognition is not supported in this browser. Please use Chrome, Edge, or Safari.");
       return;
     }
 
@@ -382,76 +250,91 @@ export default function DayToDayTranslationPage() {
       };
 
       recognition.start();
-    } catch (err) {
+    } catch {
       setIsListening(false);
     }
   };
 
-  // Text-To-Speech pronunciation
-  const handleSpeakOutput = () => {
-    if (!translatedText || typeof window === "undefined") return;
+  // Text-To-Speech pronunciation playback
+  const handleSpeakText = (text: string, speechCode: string, turnKey?: string) => {
+    if (!text || typeof window === "undefined") return;
 
     if ("speechSynthesis" in window) {
       window.speechSynthesis.cancel();
-      const utterance = new SpeechSynthesisUtterance(translatedText);
-      utterance.lang = activeTargetObj.speechCode || "en-US";
-      utterance.onstart = () => setIsPlayingAudio(true);
-      utterance.onend = () => setIsPlayingAudio(false);
-      utterance.onerror = () => setIsPlayingAudio(false);
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = speechCode;
+
+      if (turnKey) setSpeakingTurnId(turnKey);
+      else setIsPlayingAudio(true);
+
+      utterance.onend = () => {
+        setIsPlayingAudio(false);
+        setSpeakingTurnId(null);
+      };
+      utterance.onerror = () => {
+        setIsPlayingAudio(false);
+        setSpeakingTurnId(null);
+      };
+
       window.speechSynthesis.speak(utterance);
     }
   };
 
-  const handleCopy = () => {
-    if (translatedText) {
-      navigator.clipboard.writeText(translatedText);
+  const handleCopy = (text: string) => {
+    if (text) {
+      navigator.clipboard.writeText(text);
       setCopied(true);
       setTimeout(() => setCopied(false), 2000);
     }
   };
 
-  const selectQuickPhrase = (phrase: DayPhrase) => {
-    const phraseInSource = (phrase as any)[sourceLang] || phrase.te || phrase.en;
-    setInputText(phraseInSource);
-    const trans = (phrase as any)[targetLang] || phrase.en;
-    setTranslatedText(trans);
-  };
+  // Filtered Dialogues
+  const filteredDialogues = STRUCTURED_DIALOGUES.filter((d) => {
+    const matchesCategory =
+      selectedCategory === "All" || d.category.toLowerCase() === selectedCategory.toLowerCase();
+
+    if (!matchesCategory) return false;
+    if (!searchQuery.trim()) return true;
+
+    const q = searchQuery.toLowerCase();
+    const matchesTitle = d.title.toLowerCase().includes(q) || d.situation.toLowerCase().includes(q);
+    const matchesTurns = d.turns.some(
+      (t) =>
+        t.text.en?.toLowerCase().includes(q) ||
+        t.text.te?.toLowerCase().includes(q) ||
+        t.text.hi?.toLowerCase().includes(q)
+    );
+
+    return matchesTitle || matchesTurns;
+  });
 
   return (
     <div className="min-h-screen bg-[#0C0908] pb-28 text-[#F7F3EE]">
       <Navbar />
 
-      <main className="mx-auto max-w-5xl space-y-8 px-4 pt-24 sm:px-6 sm:pt-28 lg:px-8">
+      <main className="mx-auto max-w-5xl space-y-10 px-4 pt-24 sm:px-6 sm:pt-28 lg:px-8">
+        {/* Header */}
         <header className="space-y-3">
           <div className="inline-flex items-center gap-2 rounded-full border border-[#4E9F76]/30 bg-[#4E9F76]/10 px-3.5 py-1 text-xs font-semibold text-[#4E9F76]">
-            <Languages className="h-4 w-4" /> Everyday Conversational Intelligence · 13 Source Languages
+            <Languages className="h-4 w-4" /> Everyday Conversational Intelligence · 10 Core Practical Categories
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-[#F7F3EE] sm:text-5xl">
-            Day-to-Day Conversational Translator
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#F7F3EE] sm:text-4xl">
+            Day-to-Day Conversations & Multilingual Translator
           </h1>
-          <p className="max-w-2xl text-sm leading-relaxed text-[#C4B5A5] sm:text-base">
-            Translate spoken dialogue, market exchanges, medical roots, and regional phrases instantly across 13 source languages including indigenous tribal tongues (Gondi, Koya, Santhali, Lambadi).
+          <p className="max-w-3xl text-sm leading-relaxed text-[#C4B5A5] sm:text-base">
+            Natural everyday phrases, dialogues, college exchanges, market interactions, and medical communications. Includes source transliterations, pronunciation guidance, and interactive speech playback.
           </p>
         </header>
 
-        {/* Translation Studio Workspace */}
+        {/* SECTION 1: Interactive Translator Studio */}
         <section className="space-y-6 rounded-3xl border border-white/12 bg-[#1C1512]/70 p-5 sm:p-8 shadow-2xl backdrop-blur-xl">
-          {/* Dual Source & Target Selector Bar */}
+          {/* Language Selector Bar */}
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
-            {/* SOURCE LANGUAGE SELECTION */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
-              <span className="text-xs font-semibold text-[#C4B5A5]">Source Language:</span>
-
-              {/* Primary Source Pills */}
+            {/* SOURCE LANGUAGE */}
+            <div className="flex items-center gap-2">
+              <span className="text-xs font-semibold text-[#C4B5A5]">Source:</span>
               <div className="flex flex-wrap items-center gap-1.5">
-                {[
-                  { code: "te", name: "Telugu" },
-                  { code: "gondi", name: "Gondi" },
-                  { code: "koya", name: "Koya" },
-                  { code: "hi", name: "Hindi" },
-                  { code: "ta", name: "Tamil" },
-                  { code: "kn", name: "Kannada" },
-                ].map((s) => (
+                {SOURCE_LANGS.slice(0, 6).map((s) => (
                   <button
                     key={s.code}
                     type="button"
@@ -465,57 +348,6 @@ export default function DayToDayTranslationPage() {
                     {s.name}
                   </button>
                 ))}
-
-                {/* Source Language Dropdown with all 13 languages */}
-                <div className="relative">
-                  <button
-                    type="button"
-                    onClick={() => setIsSourceDropdownOpen(!isSourceDropdownOpen)}
-                    className="inline-flex min-h-8 items-center gap-1 rounded-full border border-white/15 bg-white/5 px-3 text-xs font-semibold text-[#F7F3EE] hover:bg-white/10 transition"
-                  >
-                    <span>
-                      {SOURCE_LANGS.slice(6).some((l) => l.code === sourceLang)
-                        ? activeSourceObj.name
-                        : "+ More"}
-                    </span>
-                    <ChevronDown className="h-3.5 w-3.5 text-[#C4B5A5]" />
-                  </button>
-
-                  {isSourceDropdownOpen && (
-                    <div className="absolute left-0 top-full z-30 mt-2 w-64 rounded-2xl border border-white/15 bg-[#1C1512] p-2 shadow-2xl backdrop-blur-2xl">
-                      <div className="px-2 py-1 text-[10px] font-mono uppercase tracking-wider text-[#C4B5A5]">
-                        Select from 13 Spoken Languages
-                      </div>
-                      <div className="max-h-64 overflow-y-auto space-y-1 pt-1">
-                        {SOURCE_LANGS.map((lang) => (
-                          <button
-                            key={lang.code}
-                            type="button"
-                            onClick={() => {
-                              setSourceLang(lang.code);
-                              setIsSourceDropdownOpen(false);
-                            }}
-                            className={`flex w-full items-center justify-between rounded-xl px-3 py-2 text-xs transition ${
-                              sourceLang === lang.code
-                                ? "bg-[#4E9F76] text-[#0C0908] font-bold"
-                                : "text-[#C4B5A5] hover:bg-white/5 hover:text-[#F7F3EE]"
-                            }`}
-                          >
-                            <span className="flex items-center gap-2">
-                              <span>{lang.native}</span>
-                              <span className="text-[10px] opacity-70">({lang.name})</span>
-                            </span>
-                            {lang.category === "indigenous" && (
-                              <span className="rounded bg-[#E58A4E]/20 px-1.5 py-0.5 text-[9px] font-bold text-[#E58A4E]">
-                                Tribal
-                              </span>
-                            )}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
               </div>
             </div>
 
@@ -523,63 +355,56 @@ export default function DayToDayTranslationPage() {
             <button
               type="button"
               onClick={handleSwapLanguages}
-              title="Swap Source and Target Languages"
+              title="Swap Languages"
               className="grid h-8 w-8 place-items-center rounded-full border border-white/15 bg-white/5 text-[#4E9F76] hover:bg-[#4E9F76] hover:text-[#0C0908] transition hover:scale-105"
             >
               <ArrowRightLeft className="h-3.5 w-3.5" />
             </button>
 
-            {/* TARGET LANGUAGE SELECTION */}
-            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+            {/* TARGET LANGUAGE */}
+            <div className="flex items-center gap-2">
               <span className="text-xs font-semibold text-[#C4B5A5]">Translate To:</span>
               <div className="flex flex-wrap items-center gap-1.5">
-                {TARGET_LANGS.map((lang) => (
+                {TARGET_LANGS.slice(0, 6).map((t) => (
                   <button
-                    key={lang.code}
+                    key={t.code}
                     type="button"
-                    onClick={() => setTargetLang(lang.code)}
+                    onClick={() => setTargetLang(t.code)}
                     className={`min-h-8 rounded-full px-3 text-xs font-semibold transition ${
-                      targetLang === lang.code
-                        ? "bg-[#4E9F76] text-[#0C0908] shadow-[0_0_16px_rgba(78,159,118,0.35)] font-bold"
+                      targetLang === t.code
+                        ? "bg-[#E58A4E] text-[#0C0908] shadow-[0_0_16px_rgba(229,138,78,0.35)] font-bold"
                         : "border border-white/10 text-[#C4B5A5] hover:text-[#F7F3EE] hover:bg-white/5"
                     }`}
                   >
-                    {lang.label}
+                    {t.label}
                   </button>
                 ))}
               </div>
             </div>
           </div>
 
-          {/* Active Languages Indicator Banner */}
+          {/* Active Banner */}
           <div className="flex items-center justify-between rounded-xl border border-white/10 bg-[#0C0908]/60 px-3.5 py-2 text-xs">
             <div className="flex items-center gap-2">
-              <span className="font-semibold text-[#F7F3EE]">Input:</span>
+              <span className="text-[#C4B5A5]">Speaking:</span>
               <span className="rounded-lg bg-[#4E9F76]/20 px-2 py-0.5 font-bold text-[#4E9F76]">
                 {activeSourceObj.native} ({activeSourceObj.name})
               </span>
-              {activeSourceObj.category === "indigenous" && (
-                <span className="inline-flex items-center gap-1 rounded bg-[#E58A4E]/20 px-2 py-0.5 text-[10px] font-bold text-[#E58A4E]">
-                  <Trees className="h-3 w-3" /> Indigenous Spoken Tradition
-                </span>
-              )}
             </div>
             <div className="flex items-center gap-2">
               <span className="text-[#C4B5A5]">Translating to:</span>
-              <span className="rounded-lg bg-[#4E9F76]/20 px-2 py-0.5 font-bold text-[#4E9F76]">
+              <span className="rounded-lg bg-[#E58A4E]/20 px-2 py-0.5 font-bold text-[#E58A4E]">
                 {activeTargetObj.label} ({activeTargetObj.name})
               </span>
             </div>
           </div>
 
-          {/* Dual Textboxes */}
+          {/* Input & Output Textboxes */}
           <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-            {/* Input Side */}
+            {/* Input Box */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-[#C4B5A5]">
-                <span className="font-semibold text-[#F7F3EE]">
-                  Speak or type in {activeSourceObj.name}:
-                </span>
+                <span className="font-semibold text-[#F7F3EE]">Speak or type in {activeSourceObj.name}:</span>
                 <span className="text-[#4E9F76]">Real-time Recognition</span>
               </div>
 
@@ -598,7 +423,7 @@ export default function DayToDayTranslationPage() {
                     onClick={handleSpeechInput}
                     className={`inline-flex items-center gap-1.5 rounded-full px-3 py-1.5 text-xs font-bold transition ${
                       isListening
-                        ? "bg-red-500 text-white animate-pulse shadow-[0_0_16px_rgba(239,68,68,0.4)]"
+                        ? "bg-red-500 text-white animate-pulse"
                         : "border border-white/15 bg-white/10 text-[#F7F3EE] hover:bg-white/20"
                     }`}
                   >
@@ -609,37 +434,28 @@ export default function DayToDayTranslationPage() {
               </div>
             </div>
 
-            {/* Translation Output Side */}
+            {/* Translation Output Box */}
             <div className="space-y-3">
               <div className="flex items-center justify-between text-xs text-[#C4B5A5]">
-                <span className="font-semibold text-[#F7F3EE]">
-                  Instant Translation into {activeTargetObj.name} (IndicTrans2):
-                </span>
+                <span className="font-semibold text-[#F7F3EE]">Translation in {activeTargetObj.name}:</span>
                 <div className="flex items-center gap-3">
                   <button
                     type="button"
-                    onClick={handleSpeakOutput}
+                    onClick={() => handleSpeakText(translatedText, activeTargetObj.speechCode)}
                     disabled={!translatedText}
+                    title="Pronounce via Browser Speech Engine"
                     className="inline-flex items-center gap-1 text-xs text-[#C4B5A5] hover:text-[#4E9F76] transition disabled:opacity-30"
                   >
-                    <Volume2
-                      className={`h-3.5 w-3.5 ${
-                        isPlayingAudio ? "text-[#4E9F76] animate-pulse" : ""
-                      }`}
-                    />
-                    <span>{isPlayingAudio ? "Speaking..." : "Pronounce"}</span>
+                    <Volume2 className={`h-3.5 w-3.5 ${isPlayingAudio ? "text-[#4E9F76] animate-pulse" : ""}`} />
+                    <span>{isPlayingAudio ? "Speaking..." : "Pronounce (Browser TTS)"}</span>
                   </button>
                   <button
                     type="button"
-                    onClick={handleCopy}
+                    onClick={() => handleCopy(translatedText)}
                     disabled={!translatedText}
                     className="inline-flex items-center gap-1 text-xs text-[#C4B5A5] hover:text-[#F7F3EE] transition disabled:opacity-30"
                   >
-                    {copied ? (
-                      <Check className="h-3.5 w-3.5 text-[#4E9F76]" />
-                    ) : (
-                      <Copy className="h-3.5 w-3.5" />
-                    )}
+                    {copied ? <Check className="h-3.5 w-3.5 text-[#4E9F76]" /> : <Copy className="h-3.5 w-3.5" />}
                     <span>{copied ? "Copied" : "Copy"}</span>
                   </button>
                 </div>
@@ -649,8 +465,10 @@ export default function DayToDayTranslationPage() {
                 {isTranslating ? (
                   <div className="flex items-center gap-2 text-xs text-[#4E9F76]">
                     <Sparkles className="h-4 w-4 animate-spin text-[#4E9F76]" />
-                    <span>Synthesizing translation...</span>
+                    <span>Translating phrase...</span>
                   </div>
+                ) : translationError ? (
+                  <p className="text-xs text-amber-400">{translationError}</p>
                 ) : (
                   <p className="text-base font-semibold leading-relaxed text-[#F7F3EE]">
                     {translatedText || "Translation will appear here instantly as you type or speak."}
@@ -661,60 +479,170 @@ export default function DayToDayTranslationPage() {
           </div>
         </section>
 
-        {/* Quick Day-to-Day Categories Matrix */}
-        <section className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-bold text-[#F7F3EE] flex items-center gap-2">
-              <Coffee className="h-5 w-5 text-[#4E9F76]" />
-              <span>Everyday Dialogue Samples across 13 Spoken Tongues (Click to Translate):</span>
-            </h2>
+        {/* SECTION 2: Dedicated Day-to-Day Conversation Module */}
+        <section className="space-y-6">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+            <div>
+              <h2 className="text-xl font-bold text-[#F7F3EE] flex items-center gap-2">
+                <MessageSquare className="h-5 w-5 text-[#4E9F76]" />
+                <span>Day-to-Day Conversations (10 Categories)</span>
+              </h2>
+              <p className="text-xs text-[#C4B5A5] pt-0.5">
+                Authentic dialogues with speaker turns, transliterations, and pronunciation guidance.
+              </p>
+            </div>
+
+            {/* Transliteration toggle */}
+            <div className="flex items-center gap-3">
+              <label className="flex items-center gap-2 text-xs text-[#C4B5A5] cursor-pointer">
+                <input
+                  type="checkbox"
+                  checked={showTransliteration}
+                  onChange={(e) => setShowTransliteration(e.target.checked)}
+                  className="rounded border-white/20 bg-black/40 text-[#4E9F76]"
+                />
+                <span>Show Transliteration</span>
+              </label>
+            </div>
           </div>
 
-          <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
-            {DAILY_PHRASES.map((phrase, idx) => {
-              const currentDisplayPhrase =
-                (phrase as any)[sourceLang] || phrase.te || phrase.en;
+          {/* Search bar */}
+          <div className="relative">
+            <Search className="absolute left-4 top-3.5 h-4 w-4 text-[#C4B5A5]" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder="Search phrases by English, Telugu, or Hindi keyword (e.g. 'assignment', 'fever', 'price', 'water')..."
+              className="w-full min-h-11 rounded-2xl border border-white/10 bg-[#1C1512]/60 pl-11 pr-4 text-xs text-[#F7F3EE] outline-none placeholder:text-[#C4B5A5]/50 focus:border-[#4E9F76]"
+            />
+          </div>
 
-              return (
-                <div
-                  key={idx}
-                  onClick={() => selectQuickPhrase(phrase)}
-                  className="group cursor-pointer space-y-3 rounded-2xl border border-white/10 bg-[#1C1512]/60 p-5 transition hover:-translate-y-0.5 hover:border-[#4E9F76]/40 hover:bg-[#1C1512]/85 backdrop-blur-xl"
-                >
-                  <div className="flex items-center justify-between text-[11px]">
-                    <span className="rounded-md border border-[#4E9F76]/30 bg-[#4E9F76]/15 px-2.5 py-0.5 font-bold text-[#4E9F76]">
-                      {phrase.category}
+          {/* 10 Category Selector Tabs */}
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={() => setSelectedCategory("All")}
+              className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                selectedCategory === "All"
+                  ? "bg-[#4E9F76] text-[#0C0908] font-bold shadow-md"
+                  : "border border-white/10 text-[#C4B5A5] hover:bg-white/5 hover:text-[#F7F3EE]"
+              }`}
+            >
+              All (10 Categories)
+            </button>
+            {CONVERSATION_CATEGORIES.map((cat) => (
+              <button
+                key={cat}
+                type="button"
+                onClick={() => setSelectedCategory(cat)}
+                className={`rounded-full px-3.5 py-1.5 text-xs font-semibold transition ${
+                  selectedCategory.toLowerCase() === cat.toLowerCase()
+                    ? "bg-[#4E9F76] text-[#0C0908] font-bold shadow-md"
+                  : "border border-white/10 text-[#C4B5A5] hover:bg-white/5 hover:text-[#F7F3EE]"
+                }`}
+              >
+                {cat}
+              </button>
+            ))}
+          </div>
+
+          {/* Dialogue Cards */}
+          <div className="grid grid-cols-1 gap-6">
+            {filteredDialogues.map((dialogue) => (
+              <div
+                key={dialogue.id}
+                className="space-y-4 rounded-3xl border border-white/10 bg-[#1C1512]/70 p-6 backdrop-blur-xl shadow-xl transition hover:border-[#4E9F76]/40"
+              >
+                {/* Header */}
+                <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                  <div>
+                    <span className="rounded-md border border-[#4E9F76]/30 bg-[#4E9F76]/15 px-2.5 py-0.5 text-[11px] font-bold text-[#4E9F76]">
+                      {dialogue.category}
                     </span>
-                    <span className="text-[#4E9F76] font-semibold opacity-80 group-hover:opacity-100">
-                      Translate in {activeTargetObj.name} →
-                    </span>
+                    <h3 className="text-base font-bold text-[#F7F3EE] pt-1.5">{dialogue.title}</h3>
                   </div>
-
-                  <p className="text-sm font-bold text-[#F7F3EE] group-hover:text-[#4E9F76] transition">
-                    {currentDisplayPhrase}
-                  </p>
-
-                  <div className="space-y-1 rounded-xl border border-white/5 bg-[#0C0908]/60 p-3 text-xs text-[#C4B5A5]">
-                    <div>
-                      <span className="font-semibold text-[#F7F3EE] mr-1.5">English:</span>
-                      <span>{phrase.en}</span>
-                    </div>
-                    {phrase.hi && (
-                      <div>
-                        <span className="font-semibold text-[#4E9F76] mr-1.5">Hindi:</span>
-                        <span>{phrase.hi}</span>
-                      </div>
-                    )}
-                    {phrase.gondi && (
-                      <div>
-                        <span className="font-semibold text-[#E58A4E] mr-1.5">Gondi:</span>
-                        <span>{phrase.gondi}</span>
-                      </div>
-                    )}
-                  </div>
+                  <span className="text-[11px] text-[#C4B5A5] italic">{dialogue.situation}</span>
                 </div>
-              );
-            })}
+
+                {/* Speaker Dialogue Turns */}
+                <div className="space-y-4 pt-1">
+                  {dialogue.turns.map((turn, tIdx) => {
+                    const turnKey = `${dialogue.id}-${tIdx}`;
+                    const sourceText = turn.text[sourceLang] || turn.text.te || turn.text.en;
+                    const targetText = turn.text[targetLang] || turn.text.en;
+                    const translit = turn.transliteration[sourceLang] || turn.transliteration.te || turn.transliteration.hi;
+                    const isTurnPlaying = speakingTurnId === turnKey;
+
+                    return (
+                      <div
+                        key={tIdx}
+                        className="rounded-2xl border border-white/5 bg-[#0C0908]/60 p-4 space-y-2.5"
+                      >
+                        <div className="flex items-center justify-between text-xs">
+                          <span className="font-bold text-[#E58A4E]">{turn.speaker}:</span>
+                          <div className="flex items-center gap-2">
+                            {/* Browser TTS playback with transparent labeling */}
+                            <button
+                              type="button"
+                              onClick={() => handleSpeakText(sourceText, activeSourceObj.speechCode, turnKey)}
+                              title="Listen to pronunciation (Browser TTS)"
+                              className="inline-flex items-center gap-1 rounded-lg border border-white/10 bg-white/5 px-2.5 py-1 text-[11px] text-[#C4B5A5] hover:text-[#4E9F76] hover:bg-white/10 transition"
+                            >
+                              <Volume2 className={`h-3 w-3 ${isTurnPlaying ? "text-[#4E9F76] animate-pulse" : ""}`} />
+                              <span>{isTurnPlaying ? "Speaking..." : "Audio (Browser TTS)"}</span>
+                            </button>
+
+                            {/* Load into translator */}
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setInputText(sourceText);
+                                performTranslation(sourceText, targetLang, sourceLang);
+                                window.scrollTo({ top: 180, behavior: "smooth" });
+                              }}
+                              className="inline-flex items-center gap-1 rounded-lg border border-[#4E9F76]/30 bg-[#4E9F76]/10 px-2.5 py-1 text-[11px] font-semibold text-[#4E9F76] hover:bg-[#4E9F76]/20 transition"
+                            >
+                              <span>Use in Translator ↑</span>
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Original Phrase */}
+                        <p className="text-sm font-semibold text-[#F7F3EE] leading-relaxed">
+                          {sourceText}
+                        </p>
+
+                        {/* Transliteration */}
+                        {showTransliteration && translit && (
+                          <p className="text-xs font-mono text-[#C4B5A5]/80 bg-white/[0.02] p-2 rounded-lg border border-white/5">
+                            🔤 Transliteration: {translit}
+                          </p>
+                        )}
+
+                        {/* Target Language Translation */}
+                        <div className="rounded-xl border border-white/5 bg-[#1C1512]/60 p-2.5 text-xs space-y-1">
+                          <span className="font-semibold text-[#4E9F76] mr-1.5">{activeTargetObj.name} Translation:</span>
+                          <span className="text-[#F7F3EE]">{targetText}</span>
+                        </div>
+
+                        {/* Pronunciation Guidance */}
+                        {turn.pronunciationGuidance && (
+                          <p className="text-[11px] text-[#C4B5A5]/70 pt-0.5">
+                            💡 <span className="font-semibold text-[#C4B5A5]">Pronunciation tip:</span> {turn.pronunciationGuidance}
+                          </p>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+
+            {filteredDialogues.length === 0 && (
+              <div className="rounded-2xl border border-white/10 bg-[#1C1512]/60 p-8 text-center text-[#C4B5A5]">
+                No dialogues found matching your query. Try a different category or search term.
+              </div>
+            )}
           </div>
         </section>
       </main>

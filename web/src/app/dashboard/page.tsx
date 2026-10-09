@@ -104,6 +104,57 @@ export default function DashboardPage() {
           </Link>
         </div>
 
+        {/* WORKSPACE MODULES: EVERYDAY CONVERSATIONS & AUDIO TRANSCRIPTION */}
+        <section aria-label="Core workspace features" className="grid grid-cols-1 md:grid-cols-2 gap-5">
+          <Link
+            href="/translate"
+            className="group rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.3)] p-6 hover:border-[#F9B17A]/50 transition backdrop-blur-xl flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F9B17A] bg-[#F9B17A]/15 border border-[#F9B17A]/30 px-2.5 py-1 rounded-full">
+                  Interactive Module
+                </span>
+                <span className="text-xs text-[#A9AEC5]">10 Dialogue Categories</span>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#F9B17A] transition-colors">
+                Everyday Conversations
+              </h2>
+              <p className="text-xs text-[#A9AEC5] leading-relaxed mb-4">
+                Browse verified daily dialogues across Greetings, College, Shopping, Food, Travel, Healthcare and more with Telugu, English, Hindi, and Gondi transliteration, pronunciation tips, and voice playback.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-[#F9B17A] font-semibold">
+              <span>Open Conversation Module</span>
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+
+          <Link
+            href="/upload"
+            className="group rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.3)] p-6 hover:border-[#F9B17A]/50 transition backdrop-blur-xl flex flex-col justify-between"
+          >
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F9B17A] bg-[#F9B17A]/15 border border-[#F9B17A]/30 px-2.5 py-1 rounded-full">
+                  AI Pipeline
+                </span>
+                <span className="text-xs text-[#A9AEC5]">WAV · MP3 · M4A · WebM</span>
+              </div>
+              <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#F9B17A] transition-colors">
+                Audio Transcription & Translation
+              </h2>
+              <p className="text-xs text-[#A9AEC5] leading-relaxed mb-4">
+                Ingest audio recordings, play original audio, perform speech-to-text recognition in the source language, edit the transcript, and translate into the selected target language.
+              </p>
+            </div>
+            <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-[#F9B17A] font-semibold">
+              <span>Launch Audio Pipeline</span>
+              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            </div>
+          </Link>
+        </section>
+
         {/* Cloud Object Storage & Data Protection Panel */}
         <section className="overflow-hidden rounded-3xl border border-white/15 bg-[rgba(36,41,66,0.85)] p-6 sm:p-8 shadow-2xl space-y-6 backdrop-blur-xl">
           <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">

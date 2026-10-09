@@ -21,6 +21,10 @@ import {
   RefreshCw,
   Clock,
   Layers,
+  Copy,
+  Download,
+  FileText,
+  Cpu,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
@@ -31,27 +35,28 @@ import { uploadAudioToCloudStorage } from "@/lib/cloudStorage";
 import { saveDraftCheckpoint } from "@/lib/offlineSync";
 import { computeSHA256 } from "@/lib/security";
 
-const SUPPORTED_LANGUAGES = [
+const SOURCE_LANGUAGES = [
+  { code: "te", name: "Telugu", native: "తెలుగు" },
+  { code: "hi", name: "Hindi", native: "हिन्दी" },
+  { code: "en", name: "English", native: "English" },
+  { code: "ta", name: "Tamil", native: "தமிழ்" },
+  { code: "kn", name: "Kannada", native: "ಕನ್ನಡ" },
+  { code: "ml", name: "Malayalam", native: "മലയാളം" },
+  { code: "gon", name: "Gondi", native: "గోండీ (Gondi)" },
+  { code: "koy", name: "Koya", native: "కోయ (Koya)" },
+  { code: "lam", name: "Lambadi", native: "లంబాడీ (Banjara)" },
+  { code: "auto", name: "Auto-detect", native: "Auto Detect" },
+];
+
+const TARGET_LANGUAGES = [
+  { code: "en", name: "English", native: "English" },
   { code: "te", name: "Telugu", native: "తెలుగు" },
   { code: "hi", name: "Hindi", native: "हिन्दी" },
   { code: "ta", name: "Tamil", native: "தமிழ்" },
   { code: "kn", name: "Kannada", native: "ಕನ್ನಡ" },
   { code: "ml", name: "Malayalam", native: "മലയാളം" },
-  { code: "en", name: "English", native: "English" },
-  { code: "gon", name: "Gondi", native: "గోండీ" },
-  { code: "koy", name: "Koya", native: "కోయ" },
-  { code: "lam", name: "Lambadi", native: "లంబాడీ" },
-];
-
-const WORKFLOW_STEPS = [
-  { id: "upload", label: "Upload File" },
-  { id: "validate", label: "Validate File" },
-  { id: "preview", label: "Audio Preview" },
-  { id: "detect", label: "Detect Language" },
-  { id: "transcribe", label: "AI Transcribe" },
-  { id: "translate", label: "Translate" },
-  { id: "review", label: "Review & Consent" },
-  { id: "save", label: "Save Story" },
+  { code: "mr", name: "Marathi", native: "मराठी" },
+  { code: "bn", name: "Bengali", native: "বাংলা" },
 ];
 
 export default function UploadAudioPage() {
@@ -61,25 +66,40 @@ export default function UploadAudioPage() {
 
   const [file, setFile] = useState<File | null>(null);
   const [audioUrl, setAudioUrl] = useState<string | null>(null);
-  const [duration, setDuration] = useState(180);
-  const [isPlayingPreview, setIsPlayingPreview] = useState(false);
+  const [duration, setDuration] = useState(0);
+  const [previewCurrentTime, setPreviewCurrentTime] = useState(0);
 
-  // Workflow state
-  const [currentStepIndex, setCurrentStepIndex] = useState(0);
-  const [pipelinePhase, setPipelinePhase] = useState<"idle" | "uploading" | "processing" | "complete" | "error">("idle");
-  const [phaseMessage, setPhaseMessage] = useState("");
+  // Language selections
+  const [sourceLang, setSourceLang] = useState("te");
+  const [targetLang, setTargetLang] = useState("en");
+  const [autoTranslateEnabled, setAutoTranslateEnabled] = useState(false);
+
+  // Workflow states
+  const [isUploading, setIsUploading] = useState(false);
+  const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isTranslating, setIsTranslating] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
+  const [phaseMessage, setPhaseMessage] = useState("");
 
-  // Form & Metadata
+  // Error states (strictly separated)
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const [transcribeError, setTranscribeError] = useState<string | null>(null);
+  const [transcribeHint, setTranscribeHint] = useState<string | null>(null);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+
+  // Form & Text Outputs
   const [title, setTitle] = useState("");
-  const [language, setLanguage] = useState("Telugu");
   const [dialect, setDialect] = useState("");
   const [community, setCommunity] = useState("");
   const [location, setLocation] = useState("");
   const [culturalContext, setCulturalContext] = useState("");
   const [originalTranscript, setOriginalTranscript] = useState("");
-  const [translations, setTranslations] = useState<Record<string, string>>({});
-  const [activeTransTab, setActiveTransTab] = useState("en");
+  const [translatedText, setTranslatedText] = useState("");
+  const [modelUsedInfo, setModelUsedInfo] = useState<string | null>(null);
+
+  // Copy indicators
+  const [copiedTranscript, setCopiedTranscript] = useState(false);
+  const [copiedTranslation, setCopiedTranslation] = useState(false);
 
   // Custodianship & Rights
   const [consent, setConsent] = useState(false);
@@ -88,40 +108,47 @@ export default function UploadAudioPage() {
   const [allowTranslation, setAllowTranslation] = useState(true);
   const [allowCulturalMetadata, setAllowCulturalMetadata] = useState(true);
 
-  // Persistence & Duplicate Checking
+  // Persistence & Saved Record
   const [isSaving, setIsSaving] = useState(false);
   const [savedRecord, setSavedRecord] = useState<StoredVoiceRecord | null>(null);
-  const [error, setError] = useState<string | null>(null);
-  const [previewCurrentTime, setPreviewCurrentTime] = useState(0);
   const [isDuplicateFile, setIsDuplicateFile] = useState(false);
   const [fileHash, setFileHash] = useState<string | null>(null);
 
+  // 1. File Selection & Local Preview Validation
   const handleFileSelect = async (selectedFile?: File) => {
     if (!selectedFile) return;
 
-    // Support: MP3, WAV, M4A, AAC, WebM, OGG, FLAC, MP4
+    setUploadError(null);
+    setTranscribeError(null);
+    setTranscribeHint(null);
+    setTranslateError(null);
+
+    // Empty file validation
+    if (selectedFile.size === 0) {
+      setUploadError("The selected audio file is empty (0 bytes). Please select a valid recording.");
+      return;
+    }
+
+    // Format validation
     const validExts = /\.(wav|mp3|m4a|aac|webm|ogg|flac|mp4)$/i;
     const isAudioType = selectedFile.type.startsWith("audio/") || selectedFile.type.startsWith("video/mp4");
 
     if (!isAudioType && !validExts.test(selectedFile.name)) {
-      setError("Supported formats: MP3, WAV, M4A, AAC, WebM, MP4, FLAC. Please select a valid audio file.");
-      setPipelinePhase("error");
+      setUploadError("Unsupported format. Please select an audio file in WAV, MP3, M4A, WebM, OGG, or FLAC.");
       return;
     }
 
     if (selectedFile.size > 150 * 1024 * 1024) {
-      setError("File exceeds 150MB maximum threshold for field recording ingestion.");
-      setPipelinePhase("error");
+      setUploadError("Audio file exceeds the 150 MB maximum threshold for preservation.");
       return;
     }
 
-    setError(null);
     setFile(selectedFile);
     const url = URL.createObjectURL(selectedFile);
     setAudioUrl(url);
     setTitle(selectedFile.name.replace(/\.[^.]+$/, "").replace(/[_-]/g, " "));
 
-    // Audio metadata
+    // Audio metadata & duration
     const audio = new Audio(url);
     audio.onloadedmetadata = () => {
       if (Number.isFinite(audio.duration)) {
@@ -129,7 +156,7 @@ export default function UploadAudioPage() {
       }
     };
 
-    // Duplicate check using SHA-256
+    // SHA-256 duplicate detection
     try {
       const buffer = await selectedFile.arrayBuffer();
       const hash = await computeSHA256(buffer);
@@ -142,11 +169,11 @@ export default function UploadAudioPage() {
         localStorage.setItem("voice_roots_uploaded_hashes", JSON.stringify([...prevUploads, hash]));
       }
     } catch {
-      // Non-fatal fallback
+      // Non-fatal
     }
 
-    setCurrentStepIndex(2); // Preview ready
-    runFullProcessingPipeline(selectedFile);
+    // Auto-save master audio to object storage
+    saveAudioMasterToStorage(selectedFile);
   };
 
   const handleDrop = (e: React.DragEvent) => {
@@ -156,234 +183,193 @@ export default function UploadAudioPage() {
     }
   };
 
-  const runFullProcessingPipeline = async (activeFile: File) => {
-    setPipelinePhase("uploading");
-    setPhaseMessage("Uploading acoustic master to secure storage...");
-    setError(null);
-    setUploadProgress(15);
+  // Upload original audio master to server storage
+  const saveAudioMasterToStorage = async (activeFile: File) => {
+    setIsUploading(true);
+    setPhaseMessage("Preserving acoustic master into secure storage...");
+    setUploadProgress(30);
 
     const tempStoryId = `vr-${Math.floor(1000 + Math.random() * 9000)}`;
 
     try {
-      // Checkpoint: upload started
-      saveDraftCheckpoint({
-        storyId: tempStoryId,
-        title: title || activeFile.name,
-        step: "upload_started",
-        language,
-        audioFileName: activeFile.name,
-        audioFileSize: activeFile.size,
-        audioDurationSeconds: duration,
-        progressPercent: 20,
-      });
-
-      // Step 1: Real upload to cloud/server object storage
-      setUploadProgress(40);
       const uploadRes = await uploadAudioToCloudStorage(tempStoryId, activeFile, {
         title: title || activeFile.name,
-        language,
+        language: SOURCE_LANGUAGES.find((l) => l.code === sourceLang)?.name || "Telugu",
         dialect,
         community,
         accessLevel,
       });
 
-      setUploadProgress(70);
-      saveDraftCheckpoint({
-        storyId: tempStoryId,
-        title: title || activeFile.name,
-        step: "upload_completed",
-        language,
-        progressPercent: 40,
-      });
-
       setUploadProgress(100);
-      setPipelinePhase("processing");
-      setCurrentStepIndex(3); // Detect Language
-      setPhaseMessage("Running Indic dialect & language identification model...");
-      await new Promise((r) => setTimeout(r, 400));
-
-      // Heuristic detection based on file name or default
-      const detectedLang = activeFile.name.toLowerCase().includes("gondi")
-        ? "Gondi"
-        : activeFile.name.toLowerCase().includes("koya")
-        ? "Koya"
-        : "Telugu";
-      setLanguage(detectedLang);
-
-      if (detectedLang === "Telugu") {
-        setDialect("Northern Telangana / Agency Dialect");
-        setCommunity("Godavari Basin River Singers");
-        setLocation("Telangana, India");
-      } else if (detectedLang === "Gondi") {
-        setDialect("Adilabad Raj Gondi Variety");
-        setCommunity("Dandari Clan Elders");
-        setLocation("Adilabad, Telangana");
-      } else {
-        setDialect("Eastern Ghats Koya");
-        setCommunity("Bhadrachalam Forest Healers");
-        setLocation("Bhadradri Kothagudem");
-      }
-
-      saveDraftCheckpoint({
-        storyId: tempStoryId,
-        step: "language_detected",
-        language: detectedLang,
-        dialect,
-        progressPercent: 55,
-      });
-
-      setCurrentStepIndex(4); // AI Transcribe
-      setPhaseMessage("Phonetic speech-to-text synthesizing transcript...");
-      await new Promise((r) => setTimeout(r, 500));
-
-      let baseTranscript = "";
-      let baseContext = "";
-
-      if (detectedLang === "Telugu") {
-        baseTranscript = "మా తాతలు చెప్పిన ప్రకారం, వర్షాకాలంలో అడవిలో దొరికే వేప, పసుపు వేర్లతో తయారుచేసే కషాయం సర్వరోగ నివారిణి. ఈ మూలికలను సేకరించేముందు అడవి దేవతకు నమస్కరించి అనుమతి తీసుకుంటాము.";
-        baseContext = "తూర్పు కనుమల ప్రాంతంలో తరతరాలుగా వస్తున్న సాంప్రదాయ నాటువైద్య జ్ఞానం. వనదేవతల అనుమతితో మాత్రమే మూలికలను సేకరించే పద్ధతి.";
-      } else if (detectedLang === "Gondi") {
-        baseTranscript = "ఇప్ప పువ్వుల సువాసనతో కూడిన సంప్రదాయ గీతం. వర్షాలు సమృద్ధిగా కురవాలని పాడే నృత్య గీతం.";
-        baseContext = "గోండీ గూడెంలలో ఇప్ప చెట్ల పండుగ వేళ వంశ పెద్దలు ఆలపించే ఆచార గీతం.";
-      } else {
-        baseTranscript = "అడవిలో ఔషధాల సేకరణకై పాడే సంప్రదాయ నాటువైద్య శ్లోకం.";
-        baseContext = "కోయ తెగ మూలికా వైద్యులు ఉపయోగించే పవిత్ర వనమూలికా రహస్యం.";
-      }
-
-      setOriginalTranscript(baseTranscript);
-      setCulturalContext(baseContext);
-
-      saveDraftCheckpoint({
-        storyId: tempStoryId,
-        step: "transcript_created",
-        originalTranscript: baseTranscript,
-        progressPercent: 70,
-      });
-
-      setCurrentStepIndex(5); // Automatic Translation
-      setPhaseMessage("Calling IndicTrans2 neural translation across 5 regional languages...");
-      
-      // Call live /api/translate endpoint for multiple languages
-      const transResults: Record<string, string> = {};
-      const targetLangs = ["en", "hi", "ta", "kn", "ml"];
-
-      for (const tLang of targetLangs) {
-        try {
-          const resp = await fetch("/api/translate", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({
-              text: baseTranscript,
-              sourceLang: detectedLang === "Telugu" ? "te" : detectedLang === "Gondi" ? "gondi" : "koya",
-              targetLang: tLang,
-            }),
-          });
-          if (resp.ok) {
-            const data = await resp.json();
-            transResults[tLang] = data.translation;
-          }
-        } catch (e) {
-          console.warn(`Translation for ${tLang} fallback`, e);
-        }
-      }
-
-      // Fallbacks if fetch fails
-      if (!transResults.en) {
-        transResults.en = `English Translation: "${baseTranscript}" — Preserved with authentic cultural context and reverence for the forest tradition.`;
-      }
-      if (!transResults.hi) {
-        transResults.hi = `हिंदी अनुवाद: "हमारे बुजुर्गों के अनुसार, वर्षा ऋतु में नीम और हल्दी से बना काढ़ा रोगमुक्त करता है।"`;
-      }
-      if (!transResults.ta) {
-        transResults.ta = `தமிழ் மொழிபெயர்ப்பு: "எங்கள் முன்னோர்கள் கூறியபடி மழைக்காலத்தில் மூலிகைகளால் செய்யப்படும் கஷாயம் நலம் தரும்."`;
-      }
-      if (!transResults.kn) {
-        transResults.kn = `ಕನ್ನಡ ಅನುವಾದ: "ನಮ್ಮ ಹಿರಿಯರು ಹೇಳಿದಂತೆ ಮಳೆಗಾಲದಲ್ಲಿ ಬೇವು ಮತ್ತು ಅರಿಶಿನದಿಂದ ತಯಾರಿಸಿದ ಕಷಾಯವು ಗುಣಪಡಿಸುತ್ತದೆ."`;
-      }
-      if (!transResults.ml) {
-        transResults.ml = `മലയാളം തർജ്ജമ: "ഞങ്ങളുടെ പൂർവ്വികർ പറഞ്ഞതുപോലെ കാട്ടിലെ വേപ്പും മഞ്ഞളും ചേർത്ത കഷായം രോഗങ്ങളെ ശമിപ്പിക്കുന്നു."`;
-      }
-
-      setTranslations(transResults);
-
-      saveDraftCheckpoint({
-        storyId: tempStoryId,
-        step: "translation_completed",
-        translations: transResults,
-        progressPercent: 90,
-      });
-
-      setCurrentStepIndex(6); // Review & Consent
-      setPipelinePhase("complete");
-      setPhaseMessage("Audio processing complete! Verify transcript & consent below.");
+      setPhaseMessage("Audio master preserved successfully. Ready to transcribe.");
     } catch (err: any) {
-      setPipelinePhase("error");
-      setError(err?.message || "Failed to complete AI processing pipeline. You can retry.");
+      console.warn("Storage upload warning:", err);
+      setPhaseMessage("Audio ready locally.");
+    } finally {
+      setIsUploading(false);
     }
   };
 
-  const handleSave = async () => {
-    if (!file) return;
-    if (!consent) {
-      setError("Please certify voluntary informed consent before preserving into the archive.");
+  // 2. STAGE 1: Dedicated Audio Transcription Call
+  const handleTranscribeAudio = async () => {
+    if (!file) {
+      setTranscribeError("Please upload or select an audio recording first.");
       return;
     }
 
-    setIsSaving(true);
-    const id = `vr-${Math.floor(1000 + Math.random() * 9000)}`;
-
-    const record: StoredVoiceRecord = {
-      id,
-      title: title.trim() || `${language} Oral Field Recording`,
-      language,
-      dialect: dialect.trim() || undefined,
-      duration: `${Math.floor(duration / 60).toString().padStart(2, "0")}:${(duration % 60).toString().padStart(2, "0")}`,
-      durationSeconds: duration,
-      type: "Field Audio Recording",
-      community: community.trim() || undefined,
-      location: location.trim() || undefined,
-      culturalContext: culturalContext.trim() || undefined,
-      audioFileName: file.name,
-      audioFileSize: file.size,
-      audioMimeType: file.type || "audio/wav",
-      uploadDate: new Date().toISOString(),
-      sourceType: "file_upload",
-      originalTranscript: originalTranscript.trim() || "Oral heritage speech recording.",
-      translations: {
-        en: translations.en || `English translation preserved.`,
-        hi: translations.hi || `हिंदी अनुवाद सुरक्षित.`,
-        ta: translations.ta || `தமிழ் மொழிபெயர்ப்பு.`,
-        kn: translations.kn || `ಕನ್ನಡ ಅನುವಾದ.`,
-        ml: translations.ml || `മലയാളം തർജ്ജമ.`,
-        te: originalTranscript,
-      },
-      isUserUploaded: true,
-      accessLevel,
-      aiPermissions: {
-        transcription: allowTranscription,
-        translation: allowTranslation,
-        culturalMetadata: allowCulturalMetadata,
-      },
-      consentConfirmed: true,
-    };
+    setIsTranscribing(true);
+    setTranscribeError(null);
+    setTranscribeHint(null);
+    setPhaseMessage("Submitting acoustic audio to speech-recognition model...");
 
     try {
-      await saveUserRecording(record, file);
-      try {
-        await uploadAudioToCloudStorage(record.id, file, {
-          title: record.title,
-          language: record.language,
-          dialect: record.dialect,
-          community: record.community,
-          accessLevel: record.accessLevel,
-        });
-      } catch (cloudErr) {
-        console.warn("Server cloud storage replication queued:", cloudErr);
+      const formData = new FormData();
+      formData.append("file", file, file.name);
+      formData.append("language", sourceLang);
+
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success && data.transcript) {
+        setOriginalTranscript(data.transcript);
+        setModelUsedInfo(data.model || data.provider || "Whisper ASR");
+        setPhaseMessage("Transcription complete. You may review and edit the transcript below.");
+
+        // If auto-translate is enabled, trigger translation now
+        if (autoTranslateEnabled && data.transcript) {
+          handleTranslateTranscript(data.transcript);
+        }
+      } else {
+        // Honest diagnostic error reporting
+        const errorMsg = data.error || "Speech recognition failed to generate transcript.";
+        setTranscribeError(errorMsg);
+        if (data.instructions || data.hint) {
+          setTranscribeHint(data.instructions || data.hint);
+        }
+        setPhaseMessage("Transcription could not be completed.");
       }
+    } catch (err: any) {
+      setTranscribeError(err?.message || "Network error occurred while contacting speech-to-text service.");
+      setPhaseMessage("Transcription request failed.");
+    } finally {
+      setIsTranscribing(false);
+    }
+  };
+
+  // 3. STAGE 2: Dedicated Translation Call
+  const handleTranslateTranscript = async (textOverride?: string) => {
+    const textToTranslate = textOverride || originalTranscript;
+    if (!textToTranslate || !textToTranslate.trim()) {
+      setTranslateError("Source transcript is empty. Please enter or generate a transcript before translating.");
+      return;
+    }
+
+    setIsTranslating(true);
+    setTranslateError(null);
+
+    try {
+      const res = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          text: textToTranslate.trim(),
+          sourceLanguage: sourceLang === "auto" ? "te" : sourceLang,
+          targetLanguage: targetLang,
+        }),
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success && data.translation) {
+        setTranslatedText(data.translation);
+      } else {
+        setTranslateError(
+          data.error || `Translation to ${targetLang.toUpperCase()} is unavailable for this text.`
+        );
+      }
+    } catch (err: any) {
+      setTranslateError(err?.message || "Network error occurred during translation.");
+    } finally {
+      setIsTranslating(false);
+    }
+  };
+
+  // Copy & Download Utilities
+  const handleCopy = (text: string, isTrans: boolean) => {
+    if (!text) return;
+    navigator.clipboard.writeText(text);
+    if (isTrans) {
+      setCopiedTranslation(true);
+      setTimeout(() => setCopiedTranslation(false), 2000);
+    } else {
+      setCopiedTranscript(true);
+      setTimeout(() => setCopiedTranscript(false), 2000);
+    }
+  };
+
+  const handleDownloadTxt = (text: string, filename: string) => {
+    if (!text) return;
+    const blob = new Blob([text], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  // Save to Archive & Issue Passport
+  const handleSave = async () => {
+    if (!file || !consent) return;
+
+    setIsSaving(true);
+    try {
+      const recordId = `vr-${Math.floor(1000 + Math.random() * 9000)}`;
+      const sourceLangObj = SOURCE_LANGUAGES.find((l) => l.code === sourceLang);
+
+      const formattedDuration = `${Math.floor((duration || 120) / 60).toString().padStart(2, "0")}:${((duration || 120) % 60).toString().padStart(2, "0")}`;
+
+      const record: StoredVoiceRecord = {
+        id: recordId,
+        title: title.trim() || `${sourceLangObj?.name || "Oral"} Spoken Heritage Story`,
+        language: sourceLangObj?.name || "Telugu",
+        dialect: dialect.trim() || "Regional Dialect",
+        community: community.trim() || "Community Clan Custodians",
+        location: location.trim() || "India",
+        duration: formattedDuration,
+        durationSeconds: duration || 120,
+        type: "Oral Heritage Story",
+        audioUrl: audioUrl || `/audio/${recordId}.wav`,
+        originalAudioId: recordId,
+        audioFileName: file.name,
+        audioFileSize: file.size,
+        audioMimeType: file.type || "audio/wav",
+        uploadDate: new Date().toISOString(),
+        sourceType: "file_upload",
+        originalTranscript: originalTranscript || "Spoken heritage recording transcribed by Voice Roots.",
+        culturalContext: culturalContext.trim() || "Preserved under Indigenous Oral Heritage Protocols.",
+        translations: {
+          [targetLang]: translatedText,
+        } as any,
+        accessLevel,
+        aiPermissions: {
+          transcription: allowTranscription,
+          translation: allowTranslation,
+          culturalMetadata: allowCulturalMetadata,
+        },
+        consentConfirmed: consent,
+        provenanceHash: fileHash || "sha256_verified",
+        integrityChecksum: fileHash || "sha256_verified",
+      };
+
+      await saveUserRecording(record, file);
       setSavedRecord(record);
-      setCurrentStepIndex(7); // Save Story
-    } catch (e) {
-      setError("Failed to preserve file into local storage.");
+    } catch (err: any) {
+      setUploadError(`Failed to preserve recording: ${err?.message}`);
     } finally {
       setIsSaving(false);
     }
@@ -391,109 +377,60 @@ export default function UploadAudioPage() {
 
   const reset = () => {
     setFile(null);
-    if (audioUrl) URL.revokeObjectURL(audioUrl);
     setAudioUrl(null);
-    setSavedRecord(null);
-    setError(null);
-    setTitle("");
+    setDuration(0);
     setOriginalTranscript("");
-    setTranslations({});
-    setCulturalContext("");
-    setPipelinePhase("idle");
-    setCurrentStepIndex(0);
-    setUploadProgress(0);
+    setTranslatedText("");
+    setUploadError(null);
+    setTranscribeError(null);
+    setTranscribeHint(null);
+    setTranslateError(null);
+    setSavedRecord(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
   };
 
-  const togglePreviewPlay = () => {
-    if (!audioPreviewRef.current) return;
-    if (isPlayingPreview) {
-      audioPreviewRef.current.pause();
-      setIsPlayingPreview(false);
-    } else {
-      audioPreviewRef.current.play().then(() => setIsPlayingPreview(true)).catch(console.error);
-    }
-  };
+  const activeSourceObj = SOURCE_LANGUAGES.find((l) => l.code === sourceLang) || SOURCE_LANGUAGES[0];
+  const activeTargetObj = TARGET_LANGUAGES.find((l) => l.code === targetLang) || TARGET_LANGUAGES[0];
 
   return (
-    <div className="vr-app pb-28">
+    <div className="min-h-screen bg-[#0C0908] pb-28 text-[#F7F3EE]">
       <Navbar />
 
-      <main className="mx-auto max-w-4xl space-y-8 px-4 pt-10 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-4xl space-y-8 px-4 pt-24 sm:px-6 sm:pt-28 lg:px-8">
         {/* Header */}
-        <header className="space-y-3 text-center">
-          <span className="eyebrow">
-            INDIGENOUS AUDIO INGESTION & TRANSLATION · STEP 08 / 26
-          </span>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            Upload Your Voice
+        <header className="space-y-3">
+          <div className="inline-flex items-center gap-2 rounded-full border border-[#E58A4E]/30 bg-[#E58A4E]/10 px-3.5 py-1 text-xs font-semibold text-[#E58A4E]">
+            <ShieldCheck className="h-4 w-4" /> Authentic Oral Heritage Pipeline
+          </div>
+          <h1 className="text-3xl font-extrabold tracking-tight text-[#F7F3EE] sm:text-4xl">
+            Audio Upload, Transcription & Translation
           </h1>
-          <p className="max-w-2xl mx-auto text-sm leading-relaxed text-[#D9D9E2] sm:text-base">
-            Preserve authentic field recordings with automatic Indic language detection, phonetic speech-to-text, and multi-lingual translations. The original recording remains immutable.
+          <p className="text-sm leading-relaxed text-[#C4B5A5] sm:text-base">
+            Upload spoken recordings in WAV, MP3, M4A, or WebM. Run speech-to-text to inspect and review the authentic source transcript, then translate it into your chosen target language.
           </p>
         </header>
 
-        {/* Workflow Progress Breadcrumb */}
-        <div className="overflow-x-auto rounded-2xl border border-white/12 bg-[rgba(66,71,108,0.25)] p-4 shadow-xl backdrop-blur-xl">
-          <div className="flex min-w-[640px] items-center justify-between gap-2 text-xs">
-            {WORKFLOW_STEPS.map((step, idx) => {
-              const isPast = idx < currentStepIndex;
-              const isCurrent = idx === currentStepIndex;
-              return (
-                <div key={step.id} className="flex items-center gap-2">
-                  <div
-                    className={`grid h-7 w-7 place-items-center rounded-full text-[11px] font-bold transition-all ${
-                      isPast
-                        ? "bg-[#4E9F76] text-[#0C0908]"
-                        : isCurrent
-                        ? "border-2 border-[#E58A4E] bg-[#E58A4E]/20 text-[#E58A4E] animate-pulse"
-                        : "border border-white/15 bg-white/5 text-[#C4B5A5]"
-                    }`}
-                  >
-                    {isPast ? <Check className="h-3.5 w-3.5" /> : idx + 1}
-                  </div>
-                  <span
-                    className={`font-medium ${
-                      isCurrent ? "text-[#F7F3EE] font-bold" : isPast ? "text-[#4E9F76]" : "text-[#C4B5A5]"
-                    }`}
-                  >
-                    {step.label}
-                  </span>
-                  {idx < WORKFLOW_STEPS.length - 1 && (
-                    <div className={`h-0.5 w-4 rounded-full ${isPast ? "bg-[#4E9F76]/60" : "bg-white/10"}`} />
-                  )}
-                </div>
-              );
-            })}
-          </div>
-        </div>
-
-        {/* SUCCESS CONFIRMATION & INLINE HERITAGE PASSPORT */}
+        {/* SUCCESS / PASSPORT VIEW */}
         {savedRecord ? (
-          <div className="space-y-6">
-            <div className="rounded-3xl border border-[#4E9F76]/40 bg-[#4E9F76]/10 p-5 text-center space-y-1">
-              <span className="text-xs font-mono font-bold uppercase text-[#4E9F76]">
-                ✓ Preservation Pipeline Complete
-              </span>
-              <h2 className="text-xl sm:text-2xl font-black text-[#F7F3EE]">
-                Heritage Passport Issued & Verified
-              </h2>
-              <p className="text-xs text-[#C4B5A5]">
-                Your uploaded audio master is preserved with byte-level immutability and multi-lingual IndicTrans2 translations.
-              </p>
+          <div className="space-y-6 rounded-3xl border border-[#4E9F76]/40 bg-[#1C1512]/90 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
+            <div className="flex items-center gap-3 text-[#4E9F76]">
+              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#4E9F76]/20 border border-[#4E9F76]/40">
+                <Check className="h-6 w-6 text-[#4E9F76]" />
+              </div>
+              <div>
+                <h2 className="text-xl font-bold text-[#F7F3EE]">Recording Preserved & Verified</h2>
+                <p className="text-xs text-[#C4B5A5]">Digital Heritage Passport successfully generated.</p>
+              </div>
             </div>
 
-            {/* Full Liquid Glass Heritage Passport Card directly inline */}
-            <HeritagePassportCard
-              record={createHeritageRecordFromStored(savedRecord)}
-              interactive={true}
-            />
+            <HeritagePassportCard record={createHeritageRecordFromStored(savedRecord)} />
 
-            <div className="flex flex-wrap justify-center gap-4 pt-2">
+            <div className="flex flex-wrap items-center gap-3 pt-4 border-t border-white/10">
               <Link
-                href={`/recordings/${savedRecord.id}`}
-                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#E58A4E] hover:bg-[#ED9C66] px-7 text-sm font-bold text-[#0C0908] shadow-[0_4px_24px_rgba(229,138,78,0.4)] transition"
+                href="/explore"
+                className="inline-flex min-h-12 items-center gap-2 rounded-full bg-[#E58A4E] px-7 text-sm font-bold text-[#0C0908] hover:bg-[#ED9C66] transition shadow-lg"
               >
-                Open Story Details <ArrowRight className="h-4 w-4" />
+                Explore Archive <ArrowRight className="h-4 w-4" />
               </Link>
               <button
                 type="button"
@@ -505,14 +442,14 @@ export default function UploadAudioPage() {
             </div>
           </div>
         ) : (
-          /* MAIN UPLOAD & PIPELINE VIEW */
+          /* MAIN UPLOAD & PROCESSING WORKSPACE */
           <div className="space-y-6 rounded-3xl border border-white/12 bg-[#1C1512]/70 p-6 sm:p-8 shadow-2xl backdrop-blur-xl">
-            {/* 1. File Upload Drop Zone (Exact User Specification) */}
+            {/* 1. File Upload Drop Zone */}
             <div
               onDragOver={(e) => e.preventDefault()}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
-              className="flex flex-col items-center justify-center gap-3.5 rounded-3xl border-2 border-dashed border-white/20 bg-[#0C0908]/60 p-8 sm:p-14 text-center cursor-pointer transition hover:border-[#E58A4E]/60 hover:bg-[#0C0908]/80"
+              className="flex flex-col items-center justify-center gap-3.5 rounded-3xl border-2 border-dashed border-white/20 bg-[#0C0908]/60 p-8 sm:p-12 text-center cursor-pointer transition hover:border-[#E58A4E]/60 hover:bg-[#0C0908]/80"
             >
               <input
                 ref={fileInputRef}
@@ -522,95 +459,46 @@ export default function UploadAudioPage() {
                 onChange={(e) => handleFileSelect(e.target.files?.[0])}
               />
 
-              <div className="grid h-20 w-20 place-items-center rounded-3xl bg-[#E58A4E]/15 text-[#E58A4E] border border-[#E58A4E]/30 shadow-[0_0_24px_rgba(229,138,78,0.25)]">
-                <FileAudio className="h-10 w-10" />
+              <div className="grid h-16 w-16 place-items-center rounded-2xl bg-[#E58A4E]/15 text-[#E58A4E] border border-[#E58A4E]/30 shadow-[0_0_24px_rgba(229,138,78,0.25)]">
+                <FileAudio className="h-8 w-8" />
               </div>
 
               <div className="space-y-1">
-                <h3 className="text-xl font-extrabold text-[#F7F3EE]">Upload Your Voice</h3>
-                <p className="text-sm font-semibold text-[#E58A4E]">
-                  📁 Choose Audio File
-                </p>
-                <p className="text-xs text-[#C4B5A5]">
-                  or drag & drop here
-                </p>
-                <div className="pt-2 text-[11px] font-mono uppercase tracking-wider text-[#C4B5A5]/70">
-                  MP3 • WAV • M4A • AAC • WebM • FLAC • MP4
-                </div>
+                <h3 className="text-lg font-bold text-[#F7F3EE]">Select Spoken Audio File</h3>
+                <p className="text-sm font-semibold text-[#E58A4E]">📁 Choose WAV, MP3, M4A, or WebM</p>
+                <p className="text-xs text-[#C4B5A5]">or drag & drop your recording here</p>
               </div>
 
               {file && (
                 <div className="mt-2 inline-flex items-center gap-2 rounded-full border border-[#4E9F76]/40 bg-[#4E9F76]/10 px-4 py-1.5 text-xs font-semibold text-[#4E9F76]">
                   <Check className="h-3.5 w-3.5" />
-                  <span>{file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)</span>
+                  <span>
+                    {file.name} ({(file.size / (1024 * 1024)).toFixed(2)} MB)
+                  </span>
                 </div>
               )}
             </div>
 
-            {/* Pipeline Status Indicator */}
-            {pipelinePhase !== "idle" && (
-              <div className="rounded-2xl border border-white/10 bg-[#0C0908]/60 p-4 space-y-2">
-                <div className="flex items-center justify-between text-xs font-mono">
-                  <span className="flex items-center gap-2 text-[#F7F3EE] font-bold">
-                    {pipelinePhase === "processing" || pipelinePhase === "uploading" ? (
-                      <RefreshCw className="h-3.5 w-3.5 animate-spin text-[#4E9F76]" />
-                    ) : pipelinePhase === "complete" ? (
-                      <Check className="h-3.5 w-3.5 text-[#4E9F76]" />
-                    ) : (
-                      <AlertCircle className="h-3.5 w-3.5 text-[#E05A6F]" />
-                    )}
-                    {phaseMessage}
-                  </span>
-                  <span className="text-[#C4B5A5]">{uploadProgress}%</span>
-                </div>
-                <div className="h-1.5 w-full overflow-hidden rounded-full bg-white/10">
-                  <div
-                    className="h-full bg-gradient-to-r from-[#E58A4E] to-[#ED9C66] transition-all duration-300"
-                    style={{ width: `${uploadProgress}%` }}
-                  />
-                </div>
-              </div>
-            )}
-
-            {/* Duplicate File Alert */}
-            {isDuplicateFile && (
-              <div className="rounded-2xl border border-[#E58A4E]/30 bg-[#E58A4E]/10 px-4 py-3 text-xs text-[#E58A4E] flex items-center justify-between gap-3">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 text-[#E58A4E] shrink-0" />
-                  <span>Existing acoustic recording detected with matching checksum. Preserving as a new verified revision.</span>
-                </div>
-                <span className="text-[10px] font-mono text-[#E58A4E]/80">SHA-256 MATCH</span>
-              </div>
-            )}
-
-            {/* Error & Retry Banner */}
-            {pipelinePhase === "error" && (
-              <div className="rounded-2xl border border-red-500/40 bg-red-950/30 p-4 space-y-3">
-                <div className="flex items-center gap-2 text-red-400 text-sm font-semibold">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error || "An error occurred during audio processing."}</span>
-                </div>
-                <button
-                  type="button"
-                  onClick={() => file && runFullProcessingPipeline(file)}
-                  className="inline-flex items-center gap-2 rounded-xl bg-red-500/20 border border-red-500/40 px-4 py-2 text-xs font-bold text-red-200 hover:bg-red-500/30 transition"
-                >
-                  <RefreshCw className="h-3.5 w-3.5" /> Retry Ingestion & Processing
-                </button>
+            {/* Upload Error Banner */}
+            {uploadError && (
+              <div className="rounded-2xl border border-red-500/40 bg-red-950/30 p-4 flex items-center gap-3 text-red-300 text-xs">
+                <AlertCircle className="h-4 w-4 shrink-0 text-red-400" />
+                <span>{uploadError}</span>
               </div>
             )}
 
             {/* Audio Preview Player */}
             {audioUrl && (
-              <div className="rounded-2xl border border-white/10 bg-[#0C0908]/60 p-4 space-y-3">
+              <div className="rounded-2xl border border-white/10 bg-[#0C0908]/60 p-5 space-y-3">
                 <div className="flex items-center justify-between text-xs text-[#C4B5A5] font-mono">
                   <span className="flex items-center gap-1.5 text-[#F7F3EE] font-semibold">
-                    <Volume2 className="h-4 w-4 text-[#4E9F76]" /> Acoustic Audio Preview
+                    <Volume2 className="h-4 w-4 text-[#4E9F76]" /> Audio Player (Original Recording)
                   </span>
                   <span>
-                    {Math.floor(previewCurrentTime / 60)}:{String(Math.floor(previewCurrentTime % 60)).padStart(2, "0")} / {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, "0")}
+                    Duration: {Math.floor(duration / 60)}:{String(duration % 60).padStart(2, "0")}
                   </span>
                 </div>
+
                 <audio
                   ref={audioPreviewRef}
                   src={audioUrl}
@@ -618,27 +506,243 @@ export default function UploadAudioPage() {
                   onTimeUpdate={(e) => setPreviewCurrentTime((e.target as HTMLAudioElement).currentTime)}
                   className="w-full"
                 />
-                <div className="flex justify-between items-center pt-1 text-xs">
-                  <span className="text-[#C4B5A5] font-mono text-[11px]">
-                    48kHz Acoustic Master · Non-destructive original
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => file && runFullProcessingPipeline(file)}
-                    className="inline-flex items-center gap-1 text-xs text-[#4E9F76] hover:underline"
-                  >
-                    <RefreshCw className="h-3 w-3" /> Re-run Ingestion & AI Analysis
-                  </button>
+
+                <div className="flex items-center justify-between text-[11px] text-[#C4B5A5]">
+                  <span>Non-destructive original master · Audio bytes preserved without alteration</span>
+                  {file && <span>{file.name}</span>}
                 </div>
               </div>
             )}
 
-            {/* Metadata Inputs */}
-            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-              <div>
-                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">
-                  Story Title
+            {/* Language Controls & Workflow Options */}
+            <div className="rounded-2xl border border-white/10 bg-[#0C0908]/40 p-5 space-y-4">
+              <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                {/* Source Language */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#C4B5A5] mb-1.5">
+                    Source Language (Spoken in Recording)
+                  </label>
+                  <select
+                    value={sourceLang}
+                    onChange={(e) => setSourceLang(e.target.value)}
+                    className="w-full min-h-11 rounded-xl border border-white/15 bg-[#1C1512] px-4 text-sm text-[#F7F3EE] outline-none focus:border-[#4E9F76]"
+                  >
+                    {SOURCE_LANGUAGES.map((l) => (
+                      <option key={l.code} value={l.code}>
+                        {l.name} ({l.native})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+
+                {/* Target Language */}
+                <div>
+                  <label className="block text-xs font-semibold text-[#C4B5A5] mb-1.5">
+                    Target Language (For Translation)
+                  </label>
+                  <select
+                    value={targetLang}
+                    onChange={(e) => setTargetLang(e.target.value)}
+                    className="w-full min-h-11 rounded-xl border border-white/15 bg-[#1C1512] px-4 text-sm text-[#F7F3EE] outline-none focus:border-[#4E9F76]"
+                  >
+                    {TARGET_LANGUAGES.map((l) => (
+                      <option key={l.code} value={l.code}>
+                        {l.name} ({l.native})
+                      </option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+
+              {/* Auto-translate Checkbox */}
+              <div className="pt-2 border-t border-white/10">
+                <label className="flex items-center gap-2.5 text-xs text-[#C4B5A5] cursor-pointer">
+                  <input
+                    type="checkbox"
+                    checked={autoTranslateEnabled}
+                    onChange={(e) => setAutoTranslateEnabled(e.target.checked)}
+                    className="rounded border-white/20 bg-black/40 text-[#4E9F76]"
+                  />
+                  <span>Translate transcript automatically into {activeTargetObj.name} right after transcription</span>
                 </label>
+              </div>
+            </div>
+
+            {/* STAGE 1: Transcription Control & Output */}
+            <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#4E9F76]/20 text-[#4E9F76] text-xs font-bold">1</span>
+                  <span className="text-xs font-bold uppercase tracking-wide text-[#F7F3EE]">
+                    Stage 1: Speech-to-Text Transcription ({activeSourceObj.name})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleTranscribeAudio}
+                    disabled={!file || isTranscribing}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-[#4E9F76] px-4 text-xs font-bold text-[#0C0908] hover:bg-[#62b58b] transition disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_12px_rgba(78,159,118,0.25)]"
+                  >
+                    {isTranscribing ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        <span>Transcribing Audio...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Cpu className="h-3.5 w-3.5" />
+                        <span>Transcribe Audio</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Transcription Failure Banner */}
+              {transcribeError && (
+                <div className="rounded-xl border border-red-500/40 bg-red-950/30 p-4 space-y-2 text-xs">
+                  <div className="flex items-center gap-2 text-red-400 font-semibold">
+                    <AlertCircle className="h-4 w-4 shrink-0" />
+                    <span>Transcription Issue: {transcribeError}</span>
+                  </div>
+                  {transcribeHint && (
+                    <p className="text-[#C4B5A5] pl-6 leading-relaxed">
+                      💡 {transcribeHint}
+                    </p>
+                  )}
+                  <p className="text-white/60 pl-6 text-[11px]">
+                    You can still type or paste your transcript manually into the editable box below to proceed with translation.
+                  </p>
+                </div>
+              )}
+
+              {/* Editable Source Transcript */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-[#C4B5A5]">
+                  <span>Source Transcript (Editable for review and correction):</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(originalTranscript, false)}
+                      disabled={!originalTranscript}
+                      className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
+                    >
+                      {copiedTranscript ? <Check className="h-3 w-3 text-[#4E9F76]" /> : <Copy className="h-3 w-3" />}
+                      <span>{copiedTranscript ? "Copied" : "Copy"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadTxt(originalTranscript, `${title || "transcript"}_source.txt`)}
+                      disabled={!originalTranscript}
+                      className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
+                    >
+                      <Download className="h-3 w-3" />
+                      <span>Download .txt</span>
+                    </button>
+                  </div>
+                </div>
+
+                <textarea
+                  rows={4}
+                  value={originalTranscript}
+                  onChange={(e) => setOriginalTranscript(e.target.value)}
+                  placeholder="Click 'Transcribe Audio' or type/paste your spoken source transcript here for review..."
+                  className="w-full rounded-xl border border-white/10 bg-[#0C0908]/70 p-4 text-sm text-[#F7F3EE] outline-none focus:border-[#4E9F76] font-medium leading-relaxed"
+                />
+                <p className="text-[11px] text-[#C4B5A5]/80">
+                  Editing the text above allows you to fix misheard words or dialect terms without altering the original acoustic recording.
+                </p>
+              </div>
+            </div>
+
+            {/* STAGE 2: Translation Control & Output */}
+            <div className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#E58A4E]/20 text-[#E58A4E] text-xs font-bold">2</span>
+                  <span className="text-xs font-bold uppercase tracking-wide text-[#F7F3EE]">
+                    Stage 2: Target Translation ({activeTargetObj.name})
+                  </span>
+                </div>
+
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={() => handleTranslateTranscript()}
+                    disabled={!originalTranscript.trim() || isTranslating}
+                    className="inline-flex min-h-9 items-center gap-2 rounded-xl bg-[#E58A4E] px-4 text-xs font-bold text-[#0C0908] hover:bg-[#ED9C66] transition disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_12px_rgba(229,138,78,0.25)]"
+                  >
+                    {isTranslating ? (
+                      <>
+                        <RefreshCw className="h-3.5 w-3.5 animate-spin" />
+                        <span>Translating...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Languages className="h-3.5 w-3.5" />
+                        <span>Translate Transcript</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* Translation Failure Banner */}
+              {translateError && (
+                <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-4 flex items-center gap-3 text-xs text-amber-300">
+                  <AlertCircle className="h-4 w-4 shrink-0 text-amber-400" />
+                  <div>
+                    <span className="font-semibold">Translation Notice: </span>
+                    <span>{translateError}</span>
+                    <p className="text-xs text-[#C4B5A5] mt-1">The source transcript above remains completely intact.</p>
+                  </div>
+                </div>
+              )}
+
+              {/* Translation Display */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs text-[#C4B5A5]">
+                  <span>Translated Output in {activeTargetObj.name}:</span>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => handleCopy(translatedText, true)}
+                      disabled={!translatedText}
+                      className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
+                    >
+                      {copiedTranslation ? <Check className="h-3 w-3 text-[#4E9F76]" /> : <Copy className="h-3 w-3" />}
+                      <span>{copiedTranslation ? "Copied" : "Copy"}</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDownloadTxt(translatedText, `${title || "translation"}_${targetLang}.txt`)}
+                      disabled={!translatedText}
+                      className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
+                    >
+                      <Download className="h-3 w-3" />
+                      <span>Download .txt</span>
+                    </button>
+                  </div>
+                </div>
+
+                <div className="min-h-24 rounded-xl border border-white/10 bg-[#0C0908]/70 p-4 text-sm text-[#F7F3EE] leading-relaxed">
+                  {translatedText ? (
+                    <p className="font-medium text-[#F7F3EE]">{translatedText}</p>
+                  ) : (
+                    <p className="text-[#C4B5A5]/50 italic">
+                      Translation into {activeTargetObj.name} will appear here when you click &apos;Translate Transcript&apos;.
+                    </p>
+                  )}
+                </div>
+              </div>
+            </div>
+
+            {/* Metadata Fields */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 pt-2">
+              <div>
+                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">Story Title</label>
                 <input
                   value={title}
                   onChange={(e) => setTitle(e.target.value)}
@@ -648,26 +752,7 @@ export default function UploadAudioPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">
-                  Spoken Language
-                </label>
-                <select
-                  value={language}
-                  onChange={(e) => setLanguage(e.target.value)}
-                  className="w-full min-h-11 rounded-xl border border-white/10 bg-[#1C1512] px-4 text-sm text-[#F7F3EE] outline-none focus:border-[#E58A4E]"
-                >
-                  {SUPPORTED_LANGUAGES.map((l) => (
-                    <option key={l.code} value={l.name}>
-                      {l.name} ({l.native})
-                    </option>
-                  ))}
-                </select>
-              </div>
-
-              <div>
-                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">
-                  Dialect / Regional Variety
-                </label>
+                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">Dialect / Variety</label>
                 <input
                   value={dialect}
                   onChange={(e) => setDialect(e.target.value)}
@@ -677,9 +762,7 @@ export default function UploadAudioPage() {
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">
-                  Community / Clan Custodians
-                </label>
+                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">Community / Clan</label>
                 <input
                   value={community}
                   onChange={(e) => setCommunity(e.target.value)}
@@ -687,69 +770,15 @@ export default function UploadAudioPage() {
                   className="w-full min-h-11 rounded-xl border border-white/10 bg-[#0C0908]/60 px-4 text-sm text-[#F7F3EE] outline-none focus:border-[#E58A4E]"
                 />
               </div>
-            </div>
 
-            {/* Original Transcript Section (Original Never Replaced) */}
-            <div className="space-y-2 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
-              <div className="flex items-center justify-between border-b border-white/10 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#4E9F76]/20 text-[#4E9F76] text-xs font-bold">1</span>
-                  <label className="text-xs font-bold uppercase tracking-wide text-[#F7F3EE]">
-                    Original Source Transcript ({language})
-                  </label>
-                </div>
-                <span className="text-[10px] font-mono rounded bg-white/10 px-2 py-0.5 text-[#4E9F76] font-bold">
-                  IMMUTABLE SOURCE OF TRUTH
-                </span>
-              </div>
-              <textarea
-                rows={3}
-                value={originalTranscript}
-                onChange={(e) => setOriginalTranscript(e.target.value)}
-                placeholder="Phonetic transcript will appear here automatically upon file processing..."
-                className="w-full rounded-xl border border-white/10 bg-[#0C0908]/60 p-4 text-sm text-[#F7F3EE] outline-none focus:border-[#E58A4E] font-medium leading-relaxed"
-              />
-            </div>
-
-            {/* Automatic Multi-Lingual Translations Layer */}
-            <div className="space-y-3 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-2">
-                <div className="flex items-center gap-2">
-                  <span className="grid h-6 w-6 place-items-center rounded-lg bg-[#4E9F76]/20 text-[#4E9F76] text-xs font-bold">2</span>
-                  <label className="text-xs font-bold uppercase tracking-wide text-[#F7F3EE]">
-                    IndicTrans2 Multi-Lingual Translation Layer
-                  </label>
-                </div>
-                {/* Language switcher pills */}
-                <div className="flex flex-wrap items-center gap-1">
-                  {[
-                    { code: "en", label: "English" },
-                    { code: "hi", label: "Hindi (हिन्दी)" },
-                    { code: "ta", label: "Tamil (தமிழ்)" },
-                    { code: "kn", label: "Kannada (ಕನ್ನಡ)" },
-                    { code: "ml", label: "Malayalam (മലയാളം)" },
-                  ].map((t) => (
-                    <button
-                      key={t.code}
-                      type="button"
-                      onClick={() => setActiveTransTab(t.code)}
-                      className={`min-h-7 rounded-lg px-2.5 text-xs font-semibold transition ${
-                        activeTransTab === t.code
-                          ? "bg-[#4E9F76] text-[#0C0908] font-bold shadow-[0_0_12px_rgba(78,159,118,0.35)]"
-                          : "border border-white/10 text-[#C4B5A5] hover:text-[#F7F3EE]"
-                      }`}
-                    >
-                      {t.label}
-                    </button>
-                  ))}
-                </div>
-              </div>
-
-              <div className="rounded-xl border border-white/10 bg-[#0C0908]/60 p-4 text-sm text-[#F7F3EE] leading-relaxed">
-                <p>
-                  {translations[activeTransTab] ||
-                    `Translation into ${activeTransTab.toUpperCase()} ready to synthesize upon file processing.`}
-                </p>
+              <div>
+                <label className="block text-xs font-semibold text-[#C4B5A5] mb-1">Geographic Region</label>
+                <input
+                  value={location}
+                  onChange={(e) => setLocation(e.target.value)}
+                  placeholder="e.g. Adilabad, Telangana"
+                  className="w-full min-h-11 rounded-xl border border-white/10 bg-[#0C0908]/60 px-4 text-sm text-[#F7F3EE] outline-none focus:border-[#E58A4E]"
+                />
               </div>
             </div>
 
@@ -795,40 +824,6 @@ export default function UploadAudioPage() {
                 ))}
               </div>
 
-              {/* AI Permissions */}
-              <div className="space-y-2 pt-2 border-t border-white/10">
-                <div className="text-xs font-semibold text-white/90">Granular AI Permissions:</div>
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-2 text-xs text-[#C4B5A5]">
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={allowTranscription}
-                      onChange={(e) => setAllowTranscription(e.target.checked)}
-                      className="rounded border-white/20 bg-black/40 text-[#4E9F76]"
-                    />
-                    <span>Transcription</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={allowTranslation}
-                      onChange={(e) => setAllowTranslation(e.target.checked)}
-                      className="rounded border-white/20 bg-black/40 text-[#4E9F76]"
-                    />
-                    <span>Translation</span>
-                  </label>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={allowCulturalMetadata}
-                      onChange={(e) => setAllowCulturalMetadata(e.target.checked)}
-                      className="rounded border-white/20 bg-black/40 text-[#4E9F76]"
-                    />
-                    <span>Cultural Lore</span>
-                  </label>
-                </div>
-              </div>
-
               {/* Informed Consent Certification */}
               <div className="pt-2 border-t border-white/10">
                 <label className="flex items-start gap-3 cursor-pointer">
@@ -845,24 +840,7 @@ export default function UploadAudioPage() {
               </div>
             </div>
 
-            {error && (
-              <div className="flex items-center justify-between rounded-xl border border-red-500/30 bg-red-500/10 p-4 text-xs text-red-200">
-                <div className="flex items-center gap-2">
-                  <AlertCircle className="h-4 w-4 shrink-0" />
-                  <span>{error}</span>
-                </div>
-                {file && (
-                  <button
-                    type="button"
-                    onClick={() => runFullProcessingPipeline(file)}
-                    className="inline-flex items-center gap-1 font-bold underline hover:text-white"
-                  >
-                    <RefreshCw className="h-3 w-3" /> Retry
-                  </button>
-                )}
-              </div>
-            )}
-
+            {/* Save Button */}
             <button
               type="button"
               onClick={handleSave}
