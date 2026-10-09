@@ -245,10 +245,25 @@ export function loginUser(email: string, _password?: string): UserProfile {
     token: `vr_tok_${Math.random().toString(36).substring(2, 12)}`,
   };
 
-  if (typeof window !== "undefined") {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
-  }
+  saveActiveUser(user);
   return user;
+}
+
+/**
+ * Persist active user and notify UI components
+ */
+export function saveActiveUser(user: UserProfile): void {
+  if (typeof window !== "undefined") {
+    try {
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(user));
+      if (user.token) {
+        document.cookie = `vr_token=${user.token}; path=/; max-age=604800; SameSite=Lax`;
+      }
+      window.dispatchEvent(new CustomEvent("vr-auth-changed", { detail: user }));
+    } catch (e) {
+      console.warn("Could not save active user session:", e);
+    }
+  }
 }
 
 /**
@@ -285,12 +300,12 @@ export function registerUser(data: {
       const custom: UserProfile[] = customRaw ? JSON.parse(customRaw) : [];
       custom.push(newUser);
       localStorage.setItem(REGISTERED_USERS_KEY, JSON.stringify(custom));
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
     } catch {
-      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(newUser));
+      // ignore
     }
   }
 
+  saveActiveUser(newUser);
   return newUser;
 }
 
@@ -301,9 +316,7 @@ export function updateUserProfile(updates: Partial<UserProfile>): UserProfile {
   const current = getCurrentUser() || DEMO_USERS[0];
   const updated: UserProfile = { ...current, ...updates };
 
-  if (typeof window !== "undefined") {
-    localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(updated));
-  }
+  saveActiveUser(updated);
   return updated;
 }
 
@@ -312,7 +325,13 @@ export function updateUserProfile(updates: Partial<UserProfile>): UserProfile {
  */
 export function logoutUser(): void {
   if (typeof window !== "undefined") {
-    localStorage.removeItem(AUTH_STORAGE_KEY);
+    try {
+      localStorage.removeItem(AUTH_STORAGE_KEY);
+      document.cookie = "vr_token=; path=/; max-age=0; SameSite=Lax";
+      window.dispatchEvent(new CustomEvent("vr-auth-changed", { detail: null }));
+    } catch {
+      // ignore
+    }
   }
 }
 

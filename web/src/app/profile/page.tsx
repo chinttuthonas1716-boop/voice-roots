@@ -25,6 +25,8 @@ import {
   Check,
   X,
   Lock,
+  LogIn,
+  UserPlus,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
@@ -32,12 +34,18 @@ import {
   getCurrentUser,
   logoutUser,
   loginUser,
+  saveActiveUser,
   updateUserProfile,
   DEMO_USERS,
   ROLE_DEFINITIONS,
   type UserProfile,
 } from "@/lib/auth";
-import { getUserRecordings, getStorageStats, type StoredVoiceRecord } from "@/lib/storage";
+import {
+  getUserRecordings,
+  getUserPermittedRecordings,
+  getStorageStats,
+  type StoredVoiceRecord,
+} from "@/lib/storage";
 import { getCloudStorageTelemetry, syncLocalRecordsToCloud, type CloudStorageMetrics } from "@/lib/cloudStorage";
 
 export default function ProfilePage() {
@@ -65,12 +73,14 @@ export default function ProfilePage() {
   }, []);
 
   const loadUserData = () => {
-    const active = getCurrentUser() || DEMO_USERS[0];
+    const active = getCurrentUser();
     setUser(active);
-    setBioText(active.bio || "");
-    setClanText(active.clanOrCommunity || "");
+    if (active) {
+      setBioText(active.bio || "");
+      setClanText(active.clanOrCommunity || "");
+    }
 
-    const userRecs = getUserRecordings();
+    const userRecs = getUserPermittedRecordings(active);
     setRecords(userRecs);
     setStorageStats(getStorageStats());
 
@@ -124,20 +134,64 @@ export default function ProfilePage() {
     downloadAnchor.remove();
   };
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    try {
+      await fetch("/api/auth/logout", { method: "POST" });
+    } catch {
+      // ignore
+    }
     logoutUser();
+    setUser(null);
     router.push("/login");
   };
 
-  if (!user) return null;
+  const activeUser = user || {
+    id: "guest",
+    name: "Guest Explorer",
+    email: "guest@voiceroots.local",
+    role: "guest" as const,
+    roleTitle: "Public Guest Explorer",
+    clanOrCommunity: "Public Heritage Circle",
+    location: "Global",
+    languages: ["English", "Telugu (తెలుగు)"],
+    verifiedElder: false,
+    contributionsCount: 0,
+    memberSince: "Guest Session",
+    bio: "Exploring public oral heritage stories on Voice Roots.",
+    avatarInitials: "GE",
+    token: "",
+  };
 
-  const roleInfo = ROLE_DEFINITIONS[user.role] || ROLE_DEFINITIONS.listener;
+  const roleInfo = ROLE_DEFINITIONS[activeUser.role] || ROLE_DEFINITIONS.guest;
 
   return (
     <div className="min-h-screen bg-[#2D3250] text-white selection:bg-[#F9B17A] selection:text-[#242942] pb-28 md:pb-16">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-24 sm:pt-28">
+        {!user && (
+          <div className="mb-8 rounded-3xl border border-[#F9B17A]/40 bg-[rgba(66,71,108,0.4)] p-6 sm:p-8 backdrop-blur-xl text-center space-y-4 animate-fade-in">
+            <span className="text-[10px] font-bold uppercase tracking-wider text-[#F9B17A] bg-[#F9B17A]/15 border border-[#F9B17A]/30 px-3 py-1 rounded-full">
+              Guest Visitor Mode
+            </span>
+            <h2 className="text-xl sm:text-2xl font-bold text-white">
+              Sign In to Access Your Personal Recordings & Heritage Passports
+            </h2>
+            <p className="text-xs sm:text-sm text-[#A9AEC5] max-w-xl mx-auto">
+              You are currently browsing as a guest. Log in or create an account to record spoken lore, review private community stories, and manage account credentials.
+            </p>
+            <div className="flex flex-wrap items-center justify-center gap-3 pt-2">
+              <Link href="/login" className="vr-button vr-button-primary !min-h-11 px-6 font-bold text-xs sm:text-sm">
+                <LogIn className="w-4 h-4 mr-1.5" />
+                <span>Log In to Account</span>
+              </Link>
+              <Link href="/register" className="vr-button vr-button-secondary !min-h-11 px-6 font-bold text-xs sm:text-sm">
+                <UserPlus className="w-4 h-4 mr-1.5" />
+                <span>Create Free Account</span>
+              </Link>
+            </div>
+          </div>
+        )}
         {/* Sync / Notification Banner */}
         {syncFeedback && (
           <div className="mb-6 rounded-2xl border border-[#F9B17A]/30 bg-[#F9B17A]/10 px-4 py-3 text-sm text-[#F9B17A] flex items-center justify-between animate-fade-in">
@@ -164,9 +218,9 @@ export default function ProfilePage() {
               {/* Avatar */}
               <div className="relative">
                 <div className="h-20 w-20 sm:h-24 sm:w-24 rounded-full bg-gradient-to-br from-[#42476C] to-[#2D3250] border-2 border-[#F9B17A] shadow-lg grid place-items-center text-2xl sm:text-3xl font-extrabold text-[#F9B17A]">
-                  {user.avatarInitials || "VR"}
+                  {activeUser.avatarInitials || "VR"}
                 </div>
-                {user.verifiedElder && (
+                {activeUser.verifiedElder && (
                   <span
                     className="absolute -bottom-1 -right-1 grid h-7 w-7 place-items-center rounded-full bg-[#F9B17A] text-[#242942] shadow-md border-2 border-[#242942]"
                     title="Verified Elder Custodian"
@@ -180,37 +234,37 @@ export default function ProfilePage() {
               <div>
                 <div className="flex flex-wrap items-center gap-2.5 mb-1.5">
                   <h1 className="text-2xl sm:text-3xl font-bold tracking-tight text-white">
-                    {user.name}
+                    {activeUser.name}
                   </h1>
-                  {user.verifiedElder && (
+                  {activeUser.verifiedElder && (
                     <span className="rounded-full bg-[#F9B17A]/20 border border-[#F9B17A]/40 px-2.5 py-0.5 text-xs font-semibold text-[#F9B17A]">
                       Verified Elder
                     </span>
                   )}
                   <span className="rounded-full bg-white/10 border border-white/10 px-2.5 py-0.5 text-xs font-medium text-[#D9D9E2]">
-                    {user.roleTitle}
+                    {activeUser.roleTitle}
                   </span>
                 </div>
 
                 <p className="text-sm text-[#A9AEC5] flex flex-wrap items-center gap-x-4 gap-y-1 mb-2">
                   <span className="flex items-center gap-1">
                     <User className="w-3.5 h-3.5 text-[#F9B17A]" />
-                    {user.clanOrCommunity}
+                    {activeUser.clanOrCommunity}
                   </span>
                   <span className="flex items-center gap-1">
                     <MapPin className="w-3.5 h-3.5 text-[#F9B17A]" />
-                    {user.location}
+                    {activeUser.location}
                   </span>
                   <span className="flex items-center gap-1">
                     <Calendar className="w-3.5 h-3.5 text-[#F9B17A]" />
-                    Since {user.memberSince}
+                    Since {activeUser.memberSince}
                   </span>
                 </p>
 
                 {/* Spoken Languages */}
                 <div className="flex flex-wrap items-center gap-1.5 text-xs text-[#D9D9E2]">
                   <Languages className="w-3.5 h-3.5 text-[#F9B17A] shrink-0" />
-                  {user.languages.map((lang, idx) => (
+                  {activeUser.languages.map((lang, idx) => (
                     <span
                       key={idx}
                       className="rounded-md bg-white/5 border border-white/10 px-2 py-0.5 text-[11px]"
@@ -287,7 +341,7 @@ export default function ProfilePage() {
             ) : (
               <div className="flex items-start justify-between gap-4">
                 <p className="text-xs sm:text-sm text-[#D9D9E2] italic leading-relaxed">
-                  &ldquo;{user.bio || "Preserving generational folklore, sacred oral traditions, and tribal phonetics for community posterity."}&rdquo;
+                  &ldquo;{activeUser.bio || "Preserving generational folklore, sacred oral traditions, and tribal phonetics for community posterity."}&rdquo;
                 </p>
                 <button
                   onClick={() => setIsEditingBio(true)}
@@ -398,7 +452,7 @@ export default function ProfilePage() {
                       key={d.id}
                       onClick={() => handlePersonaSwitch(d)}
                       className={`w-full text-left px-3 py-2 rounded-xl text-xs flex items-center justify-between transition ${
-                        user.id === d.id
+                        activeUser.id === d.id
                           ? "bg-[#F9B17A]/15 border border-[#F9B17A]/40 text-[#F9B17A] font-semibold"
                           : "hover:bg-white/5 text-[#D9D9E2]"
                       }`}
@@ -407,7 +461,7 @@ export default function ProfilePage() {
                         <div>{d.name}</div>
                         <div className="text-[10px] text-[#A9AEC5]">{d.roleTitle}</div>
                       </div>
-                      {user.id === d.id && <Check className="w-3.5 h-3.5 shrink-0" />}
+                      {activeUser.id === d.id && <Check className="w-3.5 h-3.5 shrink-0" />}
                     </button>
                   ))}
                 </div>

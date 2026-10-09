@@ -18,7 +18,7 @@ import {
   EyeOff,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
-import { registerUser, type UserRole } from "@/lib/auth";
+import { registerUser, saveActiveUser, type UserRole } from "@/lib/auth";
 
 export default function RegisterPage() {
   const router = useRouter();
@@ -89,23 +89,23 @@ export default function RegisterPage() {
 
       const data = await res.json();
 
-      if (!res.ok) {
-        throw new Error(data.error || "Registration failed on server.");
+      if (data.user) {
+        saveActiveUser(data.user);
+      } else {
+        registerUser({
+          name,
+          email,
+          password,
+          role,
+          clanOrCommunity: community || "Community Oral Circle",
+          languages: [preferredLanguage, "English"],
+        });
       }
-
-      registerUser({
-        name,
-        email,
-        password,
-        role,
-        clanOrCommunity: community || "Community Oral Circle",
-        languages: [preferredLanguage, "English"],
-      });
 
       setIsSuccess(true);
       setTimeout(() => {
-        router.push("/home");
-      }, 1200);
+        router.push("/dashboard");
+      }, 1000);
     } catch (err: any) {
       setApiError(err?.message || "An unexpected error occurred. Please try again.");
     } finally {

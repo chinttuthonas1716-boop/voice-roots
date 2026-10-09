@@ -23,6 +23,7 @@ import {
   loginAsGuest,
   logoutUser,
   requestPasswordReset,
+  saveActiveUser,
   DEMO_USERS,
   type UserProfile,
 } from "@/lib/auth";
@@ -91,24 +92,16 @@ export default function LoginPage() {
       });
       const data = await res.json();
 
-      if (data.success && data.user) {
-        const user = loginUser(cleanEmail, password);
-        setCurrentUser(user);
-        setStatusMessage(`Welcome back, ${user.name}!`);
-        setTimeout(() => router.push("/home"), 700);
+      if (res.ok && data.success && data.user) {
+        saveActiveUser(data.user);
+        setCurrentUser(data.user);
+        setStatusMessage(`Welcome back, ${data.user.name}!`);
+        setTimeout(() => router.push("/dashboard"), 700);
       } else {
-        // Fallback for demo credentials
-        const user = loginUser(cleanEmail, password);
-        setCurrentUser(user);
-        setStatusMessage(`Welcome back, ${user.name}!`);
-        setTimeout(() => router.push("/home"), 700);
+        setErrorMessage(data.error || "Invalid email or password. Please verify your credentials.");
       }
-    } catch {
-      // Offline / fallback login
-      const user = loginUser(cleanEmail, password);
-      setCurrentUser(user);
-      setStatusMessage(`Welcome back, ${user.name}!`);
-      setTimeout(() => router.push("/home"), 700);
+    } catch (err: any) {
+      setErrorMessage(err.message || "Network error. Please try again.");
     } finally {
       setIsLoading(false);
     }
@@ -440,18 +433,13 @@ export default function LoginPage() {
                   <span style={{ color: "#D9D9E2" }}>Remember me</span>
                 </label>
 
-                <button
-                  type="button"
-                  onClick={() => {
-                    setResetEmail(email);
-                    setResetSent(false);
-                    setShowForgotModal(true);
-                  }}
+                <Link
+                  href="/forgot-password"
                   className="font-medium hover:underline transition-colors focus:outline-none"
                   style={{ color: "#F9B17A" }}
                 >
                   Forgot password?
-                </button>
+                </Link>
               </div>
 
               {/* Primary Sign In Button */}

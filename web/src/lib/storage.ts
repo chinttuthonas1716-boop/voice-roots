@@ -31,6 +31,8 @@ export interface StoredVoiceRecord {
   consentConfirmed?: boolean;
   provenanceHash?: string;
   integrityChecksum?: string;
+  userId?: string;
+  userEmail?: string;
 }
 
 const STORAGE_KEY = "voice_roots_user_recordings";
@@ -93,6 +95,32 @@ export function getUserRecordings(): StoredVoiceRecord[] {
 export function getRecordingById(id: string): StoredVoiceRecord | null {
   const all = getUserRecordings();
   return all.find((r) => r.id === id) || null;
+}
+
+/**
+ * Returns recordings filtered by permission:
+ * - Public heritage recordings are visible to everyone
+ * - User's private recordings are visible ONLY to the creator (or reviewer/admin)
+ */
+export function getUserPermittedRecordings(currentUser?: { id?: string; email?: string; role?: string } | null): StoredVoiceRecord[] {
+  const all = getUserRecordings();
+  return all.filter((rec) => {
+    // Built-in heritage stories are always public
+    if (!rec.isUserUploaded) return true;
+
+    // Public community recordings
+    if (!rec.accessLevel || rec.accessLevel === "public") return true;
+
+    // Private or restricted recordings require authenticated owner or elder
+    if (rec.accessLevel === "private" || rec.accessLevel === "restricted") {
+      if (!currentUser) return false;
+      const isOwner = (rec.userId && rec.userId === currentUser.id) || (rec.userEmail && rec.userEmail.toLowerCase() === currentUser.email?.toLowerCase());
+      const isPrivileged = currentUser.role === "reviewer" || currentUser.role === "admin";
+      return isOwner || isPrivileged;
+    }
+
+    return true;
+  });
 }
 
 export async function saveUserRecording(
