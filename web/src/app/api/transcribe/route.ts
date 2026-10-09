@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import crypto from "crypto";
+import { detectScriptAndLanguage } from "@/lib/languageDetection";
 
 // Allowed standard and mobile audio MIME types & extensions
 const ALLOWED_MIME_TYPES = new Set([
@@ -128,10 +129,16 @@ export async function POST(request: NextRequest) {
           })
         );
 
+        const detected = detectScriptAndLanguage(transcriptText);
+
         return NextResponse.json({
           success: true,
           transcript: transcriptText,
           language: requestedLang,
+          detectedLanguage: detected.code,
+          detectedLanguageName: detected.name,
+          detectedScript: detected.script,
+          detectedConfidence: detected.confidence,
           provider: "HuggingFace-Whisper",
           model: modelId,
           durationMs,
@@ -197,10 +204,17 @@ export async function POST(request: NextRequest) {
 
       if (openAiRes.ok) {
         const data = await openAiRes.json();
+        const transcriptText = data.text || "";
+        const detected = detectScriptAndLanguage(transcriptText);
+
         return NextResponse.json({
           success: true,
-          transcript: data.text || "",
+          transcript: transcriptText,
           language: requestedLang,
+          detectedLanguage: detected.code,
+          detectedLanguageName: detected.name,
+          detectedScript: detected.script,
+          detectedConfidence: detected.confidence,
           provider: "OpenAI-Whisper",
           model: "whisper-1",
           durationMs,
@@ -250,6 +264,8 @@ export async function POST(request: NextRequest) {
         const data = await geminiRes.json();
         const transcriptText =
           data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        const detected = detectScriptAndLanguage(transcriptText);
+
         console.log(
           JSON.stringify({
             stage: "ASR_SUCCESS",
@@ -265,6 +281,10 @@ export async function POST(request: NextRequest) {
           success: true,
           transcript: transcriptText,
           language: requestedLang,
+          detectedLanguage: detected.code,
+          detectedLanguageName: detected.name,
+          detectedScript: detected.script,
+          detectedConfidence: detected.confidence,
           provider: "Google-Gemini-Flash",
           model: "gemini-2.5-flash",
           durationMs,

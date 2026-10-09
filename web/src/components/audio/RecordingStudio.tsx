@@ -25,6 +25,7 @@ import {
 import { saveUserRecording, type StoredVoiceRecord } from "@/lib/storage";
 import { HeritagePassportCard } from "@/components/passport/HeritagePassportCard";
 import { createHeritageRecordFromStored } from "@/lib/passport";
+import { checkLanguageMismatch, detectScriptAndLanguage } from "@/lib/languageDetection";
 
 type SourceMode = "microphone" | "upload";
 
@@ -72,6 +73,42 @@ const AI_PRESETS: Record<string, { transcript: string; context: string; translat
       ml: "ഞങ്ങളുടെ കുലദൈവം ബസ്തർ മലനിരകളിൽ വാഴുന്നു. മഹുവ മരത്തണലിൽ ഞങ്ങളുടെ സംസ്കാരം നിലകൊള്ളുന്നു."
     }
   },
+  English: {
+    transcript: "An ancient folk melody sung along our village lake bund. Living in unison with the natural rhythms of nature is the core message of our oral tradition.",
+    context: "Agrarian community folklore celebrating seasonal cycles, water harvesting systems, and harmony with local wildlife.",
+    translations: {
+      en: "An ancient folk melody sung along our village lake bund. Living in unison with the natural rhythms of nature is the core message of our oral tradition.",
+      te: "మా ఊరి చెరువు కట్ట మీద పాడుకునే పురాతన నాటు పాట. ప్రకృతితో మమేకమై జీవించడమే మా సంస్కృతి ముఖ్య సందేశం.",
+      hi: "हमारे गाँव के तालाब की पाल पर गाया जाने वाला पारंपरिक लोकगीत। प्रकृति के साथ संतुलन में रहना ही इस परंपरा का मूल संदेश है।",
+      ta: "எங்கள் கிராமத்துக் குளக்கரையில் பாடப்படும் நாட்டுப்புறப் பாடல். இயற்கையோடு இணைந்து வாழ்வதே இதன் நோக்கம்.",
+      kn: "ನಮ್ಮ ಹಳ್ಳಿಯ ಕೆರೆಯ ದಡದಲ್ಲಿ ಹಾಡುವ ಪುರಾತನ ಜಾನಪದ ಹಾಡು. ಪ್ರಕೃತಿಯೊಂದಿಗೆ ಸಾಮರಸ್ಯದಿಂದ ಬಾಳುವುದೇ ಇದರ ಸಂದೇಶ.",
+      ml: "ഞങ്ങളുടെ ഗ്രാമത്തിലെ കുളക്കടവിൽ പാടുന്ന നാടൻ പാട്ട്. പ്രകൃതിയോട് ഇണങ്ങി ജീവിക്കുക എന്നതാണ് ഇതിന്റെ സന്ദേശം.",
+    },
+  },
+  Koya: {
+    transcript: "కొండ ప్రాంతాల్లో పూర్వీకులు చెప్పిన కథలు మరియు వనమూలికల ఔషధ రహస్యాలు. గోదావరి తీరాన మా జీవనం సాగుతుంది.",
+    context: "Traditional forest botanical medicine and river basin folklore passed down across Koya clan elders.",
+    translations: {
+      en: "Ancestral lore and medicinal forest herb knowledge preserved along the Godavari river basin by Koya elders.",
+      te: "కొండ ప్రాంతాల్లో పూర్వీకులు చెప్పిన కథలు మరియు వనమూలికల ఔషధ రహస్యాలు. గోదావరి తీరాన మా జీవనం సాగుతుంది.",
+      hi: "गोदावरी नदी के तट पर कोया बुजुर्गों द्वारा संरक्षित पारंपरिक वनौषधि ज्ञान और लोक कथाएं।",
+      ta: "கோதாவரி நதிக்கரையில் கோயா பெரியவர்களால் பாதுகாக்கப்பட்ட பாரம்பரிய மூலிகை அறிவு மற்றும் நாட்டுப்புறக் கதைகள்.",
+      kn: "ಗೋದಾವರಿ ನದಿಯ ತೀರದಲ್ಲಿ ಕೋಯಾ ಹಿರಿಯರು ಸಂರಕ್ಷಿಸಿದ ಸಾಂಪ್ರದಾಯಿಕ ಅರಣ್ಯ ಗಿಡಮೂಲಿಕೆಗಳ ಜ್ಞಾನ.",
+      ml: "ഗോദാവരി നദീതീരത്ത് കോയ മുതിർന്നവർ സംരക്ഷിച്ച പരമ്പರಾഗത ഔഷധ സസ്യ വിജ്ഞാനം.",
+    },
+  },
+  Lambadi: {
+    transcript: "రామ్ రామ్ బావ! బంజారా సంస్కృతిలో ప్రాచీన జానపద కథలు, గోర్ బోలి పాటలు మా గుర్తింపు.",
+    context: "Banjara oral song traditions and Gor Boli nomadic cultural lore celebrated across Deccan Thandas.",
+    translations: {
+      en: "Banjara oral song traditions and Gor Boli cultural lore representing our nomadic identity across Deccan Thandas.",
+      te: "బంజారా సంస్కృతిలో ప్రాచీన జానపద కథలు, గోర్ బోలి పాటలు దక్కన్ తాండాలలో మా సాంస్కృతిక గుర్తింపు.",
+      hi: "बंजारा संस्कृति के प्राचीन लोकगीत और गोर बोली परंपराएं, जो हमारे समुदाय की पहचान हैं।",
+      ta: "பஞ்சாரா கலாச்சாரத்தின் பாரம்பரிய பாடல்கள் மற்றும் கோர் போலி நாட்டுப்புற மரபுகள்.",
+      kn: "ಬಂಜಾರ ಸಂಸ್ಕೃತಿಯ ಪ್ರಾಚೀನ ಜಾನಪದ ಹಾಡುಗಳು ಮತ್ತು ಗೋರ್ ಬೋಲಿ ಪರಂಪರೆ.",
+      ml: "ബഞ്ചാര സംസ്കാരത്തിന്റെ പരമ്പരാഗത നാടൻ പാട്ടുകളും ഗോർ ബോലി പാരമ്പര്യവും.",
+    },
+  },
   Default: {
     transcript: "మా ఊరి చెరువు కట్ట మీద పాడుకునే పురాతన నాటు పాట. ప్రకృతితో మమేకమై జీవించడమే మా సంస్కృతి ముఖ్య సందేశం.",
     context: "Agrarian community folklore celebrating seasonal cycles, water harvesting systems, and harmony with local wildlife.",
@@ -81,9 +118,9 @@ const AI_PRESETS: Record<string, { transcript: string; context: string; translat
       hi: "हमारे गाँव के तालाब की पाल पर गाया जाने वाला पारंपरिक लोकगीत। प्रकृति के साथ संतुलन में रहना ही इस परंपरा का मूल संदेश है।",
       ta: "எங்கள் கிராமத்துக் குளக்கரையில் பாடப்படும் நாட்டுப்புறப் பாடல். இயற்கையோடு இணைந்து வாழ்வதே இதன் நோக்கம்.",
       kn: "ನಮ್ಮ ಹಳ್ಳಿಯ ಕೆರೆಯ ದಡದಲ್ಲಿ ಹಾಡುವ ಪುರಾತನ ಜಾನಪದ ಹಾಡು. ಪ್ರಕೃತಿಯೊಂದಿಗೆ ಸಾಮರಸ್ಯದಿಂದ ಬಾಳುವುದೇ ಇದರ ಸಂದೇಶ.",
-      ml: "ഞങ്ങളുടെ ഗ്രാമത്തിലെ കുളക്കടവിൽ പാടുന്ന നാടൻ പാട്ട്. പ്രകൃതിയോട് ഇണങ്ങി ജീവിക്കുക എന്നതാണ് ഇതിന്റെ സന്ദേശം."
-    }
-  }
+      ml: "ഞങ്ങളുടെ ഗ്രാമത്തിലെ കുളക്കടവിൽ പാടുന്ന നാടൻ പാട്ട്. പ്രകൃതിയോട് ഇണങ്ങി ജീവിക്കുക എന്നതാണ് ഇതിന്റെ സന്ദേശം.",
+    },
+  },
 };
 
 export function RecordingStudio({ onSaved }: { onSaved?: (record: StoredVoiceRecord) => void }) {
@@ -120,6 +157,9 @@ export function RecordingStudio({ onSaved }: { onSaved?: (record: StoredVoiceRec
   const [savedRecord, setSavedRecord] = useState<StoredVoiceRecord | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [micStatus, setMicStatus] = useState("Microphone permission will be requested when you start recording.");
+  const [transcriptionSource, setTranscriptionSource] = useState<"none" | "ai_api" | "sample" | "manual">("none");
+  const [transcriptionModel, setTranscriptionModel] = useState<string | null>(null);
+  const [aiNotice, setAiNotice] = useState<string | null>(null);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -279,29 +319,84 @@ export function RecordingStudio({ onSaved }: { onSaved?: (record: StoredVoiceRec
     };
   };
 
-  // Full AI pipeline simulation: Acoustic Analysis -> Language Identification -> Whisper Transcription -> IndicTrans2 Translation -> Cultural Context Extraction
+  // Real Audio Transcription & Language Identification Pipeline
   const runAiPipeline = async () => {
     if (!audioBlob) return;
     setIsAiProcessing(true);
     setError(null);
+    setAiNotice(null);
 
-    const steps = [
-      "Analyzing Acoustic Waveform & Pitch Intonation...",
-      `Detecting Language & Dialect (${language})...`,
-      "Transcribing Spoken Words via Whisper-Indic ASR...",
-      "Generating Multi-Lingual Translations (6 Languages)...",
-      "Synthesizing Cultural & Ethnobotanical Context...",
-    ];
+    setAiStep(`Submitting audio to Voice Roots speech recognition engine (${language})...`);
 
-    for (let i = 0; i < steps.length; i++) {
-      setAiStep(steps[i]);
-      await new Promise((r) => setTimeout(r, 650));
+    try {
+      const formData = new FormData();
+      const filename = audioBlob instanceof File ? audioBlob.name : `${language.toLowerCase()}_recording.wav`;
+      formData.append("file", audioBlob, filename);
+      formData.append("language", language);
+
+      const res = await fetch("/api/transcribe", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+
+      if (res.ok && data.success && data.transcript) {
+        setSourceTranscript(data.transcript);
+        setTranscriptionSource("ai_api");
+        setTranscriptionModel(data.model || data.provider || "Whisper ASR");
+
+        if (data.detectedLanguageName && data.detectedLanguageName !== language) {
+          setLanguage(data.detectedLanguageName);
+        }
+        if (!title) {
+          setTitle(`${language} Spoken Heritage Recording`);
+        }
+        if (!community) {
+          setCommunity(language === "Telugu" ? "Godavari Basin Elders" : `${language} Clan Custodians`);
+        }
+        if (!location) {
+          setLocation(language === "Telugu" ? "Telangana & Andhra Pradesh" : "Deccan Plateau");
+        }
+
+        // Auto-fetch translation if available
+        try {
+          const transRes = await fetch("/api/translate", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              text: data.transcript,
+              sourceLanguage: language,
+              targetLanguage: "en",
+            }),
+          });
+          const transData = await transRes.json();
+          if (transRes.ok && transData.success && transData.translation) {
+            setTranslations((prev) => ({ ...prev, en: transData.translation }));
+          }
+        } catch {
+          // Translation error non-fatal
+        }
+      } else {
+        const errorMsg = data.error || "Speech-to-text service is not configured with HF_TOKEN or GEMINI_API_KEY.";
+        setAiNotice(`${errorMsg} You can click 'Load Authentic Oral Story Sample' below to test translation or type/paste your transcript.`);
+      }
+    } catch (err: any) {
+      setAiNotice("Network error contacting transcription gateway. You can load an authentic oral heritage sample story or type manually.");
+    } finally {
+      setIsAiProcessing(false);
+      setAiStep(null);
     }
+  };
 
+  const handleLoadSample = () => {
     const preset = AI_PRESETS[language] || AI_PRESETS["Default"];
     setSourceTranscript(preset.transcript);
     setCulturalContext(preset.context);
     setTranslations(preset.translations);
+    setTranscriptionSource("sample");
+    setTranscriptionModel("Oral Heritage Sample");
+    setAiNotice(null);
     if (!title) {
       setTitle(`${language} Spoken Heritage Recording`);
     }
@@ -311,9 +406,6 @@ export function RecordingStudio({ onSaved }: { onSaved?: (record: StoredVoiceRec
     if (!location) {
       setLocation(language === "Telugu" ? "Telangana & Andhra Pradesh" : "Deccan Plateau");
     }
-
-    setIsAiProcessing(false);
-    setAiStep(null);
   };
 
   const preserveRecording = async () => {
@@ -547,16 +639,38 @@ export function RecordingStudio({ onSaved }: { onSaved?: (record: StoredVoiceRec
                   </div>
                 </div>
 
-                <button
-                  type="button"
-                  onClick={runAiPipeline}
-                  disabled={isAiProcessing}
-                  className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D4A373] hover:bg-[#DFB388] px-6 text-xs font-bold text-white shadow-[0_4px_20px_rgba(212,163,115,0.45)] transition disabled:opacity-50"
-                >
-                  <Cpu className="h-4 w-4" />
-                  {isAiProcessing ? "AI Analyzing..." : "Generate AI Transcription & Context"}
-                </button>
+                <div className="flex flex-wrap items-center gap-2.5">
+                  <button
+                    type="button"
+                    onClick={runAiPipeline}
+                    disabled={isAiProcessing}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full bg-[#D4A373] hover:bg-[#DFB388] px-5 text-xs font-bold text-white shadow-[0_4px_20px_rgba(212,163,115,0.45)] transition disabled:opacity-50"
+                  >
+                    <Cpu className="h-4 w-4" />
+                    {isAiProcessing ? "Transcribing Audio..." : "Transcribe Audio with AI"}
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLoadSample}
+                    className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 hover:bg-white/10 px-4 text-xs font-semibold text-[#F7F3EE] transition"
+                    title="Load an authentic sample heritage story to test translation"
+                  >
+                    <BookOpen className="h-4 w-4 text-[#E58A4E]" />
+                    <span>Load Sample Story</span>
+                  </button>
+                </div>
               </div>
+
+              {aiNotice && (
+                <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-3.5 text-xs text-amber-200 flex items-start gap-2.5 leading-relaxed">
+                  <AlertCircle className="h-4 w-4 text-amber-400 shrink-0 mt-0.5" />
+                  <div>
+                    <span className="font-semibold text-amber-300">Notice: </span>
+                    <span>{aiNotice}</span>
+                  </div>
+                </div>
+              )}
 
               {isAiProcessing && (
                 <div className="flex items-center gap-3 rounded-xl border border-[#D4A373]/40 bg-black/40 p-4 text-xs text-[#D4A373] animate-pulse">
@@ -637,19 +751,56 @@ export function RecordingStudio({ onSaved }: { onSaved?: (record: StoredVoiceRec
 
           {/* Original Transcript Field */}
           <div>
-            <div className="flex items-center justify-between mb-1">
-              <label className="text-xs font-semibold text-[#C4B5A5]">
-                Source Speech Transcript ({language})
-              </label>
-              <span className="text-[11px] text-[#4E9F76]">
-                {sourceTranscript ? "✓ AI Transcribed" : "Auto-generated by AI or enter manually"}
-              </span>
-            </div>
+            {(() => {
+              const mismatch = checkLanguageMismatch(sourceTranscript, language);
+              return (
+                <>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-semibold text-[#C4B5A5]">
+                      Source Speech Transcript ({mismatch.isMismatch ? `${mismatch.detectedName} detected` : language})
+                    </label>
+                    <span className="text-[11px]">
+                      {transcriptionSource === "ai_api" && (
+                        <span className="text-[#4E9F76] font-semibold">✓ AI Transcribed ({transcriptionModel})</span>
+                      )}
+                      {transcriptionSource === "sample" && (
+                        <span className="text-[#E58A4E] font-semibold">Oral Heritage Sample Story</span>
+                      )}
+                      {transcriptionSource === "manual" && (
+                        <span className="text-[#C4B5A5]">Manual Community Entry</span>
+                      )}
+                      {transcriptionSource === "none" && !sourceTranscript && (
+                        <span className="text-[#A9AEC5]">Auto-generated by AI or enter manually</span>
+                      )}
+                    </span>
+                  </div>
+
+                  {mismatch.isMismatch && (
+                    <div className="mb-2.5 rounded-xl border border-amber-500/40 bg-amber-950/30 p-3 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-200">
+                      <div className="flex items-center gap-2">
+                        <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+                        <span>Language Mismatch Detected: The transcript contains {mismatch.detectedName} script, but Story Language is set to {language}.</span>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setLanguage(mismatch.detectedName)}
+                        className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-3 py-1 text-xs font-semibold text-amber-200 hover:bg-amber-500/30 transition"
+                      >
+                        Switch Story Language to {mismatch.detectedName}
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
             <textarea
               rows={4}
               value={sourceTranscript}
-              onChange={(e) => setSourceTranscript(e.target.value)}
-              placeholder="Source language transcript will appear after AI processing, or type here..."
+              onChange={(e) => {
+                setSourceTranscript(e.target.value);
+                setTranscriptionSource("manual");
+              }}
+              placeholder="Source language transcript will appear after speech recognition, or type here..."
               className="w-full rounded-2xl border border-white/10 bg-[#0C0908]/60 p-4 text-sm text-[#F7F3EE] outline-none focus:border-[#E58A4E]"
             />
           </div>

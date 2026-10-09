@@ -36,6 +36,7 @@ import { createHeritageRecordFromStored } from "@/lib/passport";
 import { uploadAudioToCloudStorage } from "@/lib/cloudStorage";
 import { saveDraftCheckpoint } from "@/lib/offlineSync";
 import { computeSHA256 } from "@/lib/security";
+import { checkLanguageMismatch } from "@/lib/languageDetection";
 
 const SOURCE_LANGUAGES = [
   { code: "te", name: "Telugu", native: "తెలుగు" },
@@ -757,29 +758,67 @@ export default function UploadAudioPage() {
 
               {/* Editable Source Transcript */}
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-xs text-[#C4B5A5]">
-                  <span>Source Transcript (Editable for review and correction):</span>
-                  <div className="flex items-center gap-2">
-                    <button
-                      type="button"
-                      onClick={() => handleCopy(originalTranscript, false)}
-                      disabled={!originalTranscript}
-                      className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
-                    >
-                      {copiedTranscript ? <Check className="h-3 w-3 text-[#4E9F76]" /> : <Copy className="h-3 w-3" />}
-                      <span>{copiedTranscript ? "Copied" : "Copy"}</span>
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleDownloadTxt(originalTranscript, `${title || "transcript"}_source.txt`)}
-                      disabled={!originalTranscript}
-                      className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
-                    >
-                      <Download className="h-3 w-3" />
-                      <span>Download .txt</span>
-                    </button>
-                  </div>
-                </div>
+                {(() => {
+                  const mismatch = checkLanguageMismatch(originalTranscript, sourceLang);
+                  return (
+                    <>
+                      <div className="flex items-center justify-between text-xs text-[#C4B5A5]">
+                        <div className="flex items-center gap-2">
+                          <span>
+                            Source Transcript ({mismatch.isMismatch ? `${mismatch.detectedName} detected` : activeSourceObj.name}):
+                          </span>
+                          {modelUsedInfo && (
+                            <span
+                              className={`rounded px-1.5 py-0.5 text-[10px] font-semibold ${
+                                modelUsedInfo.includes("Sample")
+                                  ? "bg-amber-500/20 text-amber-300"
+                                  : "bg-emerald-500/20 text-emerald-300"
+                              }`}
+                            >
+                              {modelUsedInfo.includes("Sample") ? "Oral Heritage Sample" : `✓ ${modelUsedInfo}`}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => handleCopy(originalTranscript, false)}
+                            disabled={!originalTranscript}
+                            className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
+                          >
+                            {copiedTranscript ? <Check className="h-3 w-3 text-[#4E9F76]" /> : <Copy className="h-3 w-3" />}
+                            <span>{copiedTranscript ? "Copied" : "Copy"}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleDownloadTxt(originalTranscript, `${title || "transcript"}_source.txt`)}
+                            disabled={!originalTranscript}
+                            className="inline-flex items-center gap-1 text-[11px] text-[#C4B5A5] hover:text-[#F7F3EE] disabled:opacity-30"
+                          >
+                            <Download className="h-3 w-3" />
+                            <span>Download .txt</span>
+                          </button>
+                        </div>
+                      </div>
+
+                      {mismatch.isMismatch && (
+                        <div className="rounded-xl border border-amber-500/40 bg-amber-950/30 p-3 flex flex-wrap items-center justify-between gap-2 text-xs text-amber-200">
+                          <div className="flex items-center gap-2">
+                            <AlertCircle className="h-4 w-4 text-amber-400 shrink-0" />
+                            <span>Language Mismatch Detected: The transcript contains {mismatch.detectedName} script, but source language is set to {activeSourceObj.name}.</span>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => setSourceLang(mismatch.detectedCode)}
+                            className="rounded-lg bg-amber-500/20 border border-amber-500/40 px-3 py-1 text-xs font-semibold text-amber-200 hover:bg-amber-500/30 transition"
+                          >
+                            Switch Source to {mismatch.detectedName}
+                          </button>
+                        </div>
+                      )}
+                    </>
+                  );
+                })()}
 
                 <textarea
                   rows={4}

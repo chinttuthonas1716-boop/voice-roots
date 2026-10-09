@@ -33,6 +33,7 @@ import { syncOfflineQueue, getOfflineQueue } from "@/lib/offlineSync";
 
 const desktopLinks = [
   { href: "/", label: "Home", icon: Compass },
+  { href: "/registry", label: "Registry", icon: Languages },
   { href: "/translate", label: "Conversations", icon: MessageSquare },
   { href: "/upload", label: "Transcribe", icon: Cpu },
   { href: "/explore", label: "Explore", icon: Compass },

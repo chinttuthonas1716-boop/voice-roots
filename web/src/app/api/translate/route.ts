@@ -28,23 +28,29 @@ const LANG_CODE_MAP: Record<string, string> = {
   koy: "koya",
   lambadi: "lambadi",
   lam: "lambadi",
+  banjara: "lambadi",
 };
 
 /**
- * Attempts real external machine translation via MyMemory free API.
+ * Attempts external machine translation via MyMemory free API with email attribution.
  */
 async function fetchExternalTranslation(
   text: string,
   fromLang: string,
   toLang: string
 ): Promise<{ success: boolean; translation?: string; error?: string }> {
+  // MyMemory does not support oral dialects directly
+  if (["gondi", "koya", "lambadi"].includes(fromLang) || ["gondi", "koya", "lambadi"].includes(toLang)) {
+    return { success: false, error: `External provider does not support oral dialect ${fromLang}-${toLang}` };
+  }
+
   try {
     const pair = `${fromLang}|${toLang}`;
-    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(pair)}`;
+    const url = `https://api.mymemory.translated.net/get?q=${encodeURIComponent(text)}&langpair=${encodeURIComponent(pair)}&de=admin@voiceroots.org`;
     const res = await fetch(url, {
       method: "GET",
       headers: { Accept: "application/json" },
-      signal: AbortSignal.timeout(6000), // 6-second timeout
+      signal: AbortSignal.timeout(5000), // 5-second timeout
     });
 
     if (!res.ok) {
@@ -54,9 +60,14 @@ async function fetchExternalTranslation(
     const data = await res.json();
     if (data.responseData && data.responseData.translatedText) {
       const translated = data.responseData.translatedText.trim();
-      // Verify response isn't an error message from the provider
-      if (!translated.toUpperCase().startsWith("QUERY LENGTH LIMIT") &&
-          !translated.toUpperCase().startsWith("INVALID LANGUAGE PAIR")) {
+      const upper = translated.toUpperCase();
+      // Verify response isn't an error message or rate limit warning
+      if (
+        !upper.startsWith("QUERY LENGTH LIMIT") &&
+        !upper.startsWith("INVALID LANGUAGE PAIR") &&
+        !upper.includes("MYMEMORY WARNING") &&
+        !upper.includes("YOU USED ALL AVAILABLE FREE TRANSLATIONS")
+      ) {
         return { success: true, translation: translated };
       }
     }
@@ -65,6 +76,170 @@ async function fetchExternalTranslation(
   } catch (err: any) {
     return { success: false, error: err?.message || "Translation network timeout" };
   }
+}
+
+/**
+ * Executes multi-tier translation pipeline:
+ * 1. Identity match (source === target)
+ * 2. Verified Conversational Knowledgebase lookup (including Gondi, Koya, Lambadi)
+ * 3. Google Gemini 2.5 Flash Multilingual API (if GEMINI_API_KEY / GOOGLE_API_KEY present)
+ * 4. Hugging Face IndicTrans2 (ai4bharat/indictrans2) bidirectional models (if HF_TOKEN present)
+ * 5. External Neural Translation Service (MyMemory)
+ * 6. Oral dialect / heuristic corpus fallback
+ */
+async function translateTextPipeline(
+  text: string,
+  sLang: string,
+  tLang: string
+): Promise<{
+  success: boolean;
+  translation?: string;
+  provider?: string;
+  confidence?: number;
+  error?: string;
+  details?: string;
+}> {
+  // Step 1: Identity match
+  if (sLang === tLang) {
+    return {
+      success: true,
+      translation: text,
+      provider: "Identity-NoOp",
+      confidence: 1.0,
+    };
+  }
+
+  // Step 2: Verified Conversational Knowledgebase Lookup
+  const match = findMatchingPhrase(text, sLang);
+  if (match) {
+    const directTranslation = (match as any)[tLang];
+    if (directTranslation) {
+      return {
+        success: true,
+        translation: directTranslation,
+        provider: "Verified-Conversational-Corpus",
+        confidence: 0.98,
+      };
+    }
+    // Fallback to English from the verified phrase if target is 'en'
+    if (tLang === "en" && match.en) {
+      return {
+        success: true,
+        translation: match.en,
+        provider: "Verified-Conversational-Corpus",
+        confidence: 0.98,
+      };
+    }
+  }
+
+  // Step 3: Google Gemini 2.5 Flash Multilingual Translation
+  const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
+  if (geminiKey) {
+    try {
+      const prompt = `You are a linguistically precise translator specializing in Indian languages, Scheduled languages, and oral dialects (such as Telugu, Hindi, Tamil, Kannada, Malayalam, Gondi, Koya, and Lambadi). Translate the following text from ${sLang} to ${tLang}. Preserve cultural nuances, honorifics, and dialectical vocabulary accurately. Output ONLY the translated text in its natural script or language without explanatory notes, conversational intros, or quotes.`;
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { text: `${prompt}\n\nText to translate:\n${text}` },
+                ],
+              },
+            ],
+          }),
+          signal: AbortSignal.timeout(6000),
+        }
+      );
+      if (geminiRes.ok) {
+        const geminiData = await geminiRes.json();
+        const candidate = geminiData.candidates?.[0]?.content?.parts?.[0]?.text?.trim();
+        if (candidate) {
+          return {
+            success: true,
+            translation: candidate,
+            provider: "Google-Gemini-Flash",
+            confidence: 0.95,
+          };
+        }
+      }
+    } catch {
+      // Fall through to next tier
+    }
+  }
+
+  // Step 4: Hugging Face IndicTrans2 (Bidirectional Model Routing)
+  const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_API_KEY;
+  if (hfToken) {
+    try {
+      let modelId = "ai4bharat/indictrans2-indic-en-dist-200M";
+      if (sLang === "en" && tLang !== "en") {
+        modelId = "ai4bharat/indictrans2-en-indic-dist-200M";
+      } else if (sLang !== "en" && tLang !== "en") {
+        modelId = "ai4bharat/indictrans2-indic-indic-dist-200M";
+      }
+
+      const hfRes = await fetch(
+        `https://api-inference.huggingface.co/models/${modelId}`,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Bearer ${hfToken}`,
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ inputs: text }),
+          signal: AbortSignal.timeout(6000),
+        }
+      );
+      if (hfRes.ok) {
+        const hfData = await hfRes.json();
+        if (Array.isArray(hfData) && hfData[0]?.generated_text) {
+          return {
+            success: true,
+            translation: hfData[0].generated_text.trim(),
+            provider: "IndicTrans2-HuggingFace",
+            confidence: 0.94,
+          };
+        }
+      }
+    } catch {
+      // Fall through to next tier
+    }
+  }
+
+  // Step 5: External Machine Translation (MyMemory)
+  const extResult = await fetchExternalTranslation(text, sLang, tLang);
+  if (extResult.success && extResult.translation) {
+    return {
+      success: true,
+      translation: extResult.translation,
+      provider: "Neural-Translation-Service",
+      confidence: 0.90,
+    };
+  }
+
+  // Step 6: Oral Dialect / Substring Corpus Match Fallback
+  // If text contains known words from our 10 dialogue scenarios
+  if (match) {
+    const fallbackText = (match as any)[tLang] || match.te || match.en;
+    if (fallbackText) {
+      return {
+        success: true,
+        translation: fallbackText,
+        provider: "Oral-Heritage-Corpus-Fallback",
+        confidence: 0.88,
+      };
+    }
+  }
+
+  return {
+    success: false,
+    error: `Unable to translate phrase from ${sLang.toUpperCase()} to ${tLang.toUpperCase()}.`,
+    details: extResult.error,
+  };
 }
 
 export async function GET(request: NextRequest) {
@@ -83,41 +258,29 @@ export async function GET(request: NextRequest) {
     );
   }
 
-  // 1. Check verified conversational corpus
-  const match = findMatchingPhrase(rawText, sourceLang);
-  if (match) {
-    const translation = (match as any)[targetLang] || match.en;
+  const result = await translateTextPipeline(rawText, sourceLang, targetLang);
+
+  if (result.success && result.translation) {
     return NextResponse.json({
       success: true,
       sourceLanguage: sourceLang,
       targetLanguage: targetLang,
       originalText: rawText,
-      translation,
-      provider: "Verified-Conversational-Corpus",
-      confidence: 0.98,
+      translation: result.translation,
+      provider: result.provider,
+      confidence: result.confidence || 0.92,
     });
   }
 
-  // 2. Real external translation fallback
-  const external = await fetchExternalTranslation(rawText, sourceLang, targetLang);
-  if (external.success && external.translation) {
-    return NextResponse.json({
-      success: true,
-      sourceLanguage: sourceLang,
-      targetLanguage: targetLang,
+  return NextResponse.json(
+    {
+      success: false,
+      error: result.error || `Unable to translate phrase from ${sourceLang.toUpperCase()} to ${targetLang.toUpperCase()}.`,
+      details: result.details,
       originalText: rawText,
-      translation: external.translation,
-      provider: "Neural-Translation-Service",
-      confidence: 0.92,
-    });
-  }
-
-  return NextResponse.json({
-    success: false,
-    error: `Unable to translate phrase from ${sourceLang.toUpperCase()} to ${targetLang.toUpperCase()}.`,
-    details: external.error,
-    originalText: rawText,
-  }, { status: 502 });
+    },
+    { status: 502 }
+  );
 }
 
 export async function POST(request: NextRequest) {
@@ -157,69 +320,10 @@ export async function POST(request: NextRequest) {
     const sLang = LANG_CODE_MAP[rawSource] || rawSource;
     const tLang = LANG_CODE_MAP[rawTarget] || rawTarget;
 
-    // Check if source and target are identical
-    if (sLang === tLang) {
-      return NextResponse.json({
-        success: true,
-        sourceLanguage: sLang,
-        targetLanguage: tLang,
-        originalText: text,
-        translation: text,
-        provider: "Identity-NoOp",
-        confidence: 1.0,
-      });
-    }
-
-    let translation = "";
-    let providerUsed = "";
-
-    // 3. Stage 1: Verified Conversational Knowledgebase Lookup
-    const match = findMatchingPhrase(text, sLang);
-    if (match) {
-      translation = (match as any)[tLang] || match.en;
-      providerUsed = "Verified-Conversational-Corpus";
-    }
-
-    // 4. Stage 2: Hugging Face IndicTrans2 if HF_TOKEN is configured
-    if (!translation && process.env.HF_TOKEN) {
-      try {
-        const hfRes = await fetch(
-          "https://api-inference.huggingface.co/models/ai4bharat/indictrans2-indic-en-dist-200M",
-          {
-            method: "POST",
-            headers: {
-              Authorization: `Bearer ${process.env.HF_TOKEN}`,
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ inputs: text }),
-            signal: AbortSignal.timeout(5000),
-          }
-        );
-        if (hfRes.ok) {
-          const hfData = await hfRes.json();
-          if (Array.isArray(hfData) && hfData[0]?.generated_text) {
-            translation = hfData[0].generated_text.trim();
-            providerUsed = "IndicTrans2-HuggingFace";
-          }
-        }
-      } catch {
-        // Fall through to external translation
-      }
-    }
-
-    // 5. Stage 3: Live External Machine Translation
-    if (!translation) {
-      const extResult = await fetchExternalTranslation(text, sLang, tLang);
-      if (extResult.success && extResult.translation) {
-        translation = extResult.translation;
-        providerUsed = "Neural-Translation-Service";
-      }
-    }
-
+    const pipelineResult = await translateTextPipeline(text, sLang, tLang);
     const durationMs = Date.now() - startTime;
 
-    // 6. Distinct Error Response if translation could not be performed
-    if (!translation) {
+    if (!pipelineResult.success || !pipelineResult.translation) {
       console.warn(
         JSON.stringify({
           stage: "TRANSLATION_FAILED",
@@ -239,13 +343,14 @@ export async function POST(request: NextRequest) {
           originalText: text,
           sourceLanguage: sLang,
           targetLanguage: tLang,
+          details: pipelineResult.details,
         },
         { status: 502 }
       );
     }
 
-    // 7. Cryptographic Provenance Hash
-    const provenanceHash = await computeSHA256(`${sLang}:${tLang}:${text}:${translation}`);
+    // Cryptographic Provenance Hash
+    const provenanceHash = await computeSHA256(`${sLang}:${tLang}:${text}:${pipelineResult.translation}`);
 
     console.log(
       JSON.stringify({
@@ -253,7 +358,7 @@ export async function POST(request: NextRequest) {
         requestId,
         sourceLang: sLang,
         targetLang: tLang,
-        provider: providerUsed,
+        provider: pipelineResult.provider,
         durationMs,
       })
     );
@@ -263,10 +368,10 @@ export async function POST(request: NextRequest) {
       sourceLanguage: sLang,
       targetLanguage: tLang,
       originalText: text,
-      translation,
-      provider: providerUsed,
+      translation: pipelineResult.translation,
+      provider: pipelineResult.provider,
       provenanceHash,
-      confidence: providerUsed.includes("Corpus") ? 0.98 : 0.91,
+      confidence: pipelineResult.confidence || 0.92,
       durationMs,
     });
   } catch (err: any) {
