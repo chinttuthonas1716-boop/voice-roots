@@ -57,7 +57,7 @@ export interface LinkCardData {
   dialect?: string;
 }
 
-const PUBLIC_BASE = "https://threaded-twiki-imports-uri.trycloudflare.com";
+const PUBLIC_BASE = "https://voice-roots.onrender.com";
 const LOCAL_WIFI_BASE = "http://192.168.1.12:3000";
 const LOCALHOST_WEB = "http://localhost:3000";
 const LOCALHOST_API = "http://localhost:8000";
