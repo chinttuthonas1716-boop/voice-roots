@@ -45,3 +45,4 @@ Every task must adhere to the following sequence:
   - Displays original transcript in editable review area.
   - Translates source transcript into selected target language with distinct result panels.
 - **Build & Quality**: `npm run build` must succeed with 0 errors across all 49 routes before any deployment.
+

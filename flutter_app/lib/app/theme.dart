@@ -21,6 +21,18 @@ class VoiceRootsColors {
 }
 
 class VoiceRootsTheme {
+  // Direct theme color accessors matching VoiceRootsColors
+  static const Color warmAmber = VoiceRootsColors.warmAmber;
+  static const Color peach = VoiceRootsColors.peach;
+  static const Color warmIvory = VoiceRootsColors.warmIvory;
+  static const Color secondaryText = VoiceRootsColors.textSecondary;
+  static const Color textMuted = VoiceRootsColors.textMuted;
+  static const Color heritageTeal = VoiceRootsColors.heritageTeal;
+  static const Color surfaceIndigo = VoiceRootsColors.surfaceIndigo;
+  static const Color midnightIndigo = VoiceRootsColors.midnightIndigo;
+  static const Color background = VoiceRootsColors.background;
+  static const Color backgroundDeep = VoiceRootsColors.backgroundDeep;
+
   static ThemeData dark() {
     return ThemeData(
       brightness: Brightness.dark,

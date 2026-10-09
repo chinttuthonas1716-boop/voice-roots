@@ -11,14 +11,19 @@
 | **VR-AUDIO-01** | Everyday Multilingual Conversations module with 10 categories | **Completed** | `web/src/app/translate` | Dual-speaker dialogues with pronunciation and browser TTS. |
 | **VR-AUDIO-02** | Audio file upload & playback with format validation | **Completed** | `web/src/app/upload` | WAV, MP3, M4A, WebM, OGG upload with real-time audio player. |
 | **VR-AUDIO-03** | Real Speech-to-Text (`/api/transcribe`) & Translation (`/api/translate`) | **Completed** | `web/src/app/api/*` | Multipart audio processing, editable transcript area, separate translation panel. |
-| **VR-DOCS-01** | Establish full documentation suite (PRD, Architecture, Design, etc.) | **In Progress** | `docs/` | 10 governance files created accurately representing actual stack. |
-| **VR-ENV-01** | Create root and web `.env.example` templates | **Pending** | `/.env.example` | Document `HF_TOKEN`, `OPENAI_API_KEY`, `AUTH_SECRET` without secrets. |
-| **VR-TEST-01** | Automated End-to-End User Journey test script | **Pending** | `scripts/` | Automated verification of full login, transcribe, translate, and preserve flow. |
-| **VR-SYNC-01** | Offline storage queue replay audit | **Pending** | `web/src/lib/offlineSync.ts` | Verify sync queue idempotency when network transitions offline -> online. |
+| **VR-DOCS-01** | Establish full documentation suite (PRD, Architecture, Design, etc.) | **Completed** | `docs/` | 10 governance files created accurately representing actual stack. |
+| **VR-ENV-01** | Create root and web `.env.example` templates | **Completed** | `/.env.example` | Document `HF_TOKEN`, `OPENAI_API_KEY`, `AUTH_SECRET` without secrets. |
+| **VR-TEST-01** | Automated End-to-End User Journey test script | **Completed** | `scripts/` | Automated verification of full login, transcribe, translate, and preserve flow (52/52 passed). |
+| **VR-SYNC-01** | Offline storage queue replay audit & idempotent sync | **Completed** | `web/src/lib/offlineSync.ts` | Verify sync queue idempotency when network transitions offline -> online. |
+| **VR-FLUTTER-01** | Flutter Mobile Client theme alignment & glass dock | **Completed** | `flutter_app/` | Aligned dark navy & peach color palette, elevated center FAB, and theme static accessors. |
 
 ---
 
 ## Completed Milestones
+- **2026-10-10**: Flutter mobile theme alignment (`VoiceRootsTheme` aliases) and dark navy glass bottom dock (`VoiceRootsBottomNav`).
+- **2026-10-10**: Comprehensive End-to-End User Journey test suite with 52 passing tests (`scripts/test_e2e_user_journey.js`).
+- **2026-10-10**: Full documentation rulebook completed (`RULES.md`, `TASKS.md`, `.env.example`, `docs/*`).
 - **2026-10-09**: Commit `5dd110b` & `590e0d2` — Fixed mobile header visibility, persistent login form rendering, and demo credentials on Render.
 - **2026-10-09**: Full 45-test suite for authentication system passing with 0 failures (`test_auth_system.js`).
 - **2026-10-09**: Full 32-test suite for multilingual transcription and translation passing with 0 failures (`test_transcribe_translate.js`).
+

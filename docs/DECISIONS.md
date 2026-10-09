@@ -35,3 +35,4 @@
   1. Keep top navbar visible across all viewports with a compact mobile layout displaying the brand, language selector, glowing "Log In" button, and drawer toggle.
   2. Provide a 5-item floating bottom dock on mobile with a center FAB for Preserving/Recording and a dedicated 5th tab for Log In / Profile.
 - **Consequences**: Guaranteed 1-tap access to authentication and core pages on any screen size.
+

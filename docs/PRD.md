@@ -59,3 +59,4 @@
 - **Initial Focus**: Telugu (తెలుగు), Gondi (గోండి / गोंडी), Koya (కోయ), Lambadi (లంబాడి / लंबानी), Tulu (ತುಳು).
 - **Bridge & Target Languages**: English, Hindi (हिन्दी), Kannada (ಕನ್ನಡ).
 - **Expansion Framework**: Community language contribution workflow (`/api/community/contribute-language`).
+

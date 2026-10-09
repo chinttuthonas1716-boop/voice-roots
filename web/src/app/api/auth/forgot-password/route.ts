@@ -4,7 +4,7 @@ import { checkAuthRateLimit, createPasswordResetToken } from "@/lib/serverAuth";
 export async function POST(request: NextRequest) {
   try {
     const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-    const rateCheck = checkAuthRateLimit(clientIp, 5, 60000);
+    const rateCheck = checkAuthRateLimit(clientIp, 20, 60000);
     if (!rateCheck.allowed) {
       return NextResponse.json(
         {

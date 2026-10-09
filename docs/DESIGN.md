@@ -55,3 +55,4 @@ The Voice Roots interface pairs an organic, respectful oral heritage theme with 
 - **`QRCodeModal`**: Modal displaying scan-ready QR codes for testing on mobile devices.
 - **`ResumeDraftBanner`**: Offline draft restoration prompt for incomplete field recordings.
 - **`WorkflowGuard`**: Multi-step progress tracker for recording, metadata capture, consent, and verification.
+

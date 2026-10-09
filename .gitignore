@@ -48,6 +48,7 @@ backend/storage/
 *.webm
 backups/
 data/postgres/
+web/data/
 *.zip
 *.tsbuildinfo
 

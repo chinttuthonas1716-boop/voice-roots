@@ -78,3 +78,4 @@ graph TD
 - **Comparison Security**: Verified using `crypto.timingSafeEqual` to eliminate timing attacks.
 - **Rate Limiting**: Sliding-window in-memory limiter (10 attempts per minute per IP) to mitigate brute-force attacks.
 - **Client Sync**: Broadcast events (`vr-auth-changed`) and cookie storage ensure instant state synchronization across header, drawer, and bottom navigation components.
+

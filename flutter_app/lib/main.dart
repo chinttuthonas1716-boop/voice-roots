@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'app/theme.dart';
 import 'core/api/api_client.dart';
+import 'widgets/bottom_nav.dart';
 
 void main() {
   runApp(const VoiceRootsApp());
@@ -67,44 +68,9 @@ class _MainNavigationShellState extends State<MainNavigationShell> {
 
     return Scaffold(
       body: screens[_currentIndex],
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: const Color(0xE6080A12),
-          border: Border(
-            top: BorderSide(color: Colors.white.withOpacity(0.08)),
-          ),
-        ),
-        child: BottomNavigationBar(
-          currentIndex: _currentIndex,
-          onTap: (index) => setState(() => _currentIndex = index),
-          items: const [
-            BottomNavigationBarItem(
-              icon: Icon(Icons.home_outlined),
-              activeIcon: Icon(Icons.home),
-              label: 'Home',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.explore_outlined),
-              activeIcon: Icon(Icons.explore),
-              label: 'Explore',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.mic_none, color: VoiceRootsTheme.warmAmber),
-              activeIcon: Icon(Icons.mic, color: VoiceRootsTheme.warmAmber),
-              label: 'Record',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.bookmark_border),
-              activeIcon: Icon(Icons.bookmark),
-              label: 'Saved',
-            ),
-            BottomNavigationBarItem(
-              icon: Icon(Icons.person_outline),
-              activeIcon: Icon(Icons.person),
-              label: 'Profile',
-            ),
-          ],
-        ),
+      bottomNavigationBar: VoiceRootsBottomNav(
+        currentIndex: _currentIndex,
+        onChanged: (index) => setState(() => _currentIndex = index),
       ),
     );
   }

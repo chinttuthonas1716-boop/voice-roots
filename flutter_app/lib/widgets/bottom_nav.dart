@@ -18,16 +18,16 @@ class VoiceRootsBottomNav extends StatelessWidget {
         margin: const EdgeInsets.fromLTRB(16, 0, 16, 12),
         padding: const EdgeInsets.all(7),
         decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.90),
+          color: VoiceRootsColors.backgroundDeep.withOpacity(0.92),
           borderRadius: BorderRadius.circular(24),
           border: Border.all(
-            color: Colors.white.withOpacity(0.65),
+            color: Colors.white.withOpacity(0.14),
           ),
           boxShadow: const [
             BoxShadow(
               blurRadius: 30,
               offset: Offset(0, 12),
-              color: Color(0x33000000),
+              color: Color(0x66000000),
             ),
           ],
         ),
@@ -53,7 +53,7 @@ class VoiceRootsBottomNav extends StatelessWidget {
           height: 52,
           decoration: BoxDecoration(
             color: active
-                ? VoiceRootsColors.peach.withOpacity(0.30)
+                ? VoiceRootsColors.peach.withOpacity(0.18)
                 : Colors.transparent,
             borderRadius: BorderRadius.circular(18),
           ),
@@ -62,16 +62,16 @@ class VoiceRootsBottomNav extends StatelessWidget {
             children: [
               Icon(
                 icon,
-                color: VoiceRootsColors.backgroundDeep,
+                color: active ? VoiceRootsColors.peach : VoiceRootsColors.textMuted,
                 size: 21,
               ),
               const SizedBox(height: 3),
               Text(
                 label,
-                style: const TextStyle(
-                  color: VoiceRootsColors.backgroundDeep,
+                style: TextStyle(
+                  color: active ? VoiceRootsColors.peach : VoiceRootsColors.textMuted,
                   fontSize: 10,
-                  fontWeight: FontWeight.w600,
+                  fontWeight: active ? FontWeight.bold : FontWeight.w500,
                 ),
               ),
             ],
