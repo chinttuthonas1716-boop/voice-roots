@@ -17,6 +17,10 @@
       "path": "mobile"
     },
     {
+      "name": "🦋 Mobile (Flutter)",
+      "path": "flutter_app"
+    },
+    {
       "name": "🧠 AI & ML",
       "path": "ai"
     }

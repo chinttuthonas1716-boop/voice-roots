@@ -1,158 +1,85 @@
 import React from "react";
-import { StyleSheet, Text, View, ScrollView, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
 import { SpatialIcon } from "../components/SpatialIcon";
 
 export function ArchiveScreen() {
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <View style={styles.container}>
       <View style={styles.badgePill}>
-        <SpatialIcon name="archive" size={11} color="#E50914" />
-        <Text style={styles.badge}>24 ORAL TRADITIONS</Text>
+        <SpatialIcon name="archive" size={13} color="#8BCF8B" />
+        <Text style={styles.badge}>VOICE ROOTS</Text>
       </View>
-      <Text style={styles.title}>Digital Language Archive</Text>
+      <Text style={styles.title}>Your archive</Text>
       <Text style={styles.subtitle}>
-        Explore 4,821 oral recordings preserved across 4 distinct language families.
+        This mobile app is not connected to a shared archive yet. Stories saved in the web prototype stay in the browser where they were recorded.
       </Text>
-
-      {[
-        { lang: "Telugu", count: "1,248 voices", words: "84.9K words", region: "AP & Telangana (Agency)", family: "Dravidian" },
-        { lang: "Gondi", count: "890 voices", words: "42.1K words", region: "MP & Bastar Plateau", family: "Dravidian" },
-        { lang: "Koya", count: "614 voices", words: "31.5K words", region: "Godavari River Valley", family: "Dravidian" },
-        { lang: "Santali", count: "532 voices", words: "38.2K words", region: "Jharkhand & Mayurbhanj", family: "Austroasiatic" },
-        { lang: "Tulu", count: "430 voices", words: "28.6K words", region: "Coastal Tulunadu", family: "Dravidian" },
-        { lang: "Khasi", count: "390 voices", words: "26.4K words", region: "Meghalaya Sohra Valley", family: "Austroasiatic" },
-        { lang: "Toda", count: "185 voices", words: "12.4K words", region: "Nilgiri Pastoral Clans", family: "Dravidian" },
-        { lang: "Bodo", count: "310 voices", words: "21.5K words", region: "Western Bodoland", family: "Tibeto-Burman" },
-        { lang: "Ladakhi", count: "215 voices", words: "16.8K words", region: "Leh & Zanskar", family: "Tibeto-Burman" },
-      ].map((item, idx) => (
-        <TouchableOpacity key={idx} style={styles.glassCard} activeOpacity={0.75}>
-          <View style={styles.cardHeader}>
-            <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-              <SpatialIcon name="globe" size={16} color="#E50914" />
-              <Text style={styles.langName}>{item.lang}</Text>
-            </View>
-            <View style={styles.familyPill}>
-              <Text style={styles.familyText}>{item.family}</Text>
-            </View>
-          </View>
-          <Text style={styles.region}>{item.region}</Text>
-          <View style={styles.stats}>
-            <View style={styles.statPill}>
-              <Text style={styles.statText}>{item.count}</Text>
-            </View>
-            <View style={[styles.statPill, styles.statPillRed]}>
-              <Text style={[styles.statText, { color: "#E50914" }]}>{item.words}</Text>
-            </View>
-          </View>
-        </TouchableOpacity>
-      ))}
-    </ScrollView>
+      <View style={styles.glassCard}>
+        <SpatialIcon name="globe" size={22} color="#8BCF8B" />
+        <Text style={styles.cardTitle}>No shared stories yet</Text>
+        <Text style={styles.cardBody}>
+          Connect a storage service to make stories available across devices. Until then, use the same browser and device where a recording was created.
+        </Text>
+      </View>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: "#141414",
-  },
-  content: {
-    paddingHorizontal: 18,
-    paddingTop: 12,
-    paddingBottom: 110, // clearance for floating glass tab bar
+    backgroundColor: "#101511",
+    paddingHorizontal: 20,
+    paddingTop: 20,
   },
   badgePill: {
     flexDirection: "row",
     alignItems: "center",
-    gap: 6,
+    gap: 7,
     alignSelf: "flex-start",
-    backgroundColor: "rgba(255, 255, 255, 0.08)",
+    backgroundColor: "rgba(255, 255, 255, 0.06)",
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.14)",
+    borderColor: "rgba(255, 255, 255, 0.12)",
     paddingHorizontal: 12,
-    paddingVertical: 5,
+    paddingVertical: 7,
     borderRadius: 99,
-    marginBottom: 8,
+    marginBottom: 14,
   },
   badge: {
-    color: "#E50914",
+    color: "#A9D9A9",
     fontSize: 10,
-    fontWeight: "800",
-    letterSpacing: 0.8,
-    fontFamily: "monospace",
+    fontWeight: "700",
+    letterSpacing: 1,
   },
   title: {
-    fontSize: 28,
-    fontWeight: "800",
-    color: "#FFFFFF",
-    letterSpacing: -0.6,
-  },
-  subtitle: {
-    fontSize: 13,
-    color: "#AAAAAA",
-    marginTop: 4,
-    marginBottom: 16,
-    lineHeight: 18,
-  },
-  glassCard: {
-    backgroundColor: "rgba(28, 28, 28, 0.72)",
-    borderRadius: 22,
-    padding: 18,
-    marginBottom: 12,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.1)",
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.5,
-    shadowRadius: 10,
-  },
-  cardHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-  },
-  langName: {
-    fontSize: 19,
+    fontSize: 29,
     fontWeight: "700",
     color: "#FFFFFF",
+    letterSpacing: -0.5,
   },
-  familyPill: {
-    backgroundColor: "rgba(255, 255, 255, 0.06)",
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 8,
+  subtitle: {
+    fontSize: 14,
+    color: "#B7C0B7",
+    marginTop: 8,
+    marginBottom: 20,
+    lineHeight: 21,
+  },
+  glassCard: {
+    backgroundColor: "rgba(255, 255, 255, 0.055)",
+    borderRadius: 22,
+    padding: 20,
     borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.08)",
+    borderColor: "rgba(255, 255, 255, 0.11)",
   },
-  familyText: {
-    color: "#AAAAAA",
-    fontSize: 10,
-    fontFamily: "monospace",
-  },
-  region: {
-    fontSize: 12,
-    color: "#AAAAAA",
-    marginTop: 4,
-  },
-  stats: {
-    flexDirection: "row",
-    gap: 8,
-    marginTop: 12,
-  },
-  statPill: {
-    backgroundColor: "rgba(0, 0, 0, 0.4)",
-    paddingHorizontal: 10,
-    paddingVertical: 5,
-    borderRadius: 10,
-    borderWidth: 1,
-    borderColor: "rgba(255, 255, 255, 0.06)",
-  },
-  statPillRed: {
-    borderColor: "rgba(229, 9, 20, 0.3)",
-  },
-  statText: {
-    fontSize: 11,
-    color: "#E5E5E5",
-    fontFamily: "monospace",
+  cardTitle: {
+    fontSize: 17,
     fontWeight: "600",
+    color: "#FFFFFF",
+    marginTop: 14,
+  },
+  cardBody: {
+    fontSize: 13,
+    color: "#B7C0B7",
+    marginTop: 7,
+    lineHeight: 20,
   },
 });

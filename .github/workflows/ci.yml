@@ -1,0 +1,70 @@
+name: Voice Roots CI
+
+on:
+  pull_request:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  backend:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: postgresql+psycopg://voice_roots:test-only@127.0.0.1:5432/voice_roots_test
+      JWT_SECRET: ci-only-secret-with-at-least-thirty-two-characters
+      REDIS_URL: redis://127.0.0.1:6379/0
+      AI_ENABLED: "false"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: ruff check backend tests
+      - run: pytest --cov=backend/app --cov-report=term-missing --cov-fail-under=0
+      - name: Check local secrets and generated audio stay ignored
+        run: |
+          git check-ignore -q .env
+          git check-ignore -q data/postgres/voice_roots_test
+          git check-ignore -q data/audio/private-recording.wav
+      - uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  frontend:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run typecheck
+      - run: npm test -- --coverage
+      - run: npm run build
+
+  docker:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: false
+          tags: voice-roots-backend:ci
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: false
+          tags: voice-roots-frontend:ci

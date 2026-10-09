@@ -1,0 +1,119 @@
+name: Deploy Voice Roots
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-production
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  test:
+    uses: ./.github/workflows/ci.yml
+
+  build:
+    needs: test
+    runs-on: ubuntu-latest
+    outputs:
+      image_repository: ${{ steps.image.outputs.name }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: docker/setup-buildx-action@v3
+      - id: image
+        run: echo "name=ghcr.io/${GITHUB_REPOSITORY,,}" >> "$GITHUB_OUTPUT"
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: backend/Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.name }}/backend:${{ github.sha }}
+          cache-from: type=gha,scope=backend
+          cache-to: type=gha,scope=backend,mode=max
+      - uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: frontend/Dockerfile
+          push: true
+          tags: ${{ steps.image.outputs.name }}/frontend:${{ github.sha }}
+          cache-from: type=gha,scope=frontend
+          cache-to: type=gha,scope=frontend,mode=max
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment: production
+    steps:
+      - uses: actions/checkout@v4
+      - name: Copy production compose file
+        uses: appleboy/scp-action@v1
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          source: docker-compose.prod.yml
+          target: /opt/voice-app/
+      - name: Migrate, deploy, check health, and roll back on failure
+        uses: appleboy/ssh-action@v1
+        env:
+          IMAGE_TAG: ${{ github.sha }}
+          IMAGE_REPOSITORY: ghcr.io/${{ github.repository }}
+          GHCR_USER: ${{ github.actor }}
+          GHCR_PAT: ${{ secrets.GHCR_PAT }}
+          DATABASE_URL: ${{ secrets.PRODUCTION_DATABASE_URL }}
+          JWT_SECRET: ${{ secrets.PRODUCTION_JWT_SECRET }}
+          S3_ENDPOINT: ${{ secrets.PRODUCTION_S3_ENDPOINT }}
+          S3_ACCESS_KEY: ${{ secrets.PRODUCTION_S3_ACCESS_KEY }}
+          S3_SECRET_KEY: ${{ secrets.PRODUCTION_S3_SECRET_KEY }}
+          S3_BUCKET: ${{ vars.PRODUCTION_S3_BUCKET }}
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+          SENTRY_DSN: ${{ secrets.PRODUCTION_SENTRY_DSN }}
+          HEALTH_URL: ${{ vars.PRODUCTION_HEALTH_URL }}
+          FRONTEND_ORIGIN: ${{ vars.PRODUCTION_FRONTEND_ORIGIN }}
+          AI_ENABLED: ${{ vars.PRODUCTION_AI_ENABLED }}
+          WHISPER_MODEL: ${{ vars.PRODUCTION_WHISPER_MODEL }}
+          WHISPER_DEVICE: ${{ vars.PRODUCTION_WHISPER_DEVICE }}
+          WHISPER_COMPUTE_TYPE: ${{ vars.PRODUCTION_WHISPER_COMPUTE_TYPE }}
+        with:
+          host: ${{ secrets.SSH_HOST }}
+          username: ${{ secrets.SSH_USER }}
+          key: ${{ secrets.SSH_KEY }}
+          envs: IMAGE_TAG,GHCR_USER,GHCR_PAT,DATABASE_URL,JWT_SECRET,S3_ENDPOINT,S3_ACCESS_KEY,S3_SECRET_KEY,S3_BUCKET,HF_TOKEN,SENTRY_DSN,HEALTH_URL,FRONTEND_ORIGIN,AI_ENABLED,WHISPER_MODEL,WHISPER_DEVICE,WHISPER_COMPUTE_TYPE
+          script: |
+            set -eu
+            cd /opt/voice-app
+            IMAGE_REPOSITORY='${{ needs.build.outputs.image_repository }}'
+            test -n "$DATABASE_URL"
+            test -n "$JWT_SECRET"
+            test -n "$FRONTEND_ORIGIN"
+            PREV=$(cat .current_tag 2>/dev/null || true)
+            printf 'DATABASE_URL=%s\nJWT_SECRET=%s\nS3_ENDPOINT=%s\nS3_ACCESS_KEY=%s\nS3_SECRET_KEY=%s\nS3_BUCKET=%s\nHF_TOKEN=%s\nSENTRY_DSN=%s\nFRONTEND_ORIGIN=%s\nAI_ENABLED=%s\nWHISPER_MODEL=%s\nWHISPER_DEVICE=%s\nWHISPER_COMPUTE_TYPE=%s\n' "$DATABASE_URL" "$JWT_SECRET" "$S3_ENDPOINT" "$S3_ACCESS_KEY" "$S3_SECRET_KEY" "$S3_BUCKET" "$HF_TOKEN" "$SENTRY_DSN" "$FRONTEND_ORIGIN" "$AI_ENABLED" "$WHISPER_MODEL" "$WHISPER_DEVICE" "$WHISPER_COMPUTE_TYPE" > .env
+            chmod 600 .env
+            echo "$GHCR_PAT" | docker login ghcr.io -u "$GHCR_USER" --password-stdin
+            export IMAGE_TAG IMAGE_REPOSITORY
+            docker compose -f docker-compose.prod.yml pull
+            docker compose -f docker-compose.prod.yml run --rm backend alembic upgrade head
+            docker compose -f docker-compose.prod.yml up -d
+            URL=${HEALTH_URL:-http://127.0.0.1:8000/api/voice/health}
+            ok=""
+            for i in $(seq 1 30); do
+              if curl -fsS "$URL" > /dev/null; then ok=1; break; fi
+              sleep 5
+            done
+            if [ -z "$ok" ]; then
+              echo "Voice API health check failed"
+              if [ -n "$PREV" ]; then IMAGE_TAG="$PREV" docker compose -f docker-compose.prod.yml up -d; fi
+              exit 1
+            fi
+            echo "$IMAGE_TAG" > .current_tag
+            docker image prune -f

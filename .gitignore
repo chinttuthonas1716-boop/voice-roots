@@ -18,8 +18,8 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
 parts/
 sdist/
 var/
@@ -41,10 +41,26 @@ out/
 
 # Storage & Audio Uploads
 backend/storage/
-storage/
+/storage/
 *.wav
 *.mp3
 *.webm
+backups/
+data/postgres/
+*.zip
+*.tsbuildinfo
+
+# Whitelist authentic oral heritage demo audio recordings
+!web/public/audio/harvest_song.wav
+!web/public/audio/gondi_legend.wav
+!web/public/audio/koya_remedy.wav
+!web/public/audio/general_folk.wav
+!web/public/audio/vr-106-telugu-recording.wav
+!web/public/audio/vr-107-gondi-recording.wav
+!web/public/audio/vr-108-koya-recording.wav
+!web/public/audio/vr-109-tulu-recording.wav
+!web/public/audio/vr-110-lambadi-recording.wav
+!mobile/assets/audio/*.wav
 
 # OS
 .DS_Store

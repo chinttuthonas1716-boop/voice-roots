@@ -1,323 +1,421 @@
 "use client";
 
-import React, { useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import {
+  BookOpen,
+  Compass,
   Mic,
-  Globe,
   Play,
   Pause,
+  ShieldCheck,
   Sparkles,
-  Shield,
-  ArrowRight,
-  BookOpen,
-  Volume2,
-  Radio,
-  Share2,
-  Languages,
-  Smartphone,
   Upload,
+  ArrowRight,
+  ExternalLink,
+  Volume2,
+  CheckCircle2,
+  Languages,
+  Clock,
 } from "lucide-react";
-import { JioHotstarNavbar } from "@/components/jiohotstar/JioHotstarNavbar";
-import { JioHotstarHero } from "@/components/jiohotstar/JioHotstarHero";
-import { Top10HotstarRow } from "@/components/jiohotstar/Top10HotstarRow";
-import { FolkSongsSliderRow } from "@/components/jiohotstar/FolkSongsSliderRow";
-import { ContentRow } from "@/components/archive/ContentRow";
-import { AIAssistant } from "@/components/ai/AIAssistant";
-import { ShareModal } from "@/components/ui/ShareModal";
-
-const FEATURED_STORIES = [
-  {
-    id: "vr-101",
-    title: "Traditional Harvest & Rain Song",
-    language: "Telugu (Tribal Dialect)",
-    duration: "08:42",
-    type: "song",
-    community: "Agency Hill Clans",
-    excerpt: "మా పల్లెలో వర్షాలు కురవకముందు పెద్దలు భూమి పూజ చేసి పాడుకునే సంప్రదాయ పాట...",
-    translationExcerpt: "Before the rains fall on our village, the elders perform Earth worship and sing this heirloom melody...",
-    confidence: 0.94,
-  },
-  {
-    id: "vr-102",
-    title: "The Legend of the Mountain Spring",
-    language: "Gondi (Madhya Pradesh)",
-    duration: "14:15",
-    type: "story",
-    community: "Pardhan Community",
-    excerpt: "पहाड़ की चोटी पर बहने वाले झरने के पीछे हमारे पुरखों की एक पुरानी कहानी है...",
-    translationExcerpt: "Behind the perennial spring on the mountain peak lies an ancient tale of our ancestors...",
-    confidence: 0.91,
-  },
-  {
-    id: "vr-103",
-    title: "Neem & Turmeric Traditional Medicine",
-    language: "Koya (Godavari Valley)",
-    duration: "06:30",
-    type: "traditional_knowledge",
-    community: "Forest Dwellers Collective",
-    excerpt: "అడవిలో దొరికే వేప, పసుపు వేర్లతో జ్వరాలు తగ్గించే సాంప్రదాయ వైద్య విధానం...",
-    translationExcerpt: "How wild neem and indigenous turmeric roots are formulated into seasonal fever remedies...",
-    confidence: 0.96,
-  },
-  {
-    id: "vr-104",
-    title: "Conversations on Traditional Handloom Weaving",
-    language: "Santali (Jharkhand)",
-    duration: "11:20",
-    type: "conversation",
-    community: "Mayurbhanj Artisans",
-    excerpt: "ᱥᱟᱱᱛᱟᱲᱤ ᱛᱮᱧ ᱠᱟᱹᱢᱤ ᱟᱨ ᱱᱟᱜᱟᱢ ᱨᱮᱱᱟᱜ ᱠᱟᱛᱷᱟ...",
-    translationExcerpt: "Weaving cotton yarn according to seasonal patterns passed from mothers to daughters...",
-    confidence: 0.89,
-  },
-];
-
-const TRADITIONAL_KNOWLEDGE = [
-  {
-    id: "vr-201",
-    title: "Seed Preservation in Mud Granaries",
-    language: "Telugu (Rayalaseema)",
-    duration: "09:12",
-    type: "traditional_knowledge",
-    community: "Dryland Farming Collective",
-    excerpt: "పాతకాలం నాటి విత్తనాలను మట్టి గాదెలలో భద్రపరిచే విధానం...",
-    translationExcerpt: "Methods for storing heirloom millets in sun-baked clay vessels using neem leaf layers...",
-    confidence: 0.95,
-  },
-  {
-    id: "vr-202",
-    title: "Herbal Remedies of the Northern Hills",
-    language: "Bhili (Rajasthan)",
-    duration: "12:45",
-    type: "traditional_knowledge",
-    community: "Bhil Healers",
-    excerpt: "जंगल की जड़ी-बूटियों से मौसमी बीमारियों का इलाज करने का तरीका...",
-    translationExcerpt: "Forest apothecary practices for treating monsoon illnesses using bark extracts...",
-    confidence: 0.92,
-  },
-  {
-    id: "vr-203",
-    title: "Cloud Reading & Wind Signs for Sowing",
-    language: "Kannada (Deccan Plateau)",
-    duration: "07:50",
-    type: "traditional_knowledge",
-    community: "Kaveri Farmers",
-    excerpt: "ಮಳೆ ಬರುವ ಮುನ್ನ ಬೀಸುವ ಗಾಳಿಯ ದಿಕ್ಕು ಮತ್ತು ಮೋಡಗಳ ಚಲನೆಯನ್ನು ಗುರುತಿಸುವುದು...",
-    translationExcerpt: "Reading seasonal wind shifts and thunder color to identify the exact morning for sowing ragi...",
-    confidence: 0.93,
-  },
-];
-
-const POPULAR_STORIES = [
-  {
-    id: "vr-301",
-    title: "Grandmother's Eclipse Tale",
-    language: "Telugu (Coastal)",
-    duration: "05:18",
-    type: "story",
-    community: "Krishna Delta",
-    excerpt: "సూర్యగ్రహణం సమయంలో పాము ఆకాశాన్ని చుట్టుముట్టినట్లు ఉండే పాత కథ...",
-    translationExcerpt: "The coastal folklore describing astronomical eclipses through snake metaphors...",
-    confidence: 0.93,
-  },
-  {
-    id: "vr-302",
-    title: "Clan Genealogies & Praise Chants",
-    language: "Gondi (Bastar)",
-    duration: "16:40",
-    type: "song",
-    community: "Dandami Maria",
-    excerpt: "बस्तर के गोंड कबीलों की वंशावली और पारंपरिक गीतों का संकलन...",
-    translationExcerpt: "Sacred chanted genealogies reciting twelve generations of village guardians...",
-    confidence: 0.88,
-  },
-  {
-    id: "vr-303",
-    title: "The Craft of Bamboo Fish Traps",
-    language: "Koya (Papikondalu)",
-    duration: "08:15",
-    type: "traditional_knowledge",
-    community: "River Fisherfolk",
-    excerpt: "వెదురు బొంగులతో నదిలో చేపలు పట్టేందుకు గూళ్ళు అల్లే పద్ధతి...",
-    translationExcerpt: "Intricate splitting and weaving of highland bamboo into river traps for monsoon fish runs...",
-    confidence: 0.94,
-  },
-];
+import { Navbar } from "@/components/ui/Navbar";
+import { LocationLanguageBanner } from "@/components/ui/LocationLanguageBanner";
+import { RecordingStudio } from "@/components/audio/RecordingStudio";
+import { getStorageStats, getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
+import { getActiveWorkflow, getNextValidRoute, type PreservationWorkflow } from "@/lib/workflow";
 
 export default function HomePage() {
-  const [isShareOpen, setIsShareOpen] = useState(false);
+  const [stats, setStats] = useState({
+    totalRecordingsCount: 0,
+    languagesCovered: 0,
+    durationSeconds: 0,
+    wordCount: 0,
+  });
+  const [stories, setStories] = useState<StoredVoiceRecord[]>([]);
+  const [featuredStory, setFeaturedStory] = useState<StoredVoiceRecord | null>(null);
+  const [activeWf, setActiveWf] = useState<PreservationWorkflow | null>(null);
+  const [isHeroAudioPlaying, setIsHeroAudioPlaying] = useState(false);
+  const [playingCardId, setPlayingCardId] = useState<string | null>(null);
+  const heroAudioRef = useRef<HTMLAudioElement | null>(null);
+  const cardAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    setStats(getStorageStats());
+    const all = getUserRecordings();
+    setStories(all);
+    if (all.length > 0) {
+      setFeaturedStory(all[0]);
+    }
+
+    const currentWf = getActiveWorkflow();
+    if (currentWf && currentWf.status !== "PUBLISHED" && currentWf.status !== "REJECTED") {
+      setActiveWf(currentWf);
+    }
+  }, []);
+
+  const toggleHeroAudio = () => {
+    if (!featuredStory || !featuredStory.audioUrl) return;
+    const src = featuredStory.audioUrl;
+
+    if (!heroAudioRef.current || heroAudioRef.current.src !== src) {
+      if (heroAudioRef.current) {
+        heroAudioRef.current.pause();
+      }
+      heroAudioRef.current = new Audio(src);
+      heroAudioRef.current.onended = () => setIsHeroAudioPlaying(false);
+    }
+
+    if (isHeroAudioPlaying) {
+      heroAudioRef.current.pause();
+      setIsHeroAudioPlaying(false);
+    } else {
+      if (cardAudioRef.current) {
+        cardAudioRef.current.pause();
+        setPlayingCardId(null);
+      }
+      heroAudioRef.current.play().then(() => {
+        setIsHeroAudioPlaying(true);
+      }).catch((e) => {
+        console.warn("Audio play blocked", e);
+        setIsHeroAudioPlaying(false);
+      });
+    }
+  };
+
+  const toggleCardAudio = (record: StoredVoiceRecord, e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    const src = record.audioUrl || `/audio/${record.audioFileName}`;
+
+    if (playingCardId === record.id) {
+      if (cardAudioRef.current) {
+        cardAudioRef.current.pause();
+        setPlayingCardId(null);
+      }
+    } else {
+      if (cardAudioRef.current) {
+        cardAudioRef.current.pause();
+      }
+      if (heroAudioRef.current && isHeroAudioPlaying) {
+        heroAudioRef.current.pause();
+        setIsHeroAudioPlaying(false);
+      }
+      const audio = new Audio(src);
+      cardAudioRef.current = audio;
+      setPlayingCardId(record.id);
+      audio.onended = () => setPlayingCardId(null);
+      audio.play().catch(() => setPlayingCardId(null));
+    }
+  };
+
+  const duration =
+    stats.durationSeconds < 60
+      ? `${stats.durationSeconds}s`
+      : `${Math.floor(stats.durationSeconds / 60)}m`;
 
   return (
-    <div className="min-h-screen bg-[#0f1014] text-white pb-28 selection:bg-[#0063e5] selection:text-white">
-      {/* JioHotstar Top Navigation */}
-      <JioHotstarNavbar />
+    <div className="vr-app">
+      <Navbar />
 
-      {/* JioHotstar Cinematic Hero Carousel Billboard (with slide animation & real sound) */}
-      <section className="pt-16">
-        <JioHotstarHero />
-      </section>
-
-      {/* JioHotstar Live Stats Pill Bar */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3">
-          <div className="p-4 rounded-2xl bg-[#16181f] border border-white/10 text-center hover:border-[#00d8f6] transition-colors">
-            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-[#00d8f6] block">24</span>
-            <span className="text-xs text-slate-400">Languages Preserved</span>
+      <main>
+        {/* 10. EDITORIAL HERO SECTION */}
+        <section className="hero">
+          <div className="hero-content">
+            <span className="eyebrow">
+              ORAL HERITAGE · AI · AUDIO
+            </span>
+            <h1>
+              Every voice
+              <br />
+              carries a story.
+            </h1>
+            <p>
+              Preserve oral traditions, languages and memories with AI-assisted transcription, translation and human verification.
+            </p>
+            <div className="hero-actions">
+              <Link href="/explore" className="vr-button vr-button-primary">
+                Explore Heritage
+              </Link>
+              <Link href="/preserve" className="vr-button vr-button-secondary">
+                🎙 Preserve a Voice
+              </Link>
+            </div>
+            <div className="pt-2">
+              <LocationLanguageBanner />
+            </div>
           </div>
-          <div className="p-4 rounded-2xl bg-[#16181f] border border-white/10 text-center hover:border-[#0063e5] transition-colors">
-            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white block">4,821</span>
-            <span className="text-xs text-slate-400">Recordings Streamed</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-[#16181f] border border-white/10 text-center hover:border-[#f5c518] transition-colors">
-            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-[#f5c518] block">1.2M</span>
-            <span className="text-xs text-slate-400">Words Digitized</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-[#16181f] border border-white/10 text-center hover:border-[#00d8f6] transition-colors">
-            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-[#00d8f6] block">682</span>
-            <span className="text-xs text-slate-400">Community Elders</span>
-          </div>
-          <div className="p-4 rounded-2xl bg-[#16181f] border border-white/10 text-center col-span-2 sm:col-span-1 hover:border-white transition-colors">
-            <span className="text-2xl sm:text-3xl font-extrabold font-mono text-white block">347h</span>
-            <span className="text-xs text-slate-400">Lossless Master Audio</span>
-          </div>
-        </div>
-      </section>
 
-      {/* JioHotstar Top 10 in India Sliding Row */}
-      <Top10HotstarRow />
-
-      {/* Oral Folk Songs & Sacred Chants Sliding Row (Plays real audio on click!) */}
-      <FolkSongsSliderRow />
-
-      {/* JioHotstar Day-to-Day Conversational Translation Showcase */}
-      <section className="py-6 px-4 sm:px-6 lg:px-8 max-w-7xl mx-auto">
-        <div className="p-6 sm:p-8 rounded-3xl bg-gradient-to-r from-[#16181f] via-[#10192a] to-[#16181f] border border-[#0063e5]/40 shadow-2xl space-y-6 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-80 h-80 bg-[#0063e5]/15 rounded-full blur-3xl pointer-events-none" />
-
-          <div className="flex flex-col md:flex-row items-start md:items-center justify-between gap-4 relative z-10">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-[#0063e5] to-[#00d8f6] flex items-center justify-center text-white shadow-[0_0_20px_rgba(0,124,240,0.6)]">
-                <Languages className="w-6 h-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-xl sm:text-2xl font-bold text-white tracking-tight">
-                    దైనందిన సంభాషణల అనువాదం (Day-to-Day Translation)
-                  </h2>
-                  <span className="px-2.5 py-0.5 rounded-full bg-[#00d8f6]/20 text-[#00d8f6] border border-[#00d8f6]/40 text-[10px] font-bold">
-                    12 LANGUAGES ACTIVE
-                  </span>
-                </div>
-                <p className="text-xs text-slate-300 mt-0.5">
-                  పాటలు కాకుండా, నిజజీవితంలో ప్రతిరోజూ మాట్లాడుకునే సాధారణ సంభాషణల అనువాదం (Telugu, English, Hindi, Tamil, Kannada, Malayalam, Marathi, Odia, Bengali, Gondi, Koya, Lambadi).
-                </p>
-              </div>
+          {/* FEATURED STORY CARD */}
+          <div className="hero-story vr-glass">
+            <div className="flex items-center justify-between">
+              <span>FEATURED ORAL HERITAGE</span>
+              <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#F9B17A]/15 border border-[#F9B17A]/30 text-[#F9B17A]">
+                Human Verified ✓
+              </span>
             </div>
 
+            <div className="my-2 p-5 rounded-2xl bg-white/[0.04] border border-white/10 text-center">
+              <div className="w-16 h-16 mx-auto mb-3 rounded-2xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 grid place-items-center text-3xl">
+                🌾
+              </div>
+              <h2>
+                {featuredStory?.title || "Harvest Songs of the Village"}
+              </h2>
+              <p className="mt-1 text-[#F9B17A] font-semibold text-xs">
+                {featuredStory?.language || "Telugu"} · {featuredStory?.location || "Andhra Pradesh"}
+              </p>
+              <p className="mt-2 text-xs text-[#A9AEC5] line-clamp-2">
+                {featuredStory?.culturalContext || "Generational oral harvest prayer celebrating river waters, paddy sowing, and elder blessings."}
+              </p>
+            </div>
+
+            <div className="flex items-center gap-3 pt-2">
+              <button
+                type="button"
+                onClick={toggleHeroAudio}
+                className="vr-button vr-button-primary flex-1 !min-h-11 text-xs"
+              >
+                {isHeroAudioPlaying ? <Pause className="h-4 w-4" /> : <Play className="h-4 w-4 fill-current" />}
+                <span>{isHeroAudioPlaying ? "Pause Audio" : "Listen Now"}</span>
+              </button>
+              <Link
+                href={`/story/${featuredStory?.id || "vr-106"}`}
+                className="vr-button vr-button-secondary !min-h-11 text-xs"
+              >
+                <span>View Story</span>
+                <ArrowRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+        </section>
+
+        {/* ACTIVE PRESERVATION RESUMPTION CARD */}
+        {activeWf && (
+          <section aria-label="Active preservation in progress" className="max-w-[1360px] mx-auto px-6 -mt-6 mb-16 animate-fade-in">
+            <div className="relative overflow-hidden rounded-[28px] border border-[#F9B17A]/40 bg-gradient-to-r from-[rgba(45,50,80,0.95)] via-[rgba(36,41,66,0.95)] to-[rgba(45,50,80,0.95)] p-6 sm:p-8 backdrop-blur-2xl shadow-[0_20px_50px_rgba(0,0,0,0.3)]">
+              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+                <div className="space-y-3">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#F9B17A]/20 border border-[#F9B17A]/40 text-xs font-bold text-[#F9B17A]">
+                      <Clock className="w-3.5 h-3.5" />
+                      <span>CONTINUE PRESERVING · ACTIVE SESSION</span>
+                    </span>
+                    <span className="text-xs font-mono text-[#D9D9E2] bg-white/5 border border-white/10 px-2.5 py-1 rounded-full">
+                      ID: {activeWf.id}
+                    </span>
+                  </div>
+                  <div>
+                    <h3 className="text-xl sm:text-2xl font-black text-white">
+                      {activeWf.title}
+                    </h3>
+                    <p className="text-xs sm:text-sm text-[#A9AEC5] mt-1">
+                      Current Stage: <span className="text-[#F9B17A] font-semibold">{activeWf.status.replace(/_/g, " ")}</span>
+                      {activeWf.detectedLanguage ? ` · Tongue: ${activeWf.detectedLanguage}` : ""}
+                      {activeWf.audioDuration ? ` · Duration: ${activeWf.audioDuration}` : ""}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-3">
+                  <Link
+                    href="/preserve"
+                    className="vr-button vr-button-secondary !min-h-11 text-xs font-semibold"
+                  >
+                    <span>Start Fresh Draft</span>
+                  </Link>
+                  <Link
+                    href={getNextValidRoute(activeWf)}
+                    className="vr-button vr-button-primary !min-h-11 text-xs sm:text-sm font-bold shadow-lg shadow-[#F9B17A]/15"
+                  >
+                    <span>Continue Preserving Step</span>
+                    <ArrowRight className="w-4 h-4 ml-1" />
+                  </Link>
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+
+        {/* 3 CORE PILLARS */}
+        <section className="max-w-[1360px] mx-auto px-6 mb-16">
+          <div className="grid md:grid-cols-3 gap-5">
             <Link
-              href="/translate"
-              className="flex items-center gap-2 px-6 py-3 rounded-xl bg-gradient-to-r from-[#0063e5] to-[#00d8f6] hover:brightness-110 text-white font-extrabold text-xs shadow-[0_0_20px_rgba(0,124,240,0.5)] transition-all hover:scale-105"
+              href="/explore"
+              className="p-6 rounded-3xl bg-[rgba(66,71,108,0.3)] border border-white/10 hover:border-[#F9B17A]/40 transition group"
             >
-              <span>పూర్తి ట్రాన్స్‌లేటర్‌ని తెరవండి (Open Full Translator)</span>
-              <ArrowRight className="w-4 h-4" />
+              <div className="w-12 h-12 rounded-xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 text-[#F9B17A] grid place-items-center mb-4 group-hover:scale-105 transition-transform">
+                <Compass className="w-6 h-6 stroke-[2]" />
+              </div>
+              <span className="text-[10px] font-bold text-[#F9B17A] tracking-wider uppercase">01. Discover</span>
+              <h3 className="text-xl font-bold text-white mt-1 mb-2">Explore Heritage</h3>
+              <p className="text-xs text-[#A9AEC5] leading-relaxed">
+                Browse oral archives by dialect, river basin, community elders, and folk traditions.
+              </p>
+            </Link>
+
+            <Link
+              href="/preserve"
+              className="p-6 rounded-3xl bg-[rgba(66,71,108,0.3)] border border-white/10 hover:border-[#F9B17A]/40 transition group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 text-[#F9B17A] grid place-items-center mb-4 group-hover:scale-105 transition-transform">
+                <Mic className="w-6 h-6 stroke-[2]" />
+              </div>
+              <span className="text-[10px] font-bold text-[#F9B17A] tracking-wider uppercase">02. Ingest</span>
+              <h3 className="text-xl font-bold text-white mt-1 mb-2">Preserve a Voice</h3>
+              <p className="text-xs text-[#A9AEC5] leading-relaxed">
+                Record field voice or upload audio files to run phonetic transcription and translation.
+              </p>
+            </Link>
+
+            <Link
+              href="/dashboard"
+              className="p-6 rounded-3xl bg-[rgba(66,71,108,0.3)] border border-white/10 hover:border-[#F9B17A]/40 transition group"
+            >
+              <div className="w-12 h-12 rounded-xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 text-[#F9B17A] grid place-items-center mb-4 group-hover:scale-105 transition-transform">
+                <ShieldCheck className="w-6 h-6 stroke-[2]" />
+              </div>
+              <span className="text-[10px] font-bold text-[#F9B17A] tracking-wider uppercase">03. Custody</span>
+              <h3 className="text-xl font-bold text-white mt-1 mb-2">My Heritage</h3>
+              <p className="text-xs text-[#A9AEC5] leading-relaxed">
+                Manage your community recordings, view cryptographic passports, and verify provenance.
+              </p>
+            </Link>
+          </div>
+        </section>
+
+        {/* LIVE ARCHIVE TELEMETRY */}
+        <section aria-label="Archive telemetry" className="max-w-[1360px] mx-auto px-6 mb-16">
+          <div className="mb-3 flex items-center gap-2 text-xs text-[#A9AEC5]">
+            <ShieldCheck className="h-4 w-4 text-[#F9B17A]" />
+            <span>Community preserved heritage metrics</span>
+          </div>
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+            {[
+              [stats.totalRecordingsCount.toLocaleString(), "Preserved Recordings"],
+              [stats.languagesCovered.toLocaleString(), "Indigenous Tongues"],
+              [stats.wordCount.toLocaleString(), "Transcript Words"],
+              [duration, "Lossless Audio Saved"],
+            ].map(([value, label]) => (
+              <div key={label} className="rounded-2xl border border-white/10 bg-[rgba(66,71,108,0.25)] p-5 backdrop-blur-xl">
+                <span className="block text-2xl sm:text-3xl font-extrabold text-white">{value}</span>
+                <span className="mt-1 block text-xs text-[#A9AEC5] font-medium">{label}</span>
+              </div>
+            ))}
+          </div>
+        </section>
+
+        {/* 11. FEATURED STORY CARDS GRID */}
+        <section className="story-section">
+          <div className="section-heading flex items-end justify-between">
+            <div>
+              <span>DISCOVER</span>
+              <h2>Featured Oral Heritage</h2>
+            </div>
+            <Link href="/archive" className="text-xs font-semibold text-[#F9B17A] hover:underline hidden sm:inline-flex items-center gap-1">
+              <span>View all {stories.length} stories</span>
+              <ArrowRight className="w-3.5 h-3.5" />
             </Link>
           </div>
 
-          {/* Quick Real-life Everyday Phrases Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 pt-1 relative z-10">
-            {[
-              {
-                q: "నమస్కారం! బాగున్నారా?",
-                en: "Greetings! How are you doing? Are you well?",
-                cat: "పరిచయాలు (Greetings)",
-              },
-              {
-                q: "తాగడానికి మంచి నీళ్ళు ఇవ్వండి",
-                en: "Could you please give me drinking water? I am thirsty.",
-                cat: "దాహం & నీళ్ళు (Water)",
-              },
-              {
-                q: "దీని ధర ఎంత? ఎంతకి ఇస్తారు?",
-                en: "How much does this cost? Can you reduce the price?",
-                cat: "సంత & ధరలు (Market)",
-              },
-              {
-                q: "సహాయం చేయండి, జ్వరంగా ఉంది",
-                en: "Please help me! I am feeling unwell with a fever.",
-                cat: "వైద్యం & సాయం (Health)",
-              },
-            ].map((p, idx) => (
-              <Link
-                key={idx}
-                href="/translate"
-                className="p-4 rounded-2xl bg-white/5 border border-white/5 hover:border-[#00d8f6] hover:bg-white/10 transition-all space-y-2 group"
-              >
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-bold text-[#f5c518] block">{p.cat}</span>
-                  <span className="text-[10px] text-slate-400 group-hover:text-[#00d8f6] transition-colors">అనువదించు →</span>
+          <div className="story-grid">
+            {stories.slice(0, 6).map((story, idx) => {
+              const isPlaying = playingCardId === story.id;
+              const icons = ["🌾", "🌲", "🌿", "🌊", "⛰️", "🔥"];
+              const icon = icons[idx % icons.length];
+
+              return (
+                <div key={story.id} className="story-card">
+                  <div className="story-card-image flex items-center justify-center relative">
+                    <div className="text-5xl opacity-80">{icon}</div>
+                    <button
+                      type="button"
+                      onClick={(e) => toggleCardAudio(story, e)}
+                      aria-label={isPlaying ? "Pause audio" : "Play audio"}
+                      className="absolute bottom-3 right-3 w-10 h-10 rounded-full bg-[#F9B17A] text-[#242942] grid place-items-center shadow-lg hover:scale-105 transition-transform"
+                    >
+                      {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4 fill-current ml-0.5" />}
+                    </button>
+                    <span className="absolute top-3 left-3 text-[10px] font-bold px-2 py-0.5 rounded-full bg-[#242942]/80 backdrop-blur-md text-[#D9D9E2] border border-white/10">
+                      {story.duration}
+                    </span>
+                  </div>
+
+                  <div className="story-card-content">
+                    <span className="story-card-meta">
+                      {story.language} · {story.location || story.community || "Heritage"}
+                    </span>
+                    <h3>{story.title}</h3>
+                    <p className="line-clamp-2">
+                      {story.culturalContext || story.originalTranscript || "Oral tradition recorded and preserved in community custody."}
+                    </p>
+
+                    <div className="pt-4 mt-auto border-t border-white/8 flex items-center justify-between text-xs">
+                      <span className="text-[#A9AEC5]">
+                        {story.type || "Oral Tradition"}
+                      </span>
+                      <Link
+                        href={`/story/${story.id}`}
+                        className="text-[#F9B17A] font-semibold hover:underline inline-flex items-center gap-1"
+                      >
+                        <span>Listen & Read</span>
+                        <ArrowRight className="w-3 h-3" />
+                      </Link>
+                    </div>
+                  </div>
                 </div>
-                <p className="text-sm font-bold text-white group-hover:text-[#00d8f6] transition-colors">{p.q}</p>
-                <p className="text-xs text-slate-300 italic">{p.en}</p>
-              </Link>
-            ))}
+              );
+            })}
           </div>
-        </div>
-      </section>
+        </section>
 
-      {/* JioHotstar Horizontal Discovery Rows with Smooth Slide Navigation */}
-      <section className="space-y-10 py-6">
-        <ContentRow
-          title="Voices of the Village & Spoken Stories"
-          subtitle="Community oral narratives, seasonal celebrations, and elder wisdom"
-          items={FEATURED_STORIES}
-        />
-
-        <ContentRow
-          title="Traditional Knowledge & Ethno-Ecology"
-          subtitle="Indigenous agricultural wisdom, seed conservation, and native botanical remedies"
-          items={TRADITIONAL_KNOWLEDGE}
-        />
-
-        <ContentRow
-          title="Folk Stories & Ancient Chants"
-          subtitle="Sacred spoken mythologies and oral genealogies passed down across generations"
-          items={POPULAR_STORIES}
-        />
-      </section>
-
-      {/* iPhone Fitness App & Model Lab Banner */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="p-8 sm:p-10 rounded-3xl border border-[#0063e5]/40 bg-gradient-to-r from-[#16181f] via-[#101b2b] to-[#16181f] flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl">
-          <div className="space-y-2 max-w-xl">
-            <div className="inline-flex items-center gap-2 text-xs font-mono text-[#00d8f6] font-semibold">
-              <Sparkles className="w-3.5 h-3.5" />
-              <span>Apple Fitness Style Mobile Companion App Available</span>
-            </div>
-            <h3 className="text-2xl font-bold text-white tracking-tight">
-              Track Your Spoken Language Activity Rings on iPhone
-            </h3>
-            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
-              Experience the 3 Activity Rings (Words Recorded, Oral Lore Time, Dialects Explored) just like Apple Fitness, with workout-style audio recordings and instant day-to-day speech translation.
+        {/* ALL-IN-ONE HERITAGE STUDIO */}
+        <section id="studio" aria-label="All-in-One Studio" className="max-w-[1360px] mx-auto px-6 py-12 mb-16">
+          <div className="mb-8 text-center space-y-2">
+            <span className="eyebrow">
+              VOICE ROOTS STUDIO
+            </span>
+            <h2 className="text-2xl sm:text-4xl font-extrabold text-white">
+              Record, Upload, Translate & Preserve
+            </h2>
+            <p className="mx-auto max-w-2xl text-xs sm:text-sm text-[#A9AEC5] leading-relaxed">
+              Capture live voice or upload recordings to generate phonetic transcripts in 13+ languages and issue cryptographic Heritage Passports.
             </p>
           </div>
+          <RecordingStudio onSaved={() => setStats(getStorageStats())} />
+        </section>
 
-          <Link
-            href="/app"
-            className="flex items-center gap-2 px-6 py-3.5 rounded-xl bg-gradient-to-r from-[#0063e5] to-[#00d8f6] text-white font-extrabold text-xs whitespace-nowrap self-start md:self-auto shadow-[0_0_25px_rgba(0,124,240,0.6)] hover:scale-105 transition-all"
-          >
-            <Smartphone className="w-4 h-4" />
-            <span>Open iPhone Fitness Simulator</span>
-            <ArrowRight className="w-3.5 h-3.5" />
-          </Link>
+        {/* MASTER PORTAL FOOTER LINK BAR */}
+        <section className="max-w-[1360px] mx-auto px-6 mb-16">
+          <div className="p-8 rounded-3xl bg-[rgba(66,71,108,0.25)] border border-white/10 flex flex-col sm:flex-row items-center justify-between gap-6">
+            <div>
+              <span className="eyebrow">MASTER PROJECT FLOW & VERIFICATION</span>
+              <h3 className="text-xl sm:text-2xl font-bold text-white mt-1">
+                Explore the 26-Step Heritage Journey
+              </h3>
+              <p className="text-xs text-[#A9AEC5] mt-1">
+                View all pages, QR codes, authentication portals, and cryptographic proofs in one directory.
+              </p>
+            </div>
+            <Link
+              href="/links"
+              className="vr-button vr-button-primary shrink-0 text-xs font-bold"
+            >
+              <ExternalLink className="w-4 h-4 mr-1" />
+              <span>All 26 Steps & Features</span>
+            </Link>
+          </div>
+        </section>
+      </main>
+
+      <footer className="max-w-[1360px] mx-auto border-t border-white/10 px-6 py-10 text-xs text-[#A9AEC5] flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div>🌿 Voice Roots · Oral Heritage Kept in Community Hands.</div>
+        <div className="flex gap-4">
+          <Link href="/login" className="hover:text-[#F9B17A]">Sign In</Link>
+          <Link href="/preserve" className="hover:text-[#F9B17A]">Preserve</Link>
+          <Link href="/archive" className="hover:text-white">Archive</Link>
+          <Link href="/links" className="hover:text-[#F9B17A]">Links</Link>
         </div>
-      </section>
-
-      {/* Floating Grounded AI Assistant */}
-      <AIAssistant />
-
-      {/* Share Sheet Modal */}
-      <ShareModal isOpen={isShareOpen} onClose={() => setIsShareOpen(false)} />
+      </footer>
     </div>
   );
 }

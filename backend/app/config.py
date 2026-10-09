@@ -1,6 +1,7 @@
 """Voice Roots application configuration."""
 from functools import lru_cache
 from typing import Literal
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -16,6 +17,13 @@ class Settings(BaseSettings):
     app_name: str = "Voice Roots"
     app_env: Literal["development", "staging", "production"] = "development"
     debug: bool = True
+
+    @field_validator("debug", mode="before")
+    @classmethod
+    def parse_debug(cls, v):
+        if isinstance(v, str):
+            return v.lower() in ("true", "1", "yes", "debug", "development")
+        return bool(v)
     secret_key: str = "change-me-in-production"
     allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 

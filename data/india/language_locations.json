@@ -1,0 +1,54 @@
+[
+  {
+    "id": "loc_lang_01",
+    "languageId": "lang_gondi",
+    "countryId": "IN",
+    "stateId": "TS",
+    "districtId": "dist_ts_adilabad",
+    "subdistrictId": "sub_utnoor",
+    "localityId": "loc_utnoor_village",
+    "communityId": "comm_gond",
+    "status": "FIELD_VERIFIED",
+    "sourceId": "src_voice_roots_community",
+    "sourceYear": 2026
+  },
+  {
+    "id": "loc_lang_02",
+    "languageId": "lang_telugu",
+    "countryId": "IN",
+    "stateId": "TS",
+    "districtId": "dist_ts_jayashankar",
+    "subdistrictId": "sub_kaleshwaram",
+    "localityId": "loc_kaleshwaram_temple",
+    "communityId": null,
+    "status": "OFFICIAL",
+    "sourceId": "src_census_2011_c16",
+    "sourceYear": 2011
+  },
+  {
+    "id": "loc_lang_03",
+    "languageId": "lang_konda",
+    "countryId": "IN",
+    "stateId": "AP",
+    "districtId": "dist_ap_alluri",
+    "subdistrictId": "sub_maredumilli",
+    "localityId": "loc_maredumilli_agency",
+    "communityId": "comm_koya",
+    "status": "FIELD_VERIFIED",
+    "sourceId": "src_voice_roots_community",
+    "sourceYear": 2026
+  },
+  {
+    "id": "loc_lang_04",
+    "languageId": "lang_tulu",
+    "countryId": "IN",
+    "stateId": "KA",
+    "districtId": "dist_ka_udupi",
+    "subdistrictId": "sub_udupi",
+    "localityId": "loc_udupi_malpe",
+    "communityId": "comm_tuluva",
+    "status": "OFFICIAL",
+    "sourceId": "src_census_2011_c16",
+    "sourceYear": 2011
+  }
+]

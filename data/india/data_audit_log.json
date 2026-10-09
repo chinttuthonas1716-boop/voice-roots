@@ -1,0 +1,24 @@
+[
+  {
+    "id": "audit_001",
+    "entityType": "LANGUAGE_LOCATION",
+    "entityId": "loc_lang_01",
+    "action": "FIELD_VERIFIED",
+    "oldValue": "COMMUNITY_REPORTED",
+    "newValue": "FIELD_VERIFIED",
+    "changedBy": "usr_elder_01 (Soyam Laxman, Gond Custodian)",
+    "reason": "Verified through community Ghotul oral recording session in Utnoor.",
+    "createdAt": "2026-10-02T14:30:00.000Z"
+  },
+  {
+    "id": "audit_002",
+    "entityType": "LANGUAGE",
+    "entityId": "lang_konda",
+    "action": "STATUS_CONFIRMED",
+    "oldValue": "PENDING_REVIEW",
+    "newValue": "NON_SCHEDULED",
+    "changedBy": "usr_admin_01",
+    "reason": "Matched with Census 2011 Non-Scheduled Language Code 108 (Konda/Kubi).",
+    "createdAt": "2026-10-03T10:15:00.000Z"
+  }
+]

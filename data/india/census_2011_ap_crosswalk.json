@@ -1,0 +1,24 @@
+{
+  "sourceDataset": "PC11_C16-28",
+  "sourceYear": 2011,
+  "geographyVersion": "CENSUS_2011",
+  "preBifurcationStateCode": "28",
+  "reorganizationDate": "2014-06-02",
+  "telanganaDistrictsCount": 10,
+  "telanganaDistricts": [
+    "Adilabad",
+    "Nizamabad",
+    "Karimnagar",
+    "Medak",
+    "Hyderabad",
+    "Ranga Reddy",
+    "Mahabubnagar",
+    "Nalgonda",
+    "Warangal",
+    "Khammam"
+  ],
+  "modernStateMapping": {
+    "andhraPradeshLGD": "in-ap (Code 28)",
+    "telanganaLGD": "in-tg (Code 36)"
+  }
+}

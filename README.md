@@ -1,180 +1,47 @@
-# 🌱 Voice Roots: Rooting Oral Languages in Text with AI
+# Voice Roots
 
-> **"Preserve Voices. Grow Languages. Connect Generations."**
+Voice Roots is a prototype for preserving oral stories and regional languages. It keeps the speaker's original audio at the center and separates source transcript, translation, and cultural notes.
 
-Voice Roots is an AI-powered oral-language preservation platform designed as a university capstone and scholarly research initiative. The platform enables community speakers, field linguists, and researchers to record, transcribe, translate, semantically index, and digitally archive spoken languages, tribal dialects, folk tales, songs, and indigenous ecological knowledge — **without ever destroying or overwriting the original human voice**.
+## Current prototype
 
----
+- The Next.js web app records from a browser microphone or accepts an audio file, with contributor consent.
+- Recordings and story details are stored in the current browser using IndexedDB and local storage. They are not backed up or shared across devices.
+- The archive, story details, search, and translation editor use the records saved in that browser.
+- The language selector lists English, Telugu, Hindi, Tamil, Kannada, and Malayalam; full interface localization is still incomplete.
+- Speech transcription, automatic translation, authentication, cloud synchronization, and AI answers are not connected to live providers. The UI reports those limits instead of inventing results.
+- The FastAPI and mobile folders are project scaffolding; this web prototype does not currently use them as a shared production service.
 
-## 🌟 Product Philosophy & Core Principles
+## Run the web app
 
-1. **Immutable Voice Preservation**: Never overwrite original audio or raw speech signals. Store:
-   - Original Audio (Lossless PCM WAV)
-   - Original AI Transcript
-   - Human-in-the-Loop Verified Transcript
-   - IndicTrans2 Multilingual Translation
-   - Cultural Vocabulary & Ethno-ecological Terms
-   - Strict Informed Consent & Speaker Data Sovereignty
-2. **iOS 27-Inspired Mobile Experience**: Spatial layering, liquid-glass translucent surfaces, live canvas waveforms, and haptic-friendly recording workflows.
-3. **Netflix-Style Web Discovery**: Content-first discovery with cinematic heroes, horizontally scrollable category rows, and granular filters across 18 linguistic traditions.
-4. **Academic Model Lab**: Grounded evaluation of open-source models (OpenAI Whisper vs. AI4Bharat IndicConformer vs. LoRA Fine-Tuned Checkpoints) measuring Word Error Rate (WER) and Character Error Rate (CER).
-
----
-
-## 🏗️ System Architecture
-
-```text
-                        🌱 VOICE ROOTS
-                              │
-               ┌──────────────┴──────────────┐
-               │                             │
-          📱 MOBILE                       🌐 WEB
-       (React Native / Expo)         (Next.js 14 / App Router)
-               │                             │
-               └──────────────┬──────────────┘
-                              │
-                     FastAPI REST Gateway (Port 8000)
-                              │
-        ┌─────────────────────┼────────────────────┐
-        │                     │                    │
-   Auth & RBAC            Audio Uploads         PostgreSQL 16
-   (JWT / Bcrypt)         (Local / S3)          (+ pgvector)
-        │                     │                    │
-        └─────────────────────┼────────────────────┘
-                              ▼
-                  Modular AI Processing Pipeline
-                              │
-         ┌────────────────────┼────────────────────┐
-         ▼                    ▼                    ▼
-     Speech-to-Text      Language ID          Translation
-  (Whisper / Conformer)   (IndicLID)         (IndicTrans2)
-         │                    │                    │
-         └────────────────────┼────────────────────┘
-                              ▼
-                  NLP & Vocabulary Extraction
-                              │
-                              ▼
-            Sentence Transformers Embeddings (384-d)
-                              │
-                              ▼
-               PostgreSQL pgvector Cosine Index
-                              │
-                              ▼
-               Voice Roots Grounded RAG Assistant
-```
-
----
-
-## 📁 Repository Structure
-
-```text
-voice-roots/
-├── web/                       # Next.js 14 + Tailwind CSS Web Application
-│   ├── src/
-│   │   ├── app/               # App Router pages (Home, Record, Archive, Search, Research)
-│   │   ├── components/        # Reusable UI, Audio Studio, Archive Cards, AIAssistant
-│   │   └── lib/               # Utility functions and tokens
-│   ├── Dockerfile
-│   └── package.json
-├── backend/                   # Python FastAPI REST Backend
-│   ├── app/
-│   │   ├── api/v1/            # Auth, Recordings, Uploads, Languages, Search, Analytics
-│   │   ├── ai/                # Base provider, Mock fallback, Whisper, Pipeline
-│   │   ├── auth/              # JWT, Passwords, RBAC permissions
-│   │   ├── database/          # Async SQLAlchemy engine + pgvector support
-│   │   ├── models/            # 14 Normalized ORM models
-│   │   └── schemas/           # Pydantic v2 validation models
-│   ├── Dockerfile
-│   └── requirements.txt
-├── mobile/                    # React Native Expo Mobile App
-│   ├── screens/               # HomeScreen, RecordScreen, ArchiveScreen, ProfileScreen
-│   ├── App.tsx                # Bottom tab navigation shell
-│   └── package.json
-├── docker-compose.yml         # Full multi-container stack (DB, Redis, API, Web)
-├── voice-roots.code-workspace # One-click VS Code Workspace configuration
-└── README.md
-```
-
----
-
-## 🚀 Quickstart & Setup
-
-### Option A: Running with Docker Compose (Recommended)
-
-To launch the full stack (PostgreSQL with pgvector, Redis, FastAPI Backend, and Next.js Web):
-
-```bash
-# Clone the repository
-git clone https://github.com/<your-username>/voice-roots.git
-cd voice-roots
-
-# Start all services
-docker-compose up --build
-```
-
-- **Web Platform**: [http://localhost:3000](http://localhost:3000)
-- **FastAPI Interactive API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-- **PostgreSQL Database**: `localhost:5432` (`postgres` / `password123`)
-
----
-
-### Option B: Running Locally
-
-#### 1. Backend (FastAPI)
-```bash
-cd backend
-python3 -m venv venv
-source venv/bin/activate
-pip install -r requirements.txt
-cp .env.example .env
-
-# Run FastAPI server
-uvicorn app.main:app --reload --port 8000
-```
-
-#### 2. Web Frontend (Next.js)
 ```bash
 cd web
 npm install
 npm run dev
 ```
 
-Visit [http://localhost:3000](http://localhost:3000) to view the interface.
+Open [http://localhost:3000](http://localhost:3000). Microphone recording requires browser permission and a secure context (localhost is supported by browsers).
 
----
+Create a production build with:
 
-## 🧪 Model Lab & Academic Research
+```bash
+cd web
+npm run build
+```
 
-The **Voice Roots Model Lab** (`/research`) benchmarks speech recognition systems on oral dialect recordings:
+## Progress report
 
-| Model Architecture | Parameters | WER (Word Error Rate) | CER (Char Error Rate) | Latency |
-| :--- | :--- | :--- | :--- | :--- |
-| **OpenAI Whisper-v3 Large** | 1.54B | 18.4% | 9.7% | 2.1s |
-| **AI4Bharat IndicConformer** | 600M | 12.7% | 6.8% | 1.4s |
-| **Voice Roots LoRA Fine-Tuned** | 600M + 12M | **8.9%** ⭐ | **4.1%** ⭐ | 1.6s |
+[`PROGRESS.md`](PROGRESS.md) reports observed local service status, public URL configuration, route count, and Git state. Run `python3 scripts/progress_daemon.py` from the repository root to refresh it immediately and every five minutes while the process remains running.
 
----
+## Public URL and presentation QR
 
-## 👥 Scrum & Capstone Methodology
+There is no public deployment URL configured in this repository. After deploying to an HTTPS host, set `VOICE_ROOTS_PUBLIC_URL` to that URL. The QR generator refuses to run without a valid HTTPS URL:
 
-This project is engineered according to a **10-day Agile Scrum sprint cycle**:
+```bash
+VOICE_ROOTS_PUBLIC_URL=https://your-deployed-domain.example python3 scripts/generate_qr_sync.py
+```
 
-- **Sprint 0**: Discovery, literature review, and architecture definition.
-- **Sprint 1**: Design tokens, liquid-glass visual system, and web shell.
-- **Sprint 2**: Authentication, JWT tokens, and Role-Based Access Control (RBAC).
-- **Sprint 3**: Audio recording studio with informed consent and storage.
-- **Sprint 4**: Speech-to-text pipeline and Whisper integration.
-- **Sprint 5**: Dialect identification and speaker diarization.
-- **Sprint 6**: IndicTrans2 translation and digital language archive.
-- **Sprint 7**: Sentence embeddings and pgvector semantic retrieval.
-- **Sprint 8**: Grounded RAG Voice Roots AI Assistant.
-- **Sprint 9**: Mobile application companion (iOS 27 spatial style).
-- **Sprint 10**: Community verification, review workflows, and Model Lab.
-- **Sprint 11**: End-to-end integration and security validation.
-- **Sprint 12**: Deployment and capstone release.
+It generates a QR code for the public site in `web/public/qr_website.png`. Do not use a localhost or local-network address for a presentation QR.
 
----
+## Data handling
 
-## ⚖️ Ethics & Data Sovereignty
-
-All recordings collected in Voice Roots require **explicit, informed consent** from native speakers before ingestion. Speakers and communities maintain full ownership and can designate recordings as `Public`, `Community-Only`, `Research-Only`, or `Private`. Private recordings are strictly isolated from public search indexes and RAG retrieval pipelines.
+Recordings remain in the browser where they were created. Clearing site data or changing browsers/devices can make them unavailable. Obtain informed consent before recording, and export or back up any material that must be retained.

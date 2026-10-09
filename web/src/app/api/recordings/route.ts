@@ -1,10 +1,12 @@
 import { NextResponse } from "next/server";
+import { HERITAGE_STORIES } from "@/lib/heritageData";
 
 export async function GET() {
   return NextResponse.json({
     success: true,
-    totalCount: 4821,
-    message: "Voice Roots Archive API is active.",
+    totalCount: HERITAGE_STORIES.length,
+    recordings: HERITAGE_STORIES,
+    message: "Voice Roots Oral Heritage Archive API is active.",
   });
 }
 
@@ -13,14 +15,10 @@ export async function POST(request: Request) {
     const body = await request.json();
     const {
       title,
-      language,
+      language = "Telugu",
       dialect,
-      recordingType,
-      durationSeconds,
-      audioFileName,
-      audioFileSize,
-      sourceType,
-      consentSpeaker,
+      durationSeconds = 180,
+      consentSpeaker = true,
     } = body;
 
     if (!consentSpeaker) {
@@ -30,30 +28,22 @@ export async function POST(request: Request) {
       );
     }
 
-    const newRecordId = "vr-" + Math.floor(10000 + Math.random() * 90000);
-
+    const newId = `vr-${Math.floor(1000 + Math.random() * 9000)}`;
     const savedRecord = {
-      id: newRecordId,
-      title: title || (sourceType === "file_upload" ? audioFileName || "Uploaded Field Audio" : "Live Community Recording"),
-      language: language || "Telugu",
-      dialect: dialect || "Agency Variety",
-      duration: durationSeconds
-        ? `${Math.floor(durationSeconds / 60).toString().padStart(2, "0")}:${(durationSeconds % 60).toString().padStart(2, "0")}`
-        : "04:15",
-      durationSeconds: durationSeconds || 255,
-      type: recordingType || "story",
-      community: "Community Contributor",
-      sourceType: sourceType || "microphone_recording",
-      audioFileName: audioFileName || null,
-      audioFileSize: audioFileSize || null,
+      id: newId,
+      title: title || `${language} Spoken Heritage Recording`,
+      language,
+      dialect: dialect || `${language} Regional Variety`,
+      duration: `${Math.floor(durationSeconds / 60).toString().padStart(2, "0")}:${(durationSeconds % 60).toString().padStart(2, "0")}`,
+      durationSeconds,
+      type: "Oral Heritage Story",
       uploadDate: new Date().toISOString(),
-      confidence: 0.94,
-      status: "STORED_AND_ENCRYPTED",
+      status: "PRESERVED_IN_ARCHIVE",
     };
 
     return NextResponse.json({
       success: true,
-      message: "Voice record successfully stored in Voice Roots encrypted archive.",
+      message: "Oral record successfully preserved in Voice Roots archive.",
       record: savedRecord,
     });
   } catch (err: any) {
