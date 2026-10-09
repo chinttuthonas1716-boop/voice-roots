@@ -25,6 +25,8 @@ import {
   Download,
   FileText,
   Cpu,
+  Mic,
+  MicOff,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
@@ -77,6 +79,7 @@ export default function UploadAudioPage() {
   // Workflow states
   const [isUploading, setIsUploading] = useState(false);
   const [isTranscribing, setIsTranscribing] = useState(false);
+  const [isListening, setIsListening] = useState(false);
   const [isTranslating, setIsTranslating] = useState(false);
   const [uploadProgress, setUploadProgress] = useState(0);
   const [phaseMessage, setPhaseMessage] = useState("");
@@ -257,6 +260,95 @@ export default function UploadAudioPage() {
       setPhaseMessage("Transcription request failed.");
     } finally {
       setIsTranscribing(false);
+    }
+  };
+
+  // Browser Speech-to-Text via Microphone (Client-side Web Speech API)
+  const handleSpeechInput = () => {
+    if (typeof window === "undefined") return;
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      alert("Speech recognition is not supported in this browser. Please use Google Chrome, Edge, or Safari.");
+      return;
+    }
+
+    try {
+      const recognition = new SpeechRecognition();
+      const speechCodes: Record<string, string> = {
+        te: "te-IN",
+        hi: "hi-IN",
+        en: "en-IN",
+        ta: "ta-IN",
+        kn: "kn-IN",
+        ml: "ml-IN",
+        mr: "mr-IN",
+        bn: "bn-IN",
+        gon: "te-IN",
+        koy: "te-IN",
+        lam: "hi-IN",
+        auto: "te-IN",
+      };
+      recognition.lang = speechCodes[sourceLang] || "te-IN";
+      recognition.interimResults = false;
+
+      recognition.onstart = () => {
+        setIsListening(true);
+        setTranscribeError(null);
+        setTranscribeHint(null);
+        setPhaseMessage("Listening to microphone... Speak clearly into your device.");
+      };
+
+      recognition.onend = () => {
+        setIsListening(false);
+      };
+
+      recognition.onerror = (e: any) => {
+        setIsListening(false);
+        if (e.error !== "no-speech") {
+          setTranscribeError(`Microphone recognition ended: ${e.error || "access issue"}`);
+        }
+      };
+
+      recognition.onresult = (event: any) => {
+        const spokenTranscript = event.results?.[0]?.[0]?.transcript?.trim();
+        if (spokenTranscript) {
+          setOriginalTranscript((prev) => (prev ? `${prev} ${spokenTranscript}` : spokenTranscript));
+          setModelUsedInfo("Browser Speech Recognition (Web Speech API)");
+          setPhaseMessage("Spoken audio captured via microphone. Ready to review and translate.");
+          if (autoTranslateEnabled) {
+            handleTranslateTranscript(spokenTranscript);
+          }
+        }
+      };
+
+      recognition.start();
+    } catch (err: any) {
+      setIsListening(false);
+      setTranscribeError("Could not access microphone. Please grant browser microphone permission.");
+    }
+  };
+
+  // Load Authentic Oral Heritage Sample Transcript (for testing/demoing)
+  const handleLoadSampleTranscript = () => {
+    const samples: Record<string, string> = {
+      te: "మా తాతగారు పొలంలో పని చేసేటప్పుడు ఈ పంట పాటలు పాడేవారు. ఇవి మా పూర్వీకుల సంస్కృతి మరియు సంప్రదాయం.",
+      hi: "हमारे दादाजी खेतों में काम करते समय यह लोकगीत गाया करते थे। यह हमारी सांस्कृतिक धरोहर है।",
+      en: "My grandfather used to sing this harvest chant while working in the fields. It preserves our ancestral culture.",
+      gon: "మా గోండు తెగలో పంట కోత సమయంలో సాంప్రదాయక పాటలు పాడటం ఆచారం.",
+      koy: "కొండ ప్రాంతాల్లో పూర్వీకులు చెప్పిన కథలు మరియు ఔషధ రహస్యాలు.",
+      lam: "బంజారా సంస్కృతిలో ప్రాచీన జానపద కథలు మరియు సంప్రదాయాలు.",
+      auto: "మా తాతగారు పొలంలో పని చేసేటప్పుడు ఈ పంట పాటలు పాడేవారు. ఇవి మా పూర్వీకుల సంస్కృతి మరియు సంప్రదాయం.",
+    };
+    const sampleText = samples[sourceLang] || samples.te;
+    setOriginalTranscript(sampleText);
+    setTranscribeError(null);
+    setTranscribeHint(null);
+    setModelUsedInfo("Authentic Oral Corpus Sample");
+    setPhaseMessage("Sample oral heritage transcript loaded. Ready to review and translate.");
+    if (autoTranslateEnabled) {
+      handleTranslateTranscript(sampleText);
     }
   };
 
@@ -578,7 +670,31 @@ export default function UploadAudioPage() {
                   </span>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={handleSpeechInput}
+                    className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl border px-3 text-xs font-semibold transition ${
+                      isListening
+                        ? "border-red-500 bg-red-500/20 text-red-200 animate-pulse"
+                        : "border-white/15 bg-white/5 text-[#F7F3EE] hover:bg-white/10"
+                    }`}
+                    title="Dictate directly using your microphone (Web Speech API)"
+                  >
+                    {isListening ? <MicOff className="h-3.5 w-3.5 text-red-400" /> : <Mic className="h-3.5 w-3.5 text-[#E58A4E]" />}
+                    <span>{isListening ? "Listening..." : "Dictate with Mic"}</span>
+                  </button>
+
+                  <button
+                    type="button"
+                    onClick={handleLoadSampleTranscript}
+                    className="inline-flex min-h-9 items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 text-xs font-semibold text-[#C4B5A5] hover:text-[#F7F3EE] hover:bg-white/10 transition"
+                    title="Load an authentic sample heritage transcript to test translation immediately"
+                  >
+                    <FileText className="h-3.5 w-3.5" />
+                    <span>Sample Text</span>
+                  </button>
+
                   <button
                     type="button"
                     onClick={handleTranscribeAudio}
@@ -588,7 +704,7 @@ export default function UploadAudioPage() {
                     {isTranscribing ? (
                       <>
                         <RefreshCw className="h-3.5 w-3.5 animate-spin" />
-                        <span>Transcribing Audio...</span>
+                        <span>Transcribing...</span>
                       </>
                     ) : (
                       <>
@@ -600,20 +716,41 @@ export default function UploadAudioPage() {
                 </div>
               </div>
 
-              {/* Transcription Failure Banner */}
+              {/* Transcription Notice & Options Banner */}
               {transcribeError && (
-                <div className="rounded-xl border border-red-500/40 bg-red-950/30 p-4 space-y-2 text-xs">
-                  <div className="flex items-center gap-2 text-red-400 font-semibold">
+                <div className="rounded-xl border border-amber-500/40 bg-amber-950/20 p-4 space-y-3 text-xs">
+                  <div className="flex items-center gap-2 text-amber-400 font-semibold">
                     <AlertCircle className="h-4 w-4 shrink-0" />
-                    <span>Transcription Issue: {transcribeError}</span>
+                    <span>Transcription Notice: {transcribeError}</span>
                   </div>
                   {transcribeHint && (
-                    <p className="text-[#C4B5A5] pl-6 leading-relaxed">
-                      💡 {transcribeHint}
-                    </p>
+                    <div className="rounded-lg border border-white/10 bg-black/40 p-3 text-[#C4B5A5] space-y-1 text-[11px] leading-relaxed">
+                      <p className="font-semibold text-[#F7F3EE]">💡 How to enable server Whisper on Render:</p>
+                      <p>1. Open <span className="text-[#E58A4E]">Render Dashboard</span> &rarr; <span className="text-[#E58A4E]">voice-roots</span> service &rarr; <span className="text-[#E58A4E]">Environment</span></p>
+                      <p>2. Add Variable &rarr; Key: <code className="text-[#4E9F76] font-bold">HF_TOKEN</code>, Value: (Your free Hugging Face token from <a href="https://huggingface.co/settings/tokens" target="_blank" rel="noreferrer" className="underline text-blue-400">huggingface.co/settings/tokens</a>)</p>
+                      <p>3. Save Changes &mdash; Render will redeploy in ~60 seconds with server Whisper active.</p>
+                    </div>
                   )}
-                  <p className="text-white/60 pl-6 text-[11px]">
-                    You can still type or paste your transcript manually into the editable box below to proceed with translation.
+                  <div className="flex flex-wrap items-center gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={handleSpeechInput}
+                      className="inline-flex items-center gap-1.5 rounded-lg bg-[#4E9F76] px-3 py-1.5 text-xs font-bold text-[#0C0908] hover:bg-[#62b58b] transition"
+                    >
+                      <Mic className="h-3.5 w-3.5" />
+                      <span>Dictate via Microphone (Zero Tokens Needed)</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={handleLoadSampleTranscript}
+                      className="inline-flex items-center gap-1.5 rounded-lg border border-white/20 bg-white/5 px-3 py-1.5 text-xs font-semibold text-[#F7F3EE] hover:bg-white/10 transition"
+                    >
+                      <FileText className="h-3.5 w-3.5 text-[#E58A4E]" />
+                      <span>Load Sample Heritage Text</span>
+                    </button>
+                  </div>
+                  <p className="text-white/60 text-[11px]">
+                    You can also type or paste your transcript manually into the editable box below to proceed with translation.
                   </p>
                 </div>
               )}

@@ -87,6 +87,7 @@ export async function POST(request: NextRequest) {
     // 4. Check Configured AI Providers
     const hfToken = process.env.HF_TOKEN || process.env.HUGGINGFACE_API_KEY;
     const openAiKey = process.env.OPENAI_API_KEY;
+    const geminiKey = process.env.GEMINI_API_KEY || process.env.GOOGLE_API_KEY;
 
     // --- Provider A: Hugging Face Inference API ---
     if (hfToken) {
@@ -217,7 +218,62 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // --- Provider C: Transparent Diagnostic Response when credentials are not configured ---
+    // --- Provider C: Google Gemini Flash Multimodal Speech-to-Text ---
+    if (geminiKey) {
+      const base64Audio = buffer.toString("base64");
+      const mimeType = file.type || "audio/wav";
+      const targetLangName =
+        requestedLang && requestedLang !== "auto" ? requestedLang : "original spoken language";
+      const prompt = `You are a linguistically precise speech-to-text engine. Accurately transcribe the spoken speech in this audio recording into its original language (${targetLangName}). Preserve dialect and cultural terms verbatim. Output ONLY the raw spoken text transcript. Do not add quotes, introductory remarks, or conversational commentary.`;
+
+      const geminiRes = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${geminiKey}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            contents: [
+              {
+                parts: [
+                  { inlineData: { mimeType, data: base64Audio } },
+                  { text: prompt },
+                ],
+              },
+            ],
+          }),
+        }
+      );
+
+      const durationMs = Date.now() - startTime;
+
+      if (geminiRes.ok) {
+        const data = await geminiRes.json();
+        const transcriptText =
+          data.candidates?.[0]?.content?.parts?.[0]?.text?.trim() || "";
+        console.log(
+          JSON.stringify({
+            stage: "ASR_SUCCESS",
+            requestId,
+            provider: "GoogleGemini",
+            model: "gemini-2.5-flash",
+            durationMs,
+            fileSize: file.size,
+            charsProduced: transcriptText.length,
+          })
+        );
+        return NextResponse.json({
+          success: true,
+          transcript: transcriptText,
+          language: requestedLang,
+          provider: "Google-Gemini-Flash",
+          model: "gemini-2.5-flash",
+          durationMs,
+          fileName: file.name,
+        });
+      }
+    }
+
+    // --- Provider D: Transparent Diagnostic Response when credentials are not configured ---
     // We NEVER return fake transcripts or pretended success.
     console.log(
       JSON.stringify({
@@ -241,7 +297,7 @@ export async function POST(request: NextRequest) {
           detectedFormat: file.type || "audio/wav",
           sourceLanguage: requestedLang,
         },
-        instructions: "To enable server Whisper transcription: In Render Dashboard -> voice-roots service -> Environment -> Add Environment Variable -> Key: HF_TOKEN, Value: your Hugging Face Token.",
+        instructions: "To enable server speech recognition: In Render Dashboard -> voice-roots service -> Environment -> Add Environment Variable -> Key: HF_TOKEN (Hugging Face) or GEMINI_API_KEY (Google AI Studio) or OPENAI_API_KEY.",
       },
       { status: 503 }
     );
