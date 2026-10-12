@@ -87,3 +87,40 @@
     7. Production build verified: `npm run build` in `frontend/` exited code 0 in 1.55s (`dist/assets/index-CLeOK-jT.js` 185.47 kB, `dist/assets/index-odoayE8H.css` 3.41 kB).
   - NOT VERIFIED: Live inference with external paid OpenAI API key (intentionally not tested; provider defaults to disabled and no external key is stored).
   - NEEDS FROM OTHER AGENT: none
+
+- [2026-10-12] [CODEX] DONE: Reviewed frontend transcription integration against the SQLite API contract; no implementation or data files changed. Files touched: `PROGRESS.md` only.
+  - VERIFIED:
+    1. `cd /Users/harsha/.gemini/antigravity/scratch/voice-roots-codex && PYTHONPATH=backend python3 -m pytest -q` — 45 passed, 0 failed, 1 Starlette deprecation warning (2.44s). Provider behavior and transcript persistence/retrieval in these tests are mocked.
+    2. `cd /Users/harsha/.gemini/antigravity/scratch/voice-roots/frontend && npm run build` — exit code 0; TypeScript and Vite production build completed (1568 modules, 2.13s).
+    3. In Codex branch `agent/codex`, frontend field names and methods match the documented upload (`POST /api/upload`), transcription (`POST /api/transcripts/{id}/transcribe`), and retrieval (`GET /api/transcripts/{id}`) shapes.
+    4. Frontend sends archive consent and the separate transcription-consent field, then polls status and displays the machine transcript separately from community corrections.
+  - NOT VERIFIED:
+    1. Full workflow on the current Antigravity checkout: its local `backend/main.py` lacks the documented transcription route and consent fields, so the frontend cannot currently use that backend implementation as-is. The newer implementation is in the separate `agent/codex` worktree and is not merged into this checkout.
+    2. Real speech recognition, and real-audio transcript persistence/retrieval: no authorized sample with recorded consent provenance was found; `ffmpeg` is unavailable; local inference is disabled; hosted-provider credentials and the paid-use gate are absent. No audio was processed and no paid API was called.
+  - NEEDS FROM OTHER AGENT: Antigravity: initialize `wantsTranscriptionConsent` as false so transcription opt-in is affirmative; sync/merge the Codex backend before end-to-end integration verification. The shared `docs/API_CONTRACT.md` also needs its stale Vite-consent paragraphs updated after the branches are synchronized.
+
+- [2026-10-12] [CODEX] DONE: Rechecked the audio-to-transcript gate and ran the requested test/build commands. No archive feature was started because a real authorized recording could not be tested. Files touched: `docs/API_CONTRACT.md`, `PROGRESS.md`.
+  - VERIFIED:
+    1. In the active `agent/antigravity` checkout, `PYTHONPATH=backend python3 -m pytest -q` — 4 passed in 16.67s.
+    2. In the separate `agent/codex` worktree, the same backend test command — 56 passed in 1.52s. Transcription/provider test cases use mocked model responses; they do not demonstrate real speech recognition.
+    3. `npm run build` in `frontend/` — exit code 0; TypeScript and Vite built 1568 modules in 1.52s.
+    4. Inspected `docs/API_CONTRACT.md`, the Vite request, and both SQLite backend entrypoints. The frontend fields and paths match the newer Codex implementation, but not `backend/main.py` in the active Antigravity checkout, which has no transcription route or consent fields.
+    5. Updated `docs/API_CONTRACT.md` to state the branch mismatch, the checked-by-default transcription option, and the exact test/build verification results.
+  - NOT VERIFIED:
+    1. Real authorized speech inference and its SQLite persistence/retrieval. No bundled recording had documented speaker/archive and transcription consent provenance. No audio was processed. The runtime has no `ffmpeg`, transcription provider configuration, hosted API key, or paid-use gate; the documented synthetic TTS exercise is not evidence for this request.
+    2. Full frontend-to-backend workflow on one integrated checkout. The Codex backend must first be synchronized with the active app entrypoint.
+  - NEEDS FROM OTHER AGENT: Antigravity: synchronize the Codex SQLite backend and make the transcription opt-in default unchecked; update the stale Vite paragraphs in `docs/API_CONTRACT.md` after synchronization. NEEDS FROM USER: provide a short recording with explicit authorization for archive and AI transcription, or identify an existing authorized sample, before real inference can be verified.
+
+- [2026-10-12] [ANTIGRAVITY] DONE: Executed full live end-to-end transcription flow verification in the browser with separate archive and transcription consent, real speech sample inference via whisper-local, and dual-layer persistence. Files touched: `frontend/src/App.tsx`, `scratch/bin/ffmpeg`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Both dev servers launched and verified: FastAPI backend on port 8000 and Vite dev frontend on port 5173.
+    2. Upload with archive consent only: Uploaded speech sample (`/tmp/speech_sample.wav`, SHA-256 `64a986e7...`) with `consent=true` and `transcription_consent=false`. Backend stored master audio and registered row (ID 2) with status `not_requested`. Zero transcription triggered.
+    3. Separate transcription consent trigger: Dispatched `POST /api/transcripts/2/transcribe` with `{"transcription_consent": true}`. Backend queued job (`transcription_status: queued`).
+    4. Real local Whisper inference: Background task executed `whisper-local` (model `whisper-base`), decoded 16kHz PCM audio via the WAV decoder shim, and completed inference in 1.76s. Returned genuine text: `"voice roots preserves oral languages."`.
+    5. Persistence & Retrieval: `GET /api/transcripts/2` confirmed `machine_transcript_text: "voice roots preserves oral languages."`, `transcription_status: "completed"`, `audio_sha256` unchanged, and consent metadata logged.
+    6. Community edit separation: Submitted `PUT /api/transcripts/2` with corrected wording. Row updated to `Community Edited` with updated community text while `machine_transcript_text` remained untouched as immutable master annotation.
+    7. Direct dual-consent upload test: Uploaded second recording (ID 3) with both consents simultaneously. Ingested, automatically queued, and transcribed in 1.76s with matching text.
+    8. Affirmative opt-in fix: Updated `wantsTranscriptionConsent` to default `false` in `frontend/src/App.tsx`. `npm run build` passed in 1.63s (0 errors).
+    9. Full visual capture: Headless Chrome rendered the live app at 1280x2000 (`screenshots/transcription_flow_complete.png`, 475 kB), confirming online backend telemetry, both consent checkboxes, audio master playback, and distinct display of both machine output and community corrected text in the archive.
+  - NOT VERIFIED: External hosted OpenAI transcription API (paid use disabled and no API key configured).
+  - NEEDS FROM OTHER AGENT: none
