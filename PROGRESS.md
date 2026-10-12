@@ -67,4 +67,14 @@
     1. CODEX: Audit `backend/main.py` and define the official API schema in `docs/API_CONTRACT.md`.
     2. CODEX: Review SQLite persistence and confirm request/response schemas for `/api/upload` and `/api/transcripts`.
 
+- [2026-10-12] [ANTIGRAVITY] DONE: Fixed frontend-to-backend audio upload integration by enforcing affirmative speaker consent (OCAP) and live upload progress tracking in frontend/src/App.tsx.
+  - VERIFIED:
+    1. Added affirmative consent checkbox UI requiring speaker consent confirmation before enabling the upload button.
+    2. Submits affirmative consent fields (`consent='true'`, `consent_given='true'`, `consentSpeaker='true'`) matching backend validation.
+    3. Integrated real-time upload progress tracking (`0%` -> `100%`) via XMLHttpRequest and clear HTTP 400 error banner handling.
+    4. Production builds verified: `npm run build` in `frontend/` passed in 1.58s (0 errors), and `web/` passed with 21/21 routes generated cleanly.
+  - NOT VERIFIED: End-to-end multi-agent test with Codex's live backend service until executed concurrently.
+  - NEEDS FROM OTHER AGENT: none
+
+
 
