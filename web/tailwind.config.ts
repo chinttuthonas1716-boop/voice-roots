@@ -10,60 +10,30 @@ const config: Config = {
   theme: {
     extend: {
       colors: {
-        // Netflix Cinematic Palette
-        "netflix-black": "#141414",
-        "netflix-dark": "#0B0B0B",
-        "netflix-surface": "#181818",
-        "netflix-card": "#1F1F1F",
-        "netflix-card-hover": "#262626",
-        
-        // Netflix Iconic Red & Accents
-        "netflix-red": "#E50914",
-        "netflix-red-hover": "#F40612",
-        "netflix-red-dark": "#B81D24",
-        "netflix-red-glow": "rgba(229, 9, 20, 0.4)",
-        
-        // Secondary Accents & Contrast
-        "netflix-white": "#FFFFFF",
-        "netflix-light": "#E5E5E5",
-        "netflix-gray": "#AAAAAA",
-        "netflix-muted": "#6D6D6E",
-        "netflix-dark-gray": "#333333",
+        // Voice Roots New Visual Identity
+        midnight: "#11152E",
+        "midnight-indigo": "#11152E",
+        "heritage-amber": "#D9A441",
+        "warm-amber": "#D9A441",
+        "soft-violet": "#8B7CFF",
+        "ai-violet": "#8B7CFF",
+        "heritage-teal": "#35B7A5",
+        "trans-teal": "#35B7A5",
+        "warm-ivory": "#F7F3EA",
 
-        // Cultural Heritage Warmth
-        "cultural-gold": "#E5A93C",
-        "cultural-amber": "#F59E0B",
-      },
-      fontFamily: {
-        sans: [
-          "-apple-system",
-          "BlinkMacSystemFont",
-          "Netflix Sans",
-          "SF Pro Display",
-          "Helvetica Neue",
-          "Segoe UI",
-          "Roboto",
-          "sans-serif",
-        ],
-        mono: ["SF Mono", "ui-monospace", "Menlo", "monospace"],
+        // Backward compatibility mappings for existing dark surfaces
+        obsidian: "#11152E", // Shift default base to Midnight Indigo
+        surface: "#181D3B",
+        "primary-text": "#F7F3EA", // Shift primary text to Warm Ivory
+        "secondary-text": "#9DA7C9",
+        "root-green": "#35B7A5", // Shift root green to Heritage Teal
+        "leaf-green": "#5EEAD4",
+        earth: "#D9A441", // Heritage Amber
       },
       boxShadow: {
-        "netflix-glow": "0 0 30px -5px rgba(229, 9, 20, 0.55)",
-        "netflix-card-hover": "0 20px 45px -10px rgba(0, 0, 0, 0.95), 0 0 25px -4px rgba(229, 9, 20, 0.35)",
-        "ios27-glass": "0 20px 50px -10px rgba(0, 0, 0, 0.8), inset 0 1px 1px 0 rgba(255, 255, 255, 0.12)",
-      },
-      animation: {
-        "equalizer-1": "equalizer 1.1s ease-in-out infinite alternate",
-        "equalizer-2": "equalizer 0.8s ease-in-out infinite alternate 0.2s",
-        "equalizer-3": "equalizer 1.4s ease-in-out infinite alternate 0.4s",
-        "equalizer-4": "equalizer 0.9s ease-in-out infinite alternate 0.1s",
-      },
-      keyframes: {
-        equalizer: {
-          "0%": { height: "15%" },
-          "50%": { height: "100%" },
-          "100%": { height: "35%" },
-        },
+        glow: "0 8px 28px -10px rgba(53, 183, 165, .55)",
+        "amber-glow": "0 8px 28px -10px rgba(217, 164, 65, .55)",
+        "violet-glow": "0 8px 28px -10px rgba(139, 124, 255, .55)",
       },
     },
   },

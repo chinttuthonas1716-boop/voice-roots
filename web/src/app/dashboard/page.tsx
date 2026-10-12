@@ -1,153 +1,187 @@
 "use client";
 
-import React from "react";
-import { Navbar } from "@/components/ui/Navbar";
-import { AIAssistant } from "@/components/ai/AIAssistant";
-import { Mic, Clock, BookOpen, Sparkles, Plus, CheckCircle, ArrowRight, ShieldCheck } from "lucide-react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
+import { Search, Play, Pause, Mic, ArrowRight } from "lucide-react";
+import { Navbar } from "@/components/ui/Navbar";
+import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
 
 export default function DashboardPage() {
+  const [recordings, setRecordings] = useState<StoredVoiceRecord[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  useEffect(() => {
+    setRecordings(getUserRecordings());
+  }, []);
+
+  const handleTogglePlay = (record: StoredVoiceRecord) => {
+    const src = record.audioUrl || `/audio/${record.audioFileName}`;
+
+    if (playingId === record.id) {
+      audioRef.current?.pause();
+      setPlayingId(null);
+      return;
+    }
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+
+    audioRef.current = new Audio(src);
+    audioRef.current.onended = () => setPlayingId(null);
+    audioRef.current.onerror = () => setPlayingId(null);
+
+    audioRef.current.play().then(() => {
+      setPlayingId(record.id);
+    }).catch((e) => {
+      console.warn("Audio play blocked", e);
+      setPlayingId(null);
+    });
+  };
+
+  const filtered = recordings.filter((r) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      r.title.toLowerCase().includes(q) ||
+      r.language.toLowerCase().includes(q) ||
+      (r.community && r.community.toLowerCase().includes(q))
+    );
+  });
+
+  const getPlainStatus = (record: StoredVoiceRecord): string => {
+    if (record.isUserUploaded) return "Waiting for review";
+    return "Verified";
+  };
+
+  const formatDate = (isoString?: string): string => {
+    if (!isoString) return "Recent";
+    try {
+      const d = new Date(isoString);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return "Recent";
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-obsidian text-primary-text pb-24">
+    <div className="min-h-screen pb-24 pt-20">
       <Navbar />
 
-      <main className="pt-24 px-4 sm:px-6 lg:px-8 max-w-6xl mx-auto space-y-8">
-        {/* Welcome Banner */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/5 pb-6">
+      <main className="mx-auto max-w-4xl px-4 py-8 space-y-6">
+        {/* Header & Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
-            <div className="inline-flex items-center gap-1.5 text-xs font-mono text-leaf-green">
-              <ShieldCheck className="w-3.5 h-3.5" />
-              <span>Verified Community Contributor</span>
-            </div>
-            <h1 className="text-3xl sm:text-4xl font-semibold text-white tracking-tight mt-1">
-              Good evening, Sai
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F8FAFC]">
+              My recordings
             </h1>
-            <p className="text-secondary-text text-sm mt-0.5">
-              Your voice contributions are helping preserve northern Telugu & tribal dialects.
+            <p className="text-sm text-[#94A3B8] mt-1">
+              {recordings.length} {recordings.length === 1 ? "voice story" : "voice stories"} preserved.
             </p>
           </div>
 
-          <Link
-            href="/record"
-            className="flex items-center gap-2 px-6 py-3 rounded-full bg-root-green text-obsidian font-semibold text-sm shadow-glow hover:scale-105 transition-all self-start sm:self-auto"
-          >
-            <Mic className="w-4 h-4 fill-current" />
-            <span>Record New Voice</span>
+          <Link href="/record" className="btn-primary self-start sm:self-auto">
+            <Mic className="h-4 w-4" />
+            <span>Record voice</span>
           </Link>
         </div>
 
-        {/* User Stats Trio */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <div className="glass-surface p-6 rounded-3xl border border-white/5 space-y-1">
-            <span className="text-xs font-mono uppercase text-secondary-text">Stories Preserved</span>
-            <div className="text-3xl font-bold font-mono text-white">24</div>
-            <p className="text-[11px] text-secondary-text">18 verified by community linguists</p>
-          </div>
-
-          <div className="glass-surface p-6 rounded-3xl border border-white/5 space-y-1">
-            <span className="text-xs font-mono uppercase text-secondary-text">Audio Archived</span>
-            <div className="text-3xl font-bold font-mono text-leaf-green">8.4h</div>
-            <p className="text-[11px] text-secondary-text">100% loss-less WAV format stored</p>
-          </div>
-
-          <div className="glass-surface p-6 rounded-3xl border border-white/5 space-y-1">
-            <span className="text-xs font-mono uppercase text-secondary-text">Words Digitized</span>
-            <div className="text-3xl font-bold font-mono text-earth">12.3K</div>
-            <p className="text-[11px] text-secondary-text">Indexed for semantic vector search</p>
-          </div>
+        {/* Search Box */}
+        <div className="relative">
+          <label htmlFor="search-recordings" className="sr-only">
+            Search recordings
+          </label>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#94A3B8]" />
+          <input
+            id="search-recordings"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, language, or community..."
+            className="w-full min-h-[48px] rounded-xl border border-white/15 bg-white/5 pl-11 pr-4 text-base text-[#F8FAFC] placeholder-[#94A3B8] focus:border-[#F59E0B] focus:outline-none focus:ring-1 focus:ring-[#F59E0B]"
+          />
         </div>
 
-        {/* Start Recording Big Action Card */}
-        <div className="glass-surface p-8 rounded-3xl border border-root-green/30 bg-gradient-to-r from-root-green/10 via-transparent to-transparent flex flex-col sm:flex-row items-start sm:items-center justify-between gap-6">
-          <div className="space-y-2 max-w-xl">
-            <span className="text-xs font-mono uppercase text-leaf-green">Preserve an Oral Memory</span>
-            <h2 className="text-2xl font-semibold text-white">Capture an elder's story or traditional song</h2>
-            <p className="text-xs text-secondary-text leading-relaxed">
-              Every recording is transcribed by open-source ASR, translated into standardized text, and integrated into our searchable linguistic repository.
+        {/* Simple List */}
+        {filtered.length === 0 ? (
+          <div className="glass-card p-10 text-center space-y-3">
+            <p className="text-base font-semibold text-[#F8FAFC]">No recordings found</p>
+            <p className="text-sm text-[#94A3B8]">
+              {searchQuery
+                ? `No results matching "${searchQuery}". Clear search or try another keyword.`
+                : "You don't have any recordings yet. Record your voice or upload a file."}
             </p>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="btn-glass mt-2"
+              >
+                Clear search
+              </button>
+            )}
           </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((record) => {
+              const isPlaying = playingId === record.id;
+              const statusText = getPlainStatus(record);
 
-          <Link
-            href="/record"
-            className="flex items-center gap-2 px-6 py-3.5 rounded-full bg-root-green hover:bg-leaf-green text-obsidian font-semibold text-sm transition-transform hover:scale-105 active:scale-95 shadow-glow whitespace-nowrap"
-          >
-            <Plus className="w-4 h-4" />
-            <span>Start Recording Now</span>
-          </Link>
-        </div>
-
-        {/* Recent Recordings Table */}
-        <div className="glass-surface p-6 sm:p-8 rounded-3xl border border-white/5 space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-lg font-semibold text-white">Your Recent Recordings</h2>
-            <Link href="/archive" className="text-xs text-leaf-green hover:underline">
-              View all
-            </Link>
-          </div>
-
-          <div className="divide-y divide-white/5 text-xs">
-            {[
-              {
-                id: "vr-101",
-                title: "Traditional Harvest & Rain Song",
-                lang: "Telugu (Tribal)",
-                date: "Today, 4:20 PM",
-                duration: "08:42",
-                status: "Verified & Archived",
-                confidence: "94.2%",
-              },
-              {
-                id: "vr-104",
-                title: "Agency Herbal Medicine Notes",
-                lang: "Telugu / Koya",
-                date: "Yesterday",
-                duration: "06:15",
-                status: "AI Transcribed",
-                confidence: "91.8%",
-              },
-              {
-                id: "vr-109",
-                title: "Childhood Games in the Forest",
-                lang: "Telugu",
-                date: "Oct 2, 2026",
-                duration: "14:30",
-                status: "Community Verified",
-                confidence: "96.0%",
-              },
-            ].map((rec) => (
-              <div key={rec.id} className="py-3.5 flex items-center justify-between gap-4">
-                <div className="space-y-0.5">
-                  <div className="flex items-center gap-2">
-                    <span className="font-medium text-white text-sm">{rec.title}</span>
-                    <span className="px-2 py-0.5 rounded-full bg-white/5 text-secondary-text text-[10px] font-mono">
-                      {rec.lang}
-                    </span>
+              return (
+                <div
+                  key={record.id}
+                  className="glass-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold text-[#F8FAFC] truncate">
+                        {record.title}
+                      </h2>
+                      <span className="text-xs px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[#94A3B8] shrink-0">
+                        {statusText}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#94A3B8]">
+                      {record.language} · {formatDate(record.uploadDate)} · {record.duration}
+                    </p>
                   </div>
-                  <div className="text-[11px] text-secondary-text flex items-center gap-2 font-mono">
-                    <span>{rec.date}</span>
-                    <span>•</span>
-                    <span>{rec.duration}</span>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePlay(record)}
+                      className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl border border-white/15 bg-white/5 text-sm font-medium text-[#F8FAFC] hover:bg-white/10 transition"
+                      aria-label={isPlaying ? `Pause ${record.title}` : `Play ${record.title}`}
+                    >
+                      {isPlaying ? (
+                        <>
+                          <Pause className="h-4 w-4 text-[#F59E0B]" />
+                          <span>Pause</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 text-[#F59E0B] fill-current" />
+                          <span>Play</span>
+                        </>
+                      )}
+                    </button>
+
+                    <Link
+                      href={`/passport/${record.id}`}
+                      className="inline-flex items-center gap-1 min-h-[44px] px-3.5 rounded-xl border border-white/15 bg-white/5 text-sm font-medium text-[#F8FAFC] hover:bg-white/10 transition"
+                    >
+                      <span>Passport</span>
+                      <ArrowRight className="h-4 w-4 text-[#94A3B8]" />
+                    </Link>
                   </div>
                 </div>
-
-                <div className="flex items-center gap-3">
-                  <span className="px-2.5 py-1 rounded-full bg-root-green/10 text-leaf-green border border-root-green/20 text-[10px] font-mono">
-                    {rec.status}
-                  </span>
-                  <Link
-                    href={`/archive`}
-                    className="p-1.5 rounded-full hover:bg-white/10 text-secondary-text hover:text-white"
-                  >
-                    <ArrowRight className="w-4 h-4" />
-                  </Link>
-                </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
-        </div>
+        )}
       </main>
-
-      <AIAssistant />
     </div>
   );
 }

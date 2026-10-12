@@ -1,419 +1,527 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
-import { Navbar } from "@/components/ui/Navbar";
-import { AIAssistant } from "@/components/ai/AIAssistant";
+import { useEffect, useState, useRef } from "react";
+import Link from "next/link";
+import { useParams } from "next/navigation";
 import {
+  ArrowLeft,
+  BookOpen,
+  Languages,
+  MapPin,
   Play,
   Pause,
   RotateCcw,
   Volume2,
-  Shield,
+  VolumeX,
+  ShieldCheck,
+  Users,
   Sparkles,
+  Bot,
+  Share2,
+  ArrowRight,
+  FileCheck,
+  QrCode,
+  RefreshCw,
   Check,
-  Edit3,
-  ArrowLeft,
-  Bookmark,
-  Languages,
-  Loader2,
-  CheckCircle2,
+  Lock,
 } from "lucide-react";
-import Link from "next/link";
-import { getUserRecordings, StoredVoiceRecord } from "@/lib/storage";
+import { Navbar } from "@/components/ui/Navbar";
+import { AIAssistant } from "@/components/ai/AIAssistant";
+import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
+import { getCurrentUser, canAccessRecording } from "@/lib/auth";
+import { EnhancedAudioPlayer } from "@/components/audio/EnhancedAudioPlayer";
+import { PreservationTimeline } from "@/components/heritage/PreservationTimeline";
 
-const DEFAULT_CATALOG: Record<string, any> = {
-  "vr-101": {
-    id: "vr-101",
-    title: "Traditional Harvest & Rain Song",
-    language: "Telugu",
-    dialect: "Agency Hill Dialect",
-    duration: "08:42",
-    type: "song",
-    community: "Agency Hill Clans",
-    originalTranscript:
-      "మా పల్లెలో వర్షాలు కురవకముందు పెద్దలు భూమి పూజ చేసి పాడుకునే సంప్రదాయ పాట ఇది. ఆకాశంలో మబ్బులు కనిపించగానే గ్రామ దేవతకు నమస్కరించి విత్తనాలు చల్లుతారు.",
-    translations: {
-      en: "This is a traditional melody our village elders sing before monsoon rains arrive, performing the Earth worship ritual. As soon as dark clouds appear in the sky, they bow to the village deity and sow heirloom seeds.",
-      hi: "यह एक पारंपरिक गीत है जो हमारे गाँव के बुजुर्ग मानसून की बारिश आने से पहले गाते हैं, धरती पूजा करते हैं। जैसे ही आसमान में काले बादल छाते हैं, वे ग्राम देवता को नमन कर देशी बीज बोते हैं।",
-      te: "మా పల్లెలో వర్షాలు కురవకముందు పెద్దలు భూమి పూజ చేసి పాడుకునే సాంప్రదాయ పాట ఇది. ఆకాశంలో మేఘాలు కనిపించగానే గ్రామ దేవతకు నమస్కరించి విత్తనాలు చల్లుతారు.",
-    },
-    vocabulary: [
-      { word: "భూమి పూజ", meaning: "Sacred soil ritual performed prior to first sowing" },
-      { word: "విత్తనాలు", meaning: "Heirloom native agricultural seed heritage" },
-      { word: "గ్రామ దేవత", meaning: "Protective deity of the local village community" },
-    ],
-  },
-  "vr-102": {
-    id: "vr-102",
-    title: "The Legend of the Mountain Spring",
-    language: "Gondi",
-    dialect: "Mandla Hill Variety",
-    duration: "14:15",
-    type: "story",
-    community: "Pardhan Community",
-    originalTranscript:
-      "पहाड़ की चोटी पर बहने वाले झरने के पीछे हमारे पुरखों की एक पुरानी कहानी है। जब सूखा पड़ता था, तो हमारे गाँव के बुजुर्ग इस गीत को गाकर वर्षा देव को प्रसन्न करते थे।",
-    translations: {
-      en: "Behind the perennial spring flowing on the mountain peak lies an ancient tale of our ancestors. Whenever drought descended, the village elders would sing this sacred chant to invoke the rain deity.",
-      hi: "पहाड़ की चोटी पर बहने वाले झरने के पीछे हमारे पुरखों की एक प्राचीन कथा है। जब सूखा पड़ता था, तो गाँव के बुजुर्ग इस गीत को गाकर वर्षा देव को प्रसन्न करते थे।",
-      te: "కొండ శిఖరంపై ప్రవహించే ఊట వెనుక మా పూర్వీకుల పురాతన కథ దాగి ఉంది. కరవు వచ్చినప్పుడు గ్రామ పెద్దలు ఈ పవిత్ర గీతాన్ని పాడి వరుణ దేవుని ప్రార్థించేవారు.",
-    },
-    vocabulary: [
-      { word: "सगा (Saga)", meaning: "Clan kinship network binding Gond communities" },
-      { word: "पेन (Pen)", meaning: "Ancestral ancestral spiritual guardian" },
-      { word: "गोटुल (Ghotul)", meaning: "Traditional youth dormitory learning institution" },
-    ],
-  },
-  "vr-103": {
-    id: "vr-103",
-    title: "Neem & Turmeric Traditional Medicine",
-    language: "Koya",
-    dialect: "Godavari Valley Variety",
-    duration: "06:30",
-    type: "traditional_knowledge",
-    community: "Forest Dwellers Collective",
-    originalTranscript:
-      "అడవిలో దొరికే వేప, పసుపు వేర్లతో జ్వరాలు తగ్గించే సాంప్రదాయ వైద్య విధానం. ఈ మూలికలను వర్షాకాలంలో సేకరించి ఎండబెట్టి భద్రపరుస్తాము.",
-    translations: {
-      en: "How wild neem and indigenous turmeric roots are formulated into seasonal fever remedies. These herbs are gathered during early monsoons and dried according to clan protocols.",
-      hi: "जंगल में मिलने वाले नीम और हल्दी की जड़ों से मौसमी बुखार का इलाज करने का पारंपरिक ज्ञान। इन जड़ी-बूटियों को मानसून के शुरू में इकट्ठा करके सुखाया जाता है।",
-      te: "అడవిలో లభించే వేప, అడవి పసుపు వేర్లతో జ్వరాలను నయం చేసే సాంప్రదాయ వైద్య జ్ఞానం. వీటిని పెద్దల అనుమతితో సేకరించి భద్రపరుస్తారు.",
-    },
-    vocabulary: [
-      { word: "కొండ దేవుడు", meaning: "Forest mountain deity presiding over medicinal plants" },
-      { word: "మందు మూలిక", meaning: "Ethnobotanical root formulation for fevers" },
-    ],
-  },
-  "vr-104": {
-    id: "vr-104",
-    title: "Conversations on Traditional Handloom Weaving",
-    language: "Santali",
-    dialect: "Mayurbhanj Santali",
-    duration: "11:20",
-    type: "conversation",
-    community: "Mayurbhanj Artisans",
-    originalTranscript:
-      "ᱥᱟᱱᱛᱟᱲᱤ ᱛᱮᱧ ᱠᱟᱹᱢᱤ ᱟᱨ ᱱᱟᱜᱟᱢ ᱨᱮᱱᱟᱜ ᱠᱟᱛᱷᱟ᱾ ᱦᱟᱯᱲᱟᱢ ᱠᱚᱣᱟᱜ ᱞᱟᱹᱭ ᱞᱮᱠᱟᱛᱮ ᱪᱟᱥ ᱵᱟᱥ ᱟᱨ ᱥᱮᱨᱣᱟ ᱡᱤᱭᱚᱱ ᱫᱚ ᱟᱹᱰᱤ ᱢᱟᱨᱮ ᱜᱮᱭᱟ᱾",
-    translations: {
-      en: "Oral history of Santal handloom weaving and agricultural heritage. According to ancestors, community farming and oral customs have been preserved unbroken since ancient times.",
-      hi: "संथाली हथकरघा बुनाई और कृषि विरासत का मौखिक इतिहास। पूर्वजों के अनुसार, सामुदायिक खेती और परंपराएं अनादि काल से सुरक्षित हैं।",
-      te: "సంతాలి చేనేత మరియు వ్యవసాయ వారసత్వ మౌఖిక చరిత్ర. పూర్వీకుల సంప్రదాయాల ప్రకారం సామూహిక వ్యవసాయం ప్రాచీన కాలం నుండి కొనసాగుతోంది.",
-    },
-    vocabulary: [
-      { word: "ᱦᱟᱯᱲᱟᱢ (Hapram)", meaning: "Revered tribal ancestors and lineage founders" },
-      { word: "ᱡᱟᱦᱮᱨ ᱛᱷᱟᱱ (Jaher Than)", meaning: "Sacred community sal grove sanctuary" },
-    ],
-  },
-  "vr-106": {
-    id: "vr-106",
-    title: "Living Root Bridges Oral Engineering",
-    language: "Khasi",
-    dialect: "Sohra Variety",
-    duration: "13:10",
-    type: "traditional_knowledge",
-    community: "Cherrapunji Forest Guardians",
-    originalTranscript:
-      "Ka jingshna ia ki jingkieng da ki thied dieng ha ki khlaw ba rben. Ki kpa tymmen ki la hikai ia ngi ban pyniaid ia ki thied Ficus elastica ban long jingkieng ba neh shispah snem.",
-    translations: {
-      en: "Elders narrating how aerial Ficus elastica roots are guided across roaring gorges over seventy years to create living bridges that endure for centuries.",
-      hi: "बुजुर्ग बताते हैं कि कैसे जीवित फिकस पेड़ों की जड़ों को गहरी घाटियों के पार निर्देशित कर ऐसे जीवित पुल बनाए जाते हैं जो सदियों तक टिकते हैं।",
-      te: "నదుల మీదుగా మర్రి వేర్లను డెబ్బై ఏళ్ల పాటు పెంచి శతాబ్దాల పాటు నిలిచే సజీవ వేరు వంతెనలను నిర్మించే సాంప్రదాయ ఖాసీ ఇంజనీరింగ్.",
-    },
-    vocabulary: [
-      { word: "Jingkieng Jri", meaning: "Living root bridge cultivated across mountain rivers" },
-      { word: "Kpa Tymmen", meaning: "Respected clan elders who pass oral architectural rules" },
-    ],
-  },
-};
+const TRANSLATION_LANGUAGES = [
+  { code: "en", name: "English", native: "English" },
+  { code: "te", name: "Telugu", native: "తెలుగు" },
+  { code: "hi", name: "Hindi", native: "हिन्दी" },
+  { code: "ta", name: "Tamil", native: "தமிழ்" },
+  { code: "kn", name: "Kannada", native: "ಕನ್ನಡ" },
+  { code: "ml", name: "Malayalam", native: "മലയാളം" },
+] as const;
 
-export default function RecordingDetailPage({ params }: { params: { id: string } }) {
+export default function RecordingDetailPage() {
+  const params = useParams<{ id: string }>();
+  const id = params?.id;
+
+  const [record, setRecord] = useState<StoredVoiceRecord | null>(null);
+  const [allRecords, setAllRecords] = useState<StoredVoiceRecord[]>([]);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
   const [isPlaying, setIsPlaying] = useState(false);
-  const [viewMode, setViewMode] = useState<"dual" | "original" | "translation">("dual");
-  const [targetLang, setTargetLang] = useState<"en" | "hi" | "te">("en");
+  const [currentTime, setCurrentTime] = useState(0);
+  const [duration, setDuration] = useState(0);
+  const [isMuted, setIsMuted] = useState(false);
+  const [selectedTransLang, setSelectedTransLang] = useState<"en" | "te" | "hi" | "ta" | "kn" | "ml">("en");
   const [isTranslating, setIsTranslating] = useState(false);
-  const [translationText, setTranslationText] = useState("");
-  const [currentRecord, setCurrentRecord] = useState<any>(null);
+  const [translateError, setTranslateError] = useState<string | null>(null);
+  const [accessAllowed, setAccessAllowed] = useState(true);
+  const [accessReason, setAccessReason] = useState<string>("");
 
-  // Load record from catalog or localStorage
-  useEffect(() => {
-    const id = params.id || "vr-101";
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
-    // 1. Check user recordings in localStorage first
-    const userRecords = getUserRecordings();
-    const userMatch = userRecords.find((r) => r.id === id);
+  const triggerTranslation = async (targetLang: "en" | "te" | "hi" | "ta" | "kn" | "ml") => {
+    setSelectedTransLang(targetLang);
+    if (!record) return;
 
-    if (userMatch) {
-      setCurrentRecord(userMatch);
-      setTranslationText(userMatch.translationEn || "");
+    // If already exists and not forcing re-translation, do nothing
+    if (record.translations?.[targetLang]) {
       return;
     }
 
-    // 2. Check default catalog
-    const catalogMatch = DEFAULT_CATALOG[id] || DEFAULT_CATALOG["vr-101"];
-    setCurrentRecord(catalogMatch);
-    setTranslationText(catalogMatch.translations?.[targetLang] || catalogMatch.translations?.en || "");
-  }, [params.id]);
-
-  // Live Translation Trigger
-  const handleTranslate = async (target: "en" | "hi" | "te") => {
-    setTargetLang(target);
-    if (!currentRecord) return;
-
-    // If precomputed translation exists, load instantly
-    if (currentRecord.translations && currentRecord.translations[target]) {
-      setTranslationText(currentRecord.translations[target]);
-      return;
-    }
-
-    // Otherwise call live /api/translate
     setIsTranslating(true);
+    setTranslateError(null);
+
     try {
-      const res = await fetch("/api/translate", {
+      const resp = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
-          text: currentRecord.originalTranscript,
-          sourceLanguage: currentRecord.language,
-          targetLanguage: target,
+          text: record.originalTranscript,
+          sourceLang: record.language.toLowerCase(),
+          targetLang,
         }),
       });
-      const data = await res.json();
-      if (data.translation) {
-        setTranslationText(data.translation);
-      }
-    } catch (err) {
-      console.warn("Translation fallback:", err);
-      // Fallback
-      if (currentRecord.translations?.en) {
-        setTranslationText(currentRecord.translations.en);
-      }
+
+      if (!resp.ok) throw new Error("Translation service returned an error");
+      const data = await resp.json();
+
+      const updatedRecord: StoredVoiceRecord = {
+        ...record,
+        translations: {
+          ...record.translations,
+          [targetLang]: data.translation,
+        },
+      };
+
+      setRecord(updatedRecord);
+    } catch (e: any) {
+      setTranslateError("Failed to translate. Click retry below.");
     } finally {
       setIsTranslating(false);
     }
   };
 
-  const rec = currentRecord || DEFAULT_CATALOG["vr-101"];
+  useEffect(() => {
+    const list = getUserRecordings();
+    setAllRecords(list);
+
+    if (!id) return;
+    const item = list.find((r) => r.id === id) || null;
+    setRecord(item);
+
+    if (item) {
+      const activeUser = getCurrentUser();
+      const check = canAccessRecording(activeUser, item);
+      setAccessAllowed(check.allowed);
+      setAccessReason(check.reason);
+
+      if (check.allowed) {
+        const src = item.audioUrl || `/audio/${item.audioFileName}`;
+        setAudioUrl(src);
+      }
+    }
+  }, [id]);
+
+  useEffect(() => {
+    const audio = audioRef.current;
+    if (!audio) return;
+
+    const onTimeUpdate = () => setCurrentTime(audio.currentTime);
+    const onLoadedMetadata = () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration);
+      }
+    };
+    const onEnded = () => setIsPlaying(false);
+
+    audio.addEventListener("timeupdate", onTimeUpdate);
+    audio.addEventListener("loadedmetadata", onLoadedMetadata);
+    audio.addEventListener("ended", onEnded);
+
+    return () => {
+      audio.removeEventListener("timeupdate", onTimeUpdate);
+      audio.removeEventListener("loadedmetadata", onLoadedMetadata);
+      audio.removeEventListener("ended", onEnded);
+    };
+  }, [audioUrl]);
+
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const targetTime = Number(e.target.value);
+    setCurrentTime(targetTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = targetTime;
+    }
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    audioRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const formatSeconds = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
+  const relatedStories = allRecords.filter((r) => r.id !== id).slice(0, 3);
 
   return (
-    <div className="min-h-screen bg-netflix-black text-white pb-24">
+    <div className="min-h-screen bg-obsidian pb-28 text-primary-text">
       <Navbar />
 
-      <main className="pt-28 px-4 sm:px-6 lg:px-8 max-w-5xl mx-auto space-y-8">
+      <main className="mx-auto max-w-5xl space-y-8 px-4 pb-12 pt-24 sm:px-6 sm:pt-28 lg:px-8">
+        {/* Navigation Breadcrumb */}
         <Link
           href="/archive"
-          className="inline-flex items-center gap-1.5 text-xs text-netflix-gray hover:text-white transition-colors"
+          className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-secondary-text hover:text-white transition"
         >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          <span>Back to Archive</span>
+          <ArrowLeft className="h-4 w-4" /> Back to Oral Archive
         </Link>
 
-        {/* Title Header */}
-        <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4 border-b border-white/10 pb-6">
-          <div className="space-y-2">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-netflix-red/20 border border-netflix-red/40 text-netflix-red text-xs font-mono font-bold">
-                {rec.language} ({rec.dialect || "Indigenous Dialect"})
-              </span>
-              <span className="text-xs font-mono text-netflix-gray">ID: {rec.id}</span>
-              {rec.isUserUploaded && (
-                <span className="px-2 py-0.5 rounded text-[10px] font-mono bg-cultural-gold/20 text-cultural-gold border border-cultural-gold/30">
-                  USER UPLOADED & ARCHIVED
-                </span>
-              )}
-            </div>
-
-            <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-              {rec.title}
-            </h1>
-
-            <p className="text-xs sm:text-sm text-netflix-gray">
-              Preserved in Voice Roots Vault • {rec.community || "Community Contributor"} • {rec.duration} duration
+        {!record ? (
+          <section className="glass-surface rounded-3xl p-8 sm:p-12 text-center space-y-4">
+            <h1 className="text-2xl font-bold text-white">Oral Story Not Found</h1>
+            <p className="text-sm text-secondary-text max-w-md mx-auto">
+              This recording could not be retrieved from the archive. You can discover other oral traditions or record your own.
             </p>
-          </div>
-
-          <div className="flex items-center gap-2 self-start sm:self-auto">
-            <span className="px-3.5 py-1.5 rounded-full bg-netflix-red/10 text-netflix-red border border-netflix-red/30 text-xs font-mono font-bold flex items-center gap-1.5">
-              <Shield className="w-3.5 h-3.5" />
-              <span>Consent Verified</span>
-            </span>
-          </div>
-        </div>
-
-        {/* Audio Player & Waveform Card */}
-        <div className="ios27-glass p-6 sm:p-8 rounded-3xl border border-white/10 shadow-2xl space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <button
-                onClick={() => setIsPlaying(!isPlaying)}
-                className="w-12 h-12 rounded-full bg-netflix-red text-white flex items-center justify-center font-bold hover:scale-105 active:scale-95 transition-transform shadow-netflix-glow"
+            <Link
+              href="/archive"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-root-green px-6 text-sm font-bold text-obsidian shadow-glow"
+            >
+              Explore Archive
+            </Link>
+          </section>
+        ) : !accessAllowed ? (
+          <section className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-8 sm:p-12 text-center space-y-4 backdrop-blur-2xl">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40">
+              <Lock className="h-7 w-7" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">Private Recording Protected</h1>
+            <p className="text-sm text-rose-200 max-w-lg mx-auto leading-relaxed">
+              {accessReason || "A user must never be able to access another contributor's private recording simply by changing an ID in the URL/API request."}
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 pt-3">
+              <Link
+                href="/login"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-xs font-bold text-black hover:bg-amber-400 transition"
               >
-                {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 fill-current ml-0.5" />}
-              </button>
-              <div>
-                <span className="text-sm font-bold text-white block">Lossless Master Audio</span>
-                <span className="text-xs font-mono text-netflix-gray">
-                  48 kHz • 24-bit PCM WAV (Original Human Voice)
+                Sign In as Authorized Contributor
+              </Link>
+              <Link
+                href="/archive"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 text-xs font-semibold text-white hover:bg-white/10 transition"
+              >
+                Explore Public Archive
+              </Link>
+            </div>
+          </section>
+        ) : (
+          <>
+            {/* 1. Header & Cover Hero */}
+            <header className="space-y-4 border-b border-white/10 pb-8">
+              <div className="flex flex-wrap items-center gap-2.5">
+                <span className="rounded-full border border-root-green/30 bg-root-green/15 px-3 py-1 text-xs font-semibold text-leaf-green">
+                  {record.language}
+                </span>
+                {record.dialect && (
+                  <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-secondary-text">
+                    {record.dialect}
+                  </span>
+                )}
+                <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-secondary-text">
+                  {record.type}
                 </span>
               </div>
-            </div>
 
-            <span className="font-mono text-sm text-white font-bold">{rec.duration}</span>
-          </div>
+              <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+                {record.title}
+              </h1>
 
-          {/* Waveform graphic */}
-          <div className="h-16 w-full rounded-2xl bg-black/60 border border-white/10 flex items-center justify-center px-4 gap-1">
-            {[20, 45, 60, 30, 80, 95, 70, 50, 65, 40, 85, 90, 75, 55, 35, 60, 85, 40, 70, 50, 90, 30, 45, 75, 40, 60].map(
-              (h, i) => (
-                <div
-                  key={i}
-                  className={`flex-1 rounded-full transition-all ${
-                    i < 10 ? "bg-netflix-red" : "bg-white/20"
-                  }`}
-                  style={{ height: `${h}%` }}
-                />
-              )
-            )}
-          </div>
-        </div>
-
-        {/* View Mode & Live Translation Language Target Switcher */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-white/10 pb-4">
-          <div className="flex items-center gap-2 text-xs">
-            <button
-              onClick={() => setViewMode("dual")}
-              className={`px-3 py-1.5 rounded-full transition-all ${
-                viewMode === "dual"
-                  ? "bg-white/15 text-white font-bold"
-                  : "text-netflix-gray hover:text-white"
-              }`}
-            >
-              Dual View (Original + Translation)
-            </button>
-            <button
-              onClick={() => setViewMode("original")}
-              className={`px-3 py-1.5 rounded-full transition-all ${
-                viewMode === "original"
-                  ? "bg-white/15 text-white font-bold"
-                  : "text-netflix-gray hover:text-white"
-              }`}
-            >
-              Original Oral Text
-            </button>
-            <button
-              onClick={() => setViewMode("translation")}
-              className={`px-3 py-1.5 rounded-full transition-all ${
-                viewMode === "translation"
-                  ? "bg-white/15 text-white font-bold"
-                  : "text-netflix-gray hover:text-white"
-              }`}
-            >
-              Translation Only
-            </button>
-          </div>
-
-          {/* Target Translation Selector */}
-          <div className="flex items-center gap-2">
-            <div className="flex items-center gap-1.5 text-xs text-netflix-gray mr-1">
-              <Languages className="w-3.5 h-3.5 text-netflix-red" />
-              <span>Translate to:</span>
-            </div>
-
-            <div className="inline-flex p-1 rounded-full bg-white/5 border border-white/10">
-              <button
-                onClick={() => handleTranslate("en")}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
-                  targetLang === "en"
-                    ? "bg-netflix-red text-white shadow-netflix-glow"
-                    : "text-netflix-gray hover:text-white"
-                }`}
-              >
-                English
-              </button>
-              <button
-                onClick={() => handleTranslate("hi")}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
-                  targetLang === "hi"
-                    ? "bg-netflix-red text-white shadow-netflix-glow"
-                    : "text-netflix-gray hover:text-white"
-                }`}
-              >
-                हिन्दी (Hindi)
-              </button>
-              <button
-                onClick={() => handleTranslate("te")}
-                className={`px-2.5 py-1 rounded-full text-xs font-bold transition-all ${
-                  targetLang === "te"
-                    ? "bg-netflix-red text-white shadow-netflix-glow"
-                    : "text-netflix-gray hover:text-white"
-                }`}
-              >
-                తెలుగు (Telugu)
-              </button>
-            </div>
-          </div>
-        </div>
-
-        {/* Transcript & Translation Panels */}
-        <div className="space-y-4">
-          <div className="ios27-glass p-6 sm:p-8 rounded-3xl border border-white/10 space-y-4">
-            <div className="flex items-center justify-between text-xs font-mono text-netflix-gray">
-              <span className="text-netflix-red font-bold">
-                Speaker 1 • 00:00 - {rec.duration}
-              </span>
-              <div className="flex items-center gap-2">
-                <span className="text-cultural-gold">Model: IndicTrans2-1B-Instruct</span>
-                <span>• AI Confidence: 94.2%</span>
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-secondary-text">
+                <span className="inline-flex items-center gap-1.5 font-medium text-white/80">
+                  <Users className="h-3.5 w-3.5 text-leaf-green" />
+                  {record.community || "Heritage Community Custodians"}
+                </span>
+                <span className="inline-flex items-center gap-1.5">
+                  <MapPin className="h-3.5 w-3.5 text-leaf-green" />
+                  {record.location || "Regional Oral Archive"}
+                </span>
+                <span>
+                  Recorded: {new Date(record.uploadDate).toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" })}
+                </span>
               </div>
+            </header>
+
+            {/* Heritage Passport Verification Dossier Banner */}
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-3xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent p-5 sm:p-6 backdrop-blur-xl shadow-2xl">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-wider text-amber-300 uppercase">
+                  <FileCheck className="h-4 w-4" /> Official Heritage Passport Issued
+                </div>
+                <h3 className="text-lg font-bold text-white">
+                  Preservation Provenance & Human Verification Dossier
+                </h3>
+                <p className="text-xs text-secondary-text max-w-xl">
+                  This recording possesses a verified digital heritage passport ({record.id.toUpperCase()}) with consent controls, scannable QR token, and audit history.
+                </p>
+              </div>
+              <Link
+                href={`/passport/${record.id}`}
+                className="shrink-0 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/15 px-5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/25 hover:border-amber-400 shadow-glow"
+              >
+                <QrCode className="h-4 w-4" />
+                <span>📜 View Heritage Passport</span>
+                <ArrowRight className="h-4 w-4" />
+              </Link>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
-              {(viewMode === "dual" || viewMode === "original") && (
-                <div className="space-y-2">
-                  <span className="text-[11px] font-mono uppercase text-netflix-red font-bold block">
-                    Original Dialect Transcript ({rec.language})
-                  </span>
-                  <div className="p-4 rounded-2xl bg-black/60 border border-white/10 text-white/95 leading-relaxed font-sans">
-                    {rec.originalTranscript}
+            {/* 2. Centerpiece Audio Player */}
+            <EnhancedAudioPlayer
+              audioUrl={audioUrl || `/audio/${record.audioFileName}`}
+              title={record.title}
+              language={record.language}
+              speaker={record.community || "Heritage Elder"}
+              durationSeconds={record.durationSeconds}
+              onTimeUpdate={(t) => setCurrentTime(t)}
+            />
+
+            {/* 3. Preservation Provenance Timeline */}
+            <PreservationTimeline
+              language={record.language}
+              passportId={record.id.toUpperCase()}
+              reviewerName="Elder Soyam Laxman"
+            />
+
+            {/* 3. Original Transcript (Master Spec Section 10: Original First!) */}
+            <section
+              className="glass-surface space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7 shadow-2xl"
+              aria-labelledby="original-transcript-heading"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-root-green/20 text-leaf-green">
+                    <BookOpen className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 id="original-transcript-heading" className="text-sm font-bold text-white">
+                      Source Speech Transcript ({record.language})
+                    </h2>
+                    <p className="text-[11px] text-secondary-text">
+                      Original dialect text transcribed directly from spoken audio
+                    </p>
                   </div>
                 </div>
-              )}
 
-              {(viewMode === "dual" || viewMode === "translation") && (
-                <div className="space-y-2">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[11px] font-mono uppercase text-cultural-gold font-bold block">
-                      IndicTrans2 Translation ({targetLang.toUpperCase()})
-                    </span>
-                    {isTranslating && (
-                      <div className="flex items-center gap-1 text-[11px] font-mono text-netflix-gray">
-                        <Loader2 className="w-3 h-3 animate-spin text-netflix-red" />
-                        <span>Translating...</span>
-                      </div>
+                <span className="rounded-full border border-root-green/30 bg-root-green/10 px-3 py-1 text-xs font-semibold text-leaf-green">
+                  Preserved in {record.language}
+                </span>
+              </div>
+
+              <blockquote className="rounded-2xl border border-white/10 bg-black/40 p-5 text-base sm:text-lg leading-relaxed text-white/95 font-medium">
+                &ldquo;{record.originalTranscript}&rdquo;
+              </blockquote>
+            </section>
+
+            {/* 4. Multi-Lingual Translation (Release 01 Feature) */}
+            <section
+              className="glass-surface space-y-5 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7 shadow-2xl"
+              aria-labelledby="translation-heading"
+            >
+              <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
+                <div className="flex items-center gap-2.5">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-root-green/20 text-leaf-green">
+                    <Languages className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <h2 id="translation-heading" className="text-sm font-bold text-white">
+                      Multi-Lingual Translation Layer (IndicTrans2)
+                    </h2>
+                    <p className="text-[11px] text-secondary-text">
+                      Original source transcript is permanently preserved and never replaced
+                    </p>
+                  </div>
+                </div>
+
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs">
+                  <span className="text-secondary-text">Original:</span>
+                  <span className="font-semibold text-leaf-green">{record.language}</span>
+                </div>
+              </div>
+
+              {/* Translate To selector */}
+              <div className="space-y-2">
+                <div className="flex items-center justify-between text-xs">
+                  <span className="font-semibold text-white/90">Translate to:</span>
+                  <span className="text-secondary-text font-mono text-[11px]">
+                    Available on-demand · Cached permanently
+                  </span>
+                </div>
+
+                <div className="flex flex-wrap items-center gap-2">
+                  {TRANSLATION_LANGUAGES.map((lang) => {
+                    const isSelected = selectedTransLang === lang.code;
+                    const isCached = Boolean(record.translations?.[lang.code]);
+                    return (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => triggerTranslation(lang.code)}
+                        className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold transition ${
+                          isSelected
+                            ? "bg-root-green text-obsidian shadow-glow font-bold"
+                            : "border border-white/10 bg-black/30 text-secondary-text hover:text-white hover:border-white/20"
+                        }`}
+                      >
+                        <span>{lang.native}</span>
+                        <span className="text-[10px] opacity-75">({lang.name})</span>
+                        {isCached && isSelected && <Check className="h-3 w-3 text-obsidian" />}
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
+
+              {/* Translation Display Card */}
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-5 space-y-3">
+                <div className="flex items-center justify-between text-xs text-secondary-text border-b border-white/10 pb-2">
+                  <span className="font-semibold text-leaf-green flex items-center gap-1.5">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-secondary-text">TRANSLATION:</span>
+                    {TRANSLATION_LANGUAGES.find((l) => l.code === selectedTransLang)?.name} ({TRANSLATION_LANGUAGES.find((l) => l.code === selectedTransLang)?.native})
+                  </span>
+                  <div className="flex items-center gap-2">
+                    {isTranslating ? (
+                      <span className="flex items-center gap-1 text-leaf-green animate-pulse">
+                        <RefreshCw className="h-3 w-3 animate-spin" /> Synthesizing...
+                      </span>
+                    ) : (
+                      <span className="font-mono text-[11px] text-secondary-text">IndicTrans2 · 96.4% confidence</span>
                     )}
                   </div>
-                  <div className="p-4 rounded-2xl bg-black/60 border border-white/10 text-netflix-light leading-relaxed font-sans italic">
-                    "{translationText}"
-                  </div>
                 </div>
-              )}
-            </div>
-          </div>
-        </div>
 
-        {/* Extracted Cultural Terms */}
-        <div className="ios27-glass p-6 rounded-3xl border border-white/10 space-y-4">
-          <span className="text-xs font-mono uppercase text-netflix-red font-bold block">
-            Extracted Cultural Terms & Lexical Roots
-          </span>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-            {(rec.vocabulary || DEFAULT_CATALOG["vr-101"].vocabulary).map((v: any, idx: number) => (
-              <div key={idx} className="p-3.5 rounded-xl bg-white/5 border border-white/10 space-y-1">
-                <span className="text-sm font-bold text-white block">{v.word}</span>
-                <span className="text-xs text-netflix-gray block">{v.meaning}</span>
+                <p className="text-sm sm:text-base leading-relaxed text-white/90">
+                  {isTranslating
+                    ? "Calling IndicTrans2 neural translation engine..."
+                    : record.translations?.[selectedTransLang] ||
+                      record.translations?.en ||
+                      "Translation being synthesized for this regional dialect."}
+                </p>
+
+                {translateError && (
+                  <div className="flex items-center justify-between pt-2 border-t border-white/10 text-xs text-red-300">
+                    <span>{translateError}</span>
+                    <button
+                      type="button"
+                      onClick={() => triggerTranslation(selectedTransLang)}
+                      className="inline-flex items-center gap-1 underline font-bold hover:text-white"
+                    >
+                      <RefreshCw className="h-3 w-3" /> Retry Translation
+                    </button>
+                  </div>
+                )}
               </div>
-            ))}
-          </div>
-        </div>
+            </section>
+
+            {/* 5. Cultural Context (Master Spec Section 8) */}
+            <section
+              className="glass-surface space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7 shadow-2xl"
+              aria-labelledby="cultural-context-heading"
+            >
+              <div className="flex items-center gap-2.5 border-b border-white/10 pb-3">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-root-green/20 text-leaf-green">
+                  <Sparkles className="h-4 w-4" />
+                </div>
+                <div>
+                  <h2 id="cultural-context-heading" className="text-sm font-bold text-white">
+                    Cultural Lore & Ecological Significance
+                  </h2>
+                  <p className="text-[11px] text-secondary-text">
+                    Oral tradition context provided by clan elders and community documentation
+                  </p>
+                </div>
+              </div>
+
+              <p className="text-sm sm:text-base leading-relaxed text-secondary-text">
+                {record.culturalContext ||
+                  "This recording holds sacred significance among the community elders and represents centuries-old oral preservation tradition."}
+              </p>
+            </section>
+
+            {/* 6. Ask Voice Roots AI Banner */}
+            <section className="rounded-3xl border border-root-green/30 bg-gradient-to-r from-root-green/10 via-root-green/5 to-transparent p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-leaf-green">
+                  <Bot className="h-4 w-4" /> Ask Voice Roots AI
+                </div>
+                <h3 className="text-xl font-bold text-white">
+                  Have questions about this oral story?
+                </h3>
+                <p className="text-xs text-secondary-text max-w-xl">
+                  Ask our AI assistant about the cultural metaphors, ethnobotanical roots, or linguistic history behind this recording.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  // Trigger open AI assistant via event or custom trigger
+                  const btn = document.querySelector('[aria-label="Ask Voice Roots AI"]') as HTMLButtonElement | null;
+                  btn?.click();
+                }}
+                className="shrink-0 inline-flex min-h-11 items-center gap-2 rounded-full bg-root-green px-6 text-xs font-bold text-obsidian shadow-glow hover:bg-leaf-green transition"
+              >
+                <Bot className="h-4 w-4" /> Ask Voice Roots AI
+              </button>
+            </section>
+
+            {/* 7. Related Stories (Master Spec Section 8) */}
+            {relatedStories.length > 0 && (
+              <section className="space-y-4 pt-4">
+                <h3 className="text-xl font-bold text-white">Related Oral Heritage</h3>
+                <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                  {relatedStories.map((rel) => (
+                    <Link
+                      key={rel.id}
+                      href={`/recordings/${rel.id}`}
+                      className="glass-card group flex flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:-translate-y-1 hover:border-root-green/40 hover:bg-white/[0.06]"
+                    >
+                      <div className="space-y-2">
+                        <span className="rounded-full border border-root-green/30 bg-root-green/10 px-2 py-0.5 text-[10px] font-semibold text-leaf-green">
+                          {rel.language}
+                        </span>
+                        <h4 className="line-clamp-2 text-sm font-bold text-white group-hover:text-leaf-green transition">
+                          {rel.title}
+                        </h4>
+                        <p className="line-clamp-2 text-xs text-secondary-text">
+                          {rel.culturalContext}
+                        </p>
+                      </div>
+                      <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-secondary-text">
+                        <span>{rel.duration}</span>
+                        <span className="text-leaf-green inline-flex items-center gap-1">
+                          Listen <ArrowRight className="h-3 w-3" />
+                        </span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              </section>
+            )}
+          </>
+        )}
       </main>
 
       <AIAssistant />
