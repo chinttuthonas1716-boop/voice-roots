@@ -13,7 +13,12 @@ import {
   FileAudio, 
   RefreshCw, 
   Info,
-  ShieldCheck
+  ShieldCheck,
+  Cpu,
+  RotateCcw,
+  Sparkles,
+  Loader2,
+  ExternalLink
 } from 'lucide-react';
 
 interface Language {
@@ -32,7 +37,20 @@ interface Transcript {
   language: string;
   dialect: string | null;
   transcript_text: string;
+  machine_transcript_text?: string | null;
+  transcription_status?: 'not_requested' | 'queued' | 'processing' | 'completed' | 'not_configured' | 'failed' | string;
+  transcription_error?: string | null;
+  transcription_provider?: string | null;
+  transcription_model?: string | null;
+  transcription_consent_at?: string | null;
+  transcribed_at?: string | null;
+  transcription_consent_version?: string | null;
   status: string;
+  duration_seconds?: number;
+  audio_sha256?: string;
+  file_size_bytes?: number;
+  consent_at?: string | null;
+  consent_version?: string | null;
   created_at: string;
   updated_at: string;
 }
@@ -43,6 +61,7 @@ interface ApiHealth {
   version: string;
   database: string;
   database_status: string;
+  storage_path?: string;
 }
 
 const DEFAULT_LANGUAGES: Language[] = [
@@ -51,7 +70,7 @@ const DEFAULT_LANGUAGES: Language[] = [
   { code: 'sat', name: 'Santhali', native: 'ᱥᱟᱱᱛᱟᱲᱤ', category: 'Scheduled' },
   { code: 'lam', name: 'Lambadi', native: 'లంబాడీ', category: 'Indigenous / Tribal' },
   { code: 'te', name: 'Telugu', native: 'తెలుగు', category: 'Scheduled' },
-  { code: 'hi', name: 'Hindi', native: 'హిन्दी', category: 'Scheduled' },
+  { code: 'hi', name: 'Hindi', native: 'हिन्दी', category: 'Scheduled' },
   { code: 'ta', name: 'Tamil', native: 'தமிழ்', category: 'Scheduled' },
   { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ', category: 'Scheduled' },
   { code: 'ml', name: 'Malayalam', native: 'മലയാളം', category: 'Scheduled' },
@@ -72,6 +91,7 @@ export function App() {
   const [selectedLanguage, setSelectedLanguage] = useState('Gondi');
   const [dialect, setDialect] = useState('');
   const [hasConsent, setHasConsent] = useState(false);
+  const [wantsTranscriptionConsent, setWantsTranscriptionConsent] = useState(true);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   // Audio Recording State
@@ -92,10 +112,12 @@ export function App() {
   const [submitSuccess, setSubmitSuccess] = useState<string | null>(null);
   const [submitError, setSubmitError] = useState<string | null>(null);
 
-  // Active / Latest Result State
+  // Active / Workspace Result State
   const [activeResult, setActiveResult] = useState<Transcript | null>(null);
   const [activeResultText, setActiveResultText] = useState('');
   const [isSavingEdit, setIsSavingEdit] = useState(false);
+  const [transcribingId, setTranscribingId] = useState<number | null>(null);
+  const [transcribeActionError, setTranscribeActionError] = useState<string | null>(null);
 
   // Transcripts Archive List
   const [transcripts, setTranscripts] = useState<Transcript[]>([]);
@@ -112,7 +134,6 @@ export function App() {
       setHealth(data);
       setHealthError(null);
     } catch {
-      // Fallback direct localhost check if proxy is not yet ready
       try {
         const direct = await fetch('http://127.0.0.1:8000/health');
         if (!direct.ok) throw new Error(`HTTP ${direct.status}`);
@@ -131,13 +152,17 @@ export function App() {
     setIsLoadingArchive(true);
     try {
       const res = await fetch('/api/transcripts');
-      const data = await res.json();
-      setTranscripts(data.transcripts || []);
+      if (res.ok) {
+        const data = await res.json();
+        setTranscripts(data.transcripts || []);
+      }
     } catch {
       try {
         const direct = await fetch('http://127.0.0.1:8000/api/transcripts');
-        const data = await direct.json();
-        setTranscripts(data.transcripts || []);
+        if (direct.ok) {
+          const data = await direct.json();
+          setTranscripts(data.transcripts || []);
+        }
       } catch {
         // Ignored in offline preview mode
       }
@@ -145,6 +170,63 @@ export function App() {
       setIsLoadingArchive(false);
     }
   };
+
+  // Poll single transcript status until completion or failure
+  const pollTranscript = async (id: number) => {
+    try {
+      const res = await fetch(`/api/transcripts/${id}`);
+      if (!res.ok) return;
+      const updated: Transcript = await res.json();
+
+      // Update active result if it matches
+      setActiveResult((current) => {
+        if (current && current.id === id) {
+          // If machine transcript completed and user hasn't edited yet, sync editable text
+          if (
+            updated.transcription_status === 'completed' &&
+            (!current.transcript_text || current.status !== 'Community Edited')
+          ) {
+            setActiveResultText(updated.transcript_text || updated.machine_transcript_text || '');
+          }
+          return updated;
+        }
+        return current;
+      });
+
+      // Update archive list
+      setTranscripts((prev) => prev.map((t) => (t.id === id ? { ...t, ...updated } : t)));
+    } catch {
+      // Ignore transient polling fetch error
+    }
+  };
+
+  // Polling loop for any active transcription jobs in 'queued' or 'processing'
+  useEffect(() => {
+    const activeIsPending =
+      activeResult &&
+      (activeResult.transcription_status === 'queued' || activeResult.transcription_status === 'processing');
+
+    const hasPendingInList = transcripts.some(
+      (t) => t.transcription_status === 'queued' || t.transcription_status === 'processing'
+    );
+
+    if (!activeIsPending && !hasPendingInList) return;
+
+    const interval = setInterval(() => {
+      if (activeResult && (activeResult.transcription_status === 'queued' || activeResult.transcription_status === 'processing')) {
+        pollTranscript(activeResult.id);
+      }
+      transcripts
+        .filter((t) => t.transcription_status === 'queued' || t.transcription_status === 'processing')
+        .forEach((t) => {
+          if (t.id !== activeResult?.id) {
+            pollTranscript(t.id);
+          }
+        });
+    }, 2000);
+
+    return () => clearInterval(interval);
+  }, [activeResult?.id, activeResult?.transcription_status, transcripts]);
 
   useEffect(() => {
     checkHealth();
@@ -209,6 +291,7 @@ export function App() {
     e.preventDefault();
     setSubmitError(null);
     setSubmitSuccess(null);
+    setTranscribeActionError(null);
 
     const audioToUpload = mode === 'record' ? recordedBlob : selectedFile;
     if (!audioToUpload) {
@@ -236,12 +319,17 @@ export function App() {
     formData.append('language', selectedLanguage);
     formData.append('dialect', dialect.trim());
 
-    // Submit explicit affirmative consent fields (string and boolean compatible)
+    // Submit affirmative archive consent fields (string and boolean compatible)
     formData.append('consent', 'true');
     formData.append('consent_given', 'true');
     formData.append('consentSpeaker', 'true');
 
-    const endpoint = health ? '/api/upload' : 'http://127.0.0.1:8000/api/upload';
+    // Separate opt-in consent for automated AI speech transcription
+    if (wantsTranscriptionConsent) {
+      formData.append('transcription_consent', 'true');
+    }
+
+    const endpoint = '/api/upload';
     const xhr = new XMLHttpRequest();
 
     xhr.upload.onprogress = (event) => {
@@ -257,12 +345,15 @@ export function App() {
 
       if (xhr.status >= 200 && xhr.status < 300) {
         try {
-          const data = JSON.parse(xhr.responseText);
-          setSubmitSuccess('Oral audio master saved safely to SQLite and storage with affirmative speaker consent verified!');
+          const data: Transcript = JSON.parse(xhr.responseText);
+          const noticeMsg = data.transcription_status === 'queued'
+            ? 'Oral audio master preserved safely! AI transcription queued in background.'
+            : 'Oral audio master preserved safely in immutable storage (AI transcription not requested).';
+          setSubmitSuccess(noticeMsg);
           setActiveResult(data);
-          setActiveResultText(data.transcript_text);
+          setActiveResultText(data.transcript_text || '');
           
-          // Clear inputs and reset consent
+          // Clear inputs and reset recording state
           setTitle('');
           setDialect('');
           setHasConsent(false);
@@ -302,7 +393,65 @@ export function App() {
     xhr.send(formData);
   };
 
-  // Update Transcript Text
+  // Trigger On-Demand AI Transcription via POST /api/transcripts/{id}/transcribe
+  const handleTriggerTranscription = async (id: number) => {
+    setTranscribingId(id);
+    setTranscribeActionError(null);
+    try {
+      const res = await fetch(`/api/transcripts/${id}/transcribe`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ transcription_consent: true }),
+      });
+
+      if (!res.ok) {
+        let errorText = `HTTP ${res.status}`;
+        try {
+          const errJson = await res.json();
+          if (errJson.detail) errorText = typeof errJson.detail === 'string' ? errJson.detail : JSON.stringify(errJson.detail);
+          else if (errJson.error) errorText = errJson.error;
+        } catch {
+          // fallback
+        }
+        throw new Error(errorText);
+      }
+
+      const data = await res.json();
+
+      // Update activeResult if active
+      if (activeResult?.id === id) {
+        setActiveResult((prev) => prev ? {
+          ...prev,
+          transcription_status: data.transcription_status || 'queued',
+          transcription_error: null,
+        } : null);
+      }
+
+      // Update in transcripts archive list
+      setTranscripts((prev) =>
+        prev.map((t) => (t.id === id ? { ...t, transcription_status: data.transcription_status || 'queued', transcription_error: null } : t))
+      );
+
+      // Trigger immediate poll
+      pollTranscript(id);
+    } catch (err: any) {
+      const msg = err.message || 'Failed to trigger transcription.';
+      setTranscribeActionError(msg);
+      if (activeResult?.id === id) {
+        setActiveResult((prev) => prev ? {
+          ...prev,
+          transcription_status: 'failed',
+          transcription_error: msg,
+        } : null);
+      }
+    } finally {
+      setTranscribingId(null);
+    }
+  };
+
+  // Update Transcript Text (Community Corrections) via PUT /api/transcripts/{id}
   const handleSaveActiveEdit = async () => {
     if (!activeResult) return;
     setIsSavingEdit(true);
@@ -313,7 +462,7 @@ export function App() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ transcript_text: activeResultText }),
       });
-      if (!res.ok) throw new Error('Update failed');
+      if (!res.ok) throw new Error(`HTTP ${res.status}`);
       setActiveResult({ ...activeResult, transcript_text: activeResultText, status: 'Community Edited' });
       fetchTranscripts();
     } catch (err: any) {
@@ -352,6 +501,14 @@ export function App() {
     } catch (err: any) {
       alert('Update failed: ' + err.message);
     }
+  };
+
+  // Select transcript for detailed workspace inspection
+  const handleSelectActiveTranscript = (t: Transcript) => {
+    setActiveResult(t);
+    setActiveResultText(t.transcript_text || '');
+    setTranscribeActionError(null);
+    window.scrollTo({ top: 320, behavior: 'smooth' });
   };
 
   const formatSeconds = (sec: number) => {
@@ -414,23 +571,24 @@ export function App() {
         </div>
       </header>
 
-      {/* ─── Mission & Phase 1 Scope Card ─── */}
+      {/* ─── Mission & Protocol Notice Card ─── */}
       <div className="glass-card" style={{ marginBottom: '28px', borderLeft: '4px solid #F59E0B' }}>
         <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
           <Info size={22} color="#F59E0B" style={{ flexShrink: 0, marginTop: '2px' }} />
           <div>
             <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>
-              Phase 1 Milestone Foundation
+              Ethical Language Preservation & Speech AI
             </h2>
             <p style={{ fontSize: '14px', color: '#94A3B8', lineHeight: '1.6' }}>
-              Voice Roots preserves unwritten, tribal, and regional oral tongues. The speaker's audio recording 
-              is preserved permanently as the immutable master. In this initial milestone, live audio capture, 
-              local file upload, language tagging, and SQLite transcript persistence are fully operational.
+              Voice Roots roots unwritten oral, tribal, and regional tongues into searchable text.
+              Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker's audio recording is preserved permanently as the immutable master. 
+              Automated AI transcription is processed with explicit consent and stored as an annotation layer that never overwrites the master voice.
             </p>
             <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
               <span className="badge badge-teal">Immutable Audio Master</span>
-              <span className="badge badge-amber">SQLite Persistence Active</span>
-              <span className="badge badge-teal">Phase 4: Real Speech Engine Pending</span>
+              <span className="badge badge-amber">Consent-Gated AI Engine</span>
+              <span className="badge badge-green">SQLite Storage Active</span>
+              <span className="badge badge-teal">Dual Annotation Separation</span>
             </div>
           </div>
         </div>
@@ -595,7 +753,7 @@ export function App() {
               }}>
                 <Upload size={32} color="#F59E0B" style={{ margin: '0 auto 12px' }} />
                 <p style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '12px' }}>
-                  Select a master audio file (.wav, .mp3, .m4a, .ogg)
+                  Select a master audio file (.wav, .mp3, .m4a, .ogg, .flac)
                 </p>
                 <input
                   type="file"
@@ -662,7 +820,49 @@ export function App() {
                   </strong>
                 </div>
                 <span style={{ color: '#94A3B8' }}>
-                  I confirm that this recording is made with the voluntary, informed consent of the speaker and community custodian under Indigenous Data Sovereignty (OCAP) protocols. The audio master will be stored permanently in immutable storage, and AI processing is strictly limited to phonetic transcription and language preservation.
+                  I confirm that this recording is made with voluntary, informed consent under Indigenous Data Sovereignty (OCAP). The audio master will be stored permanently in immutable storage.
+                </span>
+              </label>
+            </div>
+
+            {/* AI Speech Transcription Consent (Distinct Opt-in) */}
+            <div 
+              style={{ 
+                background: wantsTranscriptionConsent ? 'rgba(20, 184, 166, 0.08)' : 'rgba(255, 255, 255, 0.03)', 
+                border: wantsTranscriptionConsent ? '1px solid rgba(20, 184, 166, 0.35)' : '1px solid var(--card-border)', 
+                borderRadius: '12px', 
+                padding: '14px', 
+                display: 'flex', 
+                gap: '12px', 
+                alignItems: 'flex-start',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <input
+                type="checkbox"
+                id="transcription-consent-checkbox"
+                checked={wantsTranscriptionConsent}
+                onChange={(e) => setWantsTranscriptionConsent(e.target.checked)}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  marginTop: '2px',
+                  accentColor: '#14B8A6',
+                  cursor: 'pointer'
+                }}
+              />
+              <label 
+                htmlFor="transcription-consent-checkbox" 
+                style={{ fontSize: '13px', lineHeight: '1.5', color: '#F8FAFC', cursor: 'pointer', flex: 1 }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
+                  <Sparkles size={16} color="#14B8A6" />
+                  <strong style={{ color: '#5EEAD4' }}>
+                    Queue AI Speech Transcription (Opt-in Consent)
+                  </strong>
+                </div>
+                <span style={{ color: '#94A3B8', fontSize: '12px' }}>
+                  Request automated phonetic speech-to-text recognition upon upload. AI hypotheses are stored as an annotation layer without modifying the original audio.
                 </span>
               </label>
             </div>
@@ -714,61 +914,297 @@ export function App() {
           </form>
         </section>
 
-        {/* ─── Right Column: Active Transcription Inspection ─── */}
+        {/* ─── Right Column: Active Transcription Workspace ─── */}
         <section className="glass-card">
-          <h3 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Languages size={20} color="#F59E0B" />
-            <span>Transcription Workspace</span>
-          </h3>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Languages size={20} color="#F59E0B" />
+              <span>Transcription Workspace</span>
+            </h3>
+
+            {activeResult && (
+              <span className="badge badge-amber">{activeResult.status}</span>
+            )}
+          </div>
 
           {activeResult ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '6px' }}>
-                  <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC' }}>
-                    {activeResult.title}
-                  </h4>
-                  <span className="badge badge-amber">{activeResult.status}</span>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC', marginBottom: '4px' }}>
+                  {activeResult.title}
+                </h4>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', color: '#94A3B8' }}>
+                  <span>Language: <strong style={{ color: '#F8FAFC' }}>{activeResult.language}</strong></span>
+                  {activeResult.dialect && <span>• Dialect: <strong style={{ color: '#F8FAFC' }}>{activeResult.dialect}</strong></span>}
+                  {activeResult.audio_sha256 && (
+                    <span title={`SHA-256: ${activeResult.audio_sha256}`}>
+                      • SHA-256: <code style={{ color: '#F59E0B' }}>{activeResult.audio_sha256.substring(0, 8)}…</code>
+                    </span>
+                  )}
+                  {activeResult.file_size_bytes && (
+                    <span>• ({(activeResult.file_size_bytes / 1024).toFixed(1)} KB)</span>
+                  )}
                 </div>
-                <p style={{ fontSize: '13px', color: '#94A3B8' }}>
-                  Language: <strong style={{ color: '#F8FAFC' }}>{activeResult.language}</strong> 
-                  {activeResult.dialect && ` • Dialect: ${activeResult.dialect}`}
-                </p>
               </div>
 
               {/* Master Audio Stream */}
               <div style={{ background: 'rgba(0,0,0,0.4)', borderRadius: '12px', padding: '12px' }}>
-                <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '6px' }}>Master Audio Playback:</p>
+                <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '6px' }}>
+                  Master Audio Playback (Lossless Immutable Master):
+                </p>
                 <audio controls src={activeResult.audio_url} style={{ width: '100%', height: '36px' }} />
               </div>
 
-              {/* Honest Notice Badge */}
-              <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(20, 184, 166, 0.1)', border: '1px solid rgba(20, 184, 166, 0.25)', fontSize: '13px', color: '#5EEAD4' }}>
-                <strong>Speech Engine Status:</strong> Real AI acoustic recognition model will be connected in Phase 4. You can edit community transcripts below.
+              {/* ─── AI Speech Recognition Status Card ─── */}
+              <div style={{ 
+                background: 'rgba(255,255,255,0.03)', 
+                border: '1px solid var(--card-border)', 
+                borderRadius: '12px', 
+                padding: '14px',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: '10px'
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Cpu size={16} color="#14B8A6" />
+                    <strong style={{ fontSize: '13px', color: '#F8FAFC' }}>AI Speech Engine Pipeline:</strong>
+                  </div>
+
+                  {/* Status Badge */}
+                  {activeResult.transcription_status === 'completed' && (
+                    <span className="badge badge-green">
+                      <CheckCircle2 size={13} />
+                      <span>Completed</span>
+                    </span>
+                  )}
+                  {activeResult.transcription_status === 'queued' && (
+                    <span className="badge badge-amber pulse-animate">
+                      <Loader2 size={13} className="spin-animate" />
+                      <span>Queued in Background...</span>
+                    </span>
+                  )}
+                  {activeResult.transcription_status === 'processing' && (
+                    <span className="badge badge-teal pulse-animate">
+                      <Loader2 size={13} className="spin-animate" />
+                      <span>Processing Audio Waveform...</span>
+                    </span>
+                  )}
+                  {activeResult.transcription_status === 'failed' && (
+                    <span className="badge badge-red">
+                      <AlertCircle size={13} />
+                      <span>Failed</span>
+                    </span>
+                  )}
+                  {activeResult.transcription_status === 'not_configured' && (
+                    <span className="badge badge-amber">
+                      <AlertCircle size={13} />
+                      <span>Provider Disabled</span>
+                    </span>
+                  )}
+                  {(!activeResult.transcription_status || activeResult.transcription_status === 'not_requested') && (
+                    <span className="badge" style={{ background: 'rgba(255,255,255,0.06)', color: '#94A3B8' }}>
+                      <Info size={13} />
+                      <span>Not Requested</span>
+                    </span>
+                  )}
+                </div>
+
+                {/* Model Metadata if present */}
+                {(activeResult.transcription_provider || activeResult.transcription_model) && (
+                  <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px' }}>
+                    {activeResult.transcription_provider && (
+                      <span className="badge badge-teal">Provider: {activeResult.transcription_provider}</span>
+                    )}
+                    {activeResult.transcription_model && (
+                      <span className="badge badge-teal">Model: {activeResult.transcription_model}</span>
+                    )}
+                    {activeResult.transcribed_at && (
+                      <span style={{ color: '#94A3B8', fontSize: '11px', alignSelf: 'center' }}>
+                        Transcribed at: {new Date(activeResult.transcribed_at).toLocaleTimeString()}
+                      </span>
+                    )}
+                  </div>
+                )}
+
+                {/* Error Banner & Actionable Retry */}
+                {activeResult.transcription_status === 'failed' && (
+                  <div style={{ 
+                    padding: '10px 12px', 
+                    borderRadius: '8px', 
+                    background: 'rgba(239, 68, 68, 0.12)', 
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#FCA5A5',
+                    fontSize: '13px'
+                  }}>
+                    <p style={{ marginBottom: '6px' }}>
+                      <strong>Error:</strong> {activeResult.transcription_error || 'Speech engine failed to transcribe audio.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerTranscription(activeResult.id)}
+                      disabled={transcribingId === activeResult.id}
+                      className="btn-danger"
+                      style={{ fontSize: '12px', padding: '6px 12px' }}
+                    >
+                      <RotateCcw size={13} />
+                      <span>{transcribingId === activeResult.id ? 'Retrying...' : 'Retry AI Transcription'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Provider Not Configured Notice */}
+                {activeResult.transcription_status === 'not_configured' && (
+                  <div style={{ 
+                    padding: '10px 12px', 
+                    borderRadius: '8px', 
+                    background: 'rgba(245, 158, 11, 0.1)', 
+                    border: '1px solid rgba(245, 158, 11, 0.3)',
+                    color: '#FCD34D',
+                    fontSize: '13px'
+                  }}>
+                    <p style={{ marginBottom: '6px' }}>
+                      <strong>Notice:</strong> {activeResult.transcription_error || 'The backend transcription provider is currently disabled. Configure VOICE_ROOTS_TRANSCRIPTION_PROVIDER (e.g. whisper-local or openai) in the backend to enable automated processing.'}
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerTranscription(activeResult.id)}
+                      disabled={transcribingId === activeResult.id}
+                      className="btn-secondary"
+                      style={{ fontSize: '12px', padding: '6px 12px', minHeight: '32px' }}
+                    >
+                      <RotateCcw size={13} />
+                      <span>{transcribingId === activeResult.id ? 'Checking Provider...' : 'Retry / Recheck Provider'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Not Requested Action */}
+                {(!activeResult.transcription_status || activeResult.transcription_status === 'not_requested') && (
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <p style={{ fontSize: '12px', color: '#94A3B8' }}>
+                      Audio was archived without automated AI transcription consent.
+                    </p>
+                    <button
+                      type="button"
+                      onClick={() => handleTriggerTranscription(activeResult.id)}
+                      disabled={transcribingId === activeResult.id}
+                      className="btn-primary"
+                      style={{ fontSize: '12px', padding: '6px 14px', minHeight: '34px' }}
+                    >
+                      <Sparkles size={13} />
+                      <span>{transcribingId === activeResult.id ? 'Queuing...' : 'Transcribe with AI'}</span>
+                    </button>
+                  </div>
+                )}
+
+                {/* Live Polling Notice */}
+                {(activeResult.transcription_status === 'queued' || activeResult.transcription_status === 'processing') && (
+                  <p style={{ fontSize: '12px', color: '#94A3B8', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Loader2 size={12} className="spin-animate" />
+                    <span>Synchronizing genuine status from FastAPI every 2 seconds...</span>
+                  </p>
+                )}
+
+                {transcribeActionError && (
+                  <div style={{ padding: '8px 12px', borderRadius: '8px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', fontSize: '12px' }}>
+                    {transcribeActionError}
+                  </div>
+                )}
               </div>
 
-              {/* Editable Transcript Text */}
-              <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#94A3B8', marginBottom: '6px' }}>
-                  Transcript / Community Phonetic Notes:
-                </label>
+              {/* ─── Box 1: Original AI Speech Output (Immutable Annotation) ─── */}
+              <div style={{ 
+                background: 'rgba(20, 184, 166, 0.04)', 
+                border: '1px solid rgba(20, 184, 166, 0.25)', 
+                borderRadius: '12px', 
+                padding: '16px' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '700', color: '#5EEAD4', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Cpu size={15} color="#5EEAD4" />
+                    <span>Original AI Machine Output (Immutable Annotation)</span>
+                  </label>
+                  <span className="badge badge-teal" style={{ fontSize: '11px', padding: '2px 8px' }}>
+                    Read-Only
+                  </span>
+                </div>
+
+                {activeResult.machine_transcript_text ? (
+                  <div style={{ 
+                    background: 'rgba(0,0,0,0.3)', 
+                    borderRadius: '8px', 
+                    padding: '12px', 
+                    fontSize: '14px', 
+                    lineHeight: '1.6', 
+                    color: '#F8FAFC',
+                    fontStyle: 'italic',
+                    borderLeft: '3px solid #14B8A6'
+                  }}>
+                    "{activeResult.machine_transcript_text}"
+                  </div>
+                ) : (
+                  <div style={{ 
+                    background: 'rgba(0,0,0,0.2)', 
+                    borderRadius: '8px', 
+                    padding: '12px', 
+                    fontSize: '13px', 
+                    color: '#94A3B8'
+                  }}>
+                    {activeResult.transcription_status === 'queued' || activeResult.transcription_status === 'processing'
+                      ? 'Waiting for AI speech recognition model to complete transcription...'
+                      : 'No machine transcript generated for this recording yet.'}
+                  </div>
+                )}
+                <p style={{ fontSize: '11px', color: '#64748B', marginTop: '6px' }}>
+                  Preserved as an immutable annotation layer under OCAP protocols. Edits never overwrite this output.
+                </p>
+              </div>
+
+              {/* ─── Box 2: Community Corrected Transcript (Editable) ─── */}
+              <div style={{ 
+                background: 'rgba(245, 158, 11, 0.04)', 
+                border: '1px solid rgba(245, 158, 11, 0.25)', 
+                borderRadius: '12px', 
+                padding: '16px' 
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '700', color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Edit3 size={15} color="#FCD34D" />
+                    <span>Community Transcript & Corrections (Editable)</span>
+                  </label>
+                  {activeResult.status === 'Community Edited' && (
+                    <span className="badge badge-amber" style={{ fontSize: '11px', padding: '2px 8px' }}>
+                      Community Edited
+                    </span>
+                  )}
+                </div>
+
                 <textarea
                   className="textarea-field"
-                  rows={5}
+                  rows={4}
+                  placeholder="Enter phonetic notes, dialectal annotations, or corrected wording..."
                   value={activeResultText}
                   onChange={(e) => setActiveResultText(e.target.value)}
                 />
-              </div>
 
-              <button
-                type="button"
-                onClick={handleSaveActiveEdit}
-                disabled={isSavingEdit}
-                className="btn-secondary"
-              >
-                <Check size={16} />
-                <span>{isSavingEdit ? 'Saving Changes...' : 'Save Transcript Corrections'}</span>
-              </button>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap', gap: '8px' }}>
+                  <p style={{ fontSize: '11px', color: '#64748B' }}>
+                    Saved separately without modifying the immutable audio master or original AI output.
+                  </p>
+
+                  <button
+                    type="button"
+                    onClick={handleSaveActiveEdit}
+                    disabled={isSavingEdit}
+                    className="btn-primary"
+                    style={{ minHeight: '38px', padding: '6px 16px', fontSize: '13px' }}
+                  >
+                    <Check size={15} />
+                    <span>{isSavingEdit ? 'Saving...' : 'Save Transcript Corrections'}</span>
+                  </button>
+                </div>
+              </div>
             </div>
           ) : (
             <div style={{ padding: '48px 16px', textAlign: 'center', color: '#64748B' }}>
@@ -776,8 +1212,8 @@ export function App() {
               <p style={{ fontSize: '15px', fontWeight: '600', color: '#94A3B8', marginBottom: '4px' }}>
                 No active recording selected
               </p>
-              <p style={{ fontSize: '13px' }}>
-                Record live audio or choose a file on the left to review its transcription.
+              <p style={{ fontSize: '13px', maxWidth: '340px', margin: '0 auto' }}>
+                Record live audio or upload a file on the left, or select an existing recording from the archive below to inspect its AI speech output.
               </p>
             </div>
           )}
@@ -815,18 +1251,19 @@ export function App() {
             <p style={{ fontSize: '13px' }}>Use the capture studio above to save the first recording into SQLite.</p>
           </div>
         ) : (
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {transcripts.map((t) => (
               <div 
                 key={t.id} 
                 style={{ 
-                  background: 'rgba(255,255,255,0.03)', 
-                  border: '1px solid var(--card-border)', 
+                  background: activeResult?.id === t.id ? 'rgba(245, 158, 11, 0.05)' : 'rgba(255,255,255,0.03)', 
+                  border: activeResult?.id === t.id ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--card-border)', 
                   borderRadius: '12px', 
                   padding: '16px',
                   display: 'flex',
                   flexDirection: 'column',
-                  gap: '12px'
+                  gap: '12px',
+                  transition: 'all 0.15s ease'
                 }}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
@@ -840,8 +1277,62 @@ export function App() {
                     </p>
                   </div>
 
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                    {/* Status Badges */}
                     <span className="badge badge-amber">{t.status}</span>
+                    
+                    {t.transcription_status === 'completed' && (
+                      <span className="badge badge-green" title={t.transcription_model || 'Completed'}>
+                        <CheckCircle2 size={12} />
+                        <span>AI Transcribed</span>
+                      </span>
+                    )}
+                    {(t.transcription_status === 'queued' || t.transcription_status === 'processing') && (
+                      <span className="badge badge-teal pulse-animate">
+                        <Loader2 size={12} className="spin-animate" />
+                        <span>Transcribing...</span>
+                      </span>
+                    )}
+                    {t.transcription_status === 'failed' && (
+                      <span className="badge badge-red" title={t.transcription_error || 'Failed'}>
+                        <AlertCircle size={12} />
+                        <span>AI Failed</span>
+                      </span>
+                    )}
+                    {t.transcription_status === 'not_configured' && (
+                      <span className="badge badge-amber" title={t.transcription_error || 'Not Configured'}>
+                        <Info size={12} />
+                        <span>Provider Disabled</span>
+                      </span>
+                    )}
+
+                    {/* On-Demand Transcribe / Retry button */}
+                    {t.transcription_status !== 'completed' && t.transcription_status !== 'queued' && t.transcription_status !== 'processing' && (
+                      <button
+                        type="button"
+                        onClick={() => handleTriggerTranscription(t.id)}
+                        disabled={transcribingId === t.id}
+                        className="btn-secondary"
+                        style={{ padding: '4px 10px', fontSize: '12px', minHeight: '30px' }}
+                        title="Run AI Speech Transcription"
+                      >
+                        <Sparkles size={12} />
+                        <span>{transcribingId === t.id ? 'Queuing...' : (t.transcription_status === 'failed' ? 'Retry AI' : 'Transcribe')}</span>
+                      </button>
+                    )}
+
+                    {/* Open in Workspace */}
+                    <button
+                      type="button"
+                      onClick={() => handleSelectActiveTranscript(t)}
+                      className="btn-secondary"
+                      style={{ padding: '4px 10px', fontSize: '12px', minHeight: '30px' }}
+                      title="Inspect in Workspace above"
+                    >
+                      <ExternalLink size={12} />
+                      <span>Inspect</span>
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => handleDelete(t.id)}
@@ -857,52 +1348,84 @@ export function App() {
                 {/* Audio Master Player */}
                 <audio controls src={t.audio_url} style={{ width: '100%', height: '36px' }} />
 
-                {/* Inline Editing or Display */}
-                {editingId === t.id ? (
-                  <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-                    <textarea
-                      className="textarea-field"
-                      rows={3}
-                      value={editText}
-                      onChange={(e) => setEditText(e.target.value)}
-                    />
-                    <div style={{ display: 'flex', gap: '8px' }}>
-                      <button 
-                        type="button" 
-                        onClick={() => handleSaveArchiveEdit(t.id)} 
-                        className="btn-primary" 
-                        style={{ minHeight: '38px', padding: '6px 14px', fontSize: '13px' }}
+                {/* Separate Machine vs Community Transcripts Display */}
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
+                  {t.machine_transcript_text && (
+                    <div style={{ 
+                      background: 'rgba(20, 184, 166, 0.05)', 
+                      borderLeft: '3px solid #14B8A6',
+                      borderRadius: '6px', 
+                      padding: '8px 12px',
+                      color: '#E2E8F0',
+                      fontSize: '13px'
+                    }}>
+                      <span style={{ fontSize: '11px', color: '#5EEAD4', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                        Original AI Machine Output:
+                      </span>
+                      "{t.machine_transcript_text}"
+                    </div>
+                  )}
+
+                  {/* Inline Editing or Display for Community Transcript */}
+                  {editingId === t.id ? (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '4px' }}>
+                      <textarea
+                        className="textarea-field"
+                        rows={3}
+                        value={editText}
+                        onChange={(e) => setEditText(e.target.value)}
+                      />
+                      <div style={{ display: 'flex', gap: '8px' }}>
+                        <button 
+                          type="button" 
+                          onClick={() => handleSaveArchiveEdit(t.id)} 
+                          className="btn-primary" 
+                          style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px' }}
+                        >
+                          <Check size={14} />
+                          <span>Save Correction</span>
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => setEditingId(null)} 
+                          className="btn-secondary" 
+                          style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px' }}
+                        >
+                          Cancel
+                        </button>
+                      </div>
+                    </div>
+                  ) : (
+                    <div style={{ 
+                      display: 'flex', 
+                      justifyContent: 'space-between', 
+                      alignItems: 'flex-start', 
+                      gap: '12px',
+                      background: 'rgba(255,255,255,0.02)',
+                      borderRadius: '6px',
+                      padding: '8px 12px'
+                    }}>
+                      <div style={{ flex: 1 }}>
+                        <span style={{ fontSize: '11px', color: '#FCD34D', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                          Community Corrected Transcript:
+                        </span>
+                        <p style={{ color: '#E2E8F0', fontStyle: 'italic', lineHeight: '1.5' }}>
+                          "{t.transcript_text || '(No community text recorded yet)'}"
+                        </p>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => { setEditingId(t.id); setEditText(t.transcript_text || ''); }}
+                        className="btn-secondary"
+                        style={{ padding: '4px 10px', minHeight: '30px', fontSize: '12px' }}
+                        title="Edit transcript text"
                       >
-                        <Check size={14} />
-                        <span>Save</span>
-                      </button>
-                      <button 
-                        type="button" 
-                        onClick={() => setEditingId(null)} 
-                        className="btn-secondary" 
-                        style={{ minHeight: '38px', padding: '6px 14px', fontSize: '13px' }}
-                      >
-                        Cancel
+                        <Edit3 size={12} />
+                        <span>Edit</span>
                       </button>
                     </div>
-                  </div>
-                ) : (
-                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '12px' }}>
-                    <p style={{ fontSize: '13px', color: '#E2E8F0', fontStyle: 'italic', flex: 1, lineHeight: '1.5' }}>
-                      "{t.transcript_text}"
-                    </p>
-                    <button
-                      type="button"
-                      onClick={() => { setEditingId(t.id); setEditText(t.transcript_text); }}
-                      className="btn-secondary"
-                      style={{ padding: '6px 12px', minHeight: '32px', fontSize: '12px' }}
-                      title="Edit transcript text"
-                    >
-                      <Edit3 size={13} />
-                      <span>Edit</span>
-                    </button>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             ))}
           </div>
@@ -911,7 +1434,7 @@ export function App() {
 
       {/* ─── Footer ─── */}
       <footer style={{ marginTop: '40px', padding: '20px 0', borderTop: '1px solid var(--card-border)', textAlign: 'center', fontSize: '13px', color: '#64748B' }}>
-        Voice Roots • Rooting Oral Languages in Text with AI • Phase 1 Milestone Foundation
+        Voice Roots • Rooting Oral Languages in Text with AI • Indigenous Data Sovereignty (OCAP) Compliant
       </footer>
     </div>
   );
