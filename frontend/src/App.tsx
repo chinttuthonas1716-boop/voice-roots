@@ -12,7 +12,8 @@ import {
   Volume2, 
   FileAudio, 
   RefreshCw, 
-  Info 
+  Info,
+  ShieldCheck
 } from 'lucide-react';
 
 interface Language {
@@ -50,7 +51,7 @@ const DEFAULT_LANGUAGES: Language[] = [
   { code: 'sat', name: 'Santhali', native: 'ᱥᱟᱱᱛᱟᱲᱤ', category: 'Scheduled' },
   { code: 'lam', name: 'Lambadi', native: 'లంబాడీ', category: 'Indigenous / Tribal' },
   { code: 'te', name: 'Telugu', native: 'తెలుగు', category: 'Scheduled' },
-  { code: 'hi', name: 'Hindi', native: 'हिन्दी', category: 'Scheduled' },
+  { code: 'hi', name: 'Hindi', native: 'హిन्दी', category: 'Scheduled' },
   { code: 'ta', name: 'Tamil', native: 'தமிழ்', category: 'Scheduled' },
   { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ', category: 'Scheduled' },
   { code: 'ml', name: 'Malayalam', native: 'മലയാളം', category: 'Scheduled' },
@@ -70,6 +71,8 @@ export function App() {
   const [title, setTitle] = useState('');
   const [selectedLanguage, setSelectedLanguage] = useState('Gondi');
   const [dialect, setDialect] = useState('');
+  const [hasConsent, setHasConsent] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   // Audio Recording State
   const [isRecording, setIsRecording] = useState(false);
@@ -218,7 +221,14 @@ export function App() {
       return;
     }
 
+    if (!hasConsent) {
+      setSubmitError('Speaker consent is strictly mandatory under Indigenous Ethical Protocols before archiving any audio.');
+      return;
+    }
+
     setIsSubmitting(true);
+    setUploadProgress(0);
+
     const formData = new FormData();
     const fileName = mode === 'record' ? 'recording.wav' : (selectedFile?.name || 'audio.wav');
     formData.append('file', audioToUpload, fileName);
@@ -226,37 +236,70 @@ export function App() {
     formData.append('language', selectedLanguage);
     formData.append('dialect', dialect.trim());
 
-    try {
-      const endpoint = health ? '/api/upload' : 'http://127.0.0.1:8000/api/upload';
-      const res = await fetch(endpoint, {
-        method: 'POST',
-        body: formData,
-      });
+    // Submit explicit affirmative consent fields (string and boolean compatible)
+    formData.append('consent', 'true');
+    formData.append('consent_given', 'true');
+    formData.append('consentSpeaker', 'true');
 
-      if (!res.ok) {
-        throw new Error(`Upload failed with status HTTP ${res.status}`);
+    const endpoint = health ? '/api/upload' : 'http://127.0.0.1:8000/api/upload';
+    const xhr = new XMLHttpRequest();
+
+    xhr.upload.onprogress = (event) => {
+      if (event.lengthComputable) {
+        const percent = Math.round((event.loaded / event.total) * 100);
+        setUploadProgress(percent);
       }
+    };
 
-      const data = await res.json();
-      setSubmitSuccess('Oral audio master saved safely to SQLite and disk storage!');
-      setActiveResult(data);
-      setActiveResultText(data.transcript_text);
-      
-      // Clear inputs
-      setTitle('');
-      setDialect('');
-      setRecordedBlob(null);
-      setRecordedAudioUrl(null);
-      setSelectedFile(null);
-      setFileAudioUrl(null);
-
-      // Refresh archive
-      fetchTranscripts();
-    } catch (err: any) {
-      setSubmitError('Could not save recording: ' + err.message);
-    } finally {
+    xhr.onload = () => {
       setIsSubmitting(false);
-    }
+      setUploadProgress(null);
+
+      if (xhr.status >= 200 && xhr.status < 300) {
+        try {
+          const data = JSON.parse(xhr.responseText);
+          setSubmitSuccess('Oral audio master saved safely to SQLite and storage with affirmative speaker consent verified!');
+          setActiveResult(data);
+          setActiveResultText(data.transcript_text);
+          
+          // Clear inputs and reset consent
+          setTitle('');
+          setDialect('');
+          setHasConsent(false);
+          setRecordedBlob(null);
+          setRecordedAudioUrl(null);
+          setSelectedFile(null);
+          setFileAudioUrl(null);
+
+          // Refresh archive
+          fetchTranscripts();
+        } catch {
+          setSubmitSuccess('Audio master uploaded successfully!');
+        }
+      } else {
+        let errorMsg = `Upload failed with status HTTP ${xhr.status}`;
+        try {
+          const errData = JSON.parse(xhr.responseText);
+          if (errData.detail) {
+            errorMsg = typeof errData.detail === 'string' ? errData.detail : JSON.stringify(errData.detail);
+          } else if (errData.error) {
+            errorMsg = errData.error;
+          }
+        } catch {
+          // fallback to default error message
+        }
+        setSubmitError(errorMsg);
+      }
+    };
+
+    xhr.onerror = () => {
+      setIsSubmitting(false);
+      setUploadProgress(null);
+      setSubmitError('Network error connecting to backend API at ' + endpoint);
+    };
+
+    xhr.open('POST', endpoint);
+    xhr.send(formData);
   };
 
   // Update Transcript Text
@@ -578,6 +621,72 @@ export function App() {
               </div>
             )}
 
+            {/* Affirmative Speaker Consent (Mandatory under Indigenous Ethical Protocols / OCAP) */}
+            <div 
+              style={{ 
+                background: hasConsent ? 'rgba(245, 158, 11, 0.08)' : 'rgba(255, 255, 255, 0.03)', 
+                border: hasConsent ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--card-border)', 
+                borderRadius: '12px', 
+                padding: '16px', 
+                display: 'flex', 
+                gap: '12px', 
+                alignItems: 'flex-start',
+                transition: 'all 0.2s ease'
+              }}
+            >
+              <input
+                type="checkbox"
+                id="speaker-consent-checkbox"
+                checked={hasConsent}
+                onChange={(e) => {
+                  setHasConsent(e.target.checked);
+                  if (e.target.checked) setSubmitError(null);
+                }}
+                style={{
+                  width: '18px',
+                  height: '18px',
+                  marginTop: '2px',
+                  accentColor: '#F59E0B',
+                  cursor: 'pointer'
+                }}
+                required
+              />
+              <label 
+                htmlFor="speaker-consent-checkbox" 
+                style={{ fontSize: '13px', lineHeight: '1.5', color: '#F8FAFC', cursor: 'pointer', flex: 1 }}
+              >
+                <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
+                  <ShieldCheck size={16} color="#F59E0B" />
+                  <strong style={{ color: '#F59E0B' }}>
+                    Affirmative Speaker Consent (Mandatory)
+                  </strong>
+                </div>
+                <span style={{ color: '#94A3B8' }}>
+                  I confirm that this recording is made with the voluntary, informed consent of the speaker and community custodian under Indigenous Data Sovereignty (OCAP) protocols. The audio master will be stored permanently in immutable storage, and AI processing is strictly limited to phonetic transcription and language preservation.
+                </span>
+              </label>
+            </div>
+
+            {/* Live Upload Progress Indicator */}
+            {uploadProgress !== null && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94A3B8' }}>
+                  <span>Uploading & Preserving Master...</span>
+                  <span style={{ color: '#F59E0B', fontWeight: '600' }}>{uploadProgress}%</span>
+                </div>
+                <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '6px', height: '6px', overflow: 'hidden' }}>
+                  <div 
+                    style={{ 
+                      background: 'linear-gradient(90deg, #F59E0B, #10B981)', 
+                      height: '100%', 
+                      width: `${uploadProgress}%`, 
+                      transition: 'width 0.15s ease' 
+                    }} 
+                  />
+                </div>
+              </div>
+            )}
+
             {/* Feedback Banners */}
             {submitError && (
               <div style={{ padding: '10px 14px', borderRadius: '10px', background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.3)', color: '#FCA5A5', fontSize: '13px' }}>
@@ -595,10 +704,12 @@ export function App() {
             <button
               type="submit"
               className="btn-primary"
-              disabled={isSubmitting || (!recordedBlob && !selectedFile)}
+              disabled={isSubmitting || !hasConsent || (!recordedBlob && !selectedFile) || !title.trim()}
               style={{ width: '100%' }}
             >
-              {isSubmitting ? 'Saving Audio Master...' : 'Save & Ingest Recording'}
+              {isSubmitting 
+                ? (uploadProgress !== null ? `Uploading Master (${uploadProgress}%)...` : 'Saving Audio Master...') 
+                : 'Save & Ingest Recording'}
             </button>
           </form>
         </section>
