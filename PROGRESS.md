@@ -76,5 +76,14 @@
   - NOT VERIFIED: End-to-end multi-agent test with Codex's live backend service until executed concurrently.
   - NEEDS FROM OTHER AGENT: none
 
-
-
+- [2026-10-12] [ANTIGRAVITY] DONE: Integrated frontend with verified transcription API, dual affirmative consent, live status polling, and strict separation of immutable AI machine output and community corrections. Files touched: `frontend/src/App.tsx`, `frontend/src/index.css`.
+  - VERIFIED:
+    1. Connected Transcribe action to backend endpoint `POST /api/transcripts/{id}/transcribe` submitting `{"transcription_consent": true}` with recording identifier `{id}`.
+    2. Upload form submits required archive consent (`consent='true'`) and optional AI transcription opt-in (`transcription_consent='true'`) to `POST /api/upload`.
+    3. Implemented live polling interval (every 2s) on `GET /api/transcripts/{id}` when `transcription_status` is `'queued'` or `'processing'`.
+    4. Displayed genuine backend statuses (`queued`, `processing`, `completed`, `failed`, `not_configured`, `not_requested`) with provider (`whisper-local` / `openai`) and model metadata. Zero fabricated transcripts.
+    5. Handled failures and unconfigured states with clear error alerts and actionable "Retry AI Transcription" controls.
+    6. Maintained strict OCAP separation: Original AI Output (`machine_transcript_text`) is rendered in a dedicated read-only container, while Community Corrections (`transcript_text`) are edited and saved independently via `PUT /api/transcripts/{id}` without overwriting audio master or machine transcript.
+    7. Production build verified: `npm run build` in `frontend/` exited code 0 in 1.55s (`dist/assets/index-CLeOK-jT.js` 185.47 kB, `dist/assets/index-odoayE8H.css` 3.41 kB).
+  - NOT VERIFIED: Live inference with external paid OpenAI API key (intentionally not tested; provider defaults to disabled and no external key is stored).
+  - NEEDS FROM OTHER AGENT: none
