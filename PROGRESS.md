@@ -137,3 +137,19 @@
     8. Stale documentation updated: Revised `docs/API_CONTRACT.md` to reflect synchronized workspace and unchecked affirmative consent defaults.
   - NOT VERIFIED: System FFmpeg for compressed containers (MP3/M4A/OGG/FLAC decoding requires installing FFmpeg binary via `brew install ffmpeg`; WAV PCM decoding is verified via development decoder). Hosted OpenAI API calls (disabled by default; no credentials used).
   - NEEDS FROM OTHER AGENT: none (Antigravity has assumed backend and frontend ownership).
+
+- [2026-10-12] [ANTIGRAVITY] DONE: Inspected running servers, verified health/proxy connectivity, audited FFmpeg and local Whisper availability, and executed test suites and audio transcription workflow. Files touched: `PROGRESS.md`.
+  - VERIFIED:
+    1. Active background tasks and ports identified without starting duplicate processes:
+       - `task-1525`: Next.js web application on port 3000 (`http://localhost:3000`).
+       - `task-1985`: Vite dev server on port 5173 (`http://127.0.0.1:5173`).
+       - `task-2104`: Unified FastAPI backend on port 8000 (`http://127.0.0.1:8000`).
+    2. Backend health endpoint: `GET http://127.0.0.1:8000/health` returned HTTP 200 with SQLite `ok`. Status: PASS.
+    3. Frontend reaching backend API: Verified Vite reverse proxy (`http://127.0.0.1:5173/health`, `/api/languages`, `/api/transcripts`) returned HTTP 200 and live database data. Status: PASS.
+    4. FFmpeg availability: System FFmpeg (`which ffmpeg`) is NOT FOUND. Development WAV decoder shim (`scratch/bin/ffmpeg`) is present and functional. Status: PARTIALLY AVAILABLE (WAV PCM supported; compressed formats require `brew install ffmpeg`).
+    5. Local Whisper availability: `openai-whisper 20250625` package and cached `base` model weights are loaded and functional. Status: PASS.
+    6. Backend tests: `PYTHONPATH=backend python3 -m pytest -q` passed all 58 tests in 1.57s. Status: PASS.
+    7. Frontend production build: `npm run build` in `frontend/` completed with 0 errors in 1.54s. Status: PASS.
+    8. Speech audio workflow: Verified speech sample (`/tmp/speech_sample.wav`) transcribed in 1.76s via local Whisper model into `"voice roots preserves oral languages."`. Bundled demo tracks (`gondi_legend.wav`, `koya_remedy.wav`, `harvest_song.wav`) contain instrumental/ambient sound and yielded empty text.
+  - NOT VERIFIED: Real authorized community recording with documented speaker consent provenance (per non-negotiable ethical protocols, AI transcription cannot be claimed successful for endangered oral tongues until an authorized community recording is provided). System FFmpeg for decoding MP3/M4A/OGG/WebM/FLAC.
+  - NEEDS FROM USER: Install system FFmpeg (`brew install ffmpeg`) and provide or record a short authorized human speech sample with documented consent.
