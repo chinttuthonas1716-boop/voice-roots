@@ -1,6 +1,6 @@
 """AI model registry — maps config values to provider implementations."""
 import structlog
-from app.ai.base import AIProvider
+from app.ai.base import AIProvider, ProviderUnavailableError
 from app.config import settings
 
 logger = structlog.get_logger(__name__)
@@ -21,11 +21,16 @@ def get_provider() -> AIProvider:
         return _instance
 
     provider_name = settings.ai_provider
+    if provider_name == "disabled":
+        raise ProviderUnavailableError(
+            "Speech processing is disabled. Configure a real AI provider before requesting a transcript."
+        )
+
     cls = _registry.get(provider_name)
     if cls is None:
-        logger.warning("ai.unknown_provider_falling_back_to_mock", name=provider_name)
-        from app.ai.mock_provider import MockAIProvider
-        cls = MockAIProvider
+        raise ProviderUnavailableError(
+            f"AI provider '{provider_name}' is not registered; no transcript was generated."
+        )
 
     _instance = cls()
     logger.info("ai.provider_initialized", provider=_instance.name)

@@ -4,11 +4,15 @@ from dataclasses import dataclass, field
 from typing import Any
 
 
+class ProviderUnavailableError(RuntimeError):
+    """Raised when an AI provider cannot run; callers must not invent output."""
+
+
 @dataclass
 class TranscriptionResult:
     """Result of an ASR transcription."""
     text: str
-    confidence: float
+    confidence: float | None
     language_code: str
     language_name: str
     segments: list[dict] = field(default_factory=list)
@@ -73,8 +77,8 @@ class AIProvider(ABC):
     """
     Abstract base class for all Voice Roots AI providers.
 
-    Subclass this to implement real model inference. The system will
-    fall back to MockAIProvider when no real provider is configured.
+    Subclass this to implement model inference. Provider configuration errors
+    are surfaced to callers; the registry does not silently generate mock text.
     """
 
     @property

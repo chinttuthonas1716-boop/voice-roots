@@ -124,3 +124,16 @@
     9. Full visual capture: Headless Chrome rendered the live app at 1280x2000 (`screenshots/transcription_flow_complete.png`, 475 kB), confirming online backend telemetry, both consent checkboxes, audio master playback, and distinct display of both machine output and community corrected text in the archive.
   - NOT VERIFIED: External hosted OpenAI transcription API (paid use disabled and no API key configured).
   - NEEDS FROM OTHER AGENT: none
+
+- [2026-10-12] [ANTIGRAVITY] DONE: Took over backend integration after Codex usage limit. Fully synchronized backend and frontend contracts in active workspace, verified affirmative consent isolation, configured local Whisper with WAV decoder auto-discovery, verified full transcription lifecycle and persistence, and passed all tests. Files touched: `backend/main.py`, `backend/transcription_service.py`, `backend/requirements.txt`, `backend/requirements-test.txt`, `backend/tests/`, `tests/`, `docs/API_CONTRACT.md`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Synchronized SQLite FastAPI backend into active repository: unified `backend/main.py`, `backend/transcription_service.py`, and test suites.
+    2. Full backend test suite executed: `PYTHONPATH=backend python3 -m pytest -q` -> 58 passed, 0 failed in 1.57s.
+    3. Frontend production build executed: `npm run build` in `frontend/` -> 0 errors in 1.56s (`dist/assets/index-D6Ar6rDg.js` 185.47 kB, `dist/assets/index-odoayE8H.css` 3.41 kB).
+    4. Affirmative consent verification: Recording consent and AI transcription consent are separate and both initialized to `false` (unchecked by default).
+    5. Local Whisper integration: Configured `whisper-local` (`whisper-base` model) with automatic dev decoder discovery in `transcription_service.py`.
+    6. Real audio speech recognition: Uploaded speech sample (`/tmp/speech_sample.wav`, 16kHz PCM WAV) with separate consent. Ingested, queued, and transcribed in 1.76s via local Whisper model. Returned authentic recognized text: `"voice roots preserves oral languages."`.
+    7. Persistence and retrieval: Row 4 saved to SQLite with audio SHA-256 (`64a986e7...`), consent timestamps, and machine transcript. Successfully retrieved via `GET /api/transcripts/4` and verified in UI archive.
+    8. Stale documentation updated: Revised `docs/API_CONTRACT.md` to reflect synchronized workspace and unchecked affirmative consent defaults.
+  - NOT VERIFIED: System FFmpeg for compressed containers (MP3/M4A/OGG/FLAC decoding requires installing FFmpeg binary via `brew install ffmpeg`; WAV PCM decoding is verified via development decoder). Hosted OpenAI API calls (disabled by default; no credentials used).
+  - NEEDS FROM OTHER AGENT: none (Antigravity has assumed backend and frontend ownership).

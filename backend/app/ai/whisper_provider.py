@@ -1,9 +1,4 @@
-"""
-Whisper AI Provider — real transcription using OpenAI Whisper.
-
-Falls back to MockAIProvider if the whisper package is not installed
-or the model cannot be loaded (e.g. no GPU memory).
-"""
+"""Whisper provider. Load/inference failures are surfaced without fake output."""
 import asyncio
 import structlog
 from typing import Any
@@ -11,6 +6,7 @@ from typing import Any
 from app.ai.base import (
     AIProvider, TranscriptionResult, LanguageDetectionResult,
     TranslationResult, EmbeddingResult, SpeakerSegment, SummarizationResult,
+    ProviderUnavailableError,
 )
 from app.config import settings
 
@@ -25,30 +21,32 @@ class WhisperProvider(AIProvider):
 
     name = "whisper"
     _model: Any = None
-    _fallback: "AIProvider | None" = None
 
     async def _get_model(self):
         if self._model is not None:
             return self._model
         try:
             import whisper  # type: ignore
-            loop = asyncio.get_event_loop()
+        except ImportError as exc:
+            raise ProviderUnavailableError(
+                "OpenAI Whisper is not installed. Install the openai-whisper package; no transcript was generated."
+            ) from exc
+
+        try:
+            loop = asyncio.get_running_loop()
             self._model = await loop.run_in_executor(
                 None, lambda: whisper.load_model(settings.whisper_model_size)
             )
             logger.info("whisper.model_loaded", size=settings.whisper_model_size)
         except Exception as exc:
-            logger.warning("whisper.load_failed_using_mock", error=str(exc))
-            from app.ai.mock_provider import MockAIProvider
-            self._fallback = MockAIProvider()
+            raise ProviderUnavailableError(
+                f"Whisper model '{settings.whisper_model_size}' could not be loaded; no transcript was generated."
+            ) from exc
         return self._model
 
     async def transcribe(self, audio_path: str, language_hint: str | None = None) -> TranscriptionResult:
         model = await self._get_model()
-        if self._fallback:
-            return await self._fallback.transcribe(audio_path, language_hint)
-
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
         opts: dict = {"fp16": False}
         if language_hint:
             opts["language"] = language_hint
@@ -58,18 +56,16 @@ class WhisperProvider(AIProvider):
         segments = [
             {
                 "index": i,
-                "speaker": "Speaker 1",
                 "start": round(seg["start"], 2),
                 "end": round(seg["end"], 2),
                 "text": seg["text"].strip(),
-                "confidence": round(abs(seg.get("avg_logprob", -0.3)) * -1 + 1, 3),
             }
             for i, seg in enumerate(result.get("segments", []))
         ]
 
         return TranscriptionResult(
             text=result["text"].strip(),
-            confidence=0.90,
+            confidence=None,
             language_code=result.get("language", "unknown"),
             language_name=result.get("language", "Unknown").capitalize(),
             segments=segments,
@@ -77,20 +73,15 @@ class WhisperProvider(AIProvider):
         )
 
     async def detect_language(self, text: str) -> LanguageDetectionResult:
-        if self._fallback:
-            return await self._fallback.detect_language(text)
         # Whisper works on audio; use fallback for text LID
         from app.ai.mock_provider import MockAIProvider
         return await MockAIProvider().detect_language(text)
 
     async def detect_audio_language(self, audio_path: str) -> LanguageDetectionResult:
         model = await self._get_model()
-        if self._fallback:
-            return await self._fallback.detect_audio_language(audio_path)
         import whisper  # type: ignore
-        import numpy as np
 
-        loop = asyncio.get_event_loop()
+        loop = asyncio.get_running_loop()
 
         def _detect():
             audio = whisper.load_audio(audio_path)
