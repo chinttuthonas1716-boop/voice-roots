@@ -91,7 +91,7 @@ export function App() {
   const [selectedLanguage, setSelectedLanguage] = useState('Gondi');
   const [dialect, setDialect] = useState('');
   const [hasConsent, setHasConsent] = useState(false);
-  const [wantsTranscriptionConsent, setWantsTranscriptionConsent] = useState(true);
+  const [wantsTranscriptionConsent, setWantsTranscriptionConsent] = useState(false);
   const [uploadProgress, setUploadProgress] = useState<number | null>(null);
 
   // Audio Recording State
