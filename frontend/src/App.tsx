@@ -3829,7 +3829,58 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                   </div>
                 </div>
 
-                <p style={{ fontSize: '11px', color: '#94A3B8', fontStyle: 'italic' }}>
+                {/* ─── Community-Reviewed Performance (Grounded References) ─── */}
+                {evaluationReport.community_reviewed_performance?.total_reviewed_samples > 0 && (
+                  <div style={{ 
+                    marginTop: '12px', 
+                    padding: '12px 14px', 
+                    background: 'rgba(245, 158, 11, 0.06)', 
+                    border: '1px solid rgba(245, 158, 11, 0.25)', 
+                    borderRadius: '10px' 
+                  }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Award size={14} color="#FCD34D" />
+                        <span>Live Pilot Review Metrics (Compared Against Elder-Approved Transcripts)</span>
+                      </span>
+                      <span style={{ fontSize: '11px', color: '#F59E0B', background: 'rgba(245, 158, 11, 0.2)', padding: '2px 8px', borderRadius: '8px' }}>
+                        {evaluationReport.community_reviewed_performance.total_reviewed_samples} Verified Sample(s)
+                      </span>
+                    </div>
+
+                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', marginBottom: '8px' }}>
+                      {Object.entries(evaluationReport.community_reviewed_performance.languages || {}).map(([langName, data]: [string, any]) => (
+                        <div key={langName} style={{ background: 'rgba(0,0,0,0.25)', padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
+                          <div style={{ fontWeight: '700', color: '#F8FAFC', marginBottom: '4px' }}>{langName}</div>
+                          <div style={{ color: '#94A3B8', fontSize: '11px' }}>
+                            Model: <strong style={{ color: '#E2E8F0' }}>{data.models_used?.join(', ')}</strong> • 
+                            CER: <strong style={{ color: '#38BDF8' }}>{(data.average_cer * 100).toFixed(1)}%</strong> • 
+                            WER: <strong style={{ color: '#F59E0B' }}>{(data.average_wer * 100).toFixed(1)}%</strong>
+                          </div>
+                          <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '4px', fontStyle: 'italic' }}>
+                            {data.sample_size_caveat}
+                          </p>
+                        </div>
+                      ))}
+                    </div>
+
+                    {/* Unsupported Pairs Caveat */}
+                    {evaluationReport.unsupported_language_pairs?.length > 0 && (
+                      <div style={{ marginTop: '6px', paddingTop: '6px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                        <span style={{ fontSize: '11px', fontWeight: '600', color: '#94A3B8' }}>Unsupported Language Pairs & Systematic Limitations:</span>
+                        <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', marginTop: '4px' }}>
+                          {evaluationReport.unsupported_language_pairs.map((pair: any, idx: number) => (
+                            <span key={idx} style={{ fontSize: '10px', color: '#EF4444', background: 'rgba(239, 68, 68, 0.1)', padding: '2px 8px', borderRadius: '6px', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                              <strong>{pair.source} → {pair.target}</strong>: {pair.reason}
+                            </span>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                <p style={{ fontSize: '11px', color: '#94A3B8', fontStyle: 'italic', marginTop: '10px' }}>
                   {evaluationReport.methodology_disclaimer}
                 </p>
               </div>
