@@ -1428,6 +1428,7 @@ class CorrectionCreateRequest(BaseModel):
 class CorrectionReviewRequest(BaseModel):
     status: str  # approved | rejected
     reviewed_by: Optional[str] = "Community Elder"
+    reviewer_role: Optional[str] = "community_elder"
     review_notes: Optional[str] = None
     reviewer_uncertainty: Optional[str] = None  # e.g., 'certain', 'uncertain_dialect_variation', 'needs_second_elder'
 
@@ -1475,6 +1476,14 @@ def run_evaluation_endpoint():
     from evaluation import get_evaluation_runner
     runner = get_evaluation_runner()
     return runner.run_full_evaluation()
+
+
+@app.get("/api/v1/evaluation/community-reviews")
+def get_community_reviewed_evaluation():
+    """Retrieve grounded transcription accuracy measured against reviewer-approved reference transcripts."""
+    from evaluation import get_evaluation_runner
+    runner = get_evaluation_runner()
+    return runner.evaluate_community_reviewed_transcripts()
 
 
 # --- 2. Community Corrections Endpoints ---
@@ -1611,9 +1620,26 @@ def get_translation_corrections(translation_id: int):
         return {"translation_id": translation_id, "corrections": [dict(r) for r in cursor.fetchall()]}
 
 
+AUTHORIZED_REVIEWER_ROLES = {
+    "community_elder",
+    "native_speaker_reviewer",
+    "linguist",
+    "moderator",
+    "elder",
+    "admin",
+}
+
+
 @app.patch("/api/v1/corrections/{correction_id}/review")
 def review_correction(correction_id: int, payload: CorrectionReviewRequest):
-    """Approve or reject a suggested correction (by community elders/moderators)."""
+    """Approve or reject a suggested correction (by authorized community elders/moderators)."""
+    role = (payload.reviewer_role or "community_elder").lower().strip()
+    if role not in AUTHORIZED_REVIEWER_ROLES:
+        raise HTTPException(
+            status_code=403,
+            detail=f"Role '{payload.reviewer_role}' is not authorized to review corrections. Reviews must be conducted by recognized community elders or designated native speaker reviewers.",
+        )
+
     if payload.status not in ("approved", "rejected"):
         raise HTTPException(status_code=400, detail="Status must be 'approved' or 'rejected'.")
 
@@ -1671,6 +1697,37 @@ def review_correction(correction_id: int, payload: CorrectionReviewRequest):
         conn.commit()
         cursor.execute("SELECT * FROM corrections WHERE id = ?", (correction_id,))
         return dict(cursor.fetchone())
+
+
+@app.delete("/api/v1/corrections/{correction_id}")
+@app.post("/api/v1/corrections/{correction_id}/withdraw")
+def withdraw_correction(correction_id: int):
+    """Withdraw a suggested correction under contributor control."""
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM corrections WHERE id = ?", (correction_id,))
+        corr = cursor.fetchone()
+        if not corr:
+            raise HTTPException(status_code=404, detail="Correction record not found.")
+
+        c = dict(corr)
+        if c.get("status") == "withdrawn":
+            raise HTTPException(status_code=400, detail="Correction has already been withdrawn.")
+
+        cursor.execute(
+            "UPDATE corrections SET status = 'withdrawn', updated_at = ? WHERE id = ?",
+            (now, correction_id),
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "message": f"Correction {correction_id} has been withdrawn.",
+            "id": correction_id,
+            "status": "withdrawn",
+            "withdrawn_at": now,
+        }
 
 
 # --- 3. Resource Submissions & Dataset Quality Endpoints ---
@@ -1789,6 +1846,45 @@ def moderate_resource_submission(
 
         cursor.execute("SELECT * FROM resource_submissions WHERE id = ?", (submission_id,))
         return dict(cursor.fetchone())
+
+
+@app.post("/api/v1/resources/submissions/{submission_id}/withdraw")
+@app.delete("/api/v1/resources/submissions/{submission_id}")
+def withdraw_resource_submission(submission_id: int):
+    """Withdraw a contributed language resource under OCAP data sovereignty protocols."""
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM resource_submissions WHERE id = ?", (submission_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Submission not found.")
+
+        sub = dict(row)
+        if sub.get("status") == "withdrawn":
+            raise HTTPException(status_code=400, detail="Submission has already been withdrawn.")
+
+        cursor.execute(
+            "UPDATE resource_submissions SET status = 'withdrawn', updated_at = ? WHERE id = ?",
+            (now, submission_id),
+        )
+        conn.commit()
+
+        # If it was verified and indexed in ChromaDB, purge it immediately
+        doc_id = f"sub_{submission_id}_{sub['language_code']}"
+        try:
+            from vector_store import delete_resource
+            delete_resource(doc_id)
+        except Exception as e:
+            logger.warning("Could not delete %s from vector store on withdrawal: %s", doc_id, e)
+
+        return {
+            "success": True,
+            "message": f"Resource submission {submission_id} has been withdrawn under OCAP protocols.",
+            "id": submission_id,
+            "status": "withdrawn",
+            "withdrawn_at": now,
+        }
 
 
 @app.get("/api/v1/dataset/audit")

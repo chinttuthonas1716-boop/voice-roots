@@ -580,3 +580,15 @@
   - NOT VERIFIED: Public cloud hosting (intentionally held locally at $0.00 until explicit user approval).
   - NEEDS FROM OTHER AGENT: none
 
+- [2026-10-13] [ANTIGRAVITY] DONE: Stage 13 - Complete Community Pilot & Language Validation. Implemented contributor withdrawal endpoints for resource submissions and corrections under OCAP (`/withdraw`), reviewer role permission authorization checks (`HTTP 403` on unauthorized reviewer roles), grounded live pilot performance measurement (`/api/v1/evaluation/community-reviews`) with small-sample caveats, added "Withdraw Consent" actions in the web UI, and authored the responsible pilot execution guide in `docs/PILOT_GUIDE.md`. Expanded backend test suite to 122 passing tests.
+  - Files touched: `backend/main.py`, `backend/evaluation.py`, `frontend/src/App.tsx`, `tests/test_evaluation_and_corrections.py`, `docs/PILOT_GUIDE.md`, `PROGRESS.md`.
+  - Details implemented:
+    1. Contribution Withdrawal & Deletion: Added `POST /api/v1/resources/submissions/{id}/withdraw` (with ChromaDB vector purge) and `POST /api/v1/corrections/{id}/withdraw`. Added "Withdraw Consent" button in frontend UI header and archive list.
+    2. Reviewer Permission Enforcement: Added role authorization checking in `PATCH /api/v1/corrections/{id}/review` against `AUTHORIZED_REVIEWER_ROLES`, rejecting unauthorized/guest reviewers with HTTP 403 Forbidden.
+    3. Grounded Performance Measurement: Added `evaluate_community_reviewed_transcripts()` in `evaluation.py` and `GET /api/v1/evaluation/community-reviews` to calculate real CER/WER on reviewer-approved references, with explicit sample-size and small-pilot warnings.
+    4. Pilot Documentation: Updated `docs/PILOT_GUIDE.md` with withdrawal procedures, reviewer authorization specifications, and a 6-step practical checklist for running the pilot responsibly.
+  - VERIFIED: All 122 backend pytest tests passed in 8.21s; frontend TypeScript and production build passed with 0 errors (1,568 modules); local backend and frontend running healthy.
+  - NOT VERIFIED: Remote public cloud deployment (held awaiting explicit user approval).
+  - NEEDS FROM OTHER AGENT: none
+
+

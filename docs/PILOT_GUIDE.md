@@ -99,8 +99,73 @@ When testing, record observations using this standardized template:
 
 ---
 
-## 4. Issue Reporting & Handoff
+## 4. Contribution Withdrawal & Deletion Procedures (OCAP Compliance)
 
-- Submit completed tester feedback forms to the project coordinator or log them in the **Community Corrections** audit trail in the web UI.
-- All technical defects or missing language configurations must be appended to `PROGRESS.md`.
+Under Indigenous Data Sovereignty protocols, contributors maintain perpetual ownership over their voice, translations, and cultural contributions. The system provides immediate, programmatic withdrawal mechanisms:
+
+1. **Speaker Voice Recording Withdrawal**:
+   - Endpoint: `POST /api/v1/transcripts/{transcript_id}/withdraw-consent`
+   - Effect: Immediately marks status as `Consent Withdrawn`, archives the transcript, and removes the recording from the active archive and search views. Master audio remains unexposed.
+
+2. **Vocabulary & Resource Submission Withdrawal**:
+   - Endpoint: `POST /api/v1/resources/submissions/{submission_id}/withdraw` (or `DELETE /api/v1/resources/submissions/{submission_id}`)
+   - Effect: Sets submission status to `withdrawn` with a timestamp and immediately purges the item (`sub_{id}_{lang}`) from ChromaDB vector embeddings so it can no longer be retrieved in semantic search.
+
+3. **Correction Proposal Withdrawal**:
+   - Endpoint: `POST /api/v1/corrections/{correction_id}/withdraw` (or `DELETE /api/v1/corrections/{correction_id}`)
+   - Effect: Marks the proposed correction as `withdrawn`, removing it from the active elder review queue.
+
+---
+
+## 5. Authorized Native-Speaker Reviewer Roles & Guardrails
+
+To protect Indigenous languages from linguistic hallucination and unauthorized alterations:
+- **Authorized Reviewer Roles**:
+  - `community_elder`: Recognized tribal/community elder
+  - `native_speaker_reviewer`: Verified native speaker of the target dialect
+  - `linguist`: Designated community or academic linguist
+  - `moderator` / `admin`: Authorized platform administrator
+- **Access Enforcement**:
+  - `PATCH /api/v1/corrections/{id}/review` requires an authorized `reviewer_role`.
+  - Unauthorized roles (e.g. `unauthorized`, `guest`) are strictly rejected with `HTTP 403 Forbidden`.
+  - Oral tongues (Gondi, Koya, Santhali, Lambadi) strictly require elder approval before marking results as `Community Verified`.
+
+---
+
+## 6. Real Performance Measurement & Transparent Reporting
+
+- **Grounded Reference Comparison**:
+  - Live performance endpoint: `GET /api/v1/evaluation/community-reviews`
+  - Calculates Character Error Rate (CER) and Word Error Rate (WER) by comparing the AI baseline (`machine_transcript_text`) against the elder-verified reference (`transcript_text`).
+- **Sample-Size Transparency**:
+  - All evaluation reports clearly state: language, dialect, model, sample size ($N$), and evaluation date.
+  - Small pilot sample sizes are explicitly tagged with caveats: *"Preliminary pilot sample. Do not generalize to unreviewed speakers or dialects."*
+  - Unsubstantiated claims of universal 100% accuracy are prohibited.
+
+---
+
+## 7. Practical Checklist for Running the Pilot Responsibly
+
+Follow this practical checklist when conducting pilot sessions with community members:
+
+- [ ] **1. Pre-Session Setup & Offline Verification**
+  - Verify that the application is running completely locally (`http://127.0.0.1:5173`) without any external internet dependency or billing costs ($0.00).
+  - Verify that offline Whisper (`base` model) and local ChromaDB embeddings are initialized.
+- [ ] **2. Free, Prior, and Informed Consent (FPIC)**
+  - Explain verbally in the speaker's mother tongue how their voice will be preserved and stored.
+  - Explain that they retain full ownership and can withdraw their consent at any time.
+  - Verify that affirmative consent checkboxes are checked before pressing record or uploading audio.
+- [ ] **3. Respect Sacred & Restricted Oral Knowledge**
+  - Explicitly ask if the story, song, or remedy is sacred, secret, or clan-restricted.
+  - If restricted, do **not** record or upload to the platform corpus (strict HTTP 403 rejection).
+- [ ] **4. Dual-Track Review with Community Elders**
+  - Have an authorized elder or native speaker compare the acoustic master with the machine hypothesis.
+  - Record reviewer uncertainty (e.g., dialect variations between villages) rather than forcing binary choices.
+  - Preserve the original machine baseline for evaluation while applying human corrections.
+- [ ] **5. Verification Before Indexing**
+  - Never label machine outputs as "verified" without explicit human review.
+  - Only index community-verified vocabulary and cultural notes into the semantic search collection.
+- [ ] **6. Post-Session Review & Feedback Collection**
+  - Complete the **Pilot Tester Feedback Form** for any observed transcription errors or dialect mismatches.
+  - Log findings in the shared project handoff log (`PROGRESS.md`).
 

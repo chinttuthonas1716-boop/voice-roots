@@ -337,3 +337,127 @@ def test_native_speaker_review_uncertainty_and_immutable_separation():
     res_t_after_rej = client.get(f"/api/transcripts/{t_id}")
     assert res_t_after_rej.json()["transcript_text"] != "Non-authentic text to be rejected"
 
+
+def test_reviewer_permission_authorization_and_unauthorized_rejection():
+    """Verify that unauthorized reviewer roles are rejected with HTTP 403 Forbidden."""
+    res_transcripts = client.get("/api/transcripts")
+    transcripts = res_transcripts.json().get("transcripts", [])
+    assert len(transcripts) > 0
+    t_id = transcripts[0]["id"]
+
+    res_prop = client.post(
+        f"/api/v1/transcripts/{t_id}/corrections",
+        json={
+            "suggested_text": "Phonetic variation proposal for permission testing",
+            "contributor_name": "Speaker Contributor",
+            "consent_confirmed": True,
+        },
+    )
+    assert res_prop.status_code == 200
+    corr_id = res_prop.json()["id"]
+
+    # 1. Unauthorized reviewer role fails with 403 Forbidden
+    res_unauth = client.patch(
+        f"/api/v1/corrections/{corr_id}/review",
+        json={
+            "status": "approved",
+            "reviewed_by": "Unverified Guest",
+            "reviewer_role": "unauthorized",
+        },
+    )
+    assert res_unauth.status_code == 403
+    assert "not authorized" in res_unauth.json()["detail"].lower()
+
+    # 2. Authorized role (native_speaker_reviewer) succeeds
+    res_auth = client.patch(
+        f"/api/v1/corrections/{corr_id}/review",
+        json={
+            "status": "approved",
+            "reviewed_by": "Certified Speaker Elder",
+            "reviewer_role": "native_speaker_reviewer",
+            "review_notes": "Verified by recognized community speaker.",
+        },
+    )
+    assert res_auth.status_code == 200
+    assert res_auth.json()["status"] == "approved"
+
+
+def test_contributor_correction_withdrawal_lifecycle():
+    """Verify that contributors can withdraw submitted corrections under OCAP principles."""
+    res_transcripts = client.get("/api/transcripts")
+    transcripts = res_transcripts.json().get("transcripts", [])
+    assert len(transcripts) > 0
+    t_id = transcripts[0]["id"]
+
+    res_prop = client.post(
+        f"/api/v1/transcripts/{t_id}/corrections",
+        json={
+            "suggested_text": "Text to be withdrawn by contributor",
+            "contributor_name": "Testing Contributor",
+            "consent_confirmed": True,
+        },
+    )
+    assert res_prop.status_code == 200
+    corr_id = res_prop.json()["id"]
+
+    # Withdraw correction
+    res_with = client.post(f"/api/v1/corrections/{corr_id}/withdraw")
+    assert res_with.status_code == 200
+    data_with = res_with.json()
+    assert data_with["success"] is True
+    assert data_with["status"] == "withdrawn"
+
+    # Subsequent withdrawal returns 400 already withdrawn
+    res_repeat = client.post(f"/api/v1/corrections/{corr_id}/withdraw")
+    assert res_repeat.status_code == 400
+
+
+def test_resource_submission_withdrawal_lifecycle():
+    """Verify that resource contributions can be withdrawn and purged under OCAP protocols."""
+    sub_payload = {
+        "submission_type": "vocabulary",
+        "language_code": "gon",
+        "language_name": "Gondi",
+        "dialect": "Adilabad Northern",
+        "term_or_text": "సండ్రాయి గోండ్వానా (Test Term)",
+        "translation_text": "Gondwana ancestral homeland test",
+        "contributor_name": "Elder Pendur",
+        "license": "CC BY 4.0",
+        "attribution": "Adilabad Elder Circle",
+        "speaker_consent_given": True,
+        "is_sacred_or_restricted": False,
+    }
+    res_sub = client.post("/api/v1/resources/submit", json=sub_payload)
+    assert res_sub.status_code == 200
+    sub_id = res_sub.json()["id"]
+
+    # Withdraw resource submission
+    res_with = client.post(f"/api/v1/resources/submissions/{sub_id}/withdraw")
+    assert res_with.status_code == 200
+    data_with = res_with.json()
+    assert data_with["success"] is True
+    assert data_with["status"] == "withdrawn"
+    assert "withdrawn_at" in data_with
+
+    # Repeat withdrawal returns 400
+    res_repeat = client.post(f"/api/v1/resources/submissions/{sub_id}/withdraw")
+    assert res_repeat.status_code == 400
+
+
+def test_community_reviewed_evaluation_performance():
+    """Verify grounded performance metrics computed on reviewer-approved transcripts."""
+    res = client.get("/api/v1/evaluation/community-reviews")
+    assert res.status_code == 200
+    data = res.json()
+    assert "total_reviewed_samples" in data
+    assert "evaluation_date" in data
+    assert "languages" in data
+    assert "pilot_caveat" in data
+
+    # Verify run_full_evaluation report also includes community_reviewed_performance
+    res_full = client.get("/api/v1/evaluation/latest")
+    assert res_full.status_code == 200
+    full_data = res_full.json()
+    assert "community_reviewed_performance" in full_data
+
+

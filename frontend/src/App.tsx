@@ -1399,6 +1399,22 @@ ${t.transcript_text || t.machine_transcript_text || ''}
     }
   };
 
+  // Withdraw Speaker Consent under OCAP Data Sovereignty
+  const handleWithdrawConsent = async (id: number) => {
+    if (!confirm('Withdraw speaker consent under OCAP data sovereignty protocols? This will immediately remove this recording from the active archive and corpus.')) return;
+    try {
+      const res = await fetch(apiUrl(`/api/v1/transcripts/${id}/withdraw-consent`), { method: 'POST' });
+      if (!res.ok) throw new Error('Withdrawal request failed');
+      if (activeResult?.id === id) {
+        setActiveResult(null);
+      }
+      fetchTranscripts();
+      alert('Speaker consent successfully withdrawn. The recording has been removed from the active archive.');
+    } catch (err: any) {
+      alert('Consent withdrawal failed: ' + err.message);
+    }
+  };
+
   // Save Inline Edit in Archive
   const handleSaveArchiveEdit = async (id: number) => {
     try {
@@ -2051,7 +2067,30 @@ ${t.transcript_text || t.machine_transcript_text || ''}
             </h3>
 
             {activeResult && (
-              <span className="badge badge-amber">{activeResult.status}</span>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+                <span className="badge badge-amber">{activeResult.status}</span>
+                <button
+                  type="button"
+                  onClick={() => handleWithdrawConsent(activeResult.id)}
+                  style={{
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.35)',
+                    borderRadius: '8px',
+                    color: '#FCA5A5',
+                    fontSize: '11px',
+                    padding: '3px 10px',
+                    cursor: 'pointer',
+                    display: 'inline-flex',
+                    alignItems: 'center',
+                    gap: '4px',
+                    fontWeight: '600'
+                  }}
+                  title="Withdraw speaker consent under OCAP Data Sovereignty protocols"
+                >
+                  <RotateCcw size={11} />
+                  <span>Withdraw Consent</span>
+                </button>
+              </div>
             )}
           </div>
 
@@ -2963,6 +3002,17 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                     >
                       <ExternalLink size={12} />
                       <span>Inspect</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleWithdrawConsent(t.id)}
+                      className="btn-danger"
+                      style={{ padding: '4px 10px', fontSize: '12px', minHeight: '30px', background: 'rgba(239, 68, 68, 0.12)', borderColor: 'rgba(239, 68, 68, 0.35)', color: '#FCA5A5' }}
+                      title="Withdraw speaker consent under OCAP principles"
+                    >
+                      <RotateCcw size={12} />
+                      <span>Withdraw</span>
                     </button>
 
                     <button
