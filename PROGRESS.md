@@ -641,6 +641,17 @@
   - NOT VERIFIED: Remote public cloud deployment (held per user confirmation).
   - NEEDS FROM OTHER AGENT: none
 
+- [2026-10-13] [ANTIGRAVITY] DONE: Executed End-to-End Acceptance Verification of the 3 Requested Pilot Workflows (`scratch/test_pilot_three_workflows.py`).
+  - Files touched: `scratch/test_pilot_three_workflows.py`, `PROGRESS.md`.
+  - Details implemented:
+    1. Workflow 1 (Studio & Recordings `#studio`): Verified rejection of unconsented audio, audio upload with affirmative consent, offline Whisper transcription hypothesis generation, authentic dialect correction review with uncertainty logging, and contributor consent withdrawal.
+    2. Workflow 2 (Semantic Vector Resources `#resources`): Verified ChromaDB semantic search over 21+ languages, sacred lore access protection (`HTTP 403`), community lore contribution with consent, elder moderation into ChromaDB, and immediate "Withdraw (OCAP)" vector purge.
+    3. Workflow 3 (Pilot Feedback Reporting): Verified top navigation "Pilot Feedback" button, modal dialog state, structured feedback capture form, and offline Markdown/file export.
+  - VERIFIED: `python3 scratch/test_pilot_three_workflows.py` (ALL 3 WORKFLOWS PASSED); all 122 backend pytest tests pass (8.30s); zero external cloud API costs ($0.00).
+  - NOT VERIFIED: Remote public cloud deployment (held per user instruction).
+  - NEEDS FROM OTHER AGENT: none
+
+
 
 
 
