@@ -921,6 +921,7 @@ ${t.transcript_text || t.machine_transcript_text || ''}
         body: JSON.stringify({
           status,
           reviewed_by: 'Community Elder Reviewer',
+          reviewer_role: 'community_elder',
           review_notes: status === 'approved' ? 'Verified by community elder' : 'Reviewed and rejected',
           reviewer_uncertainty: reviewerUncertainty || undefined,
         }),
@@ -937,6 +938,20 @@ ${t.transcript_text || t.machine_transcript_text || ''}
       }
     } catch {
       // ignore
+    }
+  };
+
+  // Withdraw Contributed Correction under Contributor Control
+  const handleWithdrawCorrection = async (corrId: number) => {
+    if (!confirm('Withdraw this proposed correction?')) return;
+    try {
+      const res = await fetch(apiUrl(`/api/v1/corrections/${corrId}/withdraw`), { method: 'POST' });
+      if (!res.ok) throw new Error('Withdrawal failed');
+      if (activeResult?.id) {
+        await fetchCorrections(activeResult.id);
+      }
+    } catch (err: any) {
+      alert('Correction withdrawal failed: ' + err.message);
     }
   };
 
@@ -1067,6 +1082,20 @@ ${t.transcript_text || t.machine_transcript_text || ''}
       alert(`Moderation failed: ${err.message}`);
     } finally {
       setModeratingId(null);
+    }
+  };
+
+  // Withdraw Contributed Resource under OCAP Protocols
+  const handleWithdrawSubmission = async (submissionId: number) => {
+    if (!confirm('Withdraw this language resource submission under OCAP data sovereignty protocols? If indexed, it will be immediately purged from ChromaDB.')) return;
+    try {
+      const res = await fetch(apiUrl(`/api/v1/resources/submissions/${submissionId}/withdraw`), { method: 'POST' });
+      if (!res.ok) throw new Error('Withdrawal request failed');
+      await fetchSubmissions();
+      await fetchVectorStats();
+      alert('Resource contribution successfully withdrawn and purged from search indexes.');
+    } catch (err: any) {
+      alert(`Withdrawal failed: ${err.message}`);
     }
   };
 
@@ -2624,6 +2653,11 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                               {c.status === 'rejected' && (
                                 <span className="badge badge-red" style={{ fontSize: '10px' }}>Rejected</span>
                               )}
+                              {c.status === 'withdrawn' && (
+                                <span style={{ fontSize: '10px', color: '#64748B', fontStyle: 'italic', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: '4px' }}>
+                                  Withdrawn
+                                </span>
+                              )}
                               {c.status === 'pending_review' && (
                                 <div style={{ display: 'flex', gap: '4px' }}>
                                   <button
@@ -2652,6 +2686,15 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                                     title="Reject revision"
                                   >
                                     Reject
+                                  </button>
+                                  <button
+                                    type="button"
+                                    onClick={() => handleWithdrawCorrection(c.id)}
+                                    className="btn-secondary"
+                                    style={{ padding: '2px 6px', fontSize: '10px', minHeight: '22px', background: 'rgba(255,255,255,0.05)', color: '#94A3B8' }}
+                                    title="Withdraw this revision under contributor control"
+                                  >
+                                    Withdraw
                                   </button>
                                 </div>
                               )}
@@ -3375,17 +3418,22 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                                   ? 'rgba(16, 185, 129, 0.2)'
                                   : sub.status === 'rejected'
                                   ? 'rgba(239, 68, 68, 0.2)'
+                                  : sub.status === 'withdrawn'
+                                  ? 'rgba(100, 116, 139, 0.2)'
                                   : 'rgba(245, 158, 11, 0.2)',
                               color:
                                 sub.status === 'verified'
                                   ? '#6EE7B7'
                                   : sub.status === 'rejected'
                                   ? '#FCA5A5'
+                                  : sub.status === 'withdrawn'
+                                  ? '#94A3B8'
                                   : '#FCD34D'
                             }}>
                               {sub.status === 'verified' && '✓ Approved & Indexed in ChromaDB'}
                               {sub.status === 'rejected' && 'Rejected'}
                               {sub.status === 'pending_verification' && 'Awaiting Elder Review'}
+                              {sub.status === 'withdrawn' && 'Withdrawn & Purged (OCAP)'}
                             </span>
                           </div>
                         </div>
@@ -3412,6 +3460,28 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
                             <span style={{ color: '#10B981' }}>✓ OCAP Speaker Consent Confirmed</span>
                             <span>{sub.created_at ? new Date(sub.created_at).toLocaleDateString() : ''}</span>
+                            {sub.status !== 'withdrawn' && (
+                              <button
+                                type="button"
+                                onClick={() => handleWithdrawSubmission(sub.id)}
+                                style={{
+                                  background: 'none',
+                                  border: '1px solid rgba(239, 68, 68, 0.4)',
+                                  color: '#F87171',
+                                  padding: '2px 8px',
+                                  borderRadius: '4px',
+                                  fontSize: '10px',
+                                  cursor: 'pointer',
+                                  display: 'flex',
+                                  alignItems: 'center',
+                                  gap: '4px'
+                                }}
+                                title="Withdraw contribution and purge from ChromaDB under OCAP data sovereignty"
+                              >
+                                <Trash2 size={10} />
+                                Withdraw (OCAP)
+                              </button>
+                            )}
                           </div>
                         </div>
 
