@@ -601,5 +601,16 @@
   - NOT VERIFIED: Remote public cloud hosting (held awaiting explicit user approval).
   - NEEDS FROM OTHER AGENT: none
 
+- [2026-10-13] [ANTIGRAVITY] DONE: Stage 13 - Added explicit prohibitions against unconsented third-party model training and commercial redistribution to affirmative consent labels in `App.tsx` (recording form, correction submission, resource lore modal) and Section 1 of `docs/PILOT_GUIDE.md`. Maintained 100% test pass rate and clean frontend production build.
+  - Files touched: `frontend/src/App.tsx`, `docs/PILOT_GUIDE.md`, `PROGRESS.md`.
+  - Details implemented:
+    1. Consent Transparency: Explicitly affirmed in speaker and contributor consent checkboxes that voice recordings and lore cannot be used for third-party AI training or commercial redistribution without community permission.
+    2. Ethics Protocols: Formally documented model training and redistribution prohibitions in Section 1 of the Controlled Pilot Guide.
+    3. Verification: Confirmed 122/122 pytest tests pass and frontend bundle compiles cleanly with 0 errors.
+  - VERIFIED: `PYTHONPATH=backend pytest -q` (122 passed in 7.68s); `npm --prefix frontend run build` (0 errors, 1.56s).
+  - NOT VERIFIED: Remote public pilot release or external speaker outreach (strictly held awaiting user approval).
+  - NEEDS FROM OTHER AGENT: none
+
+
 
 

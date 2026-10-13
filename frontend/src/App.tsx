@@ -1993,7 +1993,7 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                   </strong>
                 </div>
                 <span style={{ color: '#94A3B8' }}>
-                  I confirm that this recording is made with voluntary, informed consent under Indigenous Data Sovereignty (OCAP). The audio master will be stored permanently in immutable storage.
+                  I confirm that this recording is made with voluntary, informed consent under Indigenous Data Sovereignty (OCAP). The audio master will be stored permanently in immutable storage. Voice recordings and cultural lore will not be used for third-party model training or commercial redistribution without explicit permission.
                 </span>
               </label>
             </div>
@@ -2604,7 +2604,7 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                           onChange={(e) => setCorrConsent(e.target.checked)}
                           style={{ accentColor: '#F59E0B' }}
                         />
-                        <span>I affirmatively consent under OCAP protocols to archive this revision.</span>
+                        <span>I affirmatively consent under OCAP protocols to archive this revision. Community contributions will not be used for commercial redistribution or unapproved training.</span>
                       </label>
 
                       {corrError && (
@@ -4470,7 +4470,7 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                   onChange={(e) => setContribConsent(e.target.checked)}
                   style={{ accentColor: '#14B8A6', marginTop: '2px' }}
                 />
-                <span>I confirm speaker/custodian consent under OCAP principles to contribute this entry to the open corpus.</span>
+                <span>I confirm speaker/custodian consent under OCAP principles to contribute this entry to the open corpus. Recordings and lore will not be used for third-party model training or commercial redistribution.</span>
               </label>
 
               {/* Sacred / Restricted Declaration */}

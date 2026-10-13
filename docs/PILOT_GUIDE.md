@@ -14,6 +14,7 @@ Before collecting or testing any community recordings:
 3. **Master Audio Immutability**: The speaker's acoustic recording is permanently retained as an immutable master. Transcripts and translations exist strictly as non-destructive annotation layers.
 4. **Sacred Knowledge Restriction**: Sacred, secret, or clan-restricted oral knowledge must **never** be uploaded to the open corpus (strictly rejected under OCAP protocols).
 5. **Right to Withdraw**: A speaker holds perpetual ownership over their voice and may withdraw consent at any time via the withdrawal endpoint (`POST /api/v1/transcripts/{id}/withdraw-consent`).
+6. **No Third-Party Model Training or Commercial Redistribution**: Community voice recordings, cultural lore, and reviewer corrections must **never** be used for third-party model training, foundation model fine-tuning, or commercial redistribution without explicit, documented community elder authorization.
 
 ---
 
