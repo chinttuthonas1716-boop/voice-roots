@@ -411,6 +411,18 @@ export function App() {
   const [isCreatingBackup, setIsCreatingBackup] = useState(false);
   const [backupMessage, setBackupMessage] = useState<string | null>(null);
 
+  // Controlled Pilot Feedback State
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
+  const [feedbackTesterName, setFeedbackTesterName] = useState('');
+  const [feedbackTesterRole, setFeedbackTesterRole] = useState('native_speaker_reviewer');
+  const [feedbackLanguage, setFeedbackLanguage] = useState('Gondi');
+  const [feedbackDialect, setFeedbackDialect] = useState('');
+  const [feedbackCategory, setFeedbackCategory] = useState<'transcription' | 'translation' | 'unsupported_pair' | 'accessibility'>('transcription');
+  const [feedbackAudioQuality, setFeedbackAudioQuality] = useState('Clear');
+  const [feedbackObservations, setFeedbackObservations] = useState('');
+  const [feedbackRecommendation, setFeedbackRecommendation] = useState('Approved for community archiving');
+  const [feedbackExportMsg, setFeedbackExportMsg] = useState<string | null>(null);
+
   // Check Backend Health
   const checkHealth = async () => {
     try {
@@ -850,6 +862,46 @@ ${t.transcript_text || t.machine_transcript_text || ''}
     a.download = `voice_roots_${t.id}.vtt`;
     a.click();
     URL.revokeObjectURL(url);
+  };
+
+  // Controlled Pilot Feedback Handlers
+  const generatePilotFeedbackMarkdown = () => {
+    return `### Voice Roots Pilot Tester Feedback Report
+Generated: ${new Date().toISOString()}
+
+**Tester Name / Role**: ${feedbackTesterName.trim() || 'Anonymous Reviewer'} / ${feedbackTesterRole}
+**Target Language & Dialect**: ${feedbackLanguage} ${feedbackDialect ? `(${feedbackDialect})` : ''}
+**Feedback Category**: ${feedbackCategory}
+**Audio Quality Observed**: ${feedbackAudioQuality}
+
+#### Observations & Systematic Discrepancies:
+${feedbackObservations.trim() || 'No specific errors noted.'}
+
+#### Recommendation:
+${feedbackRecommendation}
+
+---
+*Voice Roots Controlled Community Pilot (OCAP Data Sovereignty Compliant)*`;
+  };
+
+  const handleCopyPilotFeedback = () => {
+    const md = generatePilotFeedbackMarkdown();
+    navigator.clipboard.writeText(md);
+    setFeedbackExportMsg('Feedback report copied to clipboard!');
+    setTimeout(() => setFeedbackExportMsg(null), 3000);
+  };
+
+  const handleDownloadPilotFeedback = () => {
+    const md = generatePilotFeedbackMarkdown();
+    const blob = new Blob([md], { type: 'text/markdown;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `voice_roots_pilot_feedback_${Date.now()}.md`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setFeedbackExportMsg('Feedback report downloaded as Markdown (.md)!');
+    setTimeout(() => setFeedbackExportMsg(null), 3000);
   };
 
   // Community Corrections Handlers
@@ -1541,6 +1593,17 @@ ${t.transcript_text || t.machine_transcript_text || ''}
           >
             <RefreshCw size={13} />
             <span>Sync</span>
+          </button>
+
+          <button 
+            type="button" 
+            onClick={() => setShowFeedbackModal(true)} 
+            className="btn-secondary" 
+            style={{ padding: '6px 12px', minHeight: '34px', fontSize: '12px', borderColor: 'rgba(245, 158, 11, 0.4)', color: '#FCD34D' }}
+            title="Open Pilot Tester Feedback Form"
+          >
+            <FileText size={13} color="#F59E0B" />
+            <span>Pilot Feedback</span>
           </button>
 
           {backupMessage && (
@@ -4514,6 +4577,194 @@ ${t.transcript_text || t.machine_transcript_text || ''}
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Controlled Pilot Feedback Modal ─── */}
+      {showFeedbackModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '20px',
+        }}>
+          <div className="glass-card" style={{ maxWidth: '580px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={18} color="#F59E0B" />
+                <span>Pilot Tester Feedback Form</span>
+              </h3>
+              <button
+                type="button"
+                onClick={() => setShowFeedbackModal(false)}
+                className="btn-secondary"
+                style={{ padding: '4px 8px', minHeight: '28px' }}
+                aria-label="Close feedback modal"
+              >
+                <X size={15} />
+              </button>
+            </div>
+
+            <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '16px', lineHeight: '1.5' }}>
+              Record observations from testing sessions with community speakers. Feedback is formatted for responsible evaluation under Indigenous Data Sovereignty protocols.
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>TESTER NAME</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="e.g. Deva Rao / Linguistic Reviewer"
+                    value={feedbackTesterName}
+                    onChange={(e) => setFeedbackTesterName(e.target.value)}
+                    style={{ fontSize: '12px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>TESTER ROLE</label>
+                  <select
+                    className="select-field"
+                    value={feedbackTesterRole}
+                    onChange={(e) => setFeedbackTesterRole(e.target.value)}
+                    style={{ fontSize: '12px' }}
+                  >
+                    <option value="community_elder">Community Elder</option>
+                    <option value="native_speaker_reviewer">Native Speaker Reviewer</option>
+                    <option value="linguist">Designated Linguist</option>
+                    <option value="field_coordinator">Field Coordinator</option>
+                  </select>
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>TARGET LANGUAGE</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="e.g. Gondi / Koya / Santhali"
+                    value={feedbackLanguage}
+                    onChange={(e) => setFeedbackLanguage(e.target.value)}
+                    style={{ fontSize: '12px' }}
+                  />
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>DIALECT / REGION</label>
+                  <input
+                    type="text"
+                    className="input-field"
+                    placeholder="e.g. Adilabad Northern / Bhadrachalam"
+                    value={feedbackDialect}
+                    onChange={(e) => setFeedbackDialect(e.target.value)}
+                    style={{ fontSize: '12px' }}
+                  />
+                </div>
+              </div>
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>FEEDBACK CATEGORY</label>
+                  <select
+                    className="select-field"
+                    value={feedbackCategory}
+                    onChange={(e) => setFeedbackCategory(e.target.value as any)}
+                    style={{ fontSize: '12px' }}
+                  >
+                    <option value="transcription">Speech Transcription Error</option>
+                    <option value="translation">Translation Guardrail Discrepancy</option>
+                    <option value="unsupported_pair">Unsupported Language / Dialect</option>
+                    <option value="accessibility">UI Accessibility & Script Rendering</option>
+                  </select>
+                </div>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>AUDIO QUALITY</label>
+                  <select
+                    className="select-field"
+                    value={feedbackAudioQuality}
+                    onChange={(e) => setFeedbackAudioQuality(e.target.value)}
+                    style={{ fontSize: '12px' }}
+                  >
+                    <option value="Clear">Clear (Studio/Quiet)</option>
+                    <option value="Background Noise">Moderate Background Noise</option>
+                    <option value="Low Volume">Low Volume / Distant</option>
+                  </select>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>
+                  OBSERVATIONS, PHONETIC ERRORS & SYSTEMATIC PATTERNS *
+                </label>
+                <textarea
+                  className="input-field"
+                  rows={4}
+                  placeholder="Record specific words spoken vs Whisper output, dialect variations, missing characters in script, or guardrail responses..."
+                  value={feedbackObservations}
+                  onChange={(e) => setFeedbackObservations(e.target.value)}
+                  style={{ fontSize: '12px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>OVERALL RECOMMENDATION</label>
+                <select
+                  className="select-field"
+                  value={feedbackRecommendation}
+                  onChange={(e) => setFeedbackRecommendation(e.target.value)}
+                  style={{ fontSize: '12px' }}
+                >
+                  <option value="Approved for community archiving">Approved for community archiving</option>
+                  <option value="Requires elder linguistic review before indexing">Requires elder linguistic review before indexing</option>
+                  <option value="Blocked due to consent withdrawal or cultural restriction">Blocked due to consent withdrawal or cultural restriction</option>
+                </select>
+              </div>
+
+              {feedbackExportMsg && (
+                <div style={{ color: '#6EE7B7', background: 'rgba(16,185,129,0.15)', padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
+                  {feedbackExportMsg}
+                </div>
+              )}
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => setShowFeedbackModal(false)}
+                  className="btn-secondary"
+                  style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px' }}
+                >
+                  Close
+                </button>
+                <button
+                  type="button"
+                  onClick={handleCopyPilotFeedback}
+                  className="btn-secondary"
+                  style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px', borderColor: 'rgba(20, 184, 166, 0.4)', color: '#5EEAD4' }}
+                >
+                  <Copy size={13} />
+                  <span>Copy Form (MD)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleDownloadPilotFeedback}
+                  className="btn-primary"
+                  style={{ minHeight: '34px', padding: '6px 16px', fontSize: '12px', background: '#F59E0B', color: '#080A12' }}
+                >
+                  <Download size={13} />
+                  <span>Download Report</span>
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}
