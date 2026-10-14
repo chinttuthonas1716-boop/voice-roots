@@ -83,8 +83,8 @@ def run_diagnostics():
             "category": "PERFORMANCE",
             "severity": "LOW",
             "title": "Enable Next.js On-Demand Audio Waveform Caching",
-            "description": "Pre-cache computed 48kHz audio waveform segments in browser IndexedDB to reduce client CPU decode time on repeat playback.",
-            "proposed_fix": "Add ClientIndexedDBCache helper for audio wave buffers",
+            "description": "Report the browser-recorded audio format and size accurately; do not claim lossless encoding or a sample rate unless measured.",
+            "proposed_fix": "Display the recorded file's MIME type and size next to the original audio controls.",
             "status": "PENDING_USER_APPROVAL"
         },
         {
@@ -92,8 +92,8 @@ def run_diagnostics():
             "category": "ACCESSIBILITY",
             "severity": "LOW",
             "title": "Enhance High-Contrast Focus Ring for Keyboard Navigation",
-            "description": "Ensure tab-focus indicators have 4.5:1 contrast against pure Netflix #141414 surface for WCAG AAA compliance.",
-            "proposed_fix": "Add focus-visible:ring-netflix-red to all interactive card buttons",
+            "description": "Ensure tab-focus indicators have 4.5:1 contrast against the Voice Roots dark surface.",
+            "proposed_fix": "Add visible root-green focus rings to all interactive card buttons.",
             "status": "PENDING_USER_APPROVAL"
         }
     ]

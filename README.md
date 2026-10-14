@@ -44,25 +44,44 @@ Voice Roots is designed for **any language worldwide**, dynamically registering 
 
 ---
 
-## Quick Start
+## Quick Start & Deployment Modes
 
-### 1. Start the FastAPI Backend
+### Mode A: Unified Web App (Single Production URL — Recommended)
+Run the entire Voice Roots experience (Frontend UI + FastAPI Backend + SQLite + ChromaDB) from a single browser URL on port 8000:
+
 ```bash
-# From repository root
+# 1. Build the production frontend bundle into frontend/dist/
+npm --prefix frontend run build
+
+# 2. Launch the unified FastAPI server
+PATH="scratch/bin:$PATH" VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local VOICE_ROOTS_WHISPER_MODEL_SIZE=base python3 -m uvicorn main:app --app-dir backend --port 8000
+```
+Open **[http://127.0.0.1:8000/](http://127.0.0.1:8000/)** in your browser.
+- The root URL `/` serves the welcoming landing page.
+- Direct routes and page refreshes (`/pilot`, `/studio`, etc.) work seamlessly through client-side routing.
+- All REST API calls (`/api/*`), media streaming (`/storage/*`), and health telemetry (`/health`) operate on the same origin without CORS or proxy friction.
+
+---
+
+### Mode B: Development Mode (Vite Hot-Reload)
+For rapid frontend component and UI development with instant hot module replacement:
+
+```bash
+# Terminal 1: Backend service
 PATH="scratch/bin:$PATH" VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local VOICE_ROOTS_WHISPER_MODEL_SIZE=base python3 -m uvicorn main:app --app-dir backend --port 8000 --reload
-```
 
-### 2. Start the Frontend
-```bash
-cd frontend
-npm run dev -- --host 127.0.0.1 --port 5173
+# Terminal 2: Vite hot-reload dev server
+npm --prefix frontend run dev -- --host 127.0.0.1 --port 5173
 ```
-Open [http://127.0.0.1:5173](http://127.0.0.1:5173) in your browser.
+Open **[http://127.0.0.1:5173/](http://127.0.0.1:5173/)** in your browser.
+The Vite dev server proxies `/api`, `/health`, `/ready`, and `/storage` requests automatically to `http://127.0.0.1:8000`.
+
+---
 
 ### 3. Run the Automated Test Suite & Production Build
 ```bash
-# Run all 117 pytest tests (unit, integration, real ASR, and regression suites)
-PYTHONPATH=backend pytest -v
+# Run all 122 pytest tests (unit, integration, real ASR, and regression suites)
+python3 -m pytest -v
 
 # Or run by test category:
 pytest -m unit -v         # Fast isolated unit tests (fixtures and mocks)
@@ -95,8 +114,64 @@ For complete deployment architectures, Dockerfile templates, persistent volume s
 
 ---
 
+## Faculty Demonstration Workflow
+
+For a live review or faculty evaluation, execute this 8-step workflow on the unified local application (`http://127.0.0.1:8000/`):
+
+1. **Homepage & Orientation**:
+   - Open [http://127.0.0.1:8000/](http://127.0.0.1:8000/).
+   - Inspect the nature-inspired hero, title *"Voice Roots"*, subtitle *"Rooting Oral Languages in Text with AI"*, OCAP data sovereignty principles, and the 4 platform metrics badges.
+2. **Navigate to Recording Studio**:
+   - Click **"Start Recording"** or the **Record** navigation tab.
+   - Observe the split interface: Capture Oral Audio on the left, Transcription Workspace on the right.
+3. **Record / Upload Consented Audio**:
+   - Select an oral tongue (e.g. *Gondi* `gon` or *Koya* `kff`).
+   - Check the **Affirmative Speaker Consent (Mandatory)** checkbox under OCAP principles.
+   - Record via the live microphone or upload a consented WAV sample (`/tmp/speech_sample.wav`).
+4. **Offline Whisper Speech Recognition**:
+   - Check the optional **AI Speech-to-Text Opt-In** checkbox and click **Start Recording** / **Upload Audio**.
+   - Observe offline local Whisper processing (`whisper-base`) executing in ~1.8s with zero paid API calls.
+   - View the recognized hypothesis displayed in the read-only AI Annotation container.
+5. **Source-Grounded Translation & Safeguards**:
+   - Switch to the **Translation** tab (`#translate`).
+   - Select *Telugu* as source and *English* as target. Input text and click **Translate Text**.
+   - Select an unwritten oral language (*Gondi* or *Koya*) to demonstrate the **Indigenous Oral Tongue Protection Active** elder review safeguard banner (preventing machine hallucination).
+6. **Save & Retrieve Master Recordings**:
+   - Navigate to the **Archive** tab (`#archive`).
+   - Inspect the SQLite table of 194 saved recordings. Click play to listen to lossless master audio, and view community transcript revisions.
+7. **Language Registry & Semantic Search**:
+   - Navigate to the **Languages** tab (`#languages`) to view the 44 global languages matrix.
+   - Switch to **Search** (`#search`) and test ChromaDB semantic search using quick query pills (*"Mahua Tree (Gondi)"*, *"Healing Herb (Koya)"*).
+8. **Community Review & Controlled Pilot**:
+   - Navigate to **Community** (`#community`).
+   - View the Field Tester submission queue, Elder Review approval controls, and OCAP withdrawal buttons.
+
+---
+
+## Technical Setup & Handover
+
+- **Unified Production URL**: `http://127.0.0.1:8000/`
+- **Startup Command**:
+  ```bash
+  PATH="scratch/bin:$PATH" VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local VOICE_ROOTS_WHISPER_MODEL_SIZE=base python3 -m uvicorn main:app --app-dir backend --port 8000 --reload
+  ```
+- **Persistent Data Locations**:
+  * **Relational Database**: `backend/voice_roots.db` (SQLite source of truth)
+  * **Vector Store**: `backend/chroma_db/` (ChromaDB persistent embeddings)
+  * **Audio Masters**: `backend/storage/audio/` (SHA-256 verified acoustic masters)
+- **Verified Test Suite**:
+  * Backend Pytest: `python3 -m pytest -q` -> **122 passed in 10.06s** (100% pass rate)
+  * Frontend Bundle: `npm --prefix frontend run build` -> **0 errors in 1.90s**
+- **Top 3 Handover Priorities**:
+  1. *Field Deployment*: Mount a durable persistent SSD disk volume (`/data`) if deploying to a container host.
+  2. *Dialect Lexicons*: Expand the community Elder Review queue with authentic tribal elder audio samples.
+  3. *Mobile App Reconnection*: Unfreeze Flutter/React Native clients once server API stabilization is signed off.
+
+---
+
 ## Ethical Non-Negotiables (OCAP Principles)
 1. **Consent Gating**: Audio capture consent and AI transcription consent are separate, affirmative checkboxes that default to unchecked.
 2. **Zero Paid API Costs**: Speech recognition (Whisper-local) and vector embeddings run completely offline on local hardware with zero external API fees.
 3. **Data Sovereignty**: The original voice recording is permanently preserved as an immutable master that is never altered during transcription, translation, or community editing.
+
 

@@ -1,68 +1,47 @@
 version: "3.8"
 
 services:
-  # ─── PostgreSQL + pgvector ───────────────────────────────────────────────
-  db:
-    image: pgvector/pgvector:pg16
-    container_name: voice_roots_db
-    restart: always
-    environment:
-      POSTGRES_USER: postgres
-      POSTGRES_PASSWORD: password123
-      POSTGRES_DB: voice_roots
-    ports:
-      - "5432:5432"
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-    healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U postgres"]
-      interval: 5s
-      timeout: 5s
-      retries: 5
-
-  # ─── Redis Cache & Queue ────────────────────────────────────────────────
-  redis:
-    image: redis:7-alpine
-    container_name: voice_roots_redis
-    restart: always
-    ports:
-      - "6379:6379"
-
-  # ─── FastAPI Backend ───────────────────────────────────────────────────
+  # ─── Voice Roots FastAPI Backend ──────────────────────────────────────────
   backend:
     build:
-      context: ./backend
+      context: .
       dockerfile: Dockerfile
     container_name: voice_roots_backend
-    restart: always
+    restart: unless-stopped
     ports:
       - "8000:8000"
     environment:
-      - DATABASE_URL=postgresql+asyncpg://postgres:password123@db:5432/voice_roots
-      - REDIS_URL=redis://redis:6379/0
-      - AI_PROVIDER=mock
-      - SECRET_KEY=voice-roots-super-secure-capstone-jwt-key
-    depends_on:
-      db:
-        condition: service_healthy
-      redis:
-        condition: service_started
+      - VOICE_ROOTS_ENV=production
+      - VOICE_ROOTS_DB_PATH=/data/voice_roots.db
+      - VOICE_ROOTS_STORAGE_DIR=/data/storage
+      - VOICE_ROOTS_BACKUP_DIR=/data/backups
+      - VOICE_ROOTS_CHROMA_DIR=/data/chroma_db
+      - VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local
+      - VOICE_ROOTS_WHISPER_MODEL_SIZE=base
+      - VOICE_ROOTS_TRANSLATION_PROVIDER=offline-rule
+      - VOICE_ROOTS_ALLOWED_ORIGINS=http://localhost,http://localhost:5173,http://127.0.0.1:5173,http://localhost:80
     volumes:
-      - ./backend/storage:/app/storage
+      - voice_roots_data:/data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+      start_period: 10s
 
-  # ─── Next.js Web Platform ──────────────────────────────────────────────
-  web:
+  # ─── Voice Roots React / Vite Frontend ────────────────────────────────────
+  frontend:
     build:
-      context: ./web
+      context: ./frontend
       dockerfile: Dockerfile
-    container_name: voice_roots_web
-    restart: always
+    container_name: voice_roots_frontend
+    restart: unless-stopped
     ports:
-      - "3000:3000"
-    environment:
-      - NEXT_PUBLIC_API_URL=http://localhost:8000
+      - "5173:80"
     depends_on:
-      - backend
+      backend:
+        condition: service_healthy
 
 volumes:
-  pgdata:
+  voice_roots_data:
+    name: voice_roots_persistent_data

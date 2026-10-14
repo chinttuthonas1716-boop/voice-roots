@@ -25,7 +25,7 @@ interface SpatialIconProps {
 /**
  * iOS 27 Spatial Liquid Glass Icon Vessel.
  * Combines translucent frosted glass surfaces, specular light rims,
- * and high-contrast vector geometry with Netflix cinematic accents.
+ * and high-contrast vector geometry with Voice Roots green accents.
  */
 export function SpatialIcon({
   name,

@@ -30,8 +30,11 @@ import {
   CheckCheck,
   History,
   Send,
-  Award
+  Award,
+  Sprout
 } from 'lucide-react';
+import { Pilot } from './components/Pilot';
+import { Home } from './components/Home';
 
 interface Language {
   code: string;
@@ -283,34 +286,78 @@ export function App() {
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
 
-  // Active Navigation Tab
-  const getInitialTab = (): 'studio' | 'resources' | 'registry' => {
+  // Active Navigation Tab (Matching Reference: Home, Record, Translate, Languages, Search, Archive, Community, Login)
+  type NavTab = 'home' | 'record' | 'translate' | 'languages' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
+
+  const normalizeTab = (raw: string | null | undefined): NavTab => {
+    if (!raw) return 'home';
+    const t = raw.toLowerCase().replace(/^#/, '');
+    if (t === 'studio') return 'record';
+    if (t === 'resources') return 'search';
+    if (t === 'registry') return 'languages';
+    if (t === 'pilot') return 'community';
+    if (['home', 'record', 'translate', 'languages', 'search', 'archive', 'community', 'login'].includes(t)) {
+      return t as NavTab;
+    }
+    return 'home';
+  };
+
+  const getInitialTab = (): NavTab => {
     try {
-      const hash = window.location.hash.replace(/^#/, '').toLowerCase();
-      if (hash === 'resources' || hash === 'registry' || hash === 'studio') {
-        return hash;
+      const hash = window.location.hash;
+      if (hash) {
+        return normalizeTab(hash);
       }
       const params = new URLSearchParams(window.location.search);
-      const tabParam = params.get('tab')?.toLowerCase();
-      if (tabParam === 'resources' || tabParam === 'registry' || tabParam === 'studio') {
-        return tabParam;
+      const tabParam = params.get('tab');
+      if (tabParam) {
+        return normalizeTab(tabParam);
       }
     } catch {
       // Ignore if location inaccessible
     }
-    return 'studio';
+    return 'home';
   };
 
-  const [activeNavTab, setActiveNavTab] = useState<'studio' | 'resources' | 'registry'>(getInitialTab);
+  const [activeNavTab, setActiveNavTab] = useState<NavTab>(getInitialTab);
 
-  const handleTabChange = (tab: 'studio' | 'resources' | 'registry') => {
-    setActiveNavTab(tab);
+  const handleTabChange = (tab: NavTab) => {
+    const target = normalizeTab(tab);
+    setActiveNavTab(target);
     try {
-      if (window.location.hash !== `#${tab}`) {
-        window.history.replaceState(null, '', `#${tab}`);
+      if (target === 'home') {
+        if (window.location.hash) {
+          window.history.replaceState(null, '', window.location.pathname + window.location.search);
+        }
+      } else {
+        if (window.location.hash !== `#${target}`) {
+          window.history.replaceState(null, '', `#${target}`);
+        }
       }
     } catch {
       // Ignore history update errors
+    }
+  };
+
+  // Freeform Translation State for Dedicated Translate View (Reference Panel 3)
+  const [freeformSrcLang, setFreeformSrcLang] = useState('Telugu');
+  const [freeformTgtLang, setFreeformTgtLang] = useState('English');
+  const [freeformInputText, setFreeformInputText] = useState('నమస్కారం! మీరు బాగున్నారా?');
+  const [freeformSelectedTranscriptId, setFreeformSelectedTranscriptId] = useState<number | ''>('');
+
+  const handleSwapTranslateLanguages = () => {
+    const temp = freeformSrcLang;
+    setFreeformSrcLang(freeformTgtLang);
+    setFreeformTgtLang(temp);
+  };
+
+  const handleSelectTranscriptForTranslation = (id: number | '') => {
+    setFreeformSelectedTranscriptId(id);
+    if (!id) return;
+    const found = transcripts.find((t) => t.id === Number(id));
+    if (found) {
+      setFreeformInputText(found.transcript_text || found.machine_transcript_text || '');
+      setFreeformSrcLang(found.language || 'Gondi');
     }
   };
 
@@ -1533,249 +1580,293 @@ ${feedbackRecommendation}
 
   return (
     <div className="container">
-      {/* ─── Top Navigation & Live Telemetry ─── */}
-      <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '32px', flexWrap: 'wrap', gap: '16px' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      {/* ─── Top Navigation Bar (Matching Reference Exactly) ─── */}
+      <header style={{ 
+        display: 'flex', 
+        justifyContent: 'space-between', 
+        alignItems: 'center', 
+        padding: '16px 0', 
+        marginBottom: '28px', 
+        borderBottom: '1px solid rgba(35, 83, 71, 0.45)',
+        flexWrap: 'wrap', 
+        gap: '16px' 
+      }}>
+        {/* Left: Voice Roots Logo & Name */}
+        <div 
+          onClick={() => handleTabChange('home')}
+          style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
+          title="Voice Roots Home"
+        >
           <div style={{ 
-            width: '42px', 
-            height: '42px', 
-            borderRadius: '12px', 
-            background: 'linear-gradient(135deg, #F59E0B 0%, #D97706 100%)',
+            width: '36px', 
+            height: '36px', 
+            borderRadius: '10px', 
+            background: 'linear-gradient(135deg, #163832 0%, #0B2B26 100%)',
+            border: '1px solid #235347',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 4px 14px rgba(245, 158, 11, 0.35)'
+            boxShadow: '0 2px 8px rgba(5, 31, 32, 0.4)'
           }}>
-            <Volume2 size={24} color="#080A12" />
+            <Sprout size={18} color="#8EB69B" />
           </div>
-          <div>
-            <h1 style={{ fontSize: '22px', fontWeight: '800', letterSpacing: '-0.02em', color: '#F8FAFC' }}>
-              Voice Roots
-            </h1>
-            <p style={{ fontSize: '13px', color: '#94A3B8' }}>
-              Rooting Oral Languages in Text with AI
-            </p>
-          </div>
+          <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em', color: '#DAF1DE' }}>
+            Voice <span style={{ color: '#8EB69B' }}>Roots</span>
+          </span>
         </div>
 
-        {/* Backend Status Telemetry */}
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-          {health ? (
-            <div className="badge badge-green" title={`FastAPI running with ${health.database} database`}>
-              <CheckCircle2 size={14} />
-              <span>FastAPI Backend: Online (SQLite Connected)</span>
-            </div>
-          ) : (
-            <div className="badge badge-red" title={healthError || 'Connecting...'}>
-              <AlertCircle size={14} />
-              <span>FastAPI Backend: {healthError ? 'Offline (Run uvicorn)' : 'Connecting...'}</span>
-            </div>
-          )}
+        {/* Center: Navigation Links */}
+        <nav 
+          role="tablist" 
+          aria-label="Application Navigation"
+          style={{ 
+            display: 'flex', 
+            alignItems: 'center', 
+            gap: '4px', 
+            overflowX: 'auto',
+            maxWidth: '100%',
+            scrollbarWidth: 'none',
+            paddingBottom: '2px'
+          }}
+        >
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'home'}
+            onClick={() => handleTabChange('home')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'home' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'home' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'home' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Home
+          </button>
 
-          <button 
-            type="button" 
-            onClick={handleCreateBackup} 
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'record'}
+            onClick={() => handleTabChange('record')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'record' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'record' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'record' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Record
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'languages'}
+            onClick={() => { handleTabChange('languages'); if (capabilities.length === 0) fetchCapabilities(); }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'languages' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'languages' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'languages' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Languages
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'search'}
+            onClick={() => { handleTabChange('search'); if (searchResults.length === 0) handleSearchResources(); }}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'search' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'search' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'search' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Search
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'archive'}
+            onClick={() => handleTabChange('archive')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'archive' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'archive' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'archive' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Archive
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'community'}
+            onClick={() => handleTabChange('community')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'community' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'community' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'community' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Community
+          </button>
+        </nav>
+
+        {/* Right: Telemetry, Snapshot, Login, Sign Up buttons */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div 
+            title={health ? `FastAPI Online (${health.database})` : (healthError || 'Connecting...')}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: health ? '#8EB69B' : '#EF4444',
+              boxShadow: health ? '0 0 8px #8EB69B' : 'none',
+              marginRight: '4px'
+            }}
+          />
+
+          <button
+            type="button"
+            onClick={handleCreateBackup}
             disabled={isCreatingBackup}
-            className="btn-secondary" 
-            style={{ padding: '6px 12px', minHeight: '34px', fontSize: '12px' }}
-            title="Create atomic SQLite database snapshot"
+            title={backupMessage || "Create atomic SQLite database snapshot"}
+            style={{
+              background: 'transparent',
+              border: '1px solid #235347',
+              borderRadius: '20px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              color: '#DAF1DE',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
           >
-            {isCreatingBackup ? <Loader2 size={13} className="spin" /> : <Database size={13} color="#14B8A6" />}
-            <span>{isCreatingBackup ? 'Snapshotting...' : 'Snapshot Backup'}</span>
+            {isCreatingBackup ? <Loader2 size={12} className="spin" /> : <Database size={12} color="#8EB69B" />}
+            <span>{isCreatingBackup ? 'Saving...' : 'Backup'}</span>
           </button>
 
-          <button 
-            type="button" 
-            onClick={() => { checkHealth(); fetchTranscripts(); fetchSubmissions(); }} 
-            className="btn-secondary" 
-            style={{ padding: '6px 12px', minHeight: '34px', fontSize: '12px' }}
-            title="Refresh connection"
+          <button
+            type="button"
+            onClick={() => handleTabChange('login')}
+            className="btn-secondary"
+            style={{
+              padding: '6px 16px',
+              minHeight: '34px',
+              fontSize: '13px',
+              borderRadius: '20px',
+              background: activeNavTab === 'login' ? 'rgba(142, 182, 155, 0.2)' : 'rgba(11, 43, 38, 0.6)',
+              borderColor: activeNavTab === 'login' ? '#8EB69B' : '#235347'
+            }}
           >
-            <RefreshCw size={13} />
-            <span>Sync</span>
+            Login
           </button>
 
-          <button 
-            type="button" 
-            onClick={() => setShowFeedbackModal(true)} 
-            className="btn-secondary" 
-            style={{ padding: '6px 12px', minHeight: '34px', fontSize: '12px', borderColor: 'rgba(245, 158, 11, 0.4)', color: '#FCD34D' }}
-            title="Open Pilot Tester Feedback Form"
+          <button
+            type="button"
+            onClick={() => handleTabChange('login')}
+            className="btn-primary"
+            style={{
+              padding: '6px 18px',
+              minHeight: '34px',
+              fontSize: '13px',
+              borderRadius: '20px',
+              fontWeight: '700'
+            }}
           >
-            <FileText size={13} color="#F59E0B" />
-            <span>Pilot Feedback</span>
+            Sign Up
           </button>
-
-          {backupMessage && (
-            <div style={{
-              fontSize: '11px',
-              padding: '4px 8px',
-              borderRadius: '6px',
-              background: backupMessage.startsWith('✓') ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              color: backupMessage.startsWith('✓') ? '#6EE7B7' : '#FCA5A5',
-              border: '1px solid var(--card-border)'
-            }}>
-              {backupMessage}
-            </div>
-          )}
         </div>
       </header>
 
-      {/* ─── Mission & Protocol Notice Card ─── */}
-      <div className="glass-card" style={{ marginBottom: '28px', borderLeft: '4px solid #F59E0B' }}>
-        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-          <Info size={22} color="#F59E0B" style={{ flexShrink: 0, marginTop: '2px' }} />
-          <div>
-            <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px' }}>
-              Ethical Language Preservation & Speech AI
-            </h2>
-            <p style={{ fontSize: '14px', color: '#94A3B8', lineHeight: '1.6' }}>
-              Voice Roots roots unwritten oral, tribal, and regional tongues into searchable text.
-              Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker's audio recording is preserved permanently as the immutable master. 
-              Automated AI transcription is processed with explicit consent and stored as an annotation layer that never overwrites the master voice.
-            </p>
-            <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
-              <span className="badge badge-teal">Immutable Audio Master</span>
-              <span className="badge badge-amber">Consent-Gated AI Engine</span>
-              <span className="badge badge-green">SQLite Storage Active</span>
-              <span className="badge badge-teal">Dual Annotation Separation</span>
+      {/* ─── TAB 0: Welcoming Homepage Landing ─── */}
+      {activeNavTab === 'home' && (
+        <Home 
+          onNavigate={handleTabChange}
+          transcriptCount={transcripts.length}
+          languageCount={languages.length}
+          vectorDocCount={vectorStats?.total_records ?? 28}
+        />
+      )}
+
+      {/* ─── TAB 1: Record & Transcribe Studio (Matching Reference 2. Record & Transcribe) ─── */}
+      {(activeNavTab === 'record' || activeNavTab === 'studio') && (
+        <>
+          {/* Mission & Protocol Notice Card */}
+          <div className="glass-card" style={{ marginBottom: '28px', borderLeft: '4px solid #8EB69B' }}>
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+              <Info size={22} color="#8EB69B" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#DAF1DE' }}>
+                  Ethical Language Preservation & Speech AI
+                </h2>
+                <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.8)', lineHeight: '1.6' }}>
+                  Voice Roots roots unwritten oral, tribal, and regional tongues into searchable text.
+                  Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker's audio recording is preserved permanently as the immutable master. 
+                  Automated AI transcription is processed with explicit consent and stored as an annotation layer that never overwrites the master voice.
+                </p>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
+                  <span className="badge badge-teal">Immutable Audio Master</span>
+                  <span className="badge badge-green">Consent-Gated AI Engine</span>
+                  <span className="badge badge-teal">SQLite Storage Active</span>
+                  <span className="badge badge-green">Dual Annotation Separation</span>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-      </div>
 
-      {/* ─── Main Application Navigation Tabs ─── */}
-      <nav 
-        role="tablist" 
-        aria-label="Application Navigation Tabs"
-        style={{ 
-          display: 'flex', 
-          gap: '12px', 
-          marginBottom: '28px', 
-          flexWrap: 'wrap', 
-          borderBottom: '1px solid var(--card-border)', 
-          paddingBottom: '16px' 
-        }}
-      >
-        <button
-          type="button"
-          role="tab"
-          id="tab-studio"
-          aria-selected={activeNavTab === 'studio'}
-          aria-controls="panel-studio"
-          onClick={() => handleTabChange('studio')}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            borderRadius: '12px',
-            border: activeNavTab === 'studio' ? '1px solid #F59E0B' : '1px solid var(--card-border)',
-            background: activeNavTab === 'studio' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-            color: activeNavTab === 'studio' ? '#FCD34D' : '#94A3B8',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <Mic size={16} color={activeNavTab === 'studio' ? '#F59E0B' : '#94A3B8'} />
-          <span>Oral Studio & Archive</span>
-          {transcripts.length > 0 && (
-            <span style={{ 
-              background: 'rgba(245, 158, 11, 0.25)', 
-              color: '#FCD34D', 
-              fontSize: '11px', 
-              padding: '1px 7px', 
-              borderRadius: '10px' 
-            }}>
-              {transcripts.length}
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          id="tab-resources"
-          aria-selected={activeNavTab === 'resources'}
-          aria-controls="panel-resources"
-          onClick={() => { handleTabChange('resources'); if (searchResults.length === 0) handleSearchResources(); }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            borderRadius: '12px',
-            border: activeNavTab === 'resources' ? '1px solid #14B8A6' : '1px solid var(--card-border)',
-            background: activeNavTab === 'resources' ? 'rgba(20, 184, 166, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-            color: activeNavTab === 'resources' ? '#5EEAD4' : '#94A3B8',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <Database size={16} color={activeNavTab === 'resources' ? '#14B8A6' : '#94A3B8'} />
-          <span>Semantic Vector Resources (ChromaDB)</span>
-          {vectorStats && (
-            <span style={{ 
-              background: 'rgba(20, 184, 166, 0.25)', 
-              color: '#5EEAD4', 
-              fontSize: '11px', 
-              padding: '1px 7px', 
-              borderRadius: '10px' 
-            }}>
-              {vectorStats.total_records} docs
-            </span>
-          )}
-        </button>
-
-        <button
-          type="button"
-          role="tab"
-          id="tab-registry"
-          aria-selected={activeNavTab === 'registry'}
-          aria-controls="panel-registry"
-          onClick={() => { handleTabChange('registry'); if (capabilities.length === 0) fetchCapabilities(); }}
-          style={{
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            borderRadius: '12px',
-            border: activeNavTab === 'registry' ? '1px solid #8B5CF6' : '1px solid var(--card-border)',
-            background: activeNavTab === 'registry' ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.04)',
-            color: activeNavTab === 'registry' ? '#C4B5FD' : '#94A3B8',
-            fontSize: '14px',
-            fontWeight: '600',
-            cursor: 'pointer',
-            transition: 'all 0.15s ease'
-          }}
-        >
-          <Globe size={16} color={activeNavTab === 'registry' ? '#A78BFA' : '#94A3B8'} />
-          <span>Universal Language Registry</span>
-          <span style={{ 
-            background: 'rgba(139, 92, 246, 0.25)', 
-            color: '#C4B5FD', 
-            fontSize: '11px', 
-            padding: '1px 7px', 
-            borderRadius: '10px' 
-          }}>
-            {languages.length}
-          </span>
-        </button>
-      </nav>
-
-      {/* ─── TAB 1: Oral Studio & Archive (Existing Main Experience) ─── */}
-      {activeNavTab === 'studio' && (
-        <>
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '24px', marginBottom: '36px' }}>
         {/* ─── Left Column: Record / Upload Studio ─── */}
         <section className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileAudio size={20} color="#F59E0B" />
+              <FileAudio size={20} color="#8EB69B" />
               <span>Capture Oral Audio</span>
             </h3>
 
@@ -1785,13 +1876,13 @@ ${feedbackRecommendation}
                 type="button"
                 onClick={() => setMode('record')}
                 style={{
-                  background: mode === 'record' ? '#F59E0B' : 'transparent',
-                  color: mode === 'record' ? '#080A12' : '#94A3B8',
+                  background: mode === 'record' ? '#8EB69B' : 'transparent',
+                  color: mode === 'record' ? '#051F20' : 'rgba(218, 241, 222, 0.7)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '6px 14px',
                   fontSize: '13px',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
@@ -1802,13 +1893,13 @@ ${feedbackRecommendation}
                 type="button"
                 onClick={() => setMode('upload')}
                 style={{
-                  background: mode === 'upload' ? '#F59E0B' : 'transparent',
-                  color: mode === 'upload' ? '#080A12' : '#94A3B8',
+                  background: mode === 'upload' ? '#8EB69B' : 'transparent',
+                  color: mode === 'upload' ? '#051F20' : 'rgba(218, 241, 222, 0.7)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '6px 14px',
                   fontSize: '13px',
-                  fontWeight: '600',
+                  fontWeight: '700',
                   cursor: 'pointer',
                   transition: 'all 0.15s ease'
                 }}
@@ -1821,7 +1912,7 @@ ${feedbackRecommendation}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Title Input */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#94A3B8', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
                 Recording Title *
               </label>
               <input
@@ -1838,7 +1929,7 @@ ${feedbackRecommendation}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '500', color: '#94A3B8' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '500', color: 'rgba(218, 241, 222, 0.72)' }}>
                     Language *
                   </label>
                   <button
@@ -1847,7 +1938,7 @@ ${feedbackRecommendation}
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: '#F59E0B',
+                      color: '#8EB69B',
                       fontSize: '11px',
                       cursor: 'pointer',
                       display: 'flex',
@@ -1905,8 +1996,8 @@ ${feedbackRecommendation}
                   const curr = languages.find(l => l.name.toLowerCase() === selectedLanguage.toLowerCase() || l.code.toLowerCase() === selectedLanguage.toLowerCase());
                   if (!curr || selectedLanguage === 'auto') return null;
                   return (
-                    <div style={{ marginTop: '4px', fontSize: '11px', color: '#64748B', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <span>BCP 47: <code style={{ color: '#FCD34D' }}>{curr.code}</code></span>
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <span>BCP 47: <code style={{ color: '#8EB69B' }}>{curr.code}</code></span>
                       {curr.script && <span>Script: {curr.script.split('/')[0].trim()}</span>}
                     </div>
                   );
@@ -1914,7 +2005,7 @@ ${feedbackRecommendation}
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: '#94A3B8', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
                   Dialect / Variety
                 </label>
                 <input
@@ -1943,7 +2034,7 @@ ${feedbackRecommendation}
                       Recording: {formatSeconds(recordingTime)}
                     </div>
                   ) : (
-                    <p style={{ fontSize: '14px', color: '#94A3B8' }}>
+                    <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.72)' }}>
                       {recordedBlob ? 'Audio captured! Click play below or re-record.' : 'Click to start recording your microphone.'}
                     </p>
                   )}
@@ -1955,7 +2046,7 @@ ${feedbackRecommendation}
                       type="button"
                       onClick={startRecording}
                       className="btn-primary"
-                      style={{ background: '#EF4444', color: '#FFFFFF' }}
+                      style={{ background: '#8EB69B', color: '#051F20' }}
                     >
                       <Mic size={18} />
                       <span>{recordedBlob ? 'Record Again' : 'Start Recording'}</span>
@@ -1965,7 +2056,7 @@ ${feedbackRecommendation}
                       type="button"
                       onClick={stopRecording}
                       className="btn-primary"
-                      style={{ background: '#F59E0B', color: '#080A12' }}
+                      style={{ background: '#8EB69B', color: '#051F20' }}
                     >
                       <Square size={18} />
                       <span>Stop Recording</span>
@@ -1987,8 +2078,8 @@ ${feedbackRecommendation}
                 padding: '24px', 
                 textAlign: 'center' 
               }}>
-                <Upload size={32} color="#F59E0B" style={{ margin: '0 auto 12px' }} />
-                <p style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '12px' }}>
+                <Upload size={32} color="#8EB69B" style={{ margin: '0 auto 12px' }} />
+                <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '12px' }}>
                   Select a master audio file (.wav, .mp3, .m4a, .ogg, .flac)
                 </p>
                 <input
@@ -2004,7 +2095,7 @@ ${feedbackRecommendation}
 
                 {selectedFile && (
                   <div style={{ marginTop: '14px', textAlign: 'left' }}>
-                    <p style={{ fontSize: '13px', color: '#F8FAFC', fontWeight: '600' }}>
+                    <p style={{ fontSize: '13px', color: '#DAF1DE', fontWeight: '600' }}>
                       ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                     </p>
                     {fileAudioUrl && (
@@ -2018,8 +2109,8 @@ ${feedbackRecommendation}
             {/* Affirmative Speaker Consent (Mandatory under Indigenous Ethical Protocols / OCAP) */}
             <div 
               style={{ 
-                background: hasConsent ? 'rgba(245, 158, 11, 0.08)' : 'rgba(255, 255, 255, 0.03)', 
-                border: hasConsent ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--card-border)', 
+                background: hasConsent ? 'rgba(142, 182, 155, 0.08)' : 'rgba(255, 255, 255, 0.03)', 
+                border: hasConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)', 
                 borderRadius: '12px', 
                 padding: '16px', 
                 display: 'flex', 
@@ -2040,22 +2131,22 @@ ${feedbackRecommendation}
                   width: '18px',
                   height: '18px',
                   marginTop: '2px',
-                  accentColor: '#F59E0B',
+                  accentColor: '#8EB69B',
                   cursor: 'pointer'
                 }}
                 required
               />
               <label 
                 htmlFor="speaker-consent-checkbox" 
-                style={{ fontSize: '13px', lineHeight: '1.5', color: '#F8FAFC', cursor: 'pointer', flex: 1 }}
+                style={{ fontSize: '13px', lineHeight: '1.5', color: '#DAF1DE', cursor: 'pointer', flex: 1 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                  <ShieldCheck size={16} color="#F59E0B" />
-                  <strong style={{ color: '#F59E0B' }}>
+                  <ShieldCheck size={16} color="#8EB69B" />
+                  <strong style={{ color: '#8EB69B' }}>
                     Affirmative Speaker Consent (Mandatory)
                   </strong>
                 </div>
-                <span style={{ color: '#94A3B8' }}>
+                <span style={{ color: 'rgba(218, 241, 222, 0.72)' }}>
                   I confirm that this recording is made with voluntary, informed consent under Indigenous Data Sovereignty (OCAP). The audio master will be stored permanently in immutable storage. Voice recordings and cultural lore will not be used for third-party model training or commercial redistribution without explicit permission.
                 </span>
               </label>
@@ -2064,8 +2155,8 @@ ${feedbackRecommendation}
             {/* AI Speech Transcription Consent (Distinct Opt-in) */}
             <div 
               style={{ 
-                background: wantsTranscriptionConsent ? 'rgba(20, 184, 166, 0.08)' : 'rgba(255, 255, 255, 0.03)', 
-                border: wantsTranscriptionConsent ? '1px solid rgba(20, 184, 166, 0.35)' : '1px solid var(--card-border)', 
+                background: wantsTranscriptionConsent ? 'rgba(142, 182, 155, 0.1)' : 'rgba(255, 255, 255, 0.03)', 
+                border: wantsTranscriptionConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)', 
                 borderRadius: '12px', 
                 padding: '14px', 
                 display: 'flex', 
@@ -2083,21 +2174,21 @@ ${feedbackRecommendation}
                   width: '18px',
                   height: '18px',
                   marginTop: '2px',
-                  accentColor: '#14B8A6',
+                  accentColor: '#8EB69B',
                   cursor: 'pointer'
                 }}
               />
               <label 
                 htmlFor="transcription-consent-checkbox" 
-                style={{ fontSize: '13px', lineHeight: '1.5', color: '#F8FAFC', cursor: 'pointer', flex: 1 }}
+                style={{ fontSize: '13px', lineHeight: '1.5', color: '#DAF1DE', cursor: 'pointer', flex: 1 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                  <Sparkles size={16} color="#14B8A6" />
-                  <strong style={{ color: '#5EEAD4' }}>
+                  <Sparkles size={16} color="#8EB69B" />
+                  <strong style={{ color: '#DAF1DE' }}>
                     Queue AI Speech Transcription (Opt-in Consent)
                   </strong>
                 </div>
-                <span style={{ color: '#94A3B8', fontSize: '12px' }}>
+                <span style={{ color: 'rgba(218, 241, 222, 0.72)', fontSize: '12px' }}>
                   Request automated phonetic speech-to-text recognition upon upload. AI hypotheses are stored as an annotation layer without modifying the original audio.
                 </span>
               </label>
@@ -2106,14 +2197,14 @@ ${feedbackRecommendation}
             {/* Live Upload Progress Indicator */}
             {uploadProgress !== null && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#94A3B8' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)' }}>
                   <span>Uploading & Preserving Master...</span>
-                  <span style={{ color: '#F59E0B', fontWeight: '600' }}>{uploadProgress}%</span>
+                  <span style={{ color: '#8EB69B', fontWeight: '600' }}>{uploadProgress}%</span>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '6px', height: '6px', overflow: 'hidden' }}>
                   <div 
                     style={{ 
-                      background: 'linear-gradient(90deg, #F59E0B, #10B981)', 
+                      background: 'linear-gradient(90deg, #235347, #8EB69B)', 
                       height: '100%', 
                       width: `${uploadProgress}%`, 
                       transition: 'width 0.15s ease' 
@@ -2154,13 +2245,13 @@ ${feedbackRecommendation}
         <section className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Languages size={20} color="#F59E0B" />
+              <Languages size={20} color="#8EB69B" />
               <span>Transcription Workspace</span>
             </h3>
 
             {activeResult && (
               <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-                <span className="badge badge-amber">{activeResult.status}</span>
+                <span className="badge badge-green">{activeResult.status}</span>
                 <button
                   type="button"
                   onClick={() => handleWithdrawConsent(activeResult.id)}
@@ -2189,20 +2280,20 @@ ${feedbackRecommendation}
           {activeResult ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC', marginBottom: '4px' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', marginBottom: '4px' }}>
                   {activeResult.title}
                 </h4>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', color: '#94A3B8', alignItems: 'center' }}>
-                  <span>Language: <strong style={{ color: '#F8FAFC' }}>{activeResult.language}</strong></span>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)', alignItems: 'center' }}>
+                  <span>Language: <strong style={{ color: '#DAF1DE' }}>{activeResult.language}</strong></span>
                   <button
                     type="button"
                     onClick={() => handleDetectLanguage(activeResult.id)}
                     disabled={isDetectingLanguage || !supportsAutoDetect}
                     style={{
-                      background: supportsAutoDetect ? 'rgba(139, 92, 246, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                      border: supportsAutoDetect ? '1px solid rgba(139, 92, 246, 0.4)' : '1px solid var(--card-border)',
+                      background: supportsAutoDetect ? 'rgba(142, 182, 155, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: supportsAutoDetect ? '1px solid #8EB69B' : '1px solid var(--card-border)',
                       borderRadius: '6px',
-                      color: supportsAutoDetect ? '#C4B5FD' : '#64748B',
+                      color: supportsAutoDetect ? '#8EB69B' : 'rgba(218, 241, 222, 0.5)',
                       fontSize: '11px',
                       padding: '2px 8px',
                       cursor: supportsAutoDetect ? 'pointer' : 'not-allowed',
@@ -2216,10 +2307,10 @@ ${feedbackRecommendation}
                     <Sparkles size={11} />
                     <span>{isDetectingLanguage ? 'Analyzing...' : (supportsAutoDetect ? 'Detect Language' : 'Detect (Unavailable)')}</span>
                   </button>
-                  {activeResult.dialect && <span>• Dialect: <strong style={{ color: '#F8FAFC' }}>{activeResult.dialect}</strong></span>}
+                  {activeResult.dialect && <span>• Dialect: <strong style={{ color: '#DAF1DE' }}>{activeResult.dialect}</strong></span>}
                   {activeResult.audio_sha256 && (
                     <span title={`SHA-256: ${activeResult.audio_sha256}`}>
-                      • SHA-256: <code style={{ color: '#F59E0B' }}>{activeResult.audio_sha256.substring(0, 8)}…</code>
+                      • SHA-256: <code style={{ color: '#8EB69B' }}>{activeResult.audio_sha256.substring(0, 8)}…</code>
                     </span>
                   )}
                   {activeResult.file_size_bytes && (
@@ -2445,9 +2536,9 @@ ${feedbackRecommendation}
                   <div style={{ 
                     padding: '10px 12px', 
                     borderRadius: '8px', 
-                    background: 'rgba(245, 158, 11, 0.1)', 
-                    border: '1px solid rgba(245, 158, 11, 0.3)',
-                    color: '#FCD34D',
+                    background: 'rgba(142, 182, 155, 0.1)', 
+                    border: '1px solid #235347',
+                    color: '#DAF1DE',
                     fontSize: '13px'
                   }}>
                     <p style={{ marginBottom: '6px' }}>
@@ -2550,18 +2641,18 @@ ${feedbackRecommendation}
 
               {/* ─── Box 2: Community Corrected Transcript (Editable) ─── */}
               <div style={{ 
-                background: 'rgba(245, 158, 11, 0.04)', 
-                border: '1px solid rgba(245, 158, 11, 0.25)', 
+                background: 'rgba(142, 182, 155, 0.04)', 
+                border: '1px solid #235347', 
                 borderRadius: '12px', 
                 padding: '16px' 
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '700', color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Edit3 size={15} color="#FCD34D" />
+                  <label style={{ fontSize: '13px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Edit3 size={15} color="#8EB69B" />
                     <span>Community Transcript & Corrections (Editable)</span>
                   </label>
                   {activeResult.status === 'Community Edited' && (
-                    <span className="badge badge-amber" style={{ fontSize: '11px', padding: '2px 8px' }}>
+                    <span className="badge badge-green" style={{ fontSize: '11px', padding: '2px 8px' }}>
                       Community Edited
                     </span>
                   )}
@@ -2576,7 +2667,7 @@ ${feedbackRecommendation}
                 />
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap', gap: '8px' }}>
-                  <p style={{ fontSize: '11px', color: '#64748B' }}>
+                  <p style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)' }}>
                     Saved separately without modifying the immutable audio master or original AI output.
                   </p>
 
@@ -2593,10 +2684,10 @@ ${feedbackRecommendation}
                 </div>
 
                 {/* ─── Community Corrections Version Timeline & Form ─── */}
-                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(35, 83, 71, 0.4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <History size={14} color="#FCD34D" />
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <History size={14} color="#8EB69B" />
                       <span>Correction Audit Trail & Versions {isLoadingCorrections ? '(Loading...)' : `(${corrections.length})`}</span>
                     </span>
                     <button
@@ -2660,12 +2751,12 @@ ${feedbackRecommendation}
                       />
 
                       {/* Consent Checkbox */}
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: '#CBD5E1', marginBottom: '10px', cursor: 'pointer' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '10px', cursor: 'pointer' }}>
                         <input
                           type="checkbox"
                           checked={corrConsent}
                           onChange={(e) => setCorrConsent(e.target.checked)}
-                          style={{ accentColor: '#F59E0B' }}
+                          style={{ accentColor: '#8EB69B' }}
                         />
                         <span>I affirmatively consent under OCAP protocols to archive this revision. Community contributions will not be used for commercial redistribution or unapproved training.</span>
                       </label>
@@ -2736,7 +2827,7 @@ ${feedbackRecommendation}
                                     type="button"
                                     onClick={() => handleReviewCorrection(c.id, 'approved', 'uncertain_dialect_variation')}
                                     className="btn-secondary"
-                                    style={{ padding: '2px 6px', fontSize: '10px', minHeight: '22px', background: 'rgba(245,158,11,0.2)', color: '#FCD34D' }}
+                                    style={{ padding: '2px 6px', fontSize: '10px', minHeight: '22px', background: 'rgba(142,182,155,0.15)', color: '#8EB69B' }}
                                     title="Approve with dialect variation caveat"
                                   >
                                     + Dialect Caveat
@@ -2845,15 +2936,15 @@ ${feedbackRecommendation}
                   <div style={{ 
                     padding: '12px', 
                     borderRadius: '8px', 
-                    background: 'rgba(245, 158, 11, 0.12)', 
-                    border: '1px solid rgba(245, 158, 11, 0.35)', 
-                    color: '#FCD34D', 
+                    background: 'rgba(35, 83, 71, 0.35)', 
+                    border: '1px solid rgba(142, 182, 155, 0.35)', 
+                    color: '#DAF1DE', 
                     fontSize: '12px',
                     lineHeight: '1.5',
                     marginBottom: '10px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', marginBottom: '4px' }}>
-                      <AlertCircle size={14} color="#FCD34D" />
+                      <AlertCircle size={14} color="#8EB69B" />
                       <span>Indigenous Oral Tongue Protection Active</span>
                     </div>
                     <p>{oralReviewNotice}</p>
@@ -2996,16 +3087,263 @@ ${feedbackRecommendation}
           )}
         </section>
       </div>
+        </>
+      )}
 
-      {/* ─── Bottom Section: SQLite Saved Transcripts Archive ─── */}
-      <section className="glass-card">
+      {/* ─── TAB 2: Dedicated Translation Workspace (Matching Reference 3. Translation) ─── */}
+      {activeNavTab === 'translate' && (
+        <section style={{ display: 'flex', flexDirection: 'column', gap: '28px', marginBottom: '40px' }}>
+          {/* Header Banner */}
+          <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B' }}>
+            <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+              <Languages size={24} color="#8EB69B" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <div>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px', color: '#DAF1DE' }}>
+                  AI-Powered Translation for Oral & Written Tongues
+                </h2>
+                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', lineHeight: '1.6' }}>
+                  Translate unwritten oral transcriptions and text between indigenous, regional, and national languages. 
+                  Oral languages are protected with elder verification safeguards and strict annotation provenance.
+                </p>
+                <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
+                  <span className="badge badge-green">IndicTrans2 Engine</span>
+                  <span className="badge badge-teal">Elder Safeguards Active</span>
+                  <span className="badge badge-green">SQLite Annotation Layer</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          {/* Translation Control Panel */}
+          <div className="glass-card">
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', alignItems: 'end', marginBottom: '20px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                  SOURCE LANGUAGE
+                </label>
+                <select
+                  className="select-field"
+                  value={freeformSrcLang}
+                  onChange={(e) => setFreeformSrcLang(e.target.value)}
+                >
+                  {languages.map((l) => (
+                    <option key={l.code} value={l.name}>
+                      {l.name} {l.native ? `(${l.native})` : ''} [{l.category}]
+                    </option>
+                  ))}
+                </select>
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'center', paddingBottom: '4px' }}>
+                <button
+                  type="button"
+                  onClick={handleSwapTranslateLanguages}
+                  className="btn-secondary"
+                  title="Swap source and target languages"
+                  style={{ borderRadius: '50%', width: '42px', height: '42px', padding: 0 }}
+                >
+                  <RotateCcw size={16} color="#8EB69B" />
+                </button>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                  TARGET LANGUAGE
+                </label>
+                <select
+                  className="select-field"
+                  value={freeformTgtLang}
+                  onChange={(e) => setFreeformTgtLang(e.target.value)}
+                >
+                  <option value="English">English</option>
+                  <option value="Telugu">Telugu (తెలుగు)</option>
+                  <option value="Hindi">Hindi (हिन्दी)</option>
+                  <option value="Tamil">Tamil (தமிழ்)</option>
+                  <option value="Kannada">Kannada (ಕನ್ನಡ)</option>
+                  <option value="Malayalam">Malayalam (മലയാളം)</option>
+                  <option value="Marathi">Marathi (मराठी)</option>
+                  <option value="Odia">Odia (ଓଡ଼ିଆ)</option>
+                  <option value="Bengali">Bengali (বাংলা)</option>
+                  <option value="Gondi">Gondi (గోండీ)</option>
+                  <option value="Koya">Koya (కోయ)</option>
+                  <option value="Santhali">Santhali (ᱥᱟᱱᱛᱟᱲᱤ)</option>
+                </select>
+              </div>
+
+              <div>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                  LOAD FROM ARCHIVE (OPTIONAL)
+                </label>
+                <select
+                  className="select-field"
+                  value={freeformSelectedTranscriptId}
+                  onChange={(e) => handleSelectTranscriptForTranslation(e.target.value === '' ? '' : Number(e.target.value))}
+                >
+                  <option value="">Type or paste custom text...</option>
+                  {transcripts.slice(0, 30).map((t) => (
+                    <option key={t.id} value={t.id}>
+                      #{t.id} - {t.title} ({t.language})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '18px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                TEXT TO TRANSLATE *
+              </label>
+              <textarea
+                className="textarea-field"
+                rows={4}
+                value={freeformInputText}
+                onChange={(e) => setFreeformInputText(e.target.value)}
+                placeholder="Enter text, greeting, chant, or proverb to translate..."
+              />
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
+              <span style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.5)' }}>
+                {freeformInputText.length} characters • {freeformInputText.trim().split(/\s+/).filter(Boolean).length} words
+              </span>
+
+              <button
+                type="button"
+                onClick={() => handleTranslate(freeformInputText, freeformSrcLang, freeformTgtLang, freeformSelectedTranscriptId ? Number(freeformSelectedTranscriptId) : undefined)}
+                disabled={isTranslating || !freeformInputText.trim()}
+                className="btn-primary"
+                style={{ minWidth: '180px' }}
+              >
+                {isTranslating ? <Loader2 size={16} className="spin-animate" /> : <Languages size={16} />}
+                <span>{isTranslating ? 'Translating...' : 'Translate Text'}</span>
+              </button>
+            </div>
+          </div>
+
+          {oralReviewNotice && (
+            <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B', background: 'rgba(11, 43, 38, 0.85)' }}>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
+                <ShieldCheck size={20} color="#8EB69B" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <div>
+                  <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginBottom: '2px' }}>
+                    Elder Linguistic Safeguard Enforced
+                  </h4>
+                  <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.85)', lineHeight: '1.5' }}>
+                    {oralReviewNotice}
+                  </p>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {translationError && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '12px 16px', borderRadius: '12px', background: 'rgba(239, 68, 68, 0.15)', color: '#FCA5A5', fontSize: '13px', border: '1px solid rgba(239, 68, 68, 0.3)' }}>
+              <AlertCircle size={16} />
+              <span>{translationError}</span>
+            </div>
+          )}
+
+          {translationResult && (
+            <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B', background: '#0B2B26' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#DAF1DE' }}>
+                    {translationResult.source_language} ➔ {translationResult.target_language}
+                  </span>
+                  <span className="badge badge-teal" style={{ fontSize: '11px' }}>
+                    Provider: {translationResult.provider}
+                  </span>
+                  {translationResult.verified && (
+                    <span className="badge badge-green" style={{ fontSize: '11px' }}>
+                      Elder Verified
+                    </span>
+                  )}
+                </div>
+
+                <div style={{ display: 'flex', gap: '6px' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleCopy(translationResult.translated_text, 'Translation copied!')}
+                    className="btn-secondary"
+                    style={{ fontSize: '12px', padding: '4px 10px', minHeight: '30px' }}
+                  >
+                    <Copy size={13} />
+                    <span>{copyFeedback === 'Translation copied!' ? 'Copied!' : 'Copy'}</span>
+                  </button>
+                </div>
+              </div>
+
+              <div style={{ 
+                fontSize: '18px', 
+                color: '#DAF1DE', 
+                fontWeight: '600', 
+                lineHeight: '1.6', 
+                background: 'rgba(5, 31, 32, 0.6)', 
+                padding: '16px 20px', 
+                borderRadius: '12px',
+                border: '1px solid #235347'
+              }}>
+                "{translationResult.translated_text}"
+              </div>
+
+              {translationResult.limitation_note && (
+                <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.65)', marginTop: '10px', fontStyle: 'italic' }}>
+                  Linguistic Note: {translationResult.limitation_note}
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Persistent Saved Translations List */}
+          <div className="glass-card">
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', marginBottom: '12px' }}>
+              Recent Preserved Translations
+            </h3>
+            {savedTranslations.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.55)', fontStyle: 'italic' }}>
+                No translations stored yet. Generate and save translations to preserve cultural annotations.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+                {savedTranslations.slice(0, 10).map((tr) => (
+                  <div
+                    key={tr.id}
+                    style={{
+                      background: '#0B2B26',
+                      border: '1px solid #235347',
+                      borderRadius: '10px',
+                      padding: '12px 14px'
+                    }}
+                  >
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B' }}>
+                        {tr.source_language} ➔ {tr.target_language}
+                      </span>
+                      <span className="badge badge-teal" style={{ fontSize: '10px' }}>
+                        {tr.provider}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '14px', color: '#DAF1DE', margin: 0 }}>
+                      "{tr.translated_text}"
+                    </p>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </section>
+      )}
+
+      {/* ─── Archive Section (Matching Reference 6. Archive) ─── */}
+      {(activeNavTab === 'archive' || activeNavTab === 'record' || activeNavTab === 'studio') && (
+        <section className="glass-card" style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h3 style={{ fontSize: '18px', fontWeight: '700' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE' }}>
               Language Archive & Saved Transcripts
             </h3>
-            <p style={{ fontSize: '13px', color: '#94A3B8' }}>
-              Permanently persisted in SQLite database (<code style={{ color: '#F59E0B' }}>voice_roots.db</code>)
+            <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)' }}>
+              Permanently persisted in SQLite database (<code style={{ color: '#8EB69B' }}>voice_roots.db</code>)
             </p>
           </div>
 
@@ -3021,10 +3359,10 @@ ${feedbackRecommendation}
         </div>
 
         {isLoadingArchive ? (
-          <p style={{ padding: '24px', textAlign: 'center', color: '#94A3B8' }}>Loading saved transcripts from SQLite...</p>
+          <p style={{ padding: '24px', textAlign: 'center', color: 'rgba(218, 241, 222, 0.72)' }}>Loading saved transcripts from SQLite...</p>
         ) : transcripts.length === 0 ? (
-          <div style={{ padding: '36px', textAlign: 'center', color: '#64748B' }}>
-            <p style={{ fontSize: '14px', color: '#94A3B8', marginBottom: '4px' }}>Archive is currently empty.</p>
+          <div style={{ padding: '36px', textAlign: 'center', color: 'rgba(218, 241, 222, 0.5)' }}>
+            <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '4px' }}>Archive is currently empty.</p>
             <p style={{ fontSize: '13px' }}>Use the capture studio above to save the first recording into SQLite.</p>
           </div>
         ) : (
@@ -3033,8 +3371,8 @@ ${feedbackRecommendation}
               <div 
                 key={t.id} 
                 style={{ 
-                  background: activeResult?.id === t.id ? 'rgba(245, 158, 11, 0.05)' : 'rgba(255,255,255,0.03)', 
-                  border: activeResult?.id === t.id ? '1px solid rgba(245, 158, 11, 0.4)' : '1px solid var(--card-border)', 
+                  background: activeResult?.id === t.id ? 'rgba(142, 182, 155, 0.12)' : '#0B2B26', 
+                  border: activeResult?.id === t.id ? '1px solid #8EB69B' : '1px solid #235347', 
                   borderRadius: '12px', 
                   padding: '16px',
                   display: 'flex',
@@ -3045,18 +3383,18 @@ ${feedbackRecommendation}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
-                    <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#F8FAFC' }}>
+                    <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#DAF1DE' }}>
                       {t.title}
                     </h4>
-                    <p style={{ fontSize: '12px', color: '#94A3B8' }}>
-                      <strong style={{ color: '#F59E0B' }}>{t.language}</strong>
+                    <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)' }}>
+                      <strong style={{ color: '#8EB69B' }}>{t.language}</strong>
                       {t.dialect && ` (${t.dialect})`} • Saved: {new Date(t.created_at).toLocaleString()}
                     </p>
                   </div>
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {/* Status Badges */}
-                    <span className="badge badge-amber">{t.status}</span>
+                    <span className="badge badge-green">{t.status}</span>
                     
                     {t.transcription_status === 'completed' && (
                       <span className="badge badge-green" title={t.transcription_model || 'Completed'}>
@@ -3194,7 +3532,7 @@ ${feedbackRecommendation}
                       padding: '8px 12px'
                     }}>
                       <div style={{ flex: 1 }}>
-                        <span style={{ fontSize: '11px', color: '#FCD34D', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                           Community Corrected Transcript:
                         </span>
                         <p style={{ color: '#E2E8F0', fontStyle: 'italic', lineHeight: '1.5' }}>
@@ -3219,20 +3557,19 @@ ${feedbackRecommendation}
           </div>
         )}
       </section>
-        </>
       )}
 
-      {/* ─── TAB 2: Semantic Vector Resources (ChromaDB) ─── */}
-      {activeNavTab === 'resources' && (
+      {/* ─── TAB 2: Semantic Vector Search (ChromaDB) (Matching Reference 5. Semantic Search) ─── */}
+      {(activeNavTab === 'search' || activeNavTab === 'resources') && (
         <section className="glass-card" style={{ marginBottom: '36px' }}>
           {/* Header & Telemetry */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h3 style={{ fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Database size={22} color="#14B8A6" />
+                <Database size={22} color="#8EB69B" />
                 <span>Multilingual Semantic Vector Search (ChromaDB)</span>
               </h3>
-              <p style={{ fontSize: '13px', color: '#94A3B8', marginTop: '4px' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', marginTop: '4px' }}>
                 Search oral literature, epic chants, medicine lore, and work songs indexed across 13 languages with offline 384-dimensional embeddings.
               </p>
             </div>
@@ -3259,18 +3596,18 @@ ${feedbackRecommendation}
                   fontSize: '12px',
                   padding: '8px 14px',
                   minHeight: '36px',
-                  borderColor: showModerationQueue ? '#10B981' : undefined,
-                  color: showModerationQueue ? '#6EE7B7' : undefined,
-                  background: showModerationQueue ? 'rgba(16, 185, 129, 0.15)' : undefined
+                  borderColor: showModerationQueue ? '#8EB69B' : '#235347',
+                  color: showModerationQueue ? '#DAF1DE' : 'rgba(218, 241, 222, 0.72)',
+                  background: showModerationQueue ? 'rgba(142, 182, 155, 0.15)' : undefined
                 }}
                 title="View community submissions and elder review queue"
               >
-                <ShieldCheck size={14} color={showModerationQueue ? '#10B981' : '#94A3B8'} />
+                <ShieldCheck size={14} color={showModerationQueue ? '#8EB69B' : 'rgba(218, 241, 222, 0.72)'} />
                 <span>Elder Review Queue</span>
                 {submissions.filter(s => s.status === 'pending_verification').length > 0 && (
                   <span style={{
-                    background: '#F59E0B',
-                    color: '#080A12',
+                    background: '#8EB69B',
+                    color: '#051F20',
                     fontSize: '10px',
                     fontWeight: '800',
                     padding: '1px 6px',
@@ -3300,32 +3637,32 @@ ${feedbackRecommendation}
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
             gap: '12px', 
             marginBottom: '24px',
-            background: 'rgba(0,0,0,0.25)',
+            background: '#0B2B26',
             padding: '16px',
             borderRadius: '12px',
             border: '1px solid var(--card-border)'
           }}>
             <div>
-              <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ChromaDB Collection</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#F8FAFC', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ChromaDB Collection</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginTop: '2px' }}>
                 {vectorStats?.collection_name || 'language_resources'}
               </p>
             </div>
             <div>
-              <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Indexed Documents</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#14B8A6', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Indexed Documents</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#8EB69B', marginTop: '2px' }}>
                 {vectorStats?.total_records ?? 18} Verified Records
               </p>
             </div>
             <div>
-              <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Offline Embedding Engine</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#FCD34D', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Offline Embedding Engine</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginTop: '2px' }}>
                 384-dim Subword n-grams
               </p>
             </div>
             <div>
-              <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Languages Indexed</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#A78BFA', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Languages Indexed</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#8EB69B', marginTop: '2px' }}>
                 {vectorStats ? Object.keys(vectorStats.languages_indexed).length : 13} Target Tongues
               </p>
             </div>
@@ -3333,13 +3670,13 @@ ${feedbackRecommendation}
 
           {ingestStatus && (
             <div style={{ 
-              background: 'rgba(20, 184, 166, 0.1)', 
-              border: '1px solid rgba(20, 184, 166, 0.3)', 
+              background: 'rgba(142, 182, 155, 0.1)', 
+              border: '1px solid #235347', 
               borderRadius: '8px', 
               padding: '10px 14px', 
               marginBottom: '20px', 
               fontSize: '13px', 
-              color: '#5EEAD4' 
+              color: '#DAF1DE' 
             }}>
               {ingestStatus}
             </div>
@@ -3348,19 +3685,19 @@ ${feedbackRecommendation}
           {/* Elder Moderation Queue Container */}
           {showModerationQueue && (
             <div style={{
-              background: 'rgba(15, 23, 42, 0.65)',
-              border: '1px solid rgba(16, 185, 129, 0.3)',
+              background: '#0B2B26',
+              border: '1px solid #235347',
               borderRadius: '12px',
               padding: '20px',
               marginBottom: '24px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ShieldCheck size={18} color="#10B981" />
+                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ShieldCheck size={18} color="#8EB69B" />
                     <span>Community Contributor Submissions & Elder Moderation Queue</span>
                   </h4>
-                  <p style={{ fontSize: '12px', color: '#94A3B8', marginTop: '2px' }}>
+                  <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)', marginTop: '2px' }}>
                     Verify cultural authenticity and approve field submissions into the ChromaDB vector database with 384-dim embeddings.
                   </p>
                 </div>
@@ -3372,13 +3709,13 @@ ${feedbackRecommendation}
                       type="button"
                       onClick={() => setSubmissionFilter(filterKey)}
                       style={{
-                        background: submissionFilter === filterKey ? '#10B981' : 'rgba(255,255,255,0.05)',
-                        color: submissionFilter === filterKey ? '#080A12' : '#94A3B8',
+                        background: submissionFilter === filterKey ? '#8EB69B' : 'rgba(255,255,255,0.05)',
+                        color: submissionFilter === filterKey ? '#051F20' : 'rgba(218, 241, 222, 0.72)',
                         border: 'none',
                         borderRadius: '6px',
                         padding: '4px 10px',
                         fontSize: '11px',
-                        fontWeight: '600',
+                        fontWeight: '700',
                         cursor: 'pointer'
                       }}
                     >
@@ -3483,7 +3820,7 @@ ${feedbackRecommendation}
                                   ? 'rgba(239, 68, 68, 0.2)'
                                   : sub.status === 'withdrawn'
                                   ? 'rgba(100, 116, 139, 0.2)'
-                                  : 'rgba(245, 158, 11, 0.2)',
+                                  : 'rgba(142, 182, 155, 0.2)',
                               color:
                                 sub.status === 'verified'
                                   ? '#6EE7B7'
@@ -3491,7 +3828,7 @@ ${feedbackRecommendation}
                                   ? '#FCA5A5'
                                   : sub.status === 'withdrawn'
                                   ? '#94A3B8'
-                                  : '#FCD34D'
+                                  : '#8EB69B'
                             }}>
                               {sub.status === 'verified' && '✓ Approved & Indexed in ChromaDB'}
                               {sub.status === 'rejected' && 'Rejected'}
@@ -3549,7 +3886,7 @@ ${feedbackRecommendation}
                         </div>
 
                         {sub.reviewer_notes && (
-                          <div style={{ fontSize: '11px', color: '#FCD34D', background: 'rgba(245, 158, 11, 0.08)', padding: '4px 8px', borderRadius: '4px' }}>
+                          <div style={{ fontSize: '11px', color: '#8EB69B', background: 'rgba(142, 182, 155, 0.1)', padding: '4px 8px', borderRadius: '4px' }}>
                             Elder Notes: {sub.reviewer_notes}
                           </div>
                         )}
@@ -3821,7 +4158,7 @@ ${feedbackRecommendation}
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
                       <span style={{ color: '#64748B' }}>License:</span>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <span style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#FCD34D', padding: '1px 6px', borderRadius: '4px' }}>
+                        <span style={{ background: 'rgba(142, 182, 155, 0.15)', color: '#8EB69B', padding: '1px 6px', borderRadius: '4px' }}>
                           {rec.license}
                         </span>
                         <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#6EE7B7', padding: '1px 6px', borderRadius: '4px' }}>
@@ -3845,8 +4182,8 @@ ${feedbackRecommendation}
         </section>
       )}
 
-      {/* ─── TAB 3: Universal Language Registry ─── */}
-      {activeNavTab === 'registry' && (
+      {/* ─── TAB 3: Universal Language Registry (Matching Reference 4. Language Registry) ─── */}
+      {(activeNavTab === 'languages' || activeNavTab === 'registry') && (
         <section className="glass-card" style={{ marginBottom: '36px' }}>
           {/* Header */}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
@@ -3943,20 +4280,20 @@ ${feedbackRecommendation}
                     <span style={{ fontSize: '10px', color: '#7DD3FC' }}>Verified Local Whisper Base</span>
                   </div>
 
-                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}>Gondi Oral Recording</span>
-                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#F59E0B', marginTop: '2px' }}>
+                  <div style={{ background: '#0B2B26', padding: '10px 12px', borderRadius: '8px', border: '1px solid #235347' }}>
+                    <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>Gondi Oral Recording</span>
+                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#8EB69B', marginTop: '2px' }}>
                       Phonetic Fidelity
                     </p>
-                    <span style={{ fontSize: '10px', color: '#FCD34D' }}>Unstandardized Orthography</span>
+                    <span style={{ fontSize: '10px', color: '#DAF1DE' }}>Unstandardized Orthography</span>
                   </div>
 
-                  <div style={{ background: 'rgba(0,0,0,0.3)', padding: '10px 12px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}>Vector Search MRR</span>
-                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#A78BFA', marginTop: '2px' }}>
+                  <div style={{ background: '#0B2B26', padding: '10px 12px', borderRadius: '8px', border: '1px solid #235347' }}>
+                    <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>Vector Search MRR</span>
+                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#8EB69B', marginTop: '2px' }}>
                       MRR: {evaluationReport.semantic_vector_search?.mrr ?? 0.47}
                     </p>
-                    <span style={{ fontSize: '10px', color: '#C4B5FD' }}>
+                    <span style={{ fontSize: '10px', color: '#DAF1DE' }}>
                       Hit@1: {evaluationReport.semantic_vector_search?.hit_at_1_percent ?? 33.3}% | Hit@3: {evaluationReport.semantic_vector_search?.hit_at_3_percent ?? 66.7}%
                     </span>
                   </div>
@@ -3967,30 +4304,30 @@ ${feedbackRecommendation}
                   <div style={{ 
                     marginTop: '12px', 
                     padding: '12px 14px', 
-                    background: 'rgba(245, 158, 11, 0.06)', 
-                    border: '1px solid rgba(245, 158, 11, 0.25)', 
+                    background: 'rgba(142, 182, 155, 0.08)', 
+                    border: '1px solid #235347', 
                     borderRadius: '10px' 
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#FCD34D', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Award size={14} color="#FCD34D" />
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Award size={14} color="#8EB69B" />
                         <span>Live Pilot Review Metrics (Compared Against Elder-Approved Transcripts)</span>
                       </span>
-                      <span style={{ fontSize: '11px', color: '#F59E0B', background: 'rgba(245, 158, 11, 0.2)', padding: '2px 8px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '11px', color: '#DAF1DE', background: 'rgba(142, 182, 155, 0.2)', padding: '2px 8px', borderRadius: '8px' }}>
                         {evaluationReport.community_reviewed_performance.total_reviewed_samples} Verified Sample(s)
                       </span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', marginBottom: '8px' }}>
                       {Object.entries(evaluationReport.community_reviewed_performance.languages || {}).map(([langName, data]: [string, any]) => (
-                        <div key={langName} style={{ background: 'rgba(0,0,0,0.25)', padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
-                          <div style={{ fontWeight: '700', color: '#F8FAFC', marginBottom: '4px' }}>{langName}</div>
-                          <div style={{ color: '#94A3B8', fontSize: '11px' }}>
-                            Model: <strong style={{ color: '#E2E8F0' }}>{data.models_used?.join(', ')}</strong> • 
-                            CER: <strong style={{ color: '#38BDF8' }}>{(data.average_cer * 100).toFixed(1)}%</strong> • 
-                            WER: <strong style={{ color: '#F59E0B' }}>{(data.average_wer * 100).toFixed(1)}%</strong>
+                        <div key={langName} style={{ background: '#0B2B26', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', border: '1px solid #235347' }}>
+                          <div style={{ fontWeight: '700', color: '#DAF1DE', marginBottom: '4px' }}>{langName}</div>
+                          <div style={{ color: 'rgba(218, 241, 222, 0.72)', fontSize: '11px' }}>
+                            Model: <strong style={{ color: '#DAF1DE' }}>{data.models_used?.join(', ')}</strong> • 
+                            CER: <strong style={{ color: '#8EB69B' }}>{(data.average_cer * 100).toFixed(1)}%</strong> • 
+                            WER: <strong style={{ color: '#8EB69B' }}>{(data.average_wer * 100).toFixed(1)}%</strong>
                           </div>
-                          <p style={{ fontSize: '10px', color: '#94A3B8', marginTop: '4px', fontStyle: 'italic' }}>
+                          <p style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.6)', marginTop: '4px', fontStyle: 'italic' }}>
                             {data.sample_size_caveat}
                           </p>
                         </div>
@@ -4075,7 +4412,7 @@ ${feedbackRecommendation}
                       key={lang.code}
                       style={{
                         background: 'rgba(255, 255, 255, 0.03)',
-                        border: isOral ? '1px solid rgba(245, 158, 11, 0.3)' : '1px solid var(--card-border)',
+                        border: isOral ? '1px solid rgba(142, 182, 155, 0.4)' : '1px solid var(--card-border)',
                         borderRadius: '12px',
                         padding: '16px',
                         display: 'flex',
@@ -4090,7 +4427,7 @@ ${feedbackRecommendation}
                             <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC' }}>
                               {lang.name}
                             </h4>
-                            <code style={{ fontSize: '11px', color: '#FCD34D', background: 'rgba(245, 158, 11, 0.1)', padding: '1px 5px', borderRadius: '4px' }}>
+                            <code style={{ fontSize: '11px', color: '#8EB69B', background: 'rgba(142, 182, 155, 0.1)', padding: '1px 5px', borderRadius: '4px' }}>
                               {lang.code}
                             </code>
                           </div>
@@ -4108,8 +4445,8 @@ ${feedbackRecommendation}
                             fontSize: '10px', 
                             padding: '2px 8px', 
                             borderRadius: '6px', 
-                            background: isOral ? 'rgba(245, 158, 11, 0.15)' : 'rgba(20, 184, 166, 0.15)',
-                            color: isOral ? '#FCD34D' : '#5EEAD4',
+                            background: isOral ? 'rgba(142, 182, 155, 0.2)' : 'rgba(20, 184, 166, 0.15)',
+                            color: isOral ? '#8EB69B' : '#5EEAD4',
                             fontWeight: '600'
                           }}>
                             {isOral ? 'Indigenous / Oral' : lang.category || 'Standard'}
@@ -4139,7 +4476,7 @@ ${feedbackRecommendation}
                         <div>
                           <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>SPEECH RECOGNITION</span>
                           <span style={{ 
-                            color: lang.speech_recognition === 'available' ? '#34D399' : '#FBBF24', 
+                            color: lang.speech_recognition === 'available' ? '#34D399' : '#8EB69B', 
                             fontWeight: '600',
                             display: 'flex',
                             alignItems: 'center',
@@ -4154,7 +4491,7 @@ ${feedbackRecommendation}
                         <div>
                           <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>TRANSLATION</span>
                           <span style={{ 
-                            color: lang.translation === 'available' ? '#34D399' : (lang.translation === 'elder_review_required' || lang.translation === 'restricted') ? '#F87171' : '#FBBF24',
+                            color: lang.translation === 'available' ? '#34D399' : (lang.translation === 'elder_review_required' || lang.translation === 'restricted') ? '#F87171' : '#8EB69B',
                             fontWeight: '600',
                             display: 'flex',
                             alignItems: 'center',
@@ -4186,14 +4523,14 @@ ${feedbackRecommendation}
                       {/* Linguistic Constraints & Limitations */}
                       <div style={{ 
                         fontSize: '12px', 
-                        color: '#94A3B8', 
+                        color: 'rgba(218, 241, 222, 0.72)', 
                         lineHeight: '1.5',
                         background: 'rgba(255,255,255,0.02)',
                         padding: '10px',
                         borderRadius: '8px',
-                        borderLeft: isOral ? '3px solid #F59E0B' : '3px solid #64748B'
+                        borderLeft: isOral ? '3px solid #8EB69B' : '3px solid #235347'
                       }}>
-                        <span style={{ fontSize: '11px', color: isOral ? '#FCD34D' : '#CBD5E1', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '11px', color: isOral ? '#8EB69B' : 'rgba(218, 241, 222, 0.72)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                           Linguistic Context & Known Constraints:
                         </span>
                         {lang.known_limitations}
@@ -4203,6 +4540,145 @@ ${feedbackRecommendation}
                 })}
             </div>
           )}
+        </section>
+      )}
+
+      {/* ─── TAB 4: Community Contributions & Review (Matching Reference 7. Community) ─── */}
+      {(activeNavTab === 'community' || activeNavTab === 'pilot') && (
+        <section style={{ marginBottom: '36px' }}>
+          <Pilot />
+        </section>
+      )}
+
+      {/* ─── TAB 5: Login / Sign Up (Matching Reference 8. Login / Signup) ─── */}
+      {activeNavTab === 'login' && (
+        <section style={{ maxWidth: '880px', margin: '40px auto 60px' }}>
+          <div className="glass-card" style={{ 
+            display: 'grid', 
+            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+            gap: '0', 
+            overflow: 'hidden', 
+            padding: 0,
+            borderRadius: '24px',
+            border: '1px solid #235347',
+            boxShadow: '0 20px 50px rgba(5, 31, 32, 0.7)'
+          }}>
+            {/* Left Column: Form */}
+            <div style={{ background: '#FFFFFF', color: '#0F172A', padding: '44px 36px' }}>
+              <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A', marginBottom: '6px' }}>
+                Welcome Back
+              </h3>
+              <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '28px' }}>
+                Login to continue your language preservation journey.
+              </p>
+
+              <form onSubmit={(e) => { e.preventDefault(); handleTabChange('home'); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                    Email Address
+                  </label>
+                  <input 
+                    type="email" 
+                    placeholder="name@community.org" 
+                    defaultValue="field.worker@voiceroots.org"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '14px',
+                      color: '#0F172A',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
+                    Password
+                  </label>
+                  <input 
+                    type="password" 
+                    placeholder="••••••••••••" 
+                    defaultValue="preservation2026"
+                    style={{
+                      width: '100%',
+                      padding: '12px 14px',
+                      borderRadius: '10px',
+                      border: '1px solid #CBD5E1',
+                      fontSize: '14px',
+                      color: '#0F172A',
+                      outline: 'none'
+                    }}
+                  />
+                </div>
+
+                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                  <span style={{ fontSize: '12px', color: '#163832', fontWeight: '600', cursor: 'pointer' }}>
+                    Forgot password?
+                  </span>
+                </div>
+
+                <button 
+                  type="submit"
+                  style={{
+                    width: '100%',
+                    padding: '12px',
+                    borderRadius: '10px',
+                    background: '#163832',
+                    color: '#DAF1DE',
+                    fontWeight: '700',
+                    fontSize: '14px',
+                    border: 'none',
+                    cursor: 'pointer',
+                    marginTop: '8px',
+                    boxShadow: '0 4px 12px rgba(22, 56, 50, 0.3)'
+                  }}
+                >
+                  Login
+                </button>
+
+                <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748B', marginTop: '12px' }}>
+                  Don't have an account? <span style={{ color: '#163832', fontWeight: '700', cursor: 'pointer' }}>Sign Up</span>
+                </p>
+              </form>
+            </div>
+
+            {/* Right Column: Forest Heritage Hero Brand */}
+            <div style={{ 
+              background: 'linear-gradient(135deg, #0B2B26 0%, #163832 50%, #051F20 100%)',
+              padding: '44px 36px',
+              display: 'flex',
+              flexDirection: 'column',
+              justifyContent: 'center',
+              alignItems: 'center',
+              textAlign: 'center',
+              position: 'relative'
+            }}>
+              <div style={{ 
+                width: '64px', 
+                height: '64px', 
+                borderRadius: '18px', 
+                background: 'rgba(142, 182, 155, 0.15)', 
+                border: '1px solid #235347',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                marginBottom: '16px'
+              }}>
+                <Sparkles size={32} color="#8EB69B" />
+              </div>
+              <h4 style={{ fontSize: '26px', fontWeight: '800', color: '#DAF1DE', marginBottom: '8px' }}>
+                Voice <span style={{ color: '#8EB69B' }}>Roots</span>
+              </h4>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: 'rgba(218, 241, 222, 0.75)', fontSize: '13px', marginTop: '14px' }}>
+                <span>Preserve</span>
+                <span>Explore</span>
+                <span>Share</span>
+                <span>Together</span>
+              </div>
+            </div>
+          </div>
         </section>
       )}
 
@@ -4235,7 +4711,7 @@ ${feedbackRecommendation}
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Globe size={20} color="#F59E0B" />
+                <Globe size={20} color="#8EB69B" />
                 <span>Register Any Language Worldwide</span>
               </h3>
               <button
@@ -4599,8 +5075,8 @@ ${feedbackRecommendation}
         }}>
           <div className="glass-card" style={{ maxWidth: '580px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#F8FAFC', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileText size={18} color="#F59E0B" />
+              <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={18} color="#8EB69B" />
                 <span>Pilot Tester Feedback Form</span>
               </h3>
               <button
@@ -4614,14 +5090,14 @@ ${feedbackRecommendation}
               </button>
             </div>
 
-            <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '16px', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '16px', lineHeight: '1.5' }}>
               Record observations from testing sessions with community speakers. Feedback is formatted for responsible evaluation under Indigenous Data Sovereignty protocols.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>TESTER NAME</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>TESTER NAME</label>
                   <input
                     type="text"
                     className="input-field"
@@ -4632,7 +5108,7 @@ ${feedbackRecommendation}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>TESTER ROLE</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>TESTER ROLE</label>
                   <select
                     className="select-field"
                     value={feedbackTesterRole}
@@ -4649,7 +5125,7 @@ ${feedbackRecommendation}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>TARGET LANGUAGE</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>TARGET LANGUAGE</label>
                   <input
                     type="text"
                     className="input-field"
@@ -4660,7 +5136,7 @@ ${feedbackRecommendation}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>DIALECT / REGION</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>DIALECT / REGION</label>
                   <input
                     type="text"
                     className="input-field"
@@ -4674,7 +5150,7 @@ ${feedbackRecommendation}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>FEEDBACK CATEGORY</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>FEEDBACK CATEGORY</label>
                   <select
                     className="select-field"
                     value={feedbackCategory}
@@ -4688,7 +5164,7 @@ ${feedbackRecommendation}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>AUDIO QUALITY</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>AUDIO QUALITY</label>
                   <select
                     className="select-field"
                     value={feedbackAudioQuality}
@@ -4703,7 +5179,7 @@ ${feedbackRecommendation}
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>
                   OBSERVATIONS, PHONETIC ERRORS & SYSTEMATIC PATTERNS *
                 </label>
                 <textarea
@@ -4717,7 +5193,7 @@ ${feedbackRecommendation}
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', color: '#64748B', display: 'block', marginBottom: '4px' }}>OVERALL RECOMMENDATION</label>
+                <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>OVERALL RECOMMENDATION</label>
                 <select
                   className="select-field"
                   value={feedbackRecommendation}
@@ -4731,7 +5207,7 @@ ${feedbackRecommendation}
               </div>
 
               {feedbackExportMsg && (
-                <div style={{ color: '#6EE7B7', background: 'rgba(16,185,129,0.15)', padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
+                <div style={{ color: '#DAF1DE', background: 'rgba(142,182,155,0.15)', border: '1px solid #235347', padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
                   {feedbackExportMsg}
                 </div>
               )}
@@ -4749,7 +5225,7 @@ ${feedbackRecommendation}
                   type="button"
                   onClick={handleCopyPilotFeedback}
                   className="btn-secondary"
-                  style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px', borderColor: 'rgba(20, 184, 166, 0.4)', color: '#5EEAD4' }}
+                  style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px', borderColor: '#235347', color: '#DAF1DE' }}
                 >
                   <Copy size={13} />
                   <span>Copy Form (MD)</span>
@@ -4758,7 +5234,7 @@ ${feedbackRecommendation}
                   type="button"
                   onClick={handleDownloadPilotFeedback}
                   className="btn-primary"
-                  style={{ minHeight: '34px', padding: '6px 16px', fontSize: '12px', background: '#F59E0B', color: '#080A12' }}
+                  style={{ minHeight: '34px', padding: '6px 16px', fontSize: '12px' }}
                 >
                   <Download size={13} />
                   <span>Download Report</span>
@@ -4770,7 +5246,7 @@ ${feedbackRecommendation}
       )}
 
       {/* ─── Footer ─── */}
-      <footer style={{ marginTop: '40px', padding: '20px 0', borderTop: '1px solid var(--card-border)', textAlign: 'center', fontSize: '13px', color: '#64748B' }}>
+      <footer style={{ marginTop: '40px', padding: '20px 0', borderTop: '1px solid var(--card-border)', textAlign: 'center', fontSize: '13px', color: 'rgba(218, 241, 222, 0.6)' }}>
         Voice Roots • Rooting Oral Languages in Text with AI • Indigenous Data Sovereignty (OCAP) Compliant
       </footer>
     </div>

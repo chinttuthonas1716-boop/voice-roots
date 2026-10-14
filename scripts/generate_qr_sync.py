@@ -1,47 +1,47 @@
 #!/usr/bin/env python3
-"""
-Generate and synchronize camera-scannable QR codes for Website, App, and Day-to-Day Translator.
-Saves to web/public and artifact directory for instant phone scanning.
-"""
+"""Create the presentation QR only after a public HTTPS deployment is configured."""
+
+from __future__ import annotations
 
 import os
-import urllib.request
 import urllib.parse
+import urllib.request
+from pathlib import Path
 
-ARTIFACT_DIR = "/Users/harsha/.gemini/antigravity/brain/ddc98306-e71b-4347-b008-63d25c0a86fb"
-WEB_PUBLIC_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), "../web/public"))
 
-os.makedirs(ARTIFACT_DIR, exist_ok=True)
-os.makedirs(WEB_PUBLIC_DIR, exist_ok=True)
+ROOT_DIR = Path(__file__).resolve().parent.parent
+WEB_PUBLIC_DIR = ROOT_DIR / "web" / "public"
 
-TARGETS = [
-    ("qr_website.png", "https://dee-arabia-gathered-drove.trycloudflare.com"),
-    ("qr_app.png", "https://dee-arabia-gathered-drove.trycloudflare.com/app"),
-    ("qr_translate.png", "https://dee-arabia-gathered-drove.trycloudflare.com/translate"),
-    ("qr_wifi.png", "http://192.168.1.3:3000"),
-]
 
-def generate_qrs():
-    print("Generating high-resolution camera-scannable QR codes...")
-    for filename, url in TARGETS:
-        # Generate with white background and black modules for 100% instant phone camera detection
-        encoded_url = urllib.parse.quote(url)
-        qr_api = f"https://api.qrserver.com/v1/create-qr-code/?size=450x450&data={encoded_url}&margin=15&bgcolor=255-255-255&color=0-0-0"
-        
-        target_artifact = os.path.join(ARTIFACT_DIR, filename)
-        target_web = os.path.join(WEB_PUBLIC_DIR, filename)
-        
-        try:
-            req = urllib.request.Request(qr_api, headers={'User-Agent': 'Mozilla/5.0'})
-            with urllib.request.urlopen(req, timeout=10) as response:
-                data = response.read()
-                with open(target_artifact, 'wb') as f:
-                    f.write(data)
-                with open(target_web, 'wb') as f:
-                    f.write(data)
-            print(f"✓ Generated {filename} for {url} ({len(data)} bytes)")
-        except Exception as e:
-            print(f"Failed to generate {filename}: {e}")
+def public_url() -> str:
+    raw_url = os.environ.get("VOICE_ROOTS_PUBLIC_URL", "").strip()
+    parsed = urllib.parse.urlparse(raw_url)
+    if parsed.scheme != "https" or not parsed.netloc:
+        raise SystemExit(
+            "Set VOICE_ROOTS_PUBLIC_URL to the deployed HTTPS site before generating the presentation QR."
+        )
+    return f"https://{parsed.netloc}{parsed.path.rstrip('/')}/"
+
+
+def generate_qr() -> Path:
+    url = public_url()
+    encoded_url = urllib.parse.quote(url, safe="")
+    qr_api = (
+        "https://api.qrserver.com/v1/create-qr-code/?size=450x450&"
+        f"data={encoded_url}&margin=15&bgcolor=255-255-255&color=0-0-0"
+    )
+    request = urllib.request.Request(qr_api, headers={"User-Agent": "VoiceRootsQR/1.0"})
+    with urllib.request.urlopen(request, timeout=15) as response:
+        image = response.read()
+        if response.status != 200 or not image.startswith(b"\x89PNG\r\n\x1a\n"):
+            raise RuntimeError("QR service did not return a valid PNG image.")
+
+    WEB_PUBLIC_DIR.mkdir(parents=True, exist_ok=True)
+    output = WEB_PUBLIC_DIR / "qr_website.png"
+    output.write_bytes(image)
+    print(f"Created {output.relative_to(ROOT_DIR)} for {url}")
+    return output
+
 
 if __name__ == "__main__":
-    generate_qrs()
+    generate_qr()

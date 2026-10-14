@@ -309,4 +309,30 @@ services:
 | **Translation API** | Rule Guardrails + SQLite | 100% Offline (Local) | $0.00 / mo |
 | **Total Estimated Cost** | — | — | **~$9.50 / month** |
 
+---
+
+## 10. Local Demonstration & Faculty Handover Protocol
+
+### Unified Local Architecture
+The application runs as a unified single-origin service on port 8000:
+- **Local URL**: `http://127.0.0.1:8000/`
+- **Execution Command**:
+  ```bash
+  PATH="scratch/bin:$PATH" VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local VOICE_ROOTS_WHISPER_MODEL_SIZE=base python3 -m uvicorn main:app --app-dir backend --port 8000 --reload
+  ```
+- **Stateful Assets on Host**:
+  * SQLite DB: `backend/voice_roots.db` (194 recordings, consent logs, community revisions)
+  * Vector Store: `backend/chroma_db/` (28 indexed documents, 384 dimensions)
+  * Audio Masters: `backend/storage/audio/` (lossless WAV/FLAC files with SHA-256 integrity)
+
+### Automated Test Verification
+- Backend Pytest Suite: `python3 -m pytest -q` -> **122 of 122 tests passed** (10.06s).
+- Frontend Production Bundle: `npm --prefix frontend run build` -> **0 errors** (1.90s).
+
+### Top 3 Handover Priorities
+1. **Persistent Volume Attachment**: In remote environments, mount a durable SSD at `/data` to preserve master audio and SQLite across container lifecycles.
+2. **Community Elder Pilot Integration**: Conduct field sessions with tribal elders to annotate unwritten dialects (Gondi/Koya) and expand the review queue.
+3. **Mobile Client Reconnection**: Re-enable and test the React Native / Flutter mobile clients against the stabilized `/api/v1` routes once production deployment is scheduled.
+
+
 

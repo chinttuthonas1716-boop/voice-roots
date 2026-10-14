@@ -16,6 +16,7 @@ from typing import Any, Dict, List, Optional
 
 from fastapi import BackgroundTasks, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 
@@ -50,6 +51,11 @@ BACKUP_DIR = os.environ.get(
 DB_PATH = os.environ.get(
     "VOICE_ROOTS_DB_PATH", os.path.join(BACKEND_DIR, "voice_roots.db")
 )
+FRONTEND_DIST = os.environ.get(
+    "VOICE_ROOTS_FRONTEND_DIST",
+    os.path.join(os.path.dirname(BACKEND_DIR), "frontend", "dist")
+)
+INDEX_HTML_PATH = os.path.join(FRONTEND_DIST, "index.html")
 MAX_AUDIO_SIZE_MB = max(1, int(os.environ.get("VOICE_ROOTS_MAX_AUDIO_SIZE_MB", "500")))
 MAX_AUDIO_SIZE_BYTES = MAX_AUDIO_SIZE_MB * 1024 * 1024
 CONSENT_VERSION = "voice-roots-consent-v1"
@@ -207,6 +213,56 @@ def init_db():
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_submissions_status ON resource_submissions(status)"
         )
+        # Pilot testing tables
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pilot_submissions (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                transcript_id INTEGER NOT NULL,
+                tester_name TEXT NOT NULL,
+                consent INTEGER NOT NULL DEFAULT 0,
+                notes TEXT,
+                withdrawn INTEGER NOT NULL DEFAULT 0,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL,
+                FOREIGN KEY(transcript_id) REFERENCES transcripts(id) ON DELETE CASCADE
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pilot_reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                submission_id INTEGER NOT NULL,
+                reviewer_name TEXT NOT NULL,
+                approval INTEGER NOT NULL,
+                uncertainty TEXT,
+                corrected_transcript TEXT,
+                corrected_translation TEXT,
+                review_notes TEXT,
+                reviewed_at TEXT NOT NULL,
+                FOREIGN KEY(submission_id) REFERENCES pilot_submissions(id) ON DELETE CASCADE
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS pilot_metrics (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                language TEXT NOT NULL,
+                dialect TEXT,
+                model TEXT,
+                sample_size INTEGER NOT NULL,
+                wer REAL,
+                cer REAL,
+                bleu REAL,
+                evaluation_date TEXT NOT NULL
+            )
+            """
+        )
+        # Indexes for quick lookup
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_pilot_submissions_transcript ON pilot_submissions(transcript_id)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_pilot_reviews_submission ON pilot_reviews(submission_id)")
         conn.commit()
 
 
@@ -264,6 +320,11 @@ async def structured_logging_middleware(request: Request, call_next):
 if os.path.exists(AUDIO_STORAGE):
     app.mount("/storage/audio", StaticFiles(directory=AUDIO_STORAGE), name="audio_storage")
 
+# Mount built frontend assets for unified web application serving
+_assets_dir = os.path.join(FRONTEND_DIST, "assets")
+if os.path.exists(_assets_dir):
+    app.mount("/assets", StaticFiles(directory=_assets_dir), name="frontend_assets")
+
 
 # Pydantic schemas for data validation
 class TranscriptUpdate(BaseModel):
@@ -303,6 +364,64 @@ class TranscriptResponse(BaseModel):
     transcription_consent_version: Optional[str] = None
     transcribed_at: Optional[str] = None
 
+# Pilot testing schemas
+class PilotSubmissionCreate(BaseModel):
+    transcript_id: int
+    tester_name: str
+    consent: bool
+    notes: Optional[str] = None
+
+class PilotSubmissionResponse(BaseModel):
+    id: int
+    transcript_id: int
+    tester_name: str
+    consent: int
+    notes: Optional[str]
+    withdrawn: int
+    created_at: str
+    updated_at: str
+
+class PilotReviewCreate(BaseModel):
+    submission_id: int
+    reviewer_name: str
+    approval: int  # 0 or 1
+    uncertainty: Optional[str] = None
+    corrected_transcript: Optional[str] = None
+    corrected_translation: Optional[str] = None
+    review_notes: Optional[str] = None
+
+class PilotReviewResponse(BaseModel):
+    id: int
+    submission_id: int
+    reviewer_name: str
+    approval: int
+    uncertainty: Optional[str]
+    corrected_transcript: Optional[str]
+    corrected_translation: Optional[str]
+    review_notes: Optional[str]
+    reviewed_at: str
+
+class PilotMetricCreate(BaseModel):
+    language: str
+    dialect: Optional[str] = None
+    model: str
+    sample_size: int
+    wer: Optional[float] = None
+    cer: Optional[float] = None
+    bleu: Optional[float] = None
+    evaluation_date: str  # ISO date string
+
+class PilotMetricResponse(BaseModel):
+    id: int
+    language: str
+    dialect: Optional[str]
+    model: str
+    sample_size: int
+    wer: Optional[float]
+    cer: Optional[float]
+    bleu: Optional[float]
+    evaluation_date: str
+
 
 from language_registry import (
     get_all_capabilities,
@@ -339,8 +458,25 @@ SUPPORTED_LANGUAGES = list_languages()
 
 
 @app.get("/")
-def root():
-    """Root endpoint welcoming clients and referencing documentation."""
+def root(request: Request):
+    """Root endpoint welcoming clients and referencing documentation, or serving SPA in browser."""
+    accept = request.headers.get("accept", "")
+    if "text/html" in accept and os.path.exists(INDEX_HTML_PATH):
+        return FileResponse(INDEX_HTML_PATH)
+    return {
+        "name": "Voice Roots API",
+        "tagline": "Rooting Oral Languages in Text with AI",
+        "status": "online",
+        "version": "1.0.0",
+        "docs_url": "/docs",
+        "health_check": "/health",
+    }
+
+
+@app.get("/api")
+@app.get("/api/v1")
+def api_root():
+    """Explicit JSON metadata endpoint for the API."""
     return {
         "name": "Voice Roots API",
         "tagline": "Rooting Oral Languages in Text with AI",
@@ -2027,3 +2163,176 @@ def get_system_telemetry():
     }
 
 
+# ---- Pilot Testing API ----
+
+@app.post("/api/v1/pilot/submissions")
+def create_pilot_submission(payload: PilotSubmissionCreate):
+    """Create a pilot submission. Consent must be true."""
+    if not payload.consent:
+        raise HTTPException(status_code=400, detail="Consent is required for pilot submission.")
+    # Verify transcript exists
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT id FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            (payload.transcript_id,),
+        )
+        if cursor.fetchone() is None:
+            raise HTTPException(status_code=404, detail="Referenced transcript not found.")
+        now = datetime.now(timezone.utc).isoformat()
+        cursor.execute(
+            """
+            INSERT INTO pilot_submissions (transcript_id, tester_name, consent, notes, withdrawn, created_at, updated_at)
+            VALUES (?, ?, ?, ?, 0, ?, ?)
+            """,
+            (
+                payload.transcript_id,
+                payload.tester_name,
+                1,
+                payload.notes,
+                now,
+                now,
+            ),
+        )
+        conn.commit()
+        sub_id = cursor.lastrowid
+        cursor.execute("SELECT * FROM pilot_submissions WHERE id = ?", (sub_id,))
+        sub_row = cursor.fetchone()
+    return dict(sub_row)
+
+@app.get("/api/v1/pilot/submissions")
+def list_pilot_submissions():
+    """List all active pilot submissions."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM pilot_submissions ORDER BY created_at DESC")
+        rows = cursor.fetchall()
+    return {"submissions": [dict(r) for r in rows]}
+
+@app.get("/api/v1/pilot/submissions/{submission_id}")
+def get_pilot_submission(submission_id: int):
+    """Retrieve a pilot submission together with its transcript data."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            SELECT ps.*, t.*
+            FROM pilot_submissions ps
+            JOIN transcripts t ON ps.transcript_id = t.id
+            WHERE ps.id = ? AND ps.withdrawn = 0
+            """,
+            (submission_id,),
+        )
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Pilot submission not found.")
+        # Separate dicts
+        sub_dict = {k: row[k] for k in row.keys() if k in ["id", "transcript_id", "tester_name", "consent", "notes", "withdrawn", "created_at", "updated_at"]}
+        transcript_dict = {k: row[k] for k in row.keys() if k.startswith("transcript_") or k in ["title", "audio_filename", "language", "dialect", "transcript_text", "status", "duration_seconds", "created_at", "updated_at"]}
+    return {"submission": sub_dict, "transcript": transcript_dict}
+
+@app.post("/api/v1/pilot/reviews")
+def create_pilot_review(payload: PilotReviewCreate):
+    """Store a reviewer feedback for a pilot submission."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        # Verify submission exists and not withdrawn
+        cursor.execute(
+            "SELECT id FROM pilot_submissions WHERE id = ? AND withdrawn = 0",
+            (payload.submission_id,),
+        )
+        if cursor.fetchone() is None:
+            raise HTTPException(status_code=404, detail="Pilot submission not found for review.")
+        now = datetime.now(timezone.utc).isoformat()
+        cursor.execute(
+            """
+            INSERT INTO pilot_reviews (submission_id, reviewer_name, approval, uncertainty, corrected_transcript, corrected_translation, review_notes, reviewed_at)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                payload.submission_id,
+                payload.reviewer_name,
+                payload.approval,
+                payload.uncertainty,
+                payload.corrected_transcript,
+                payload.corrected_translation,
+                payload.review_notes,
+                now,
+            ),
+        )
+        conn.commit()
+        rev_id = cursor.lastrowid
+        cursor.execute("SELECT * FROM pilot_reviews WHERE id = ?", (rev_id,))
+        rev_row = cursor.fetchone()
+    return dict(rev_row)
+
+@app.get("/api/v1/pilot/metrics")
+def list_pilot_metrics(
+    language: Optional[str] = Query(None),
+    model: Optional[str] = Query(None),
+    start_date: Optional[str] = Query(None),
+    end_date: Optional[str] = Query(None),
+):
+    """List pilot metrics with optional filters."""
+    query = "SELECT * FROM pilot_metrics WHERE 1=1"
+    params: List[Any] = []
+    if language:
+        query += " AND language = ?"
+        params.append(language)
+    if model:
+        query += " AND model = ?"
+        params.append(model)
+    if start_date:
+        query += " AND evaluation_date >= ?"
+        params.append(start_date)
+    if end_date:
+        query += " AND evaluation_date <= ?"
+        params.append(end_date)
+    query += " ORDER BY evaluation_date DESC"
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+    return [dict(row) for row in rows]
+
+@app.patch("/api/v1/pilot/submissions/{submission_id}/withdraw")
+def withdraw_pilot_submission(submission_id: int):
+    """Mark a pilot submission as withdrawn (OCAP compliance)."""
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT id FROM pilot_submissions WHERE id = ?", (submission_id,))
+        if cursor.fetchone() is None:
+            raise HTTPException(status_code=404, detail="Pilot submission not found.")
+        now = datetime.now(timezone.utc).isoformat()
+        cursor.execute(
+            "UPDATE pilot_submissions SET withdrawn = 1, updated_at = ? WHERE id = ?",
+            (now, submission_id),
+        )
+        conn.commit()
+    return {"status": "withdrawn", "submission_id": submission_id}
+
+# End pilot routes
+
+
+@app.get("/{full_path:path}")
+async def serve_spa_or_static(request: Request, full_path: str):
+    """Serve built frontend static assets or fallback to index.html for SPA client-side routing."""
+    # Check if a specific file exists in FRONTEND_DIST (e.g. vite.svg, robots.txt, favicon.ico)
+    candidate_file = os.path.join(FRONTEND_DIST, full_path)
+    if os.path.isfile(candidate_file):
+        return FileResponse(candidate_file)
+
+    # Do not intercept API, storage, health, ready, or documentation routes
+    if full_path.startswith(("api/", "api", "storage/", "storage", "health", "ready", "docs", "redoc", "openapi.json")):
+        raise HTTPException(status_code=404, detail="Not Found")
+
+    # Fallback to SPA index.html for client-side routing
+    if os.path.exists(INDEX_HTML_PATH):
+        return FileResponse(INDEX_HTML_PATH)
+
+    raise HTTPException(status_code=404, detail="Not Found")

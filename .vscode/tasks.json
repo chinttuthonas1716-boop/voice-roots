@@ -2,7 +2,26 @@
   "version": "2.0.0",
   "tasks": [
     {
-      "label": "Start Backend (FastAPI)",
+      "label": "🌐 Web: Start Next.js Dev",
+      "type": "shell",
+      "command": "npm run dev",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "🌐 Web: Build Next.js Production",
+      "type": "shell",
+      "command": "npm run build",
+      "options": {
+        "cwd": "${workspaceFolder}/web"
+      },
+      "problemMatcher": ["$tsc"]
+    },
+    {
+      "label": "⚙️ Backend: Start FastAPI",
       "type": "shell",
       "command": "python3 -m uvicorn app.main:app --reload --port 8000",
       "options": {
@@ -12,13 +31,31 @@
       "problemMatcher": []
     },
     {
-      "label": "Start Web (Next.js)",
+      "label": "📱 Mobile: Start Expo",
       "type": "shell",
-      "command": "npm run dev",
+      "command": "npm run start",
       "options": {
-        "cwd": "${workspaceFolder}/web"
+        "cwd": "${workspaceFolder}/mobile"
       },
       "isBackground": true,
+      "problemMatcher": []
+    },
+    {
+      "label": "🦋 Flutter: Run App",
+      "type": "shell",
+      "command": "flutter run",
+      "options": {
+        "cwd": "${workspaceFolder}/flutter_app"
+      },
+      "problemMatcher": []
+    },
+    {
+      "label": "🧪 Test: Run Audit Suite",
+      "type": "shell",
+      "command": "python3 scripts/audit_functionality.py",
+      "options": {
+        "cwd": "${workspaceFolder}"
+      },
       "problemMatcher": []
     }
   ]

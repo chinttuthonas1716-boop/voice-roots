@@ -39,12 +39,45 @@ out/
 .env.test.local
 .env.production.local
 
-# Storage & Audio Uploads
+# Storage & Audio Uploads (Private acoustic masters)
 backend/storage/
 storage/
+backend/chroma_db/
+scratch/
 *.wav
 *.mp3
 *.webm
+*.ogg
+*.m4a
+*.flac
+*.aac
+*.mp4
+*.mov
+*.zip
+
+# Local test databases, backups & coverage
+test_*.db
+*.sqlite3
+backend/storage/backups/
+backend/backups/
+backups/
+*.db
+.coverage
+htmlcov/
+coverage/
+
+# Local Model weights & caches
+models/
+*.pt
+*.bin
+*.onnx
+*.safetensors
+.cache/
+
+# Credentials & secrets
+*.pem
+*.key
+*.cert
 
 # OS
 .DS_Store

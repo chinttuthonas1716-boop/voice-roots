@@ -102,13 +102,26 @@ Every preserved oral story adheres to the 9-part structure:
 
 ---
 
-## 7. 🔀 Three Language Layers
+## 7. 🔀 Three Language Layers & Universal Multilingual Support
 
 | Layer | Function | Example |
 | :--- | :--- | :--- |
-| **App Language** | Controls UI buttons, menus, and AI chat chrome | English (`en`) |
-| **Story Language** | Represents source recording and native script | Telugu / Gondi |
-| **Translation Language** | Controls multilingual interpretation layer | Hindi / Tamil |
+| **App Language** | Controls UI buttons, menus, and AI chat chrome | English (`en`), Telugu, Spanish, Swahili |
+| **Story Language** | Represents source recording and native script | Gondi (`gon`), Koya (`kff`), Quechua (`qu`), Welsh (`cy`) |
+| **Translation Language** | Controls multilingual interpretation layer | English, Hindi, Spanish, Arabic |
+
+### 7.1 Universal Multilingual Dynamic System
+- **Global Scope**: Not restricted to Indian languages; natively extensible to any spoken and written tongue worldwide.
+- **Dynamic Registry**: Initialized with 44 world languages across Indigenous/Oral, Regional, Scheduled, and Major World categories with standard BCP 47/ISO codes.
+- **Runtime Registration**: `POST /api/v1/languages/register` allows community onboarding of new languages without code redeployments.
+- **Oral Language Sovereignty (OCAP)**: Unwritten oral tongues (Gondi, Koya, Santhali, Lambadi, etc.) strictly mandate community elder verification before translation layers are certified, preventing synthetic AI hallucination.
+- **ChromaDB Vector Archive**: Indexed across global linguistic corpora with transparent character n-gram lexical fallback.
+
+### 7.2 Independent Translation Persistence Layer (OCAP Compliance)
+- **Relational Storage**: Translations are persisted in a dedicated SQLite table (`translations`), referencing the parent transcript via `FOREIGN KEY (transcript_id) REFERENCES transcripts(id)`.
+- **Annotation Integrity**: The original acoustic audio master and primary transcript text are immutable and never modified or overwritten by machine or community translations.
+- **Verification States**: Translations record provider, model, creation timestamp, and native speaker verification status (`verified: 0 | 1`) with optional elder commentary.
+- **API Endpoints**: `POST /api/v1/translate` (stores with `transcript_id`), `GET /api/v1/transcripts/{id}/translations`, `PATCH /api/v1/translations/{id}`, `DELETE /api/v1/translations/{id}`.
 
 ---
 
