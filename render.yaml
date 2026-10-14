@@ -1,0 +1,36 @@
+# Voice Roots — Render Infrastructure as Code Blueprint
+# Reference: https://render.com/docs/blueprint-spec
+
+services:
+  - type: web
+    name: voice-roots
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    plan: starter # Change to 'free' if deploying without persistent disk
+    region: oregon
+    healthCheckPath: /ready
+    disk:
+      name: voice-roots-data
+      mountPath: /data
+      sizeGB: 10
+    envVars:
+      - key: VOICE_ROOTS_ENV
+        value: production
+      - key: VOICE_ROOTS_DB_PATH
+        value: /data/voice_roots.db
+      - key: VOICE_ROOTS_STORAGE_DIR
+        value: /data/storage
+      - key: VOICE_ROOTS_BACKUP_DIR
+        value: /data/backups
+      - key: VOICE_ROOTS_CHROMA_DIR
+        value: /data/chroma_db
+      - key: VOICE_ROOTS_TRANSCRIPTION_PROVIDER
+        value: whisper-local
+      - key: VOICE_ROOTS_WHISPER_MODEL_SIZE
+        value: base
+      - key: VOICE_ROOTS_TRANSLATION_PROVIDER
+        value: offline-rule
+      - key: VOICE_ROOTS_ALLOWED_ORIGINS
+        value: https://voice-roots.onrender.com
+      - key: VOICE_ROOTS_ADMIN_KEY
+        generateValue: true
