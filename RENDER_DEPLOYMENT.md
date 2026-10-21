@@ -90,3 +90,4 @@ Once your Render service is **Live**:
 - **Build Timeout / Memory**: Render builds Docker images with 2+ GB RAM. If building the node frontend in Docker times out, you can run `npm --prefix frontend run build` locally and commit `frontend/dist/`.
 - **Port Binding**: The Dockerfile automatically binds to Render's injected `$PORT` environment variable via `0.0.0.0:${PORT:-8000}`.
 - **Custom Domain**: In the Render service dashboard under "Settings" -> "Custom Domains", you can add a custom domain (e.g. `voiceroots.org`) with free automated Let's Encrypt SSL.
+

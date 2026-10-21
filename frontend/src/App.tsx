@@ -285,6 +285,8 @@ export function App() {
   const [isLoadingArchive, setIsLoadingArchive] = useState(false);
   const [editingId, setEditingId] = useState<number | null>(null);
   const [editText, setEditText] = useState('');
+  const [archiveDisplayLimit, setArchiveDisplayLimit] = useState(15);
+  const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
 
   // Active Navigation Tab (Matching Reference: Home, Record, Translate, Languages, Search, Archive, Community, Login)
   type NavTab = 'home' | 'record' | 'translate' | 'languages' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
@@ -2363,7 +2365,7 @@ ${feedbackRecommendation}
                 <p style={{ fontSize: '12px', color: '#94A3B8', marginBottom: '6px' }}>
                   Master Audio Playback (Lossless Immutable Master):
                 </p>
-                <audio controls src={resolveMediaUrl(activeResult.audio_url)} style={{ width: '100%', height: '36px' }} />
+                <audio controls preload="none" src={resolveMediaUrl(activeResult.audio_url)} style={{ width: '100%', height: '36px' }} />
               </div>
 
               {/* ─── Export & Copy Action Toolbar ─── */}
@@ -3340,22 +3342,43 @@ ${feedbackRecommendation}
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
             <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE' }}>
-              Language Archive & Saved Transcripts
+              Language Archive & Saved Transcripts ({transcripts.length})
             </h3>
             <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)' }}>
               Permanently persisted in SQLite database (<code style={{ color: '#8EB69B' }}>voice_roots.db</code>)
             </p>
           </div>
 
-          <button 
-            type="button" 
-            onClick={fetchTranscripts} 
-            className="btn-secondary"
-            style={{ fontSize: '13px', padding: '8px 14px' }}
-          >
-            <RefreshCw size={14} />
-            <span>Refresh Archive</span>
-          </button>
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <input
+              type="text"
+              placeholder="Search by title, language..."
+              value={archiveSearchQuery}
+              onChange={(e) => {
+                setArchiveSearchQuery(e.target.value);
+                setArchiveDisplayLimit(15);
+              }}
+              style={{
+                background: 'rgba(5, 31, 32, 0.7)',
+                border: '1px solid #235347',
+                borderRadius: '8px',
+                color: '#DAF1DE',
+                padding: '6px 12px',
+                fontSize: '13px',
+                outline: 'none',
+                minWidth: '200px'
+              }}
+            />
+            <button 
+              type="button" 
+              onClick={fetchTranscripts} 
+              className="btn-secondary"
+              style={{ fontSize: '13px', padding: '8px 14px' }}
+            >
+              <RefreshCw size={14} />
+              <span>Refresh</span>
+            </button>
+          </div>
         </div>
 
         {isLoadingArchive ? (
@@ -3367,7 +3390,32 @@ ${feedbackRecommendation}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-            {transcripts.map((t) => (
+            {(() => {
+              const filteredTranscripts = transcripts.filter((t) => {
+                if (!archiveSearchQuery.trim()) return true;
+                const q = archiveSearchQuery.toLowerCase();
+                return (
+                  (t.title && t.title.toLowerCase().includes(q)) ||
+                  (t.language && t.language.toLowerCase().includes(q)) ||
+                  (t.dialect && t.dialect.toLowerCase().includes(q)) ||
+                  (t.status && t.status.toLowerCase().includes(q)) ||
+                  (t.transcript_text && t.transcript_text.toLowerCase().includes(q)) ||
+                  (t.machine_transcript_text && t.machine_transcript_text.toLowerCase().includes(q))
+                );
+              });
+              const displayedTranscripts = filteredTranscripts.slice(0, archiveDisplayLimit);
+
+              if (filteredTranscripts.length === 0) {
+                return (
+                  <p style={{ padding: '24px', textAlign: 'center', color: 'rgba(218, 241, 222, 0.6)' }}>
+                    No recordings match "{archiveSearchQuery}".
+                  </p>
+                );
+              }
+
+              return (
+                <>
+                  {displayedTranscripts.map((t) => (
               <div 
                 key={t.id} 
                 style={{ 
@@ -3472,7 +3520,7 @@ ${feedbackRecommendation}
                 </div>
 
                 {/* Audio Master Player */}
-                <audio controls src={resolveMediaUrl(t.audio_url)} style={{ width: '100%', height: '36px' }} />
+                <audio controls preload="none" src={resolveMediaUrl(t.audio_url)} style={{ width: '100%', height: '36px' }} />
 
                 {/* Separate Machine vs Community Transcripts Display */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
@@ -3553,7 +3601,23 @@ ${feedbackRecommendation}
                   )}
                 </div>
               </div>
-            ))}
+                  ))}
+
+                  {filteredTranscripts.length > archiveDisplayLimit && (
+                    <div style={{ textAlign: 'center', marginTop: '14px' }}>
+                      <button
+                        type="button"
+                        onClick={() => setArchiveDisplayLimit((prev) => prev + 25)}
+                        className="btn-secondary"
+                        style={{ padding: '8px 24px', fontSize: '13px', margin: '0 auto', display: 'inline-flex', alignItems: 'center', gap: '8px' }}
+                      >
+                        <span>Load More Recordings ({displayedTranscripts.length} of {filteredTranscripts.length})</span>
+                      </button>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         )}
       </section>

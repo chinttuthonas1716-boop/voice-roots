@@ -34,3 +34,4 @@ services:
         value: https://voice-roots.onrender.com
       - key: VOICE_ROOTS_ADMIN_KEY
         generateValue: true
+
