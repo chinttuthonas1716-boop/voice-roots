@@ -139,6 +139,17 @@ def init_db():
             "privacy_level": "TEXT NOT NULL DEFAULT 'public'",
             "retention_policy": "TEXT NOT NULL DEFAULT 'indefinite'",
             "storage_backend": "TEXT NOT NULL DEFAULT 'local'",
+            "verification_status": "TEXT NOT NULL DEFAULT 'submitted'",
+            "consent_private_storage": "INTEGER NOT NULL DEFAULT 1",
+            "consent_community_access": "INTEGER NOT NULL DEFAULT 1",
+            "consent_public_publication": "INTEGER NOT NULL DEFAULT 0",
+            "consent_ai_training": "INTEGER NOT NULL DEFAULT 0",
+            "is_anonymous": "INTEGER NOT NULL DEFAULT 0",
+            "contextual_notes": "TEXT",
+            "reviewer_uncertainty": "TEXT",
+            "verified_by": "TEXT",
+            "verified_at": "TEXT",
+            "review_notes": "TEXT",
         }
         for column, sql_type in additions.items():
             if column not in existing_columns:
@@ -153,6 +164,7 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_status ON transcripts(status)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_sha256 ON transcripts(audio_sha256)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_privacy ON transcripts(privacy_level)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_verification ON transcripts(verification_status)")
 
         cursor.execute(
             """
@@ -393,6 +405,17 @@ class TranscriptResponse(BaseModel):
     transcription_consent_at: Optional[str] = None
     transcription_consent_version: Optional[str] = None
     transcribed_at: Optional[str] = None
+    verification_status: Optional[str] = "submitted"
+    consent_private_storage: Optional[int] = 1
+    consent_community_access: Optional[int] = 1
+    consent_public_publication: Optional[int] = 0
+    consent_ai_training: Optional[int] = 0
+    is_anonymous: Optional[int] = 0
+    contextual_notes: Optional[str] = None
+    reviewer_uncertainty: Optional[str] = None
+    verified_by: Optional[str] = None
+    verified_at: Optional[str] = None
+    review_notes: Optional[str] = None
 
 # Pilot testing schemas
 class PilotSubmissionCreate(BaseModel):
@@ -451,6 +474,26 @@ class PilotMetricResponse(BaseModel):
     cer: Optional[float]
     bleu: Optional[float]
     evaluation_date: str
+
+
+class ContributionDraftUpdateRequest(BaseModel):
+    title: Optional[str] = None
+    dialect: Optional[str] = None
+    contextual_notes: Optional[str] = None
+    transcript_text: Optional[str] = None
+    transliteration_text: Optional[str] = None
+    submit: bool = False  # If True, transitions 'draft' -> 'submitted'
+
+
+class VerificationReviewRequest(BaseModel):
+    reviewer_name: str
+    reviewer_role: str
+    decision: str  # verified, changes_requested, corrected, withdrawn_or_rejected
+    corrected_transcript: Optional[str] = None
+    corrected_translation: Optional[str] = None
+    reviewer_uncertainty: Optional[str] = None  # low, medium, high, unclear_audio, unknown_dialect
+    review_notes: Optional[str] = None
+    admin_key: Optional[str] = None
 
 
 from language_registry import (
@@ -968,6 +1011,14 @@ async def upload_audio(
     license: Optional[str] = Form("CC BY-NC 4.0"),
     privacy_level: Optional[str] = Form("public"),
     retention_policy: Optional[str] = Form("indefinite"),
+    is_draft: bool = Form(False),
+    verification_status: Optional[str] = Form(None),
+    consent_private_storage: bool = Form(False),
+    consent_community_access: bool = Form(False),
+    consent_public_publication: bool = Form(False),
+    consent_ai_training: bool = Form(False),
+    is_anonymous: bool = Form(False),
+    contextual_notes: Optional[str] = Form(None),
 ):
     """Store a consented audio master and optionally queue consented transcription."""
     client_ip = request.client.host if request.client else ""
@@ -978,7 +1029,7 @@ async def upload_audio(
             status_code=422,
             detail="Audio file is required (use 'file' or 'audio' form field).",
         )
-    if not consent:
+    if not consent and not consent_private_storage:
         raise HTTPException(
             status_code=400,
             detail="Consent is required before the recording can be stored.",
@@ -995,7 +1046,8 @@ async def upload_audio(
     unique_uuid = str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     initial_transcript = ""
-    status_label = "Awaiting transcription"
+    v_status = "draft" if is_draft else (verification_status or "submitted")
+    status_label = "Draft" if is_draft else "Awaiting transcription"
     transcription_status = "queued" if transcription_consent else "not_requested"
     transcription_consent_at = now if transcription_consent else None
     transcription_consent_version = (
@@ -1016,6 +1068,30 @@ async def upload_audio(
 
     storage_backend = os.environ.get("VOICE_ROOTS_STORAGE_BACKEND", "local")
 
+    effective_contributor = "Anonymous Contributor" if is_anonymous else (contributor_name or "Community Contributor")
+    has_explicit_multitier = any([
+        consent_private_storage,
+        consent_community_access,
+        consent_public_publication,
+        consent_ai_training,
+    ])
+    if has_explicit_multitier:
+        c_storage = 1 if (consent or consent_private_storage) else 0
+        c_community = 1 if (consent or consent_community_access) else 0
+        c_public = 1 if consent_public_publication else 0
+        c_ai = 1 if consent_ai_training else 0
+        if not c_public:
+            effective_privacy = "private" if not c_community else (privacy_level if privacy_level == "private" else "community")
+        else:
+            effective_privacy = privacy_level or "public"
+    else:
+        c_storage = 1 if consent else 0
+        c_community = 1 if consent else 0
+        c_public = 1 if (consent and privacy_level == "public") else 0
+        c_ai = 0
+        effective_privacy = privacy_level or "public"
+    anon_flag = 1 if is_anonymous else 0
+
     # Insert into SQLite. Roll back the just-created file if registration fails.
     try:
         with sqlite3.connect(DB_PATH) as conn:
@@ -1030,8 +1106,11 @@ async def upload_audio(
                     transcription_consent_at, transcription_consent_version,
                     contributor_name, contributor_role, provenance_notes,
                     transliteration_text, license, privacy_level, retention_policy,
-                    storage_backend
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    storage_backend,
+                    verification_status, consent_private_storage, consent_community_access,
+                    consent_public_publication, consent_ai_training, is_anonymous,
+                    contextual_notes
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     unique_uuid,
@@ -1052,14 +1131,21 @@ async def upload_audio(
                     transcription_status,
                     transcription_consent_at,
                     transcription_consent_version,
-                    contributor_name or "Community Contributor",
+                    effective_contributor,
                     contributor_role or "speaker",
                     provenance_notes,
                     transliteration_text,
                     license or "CC BY-NC 4.0",
-                    privacy_level or "public",
+                    effective_privacy,
                     retention_policy or "indefinite",
                     storage_backend,
+                    v_status,
+                    c_storage,
+                    c_community,
+                    c_public,
+                    c_ai,
+                    anon_flag,
+                    contextual_notes,
                 ),
             )
             conn.commit()
@@ -1098,14 +1184,22 @@ async def upload_audio(
         "file_size_bytes": file_size,
         "consent_at": now,
         "consent_version": CONSENT_VERSION,
-        "contributor_name": contributor_name or "Community Contributor",
+        "contributor_name": effective_contributor,
         "contributor_role": contributor_role or "speaker",
         "provenance_notes": provenance_notes,
         "transliteration_text": transliteration_text,
         "license": license or "CC BY-NC 4.0",
-        "privacy_level": privacy_level or "public",
+        "privacy_level": effective_privacy,
         "retention_policy": retention_policy or "indefinite",
         "storage_backend": storage_backend,
+        "verification_status": v_status,
+        "consent_private_storage": c_storage,
+        "consent_community_access": c_community,
+        "consent_public_publication": c_public,
+        "consent_ai_training": c_ai,
+        "is_anonymous": bool(anon_flag),
+        "contextual_notes": contextual_notes,
+        "is_draft": is_draft,
         "notice": (
             "Audio master saved unchanged. Transcription was queued after separate transcription consent."
             if transcription_consent
@@ -2605,6 +2699,411 @@ def withdraw_pilot_submission(submission_id: int):
     return {"status": "withdrawn", "submission_id": submission_id}
 
 # End pilot routes
+
+
+# ─── Milestone 8: Contributor Portal & Human Verification API ───
+
+AUTHORIZED_REVIEWER_ROLES = {
+    "community_elder",
+    "native_speaker_reviewer",
+    "linguist",
+    "moderator",
+    "elder",
+    "admin",
+}
+
+VALID_VERIFICATION_STATUSES = {
+    "draft",
+    "submitted",
+    "awaiting_review",
+    "under_review",
+    "changes_requested",
+    "corrected",
+    "verified",
+    "published",
+    "withdrawn_or_rejected",
+}
+
+VALID_UNCERTAINTIES = {
+    "low",
+    "medium",
+    "high",
+    "unclear_audio",
+    "unknown_dialect",
+}
+
+
+@app.get("/api/v1/contributions/my-submissions")
+def list_my_contributions(
+    contributor_name: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    verification_status: Optional[str] = Query(None),
+    limit: int = Query(50),
+):
+    """Retrieve contributions with verification status for the contributor portal."""
+    query = "SELECT * FROM transcripts WHERE archived_at IS NULL"
+    params: List[Any] = []
+    if contributor_name:
+        query += " AND contributor_name = ?"
+        params.append(contributor_name)
+    if verification_status:
+        query += " AND verification_status = ?"
+        params.append(verification_status)
+    elif status:
+        query += " AND status = ?"
+        params.append(status)
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+        return {"submissions": [dict(r) for r in rows], "count": len(rows)}
+
+
+@app.patch("/api/v1/contributions/{transcript_id}/draft")
+def update_contribution_draft(transcript_id: int, payload: ContributionDraftUpdateRequest):
+    """Update a draft contribution or submit it for human verification."""
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL", (transcript_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Contribution not found.")
+
+        current = dict(row)
+        curr_v_status = current.get("verification_status") or "submitted"
+        if curr_v_status not in ("draft", "changes_requested"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot edit contribution in '{curr_v_status}' status. Only 'draft' or 'changes_requested' can be edited.",
+            )
+
+        new_title = payload.title.strip() if payload.title is not None else current["title"]
+        new_dialect = payload.dialect if payload.dialect is not None else current["dialect"]
+        new_context = payload.contextual_notes if payload.contextual_notes is not None else current.get("contextual_notes")
+        new_transcript = payload.transcript_text if payload.transcript_text is not None else current["transcript_text"]
+        new_translit = payload.transliteration_text if payload.transliteration_text is not None else current["transliteration_text"]
+
+        new_v_status = "submitted" if payload.submit else curr_v_status
+        new_status = "Submitted for Review" if payload.submit else current["status"]
+
+        cursor.execute(
+            """
+            UPDATE transcripts
+            SET title = ?, dialect = ?, contextual_notes = ?, transcript_text = ?,
+                transliteration_text = ?, verification_status = ?, status = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                new_title,
+                new_dialect,
+                new_context,
+                new_transcript,
+                new_translit,
+                new_v_status,
+                new_status,
+                now,
+                transcript_id,
+            ),
+        )
+        conn.commit()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ?", (transcript_id,))
+        return dict(cursor.fetchone())
+
+
+@app.post("/api/v1/contributions/{transcript_id}/withdraw")
+def withdraw_contribution(transcript_id: int):
+    """Withdraw a contribution under OCAP data sovereignty protocols."""
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL", (transcript_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Contribution not found.")
+
+        cursor.execute(
+            """
+            UPDATE transcripts
+            SET verification_status = 'withdrawn_or_rejected', status = 'Withdrawn', updated_at = ?
+            WHERE id = ?
+            """,
+            (now, transcript_id),
+        )
+        conn.commit()
+        return {
+            "success": True,
+            "id": transcript_id,
+            "verification_status": "withdrawn_or_rejected",
+            "status": "Withdrawn",
+            "message": "Contribution withdrawn successfully under OCAP protocols.",
+        }
+
+
+@app.get("/api/v1/verification/queue")
+def list_verification_queue(
+    reviewer_role: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+    language: Optional[str] = Query(None),
+    limit: int = Query(50),
+):
+    """List recordings awaiting human transcript verification. Requires reviewer role."""
+    if reviewer_role and reviewer_role not in AUTHORIZED_REVIEWER_ROLES:
+        raise HTTPException(status_code=403, detail="Access denied: Reviewer authorization required.")
+
+    query = "SELECT * FROM transcripts WHERE archived_at IS NULL"
+    params: List[Any] = []
+    if status:
+        if status not in VALID_VERIFICATION_STATUSES:
+            raise HTTPException(status_code=400, detail=f"Invalid verification status: {status}")
+        query += " AND verification_status = ?"
+        params.append(status)
+    else:
+        query += " AND verification_status IN ('submitted', 'awaiting_review', 'under_review', 'changes_requested', 'corrected')"
+
+    if language:
+        query += " AND language = ?"
+        params.append(language)
+
+    query += " ORDER BY id DESC LIMIT ?"
+    params.append(limit)
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(query, tuple(params))
+        rows = cursor.fetchall()
+        return {"queue": [dict(r) for r in rows], "count": len(rows)}
+
+
+@app.post("/api/v1/verification/{transcript_id}/claim")
+def claim_verification(
+    transcript_id: int,
+    reviewer_name: str = Query(...),
+    reviewer_role: str = Query(...),
+):
+    """Claim a recording for review, setting verification_status to 'under_review'."""
+    if reviewer_role not in AUTHORIZED_REVIEWER_ROLES:
+        raise HTTPException(status_code=403, detail="Access denied: Reviewer authorization required.")
+
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL", (transcript_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Recording not found.")
+
+        current = dict(row)
+        if current.get("verification_status") in ("withdrawn_or_rejected", "published"):
+            raise HTTPException(
+                status_code=400,
+                detail=f"Cannot claim recording in '{current.get('verification_status')}' status.",
+            )
+
+        cursor.execute(
+            """
+            UPDATE transcripts
+            SET verification_status = 'under_review', verified_by = ?, updated_at = ?
+            WHERE id = ?
+            """,
+            (reviewer_name, now, transcript_id),
+        )
+        conn.commit()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ?", (transcript_id,))
+        return dict(cursor.fetchone())
+
+
+@app.post("/api/v1/verification/{transcript_id}/review")
+def review_verification(
+    transcript_id: int,
+    payload: VerificationReviewRequest,
+):
+    """Submit human review, correction, and verification decision for a transcript."""
+    if payload.reviewer_role not in AUTHORIZED_REVIEWER_ROLES:
+        raise HTTPException(status_code=403, detail="Access denied: Reviewer authorization required.")
+
+    if payload.decision not in ("verified", "changes_requested", "corrected", "withdrawn_or_rejected"):
+        raise HTTPException(
+            status_code=400,
+            detail="Decision must be one of: 'verified', 'changes_requested', 'corrected', 'withdrawn_or_rejected'.",
+        )
+
+    if payload.reviewer_uncertainty and payload.reviewer_uncertainty not in VALID_UNCERTAINTIES:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Invalid reviewer uncertainty: must be one of {sorted(VALID_UNCERTAINTIES)}",
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL", (transcript_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Recording not found.")
+
+        current = dict(row)
+        original_text = current["transcript_text"]
+        new_text = payload.corrected_transcript if payload.corrected_transcript is not None else original_text
+
+        # Record revision history in corrections table if text was corrected
+        if payload.corrected_transcript and payload.corrected_transcript.strip() != original_text.strip():
+            cursor.execute(
+                """
+                INSERT INTO corrections (
+                    target_type, target_id, version_number, previous_text, suggested_text,
+                    contributor_name, contributor_role, rationale, status, consent_confirmed,
+                    reviewed_by, reviewed_at, review_notes, reviewer_uncertainty, created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    "transcript",
+                    transcript_id,
+                    1,
+                    original_text,
+                    payload.corrected_transcript.strip(),
+                    payload.reviewer_name,
+                    payload.reviewer_role,
+                    payload.review_notes or "Human transcript verification correction",
+                    "accepted",
+                    payload.reviewer_name,
+                    now,
+                    payload.review_notes,
+                    payload.reviewer_uncertainty,
+                    now,
+                    now,
+                ),
+            )
+
+        new_status = current["status"]
+        if payload.decision == "verified":
+            new_status = "Human Verified"
+        elif payload.decision == "corrected":
+            new_status = "Community Corrected"
+        elif payload.decision == "changes_requested":
+            new_status = "Changes Requested"
+        elif payload.decision == "withdrawn_or_rejected":
+            new_status = "Rejected"
+
+        cursor.execute(
+            """
+            UPDATE transcripts
+            SET transcript_text = ?,
+                verification_status = ?,
+                status = ?,
+                reviewer_uncertainty = ?,
+                verified_by = ?,
+                verified_at = ?,
+                review_notes = ?,
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                new_text,
+                payload.decision,
+                new_status,
+                payload.reviewer_uncertainty,
+                payload.reviewer_name,
+                now if payload.decision in ("verified", "corrected") else current.get("verified_at"),
+                payload.review_notes,
+                now,
+                transcript_id,
+            ),
+        )
+        conn.commit()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ?", (transcript_id,))
+        return dict(cursor.fetchone())
+
+
+@app.get("/api/v1/verification/{transcript_id}/history")
+def get_transcript_verification_history(transcript_id: int):
+    """Retrieve full audit and revision history for a transcript."""
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL", (transcript_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Recording not found.")
+        transcript = dict(row)
+
+        cursor.execute(
+            "SELECT * FROM corrections WHERE target_type = 'transcript' AND target_id = ? ORDER BY id ASC",
+            (transcript_id,),
+        )
+        corrections = [dict(r) for r in cursor.fetchall()]
+
+        return {
+            "transcript_id": transcript_id,
+            "title": transcript["title"],
+            "machine_transcript_text": transcript.get("machine_transcript_text", ""),
+            "current_transcript_text": transcript["transcript_text"],
+            "verification_status": transcript.get("verification_status", "submitted"),
+            "reviewer_uncertainty": transcript.get("reviewer_uncertainty"),
+            "verified_by": transcript.get("verified_by"),
+            "verified_at": transcript.get("verified_at"),
+            "review_notes": transcript.get("review_notes"),
+            "revisions": corrections,
+        }
+
+
+@app.post("/api/v1/verification/{transcript_id}/publish")
+def publish_verified_transcript(
+    transcript_id: int,
+    publisher_role: str = Query(...),
+    admin_key: Optional[str] = Query(None),
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+):
+    """Publish a human-verified transcript. Enforces OCAP public consent & role authorization."""
+    if publisher_role not in ("moderator", "admin", "community_elder"):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: Moderator or Admin authorization required to publish.",
+        )
+
+    now = datetime.now(timezone.utc).isoformat()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL", (transcript_id,))
+        row = cursor.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Recording not found.")
+
+        current = dict(row)
+        if current.get("verification_status") not in ("verified", "corrected"):
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot publish: Transcript must be human-verified before publication.",
+            )
+
+        if not current.get("consent_public_publication"):
+            raise HTTPException(
+                status_code=400,
+                detail="Cannot publish: Contributor has not granted public publication consent (OCAP protocol).",
+            )
+
+        cursor.execute(
+            """
+            UPDATE transcripts
+            SET verification_status = 'published',
+                status = 'Published',
+                privacy_level = 'public',
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (now, transcript_id),
+        )
+        conn.commit()
+        return {
+            "success": True,
+            "id": transcript_id,
+            "verification_status": "published",
+            "status": "Published",
+            "privacy_level": "public",
+            "message": "Transcript and recording published to community corpus successfully.",
+        }
 
 
 @app.get("/{full_path:path}")

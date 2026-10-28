@@ -1401,6 +1401,25 @@
 
 - [2026-10-28 14:20:00 IST] [ANTIGRAVITY] DONE: Executed automated 10-minute health checkpoint (iteration 14). Ran pre-faculty release audit. Verified root route, system health/readiness probes (200 OK), universal language registry (44 tongues), audio upload with affirmative consent, speech recognition dispatch, translation guardrails (HTTP 503 on Gondi), semantic vector search, audio streaming, and database integrity (394 transcripts, 81 translations). All 26/26 audit checkpoints passed. Files touched: `PROGRESS.md`.
 
+- [2026-10-28 14:52:00 IST] [ANTIGRAVITY] DONE: Completed Milestone 8 — Community Contribution Portal and Human Transcript Verification.
+  - Implemented Alembic schema migration `b3910c28341a` adding 11 columns to `transcripts` (`verification_status`, `consent_private_storage`, `consent_community_access`, `consent_public_publication`, `consent_ai_training`, `is_anonymous`, `contextual_notes`, `reviewer_uncertainty`, `verified_by`, `verified_at`, `review_notes`) and index `idx_transcripts_verification_status`.
+  - Upgraded SQLite database to head revision cleanly, preserving all existing records without data loss.
+  - Updated `backend/main.py` with multi-tier explicit consent (private storage, elder review, public corpus opt-in, AI training opt-in) and anonymous attribution in `/api/upload`.
+  - Added Contributor Portal REST endpoints: `GET /api/v1/contributions/my-submissions`, `PATCH /api/v1/contributions/{id}/draft`, and `POST /api/v1/contributions/{id}/withdraw` (OCAP right to withdraw).
+  - Added Human Verification REST endpoints: `GET /api/v1/verification/queue`, `POST /api/v1/verification/{id}/claim`, `POST /api/v1/verification/{id}/review` (with uncertainty marking and audit trail in `corrections`), `GET /api/v1/verification/{id}/history`, and `POST /api/v1/verification/{id}/publish` (with publication gate enforcing verified status and public publication consent).
+  - Enforced role-based authorization for reviewers (`community_elder`, `native_speaker_reviewer`, `linguist`, `moderator`, `elder`, `admin`), returning HTTP 403 Forbidden on unauthorized access.
+  - Created automated test suite `tests/test_milestone8_verification_workflow.py` with 8 comprehensive test cases covering drafts, multi-tier consent, anonymous attribution, reviewer permissions, audit immutability, and OCAP withdrawal.
+  - Upgraded frontend `frontend/src/components/Pilot.tsx` and `frontend/src/types.ts` with dedicated Contributor Portal, Human Verification Queue, and Evaluation Benchmark views.
+  - Files touched: `backend/alembic/versions/b3910c28341a_community_verification_and_roles.py`, `backend/alembic.ini`, `backend/main.py`, `tests/test_milestone8_verification_workflow.py`, `frontend/src/types.ts`, `frontend/src/components/Pilot.tsx`, `PROGRESS.md`.
+  - VERIFIED:
+    1. `pytest` test suite: 138/138 passed in 10.85s (100% pass rate).
+    2. `pre_faculty_release_audit.py`: 26/26 passed (0 failed).
+    3. `test_every_feature.py`: 27/27 passed (0 failed).
+    4. `npm run build --prefix frontend`: passed in 1.69s with 0 errors (TypeScript strict check clean).
+    5. Local backend and frontend daemons verified healthy on ports 8000 and 5173.
+  - NOT VERIFIED: Remote public cloud deployment (held locally awaiting explicit user authorization).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 
