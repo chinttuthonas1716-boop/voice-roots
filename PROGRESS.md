@@ -1472,6 +1472,32 @@
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-10-28] [ANTIGRAVITY] DONE: Milestone 11 — Multilingual AI Model Evaluation, Comparison Matrix, Fine-Tuning Feasibility Study, and Model Governance Architecture.
+  - Implemented Model Registry & Governance (`backend/model_registry.py`):
+    - Cataloged Speech-to-Text models (`whisper-base-local`, `whisper-small-local`, `indic-whisper-ai4bharat`, `meta-mms-1b`, `openai-whisper-api`).
+    - Cataloged Machine Translation models (`voiceroots-elder-guardrail-v1`, `indictrans2-1b`, `meta-nllb-200`).
+    - Cataloged Semantic Embedding models (`voiceroots_multilingual_v1`).
+    - Documented architectures, parameter counts, licensing (MIT, CC BY-NC, Commercial), operating costs ($0.00 self-hosted vs cloud), CPU/GPU latency, RAM/VRAM requirements, and OCAP privacy compliance.
+  - Implemented Model Comparison Matrix (`get_model_comparison_matrix`) across ASR, MT, and Embeddings.
+  - Implemented Fine-Tuning Feasibility & OCAP Rights Study (`assess_fine_tuning_feasibility`): Audited archive data volume, affirmative consent (`consent_ai_training`), compute cost ($24.50 for LoRA on 1x T4), and delivered evidence-based recommendation to halt training until >= 50 hours of elder-assented paired recordings are acquired.
+  - Implemented Release Gates & Rollback (`promote_candidate_model`, `rollback_production_model`): Enforced admin key authorization, task slot validation, and 100% elder review guardrail protection on indigenous oral tongues.
+  - Wired REST API routes in `backend/main.py`:
+    - `GET /api/v1/models`
+    - `GET /api/v1/models/comparison/matrix`
+    - `GET /api/v1/models/fine-tuning/feasibility`
+    - `GET /api/v1/models/{model_id}`
+    - `POST /api/v1/models/{model_id}/promote`
+    - `POST /api/v1/models/rollback`
+  - Authored automated test suite `tests/test_milestone11_model_evaluation.py` (7/7 tests passing).
+  - Files touched: `backend/model_registry.py`, `backend/main.py`, `tests/test_milestone11_model_evaluation.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Pytest Suite: 168/168 passed in 27.25s (100% pass rate).
+    2. Dedicated Milestone 11 Tests: 7/7 passed in `tests/test_milestone11_model_evaluation.py`.
+    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    4. Codebase compilation: `python3 -m py_compile backend/main.py` exit code 0.
+  - NOT VERIFIED: Paid external OpenAI Whisper API live requests (zero external network exposure, $0.00 operating cost preserved).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 

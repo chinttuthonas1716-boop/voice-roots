@@ -60,6 +60,15 @@ from evaluation_service import (
     evaluate_discovery_research,
     generate_comprehensive_research_report,
 )
+from model_registry import (
+    OFFICIAL_MODEL_REGISTRY,
+    assess_fine_tuning_feasibility,
+    get_model_comparison_matrix,
+    get_model_details,
+    list_registered_models,
+    promote_candidate_model,
+    rollback_production_model,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1724,6 +1733,90 @@ def export_research_data_package(
 def get_research_evaluation_report():
     """Generate comprehensive, statistically grounded research evaluation report across ASR, MT, and Search."""
     return generate_comprehensive_research_report()
+
+
+# ==============================================================================
+# Milestone 11: Multilingual AI Model Evaluation, Comparison & Governance
+# ==============================================================================
+
+class ModelPromotionRequest(BaseModel):
+    target_slot: str = "speech_to_text"
+    admin_key: Optional[str] = None
+
+
+class ModelRollbackRequest(BaseModel):
+    target_slot: str = "speech_to_text"
+    admin_key: Optional[str] = None
+
+
+@app.get("/api/v1/models")
+def get_models_registry():
+    """List all models registered in the Voice Roots Multilingual Model Registry."""
+    models = list_registered_models()
+    return {
+        "models": models,
+        "total_models": len(models),
+        "status": "healthy",
+    }
+
+
+@app.get("/api/v1/models/comparison/matrix")
+def get_models_comparison_matrix():
+    """Retrieve cross-model evaluation, hardware requirements, latency, and cost comparison matrix."""
+    return get_model_comparison_matrix()
+
+
+@app.get("/api/v1/models/fine-tuning/feasibility")
+def get_fine_tuning_feasibility_study():
+    """Audit data volume, OCAP consent compliance, compute costs, and feasibility for local fine-tuning."""
+    return assess_fine_tuning_feasibility()
+
+
+@app.get("/api/v1/models/{model_id}")
+def get_model_specification_card(model_id: str):
+    """Retrieve detailed model card, architecture, licenses, evaluation metrics, and limitations."""
+    details = get_model_details(model_id)
+    if not details:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Model '{model_id}' not found in registry.",
+        )
+    return details
+
+
+@app.post("/api/v1/models/{model_id}/promote")
+def promote_model_endpoint(
+    model_id: str,
+    payload: ModelPromotionRequest,
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+):
+    """Promote a candidate model to production slot under strict release gates & OCAP compliance."""
+    admin_key = payload.admin_key or x_admin_key
+    res = promote_candidate_model(
+        model_id=model_id,
+        target_slot=payload.target_slot,
+        admin_key=admin_key,
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=res.get("status_code", 400), detail=res.get("error"))
+    return res
+
+
+@app.post("/api/v1/models/rollback")
+def rollback_model_endpoint(
+    payload: ModelRollbackRequest,
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+):
+    """Rollback current production model in target slot to its designated baseline target."""
+    admin_key = payload.admin_key or x_admin_key
+    res = rollback_production_model(
+        target_slot=payload.target_slot,
+        admin_key=admin_key,
+    )
+    if not res.get("success"):
+        raise HTTPException(status_code=res.get("status_code", 400), detail=res.get("error"))
+    return res
+
 
 
 @app.get("/api/v1/archive/export")
