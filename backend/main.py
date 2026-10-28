@@ -69,6 +69,13 @@ from model_registry import (
     promote_candidate_model,
     rollback_production_model,
 )
+from voice_assistant import (
+    assistant_manager,
+    delete_saved_conversation,
+    generate_pronunciation_guidance,
+    list_saved_conversations,
+    save_conversation_history,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -329,6 +336,25 @@ def init_db():
         # Indexes for quick lookup
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_pilot_submissions_transcript ON pilot_submissions(transcript_id)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_pilot_reviews_submission ON pilot_reviews(submission_id)")
+
+        # Assistant saved conversation histories (OCAP consent required)
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS assistant_conversations (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                session_id TEXT UNIQUE NOT NULL,
+                user_name TEXT DEFAULT 'Community Speaker',
+                source_language TEXT NOT NULL,
+                target_language TEXT NOT NULL,
+                turn_count INTEGER NOT NULL,
+                conversation_json TEXT NOT NULL,
+                consent_confirmed INTEGER NOT NULL DEFAULT 1,
+                created_at TEXT NOT NULL,
+                updated_at TEXT NOT NULL
+            )
+            """
+        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_assistant_conv_session ON assistant_conversations(session_id)")
         conn.commit()
 
 
@@ -1050,6 +1076,7 @@ def _check_upload_rate_limit(client_ip: str):
         _UPLOAD_ACCESS_TIMESTAMPS[client_ip].append(now)
 
 
+@app.post("/api/v1/transcripts/upload")
 @app.post("/api/v1/audio/upload")
 @app.post("/api/upload")
 async def upload_audio(
@@ -1077,6 +1104,7 @@ async def upload_audio(
     consent_ai_training: bool = Form(False),
     is_anonymous: bool = Form(False),
     contextual_notes: Optional[str] = Form(None),
+    client_uuid: Optional[str] = Form(None),
 ):
     """Store a consented audio master and optionally queue consented transcription."""
     client_ip = request.client.host if request.client else ""
@@ -1098,10 +1126,19 @@ async def upload_audio(
             detail="Title and contributor-selected language are required.",
         )
 
+    # Idempotent offline sync check: return existing record if already synced
+    if client_uuid:
+        with get_db_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM transcripts WHERE uuid_id = ? AND archived_at IS NULL", (client_uuid,))
+            existing = cursor.fetchone()
+            if existing:
+                return dict(existing)
+
     unique_filename, file_size, audio_sha256 = await _store_audio_upload(upload_file)
 
     audio_url = f"/storage/audio/{unique_filename}"
-    unique_uuid = str(uuid.uuid4())
+    unique_uuid = client_uuid or str(uuid.uuid4())
     now = datetime.now(timezone.utc).isoformat()
     initial_transcript = ""
     v_status = "draft" if is_draft else (verification_status or "submitted")
@@ -1816,6 +1853,170 @@ def rollback_model_endpoint(
     if not res.get("success"):
         raise HTTPException(status_code=res.get("status_code", 400), detail=res.get("error"))
     return res
+
+
+# ==============================================================================
+# Milestone 12: Real-Time Multilingual Voice Assistant API
+# ==============================================================================
+
+class VoiceAssistantSessionCreate(BaseModel):
+    source_language: str = "te"
+    target_language: str = "en"
+    user_name: str = "Community Speaker"
+
+
+class VoiceAssistantTurnTextRequest(BaseModel):
+    text: str
+    override_source_lang: Optional[str] = None
+    override_target_lang: Optional[str] = None
+
+
+class VoiceAssistantSaveRequest(BaseModel):
+    consent_confirmed: bool = False
+    user_name: Optional[str] = None
+
+
+class VoiceAssistantPronounceRequest(BaseModel):
+    text: str
+    language: str = "te"
+
+
+@app.post("/api/v1/voice-assistant/sessions")
+def create_voice_assistant_session(payload: VoiceAssistantSessionCreate):
+    """Start an authorized real-time voice conversation session with ephemeral memory."""
+    return assistant_manager.create_session(
+        source_language=payload.source_language,
+        target_language=payload.target_language,
+        user_name=payload.user_name,
+    )
+
+
+@app.get("/api/v1/voice-assistant/sessions/{session_id}")
+def get_voice_assistant_session(session_id: str):
+    """Retrieve session summary, active status, and remaining turn limits."""
+    session = assistant_manager.get_session(session_id)
+    if not session:
+        raise HTTPException(status_code=404, detail=f"Voice assistant session '{session_id}' not found or expired.")
+    return session.to_summary()
+
+
+@app.delete("/api/v1/voice-assistant/sessions/{session_id}")
+def close_voice_assistant_session(session_id: str):
+    """Close conversation session and purge all ephemeral in-memory state."""
+    closed = assistant_manager.close_session(session_id)
+    if not closed:
+        raise HTTPException(status_code=404, detail=f"Session '{session_id}' not found.")
+    return {"success": True, "session_id": session_id, "message": "Session closed and ephemeral memory purged."}
+
+
+@app.get("/api/v1/voice-assistant/sessions/{session_id}/history")
+def get_voice_assistant_history(session_id: str):
+    """Retrieve conversation turns for the active session."""
+    try:
+        return assistant_manager.get_session_history(session_id)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.post("/api/v1/voice-assistant/sessions/{session_id}/turn")
+async def process_voice_turn_audio(
+    session_id: str,
+    audio: Optional[UploadFile] = File(None),
+    text_input: Optional[str] = Form(None),
+    override_source_lang: Optional[str] = Form(None),
+    override_target_lang: Optional[str] = Form(None),
+):
+    """
+    Process an interactive audio or text turn:
+    Executes live transcription, Indigenous elder guardrail verification,
+    conversational translation, and pronunciation guidance.
+    """
+    audio_bytes = None
+    audio_format = "wav"
+    if audio:
+        audio_bytes = await audio.read()
+        if audio.filename and "." in audio.filename:
+            audio_format = audio.filename.rsplit(".", 1)[-1].lower()
+
+    try:
+        res = assistant_manager.process_turn(
+            session_id=session_id,
+            audio_bytes=audio_bytes,
+            text_input=text_input,
+            audio_format=audio_format,
+            override_source_lang=override_source_lang,
+            override_target_lang=override_target_lang,
+        )
+        return res
+    except ValueError as e:
+        err_msg = str(e)
+        if "not found" in err_msg.lower():
+            raise HTTPException(status_code=404, detail=err_msg)
+        raise HTTPException(status_code=400, detail=err_msg)
+
+
+@app.post("/api/v1/voice-assistant/sessions/{session_id}/turn-text")
+def process_voice_turn_text_json(
+    session_id: str,
+    payload: VoiceAssistantTurnTextRequest,
+):
+    """Instant text-based turn for assistive keyboard entry or conversational queries."""
+    try:
+        res = assistant_manager.process_turn(
+            session_id=session_id,
+            audio_bytes=None,
+            text_input=payload.text,
+            override_source_lang=payload.override_source_lang,
+            override_target_lang=payload.override_target_lang,
+        )
+        return res
+    except ValueError as e:
+        err_msg = str(e)
+        if "not found" in err_msg.lower():
+            raise HTTPException(status_code=404, detail=err_msg)
+        raise HTTPException(status_code=400, detail=err_msg)
+
+
+@app.post("/api/v1/voice-assistant/sessions/{session_id}/save")
+def save_voice_assistant_conversation(
+    session_id: str,
+    payload: VoiceAssistantSaveRequest,
+):
+    """Persist conversation history into database. Strictly requires affirmative OCAP consent."""
+    try:
+        return save_conversation_history(
+            session_id=session_id,
+            user_name=payload.user_name,
+            consent_confirmed=payload.consent_confirmed,
+            db_path=DB_PATH,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/voice-assistant/saved")
+def list_saved_voice_conversations(limit: int = Query(50)):
+    """List saved conversation histories with speaker attribution."""
+    return {"saved_conversations": list_saved_conversations(db_path=DB_PATH, limit=limit)}
+
+
+@app.delete("/api/v1/voice-assistant/saved/{conv_id}")
+def delete_saved_voice_conversation(conv_id: int):
+    """Purge saved conversation history under OCAP data sovereignty & deletion controls."""
+    deleted = delete_saved_conversation(conv_id=conv_id, db_path=DB_PATH)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Saved conversation ID {conv_id} not found.")
+    return {"success": True, "conversation_id": conv_id, "message": "Saved conversation permanently deleted."}
+
+
+@app.post("/api/v1/voice-assistant/pronounce")
+def get_pronunciation_guidance_endpoint(payload: VoiceAssistantPronounceRequest):
+    """Generate phonetic transliteration, phoneme syllables, and pronunciation tips."""
+    return generate_pronunciation_guidance(
+        text=payload.text,
+        language=payload.language,
+    )
+
 
 
 

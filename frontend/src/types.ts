@@ -340,3 +340,60 @@ export interface ResearchEvaluationReport {
   ethical_disclosure: string;
 }
 
+// ─── Milestone 12: Voice Assistant Interfaces ───
+
+export interface VoiceAssistantSessionSummary {
+  session_id: string;
+  source_language: string;
+  target_language: string;
+  user_name: string;
+  turn_count: number;
+  max_turns: number;
+  created_at: string;
+  last_active: string;
+  is_active: boolean;
+  ephemeral_mode: boolean;
+  privacy_notice: string;
+}
+
+export interface VoiceAssistantTurn {
+  turn_id: string;
+  speaker: string;
+  original_transcript: string;
+  source_language: string;
+  target_language: string;
+  translated_text?: string;
+  transliteration?: string;
+  pronunciation_guidance?: {
+    text?: string;
+    language?: string;
+    transliteration?: string;
+    word_count?: number;
+    syllables_breakdown?: Array<{
+      word: string;
+      syllable_count: number;
+      phonetic_hint: string;
+    }>;
+    pronunciation_tips?: string[];
+    synthesis_supported?: boolean;
+    disclaimer?: string;
+  };
+  latency_ms: number;
+  guardrail_triggered: boolean;
+  timestamp: string;
+}
+
+export interface SavedConversationSummary {
+  id: number;
+  session_id: string;
+  user_name: string;
+  source_language: string;
+  target_language: string;
+  turn_count: number;
+  created_at: string;
+  updated_at: string;
+  conversation_data?: {
+    turns: VoiceAssistantTurn[];
+  };
+}
+

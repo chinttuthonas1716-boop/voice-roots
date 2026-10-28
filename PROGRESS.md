@@ -1498,6 +1498,69 @@
   - NOT VERIFIED: Paid external OpenAI Whisper API live requests (zero external network exposure, $0.00 operating cost preserved).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-10-28] [ANTIGRAVITY] DONE: Milestone 12 — Real-Time Multilingual Voice Assistant.
+  - Implemented Voice Assistant Architecture (`backend/voice_assistant.py`):
+    - Session management with in-memory ephemeral store, 15-minute inactivity timeouts (`SESSION_TIMEOUT_SECONDS = 900`), and rate limits (`MAX_TURNS_PER_SESSION = 30`).
+    - Ephemeral voice turns: Audio chunks are processed locally via offline Whisper speech recognition and immediately purged from memory without persistent audio storage.
+    - Indigenous Oral Heritage Guardrails: Strictly protects Gondi, Koya, Santhali, and Lambadi from synthetic machine translation hallucinations; returns clear elder review required notice under OCAP principles.
+    - Conversational translation for scheduled Indic and world languages.
+    - Pronunciation Assistance: Generates Romanized phonetic transliteration, syllable rhythm breakdown chips, and regional linguistic tips (e.g. Dravidian retroflex consonants, Indo-Aryan aspirates).
+    - OCAP Consented History Persistence: Implemented `assistant_conversations` table in SQLite; requires affirmative consent (`consent_confirmed = True`) before saving, with full right-to-be-forgotten deletion controls.
+  - Wired REST API routes in `backend/main.py`:
+    - `POST /api/v1/voice-assistant/sessions`
+    - `GET /api/v1/voice-assistant/sessions/{id}`
+    - `DELETE /api/v1/voice-assistant/sessions/{id}`
+    - `GET /api/v1/voice-assistant/sessions/{id}/history`
+    - `POST /api/v1/voice-assistant/sessions/{id}/turn` (multipart audio)
+    - `POST /api/v1/voice-assistant/sessions/{id}/turn-text` (JSON text turn)
+    - `POST /api/v1/voice-assistant/sessions/{id}/save` (consented persistence)
+    - `GET /api/v1/voice-assistant/saved`
+    - `DELETE /api/v1/voice-assistant/saved/{id}`
+    - `POST /api/v1/voice-assistant/pronounce`
+  - Built Frontend Voice Assistant Interface (`frontend/src/components/VoiceAssistant.tsx`):
+    - Push-to-talk microphone recording via Web Audio API MediaRecorder.
+    - Live turn stream with distinct original speech cards, recognized transcripts, translated output, and elder guardrail notices.
+    - Speech synthesis playback via browser `window.speechSynthesis`.
+    - Integrated "Assistant" navigation tab into `frontend/src/App.tsx`.
+  - Created automated test suite `tests/test_milestone12_voice_assistant.py` (8/8 tests passed).
+  - Files touched: `backend/voice_assistant.py`, `backend/main.py`, `frontend/src/components/VoiceAssistant.tsx`, `frontend/src/types.ts`, `frontend/src/App.tsx`, `tests/test_milestone12_voice_assistant.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 12 Tests: 8/8 passed in `tests/test_milestone12_voice_assistant.py`.
+    2. Ephemeral memory audit: Raw audio discarded immediately; no disk file leaks.
+    3. Elder review protection: Automated MT strictly blocked on Gondi and Koya.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
+
+- [2026-10-28] [ANTIGRAVITY] DONE: Milestone 13 — Offline-First Progressive Web Application (PWA).
+  - Configured Web App Manifest (`frontend/public/manifest.json`):
+    - Configured for standalone PWA display, `#051F20` theme/background color, orientation `portrait-primary`, and compliant 192x192 & 512x512 maskable SVG/PNG icons.
+  - Implemented Offline-First Service Worker (`frontend/public/sw.js`):
+    - Precaches application shell (`/`, `/index.html`, `/manifest.json`, verified demo audio).
+    - Stale-While-Revalidate caching for static assets with offline navigation fallback.
+    - Strict Security & Privacy Boundary: `/api/*` and `/storage/*` requests are strictly network-only; never cached in the public Service Worker cache to prevent leaking private audio or authenticated data.
+  - Created Client-Side Offline Store & Sync Engine (`frontend/src/utils/offlineStore.ts`):
+    - IndexedDB database `voice_roots_offline_db` with `offline_recordings` and `offline_drafts` object stores.
+    - Stores audio Blobs locally with client UUIDs, metadata, and sync status (`local`, `uploading`, `synced`, `failed`).
+    - Implemented browser storage quota auditing via `navigator.storage.estimate()`.
+    - Idempotent synchronization engine: uploads pending recordings with `client_uuid`.
+  - Added Backend Idempotency Support (`backend/main.py`):
+    - `upload_audio` accepts `client_uuid`; checks existing records by UUID before inserting to guarantee zero duplicate submissions if an offline upload is retried. Added route alias `@app.post("/api/v1/transcripts/upload")`.
+  - Built Offline UI & Management Component (`frontend/src/components/OfflineManager.tsx`):
+    - Sticky amber offline notification banner displayed when disconnected.
+    - Floating offline sync badge with pending item counter.
+    - Offline queue inspection modal with storage usage bar, "Sync All" trigger, and local storage purge controls.
+    - Clear ethical disclosure: "Audio recording works offline on your device. Speech recognition and translation process upon connecting to the server."
+  - Created automated test suite `tests/test_milestone13_pwa_offline.py` (4/4 tests passed).
+  - Files touched: `frontend/public/manifest.json`, `frontend/public/sw.js`, `frontend/index.html`, `frontend/src/main.tsx`, `frontend/src/utils/offlineStore.ts`, `frontend/src/components/OfflineManager.tsx`, `frontend/src/App.tsx`, `backend/main.py`, `tests/test_milestone13_pwa_offline.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 13 Tests: 4/4 passed in `tests/test_milestone13_pwa_offline.py`.
+    2. Full Repository Pytest Suite: 180/180 passed in 27.62s (100% pass rate).
+    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    4. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
+    5. Frontend Production Build: `npm run build --prefix frontend` compiled in 2.00s with zero TypeScript errors.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 

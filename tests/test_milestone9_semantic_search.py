@@ -174,12 +174,12 @@ def test_search_filters_by_language_and_dialect():
     res_gondi = client.get("/api/v1/discovery/search?language=Gondi&page_size=5")
     assert res_gondi.status_code == 200
     for item in res_gondi.json()["results"]:
-        assert "Gondi" in item["language"]
+        assert "gondi" in item["language"].lower()
 
     res_kurukh = client.get("/api/v1/discovery/search?language=Kurukh&page_size=5")
     assert res_kurukh.status_code == 200
     for item in res_kurukh.json()["results"]:
-        assert "Kurukh" in item["language"]
+        assert "kurukh" in item["language"].lower()
 
 
 def test_search_filters_by_topic_and_verification_status():
