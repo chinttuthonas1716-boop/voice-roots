@@ -47,6 +47,19 @@ from search_service import (
     reindex_all_search,
     sync_transcript_fts,
 )
+from dataset_service import (
+    get_dataset_details,
+    generate_research_export,
+    list_registered_datasets,
+    verify_dataset_integrity,
+    verify_preservation_and_backup,
+)
+from evaluation_service import (
+    evaluate_speech_recognition_research,
+    evaluate_translation_research,
+    evaluate_discovery_research,
+    generate_comprehensive_research_report,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -1642,6 +1655,75 @@ def get_discovery_stats():
 def run_discovery_benchmark_evaluation():
     """Run benchmark evaluation suite measuring cross-lingual search precision, MRR, and latency."""
     return evaluate_multilingual_discovery()
+
+
+# ==============================================================================
+# Milestone 10: Research Datasets, Digital Preservation & Model Evaluation
+# ==============================================================================
+
+@app.get("/api/v1/datasets")
+def get_datasets_registry():
+    """List all registered research datasets with metadata, licenses, and versions."""
+    return {
+        "datasets": list_registered_datasets(),
+        "total_datasets": len(list_registered_datasets()),
+        "status": "healthy",
+    }
+
+
+@app.get("/api/v1/datasets/preservation/status")
+def get_digital_preservation_status():
+    """Audit long-term digital preservation, backup snapshots, and non-destructive restoration status."""
+    return verify_preservation_and_backup()
+
+
+@app.get("/api/v1/datasets/{dataset_id}")
+def get_dataset_metadata_card(dataset_id: str):
+    """Retrieve full metadata card, DCAT provenance, schema, and license details for a dataset."""
+    details = get_dataset_details(dataset_id)
+    if not details:
+        raise HTTPException(
+            status_code=404,
+            detail=f"Dataset '{dataset_id}' not found in registry.",
+        )
+    return details
+
+
+@app.get("/api/v1/datasets/{dataset_id}/verify-integrity")
+def verify_dataset_file_integrity(dataset_id: str):
+    """Run bit-level SHA-256 file integrity scan across stored audio recordings and records."""
+    res = verify_dataset_integrity(dataset_id)
+    if res.get("status") == "error":
+        raise HTTPException(status_code=404, detail=res.get("error"))
+    return res
+
+
+@app.get("/api/v1/datasets/{dataset_id}/export")
+def export_research_data_package(
+    dataset_id: str,
+    format: str = Query("json", pattern="^(json|csv)$"),
+    include_splits: bool = Query(True),
+):
+    """Export Frictionless Research Data Package with SHA-256 checksums and strict OCAP consent filtering."""
+    try:
+        data = generate_research_export(dataset_id, export_format=format, include_splits=include_splits)
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+    if format == "csv":
+        from fastapi.responses import Response
+        return Response(
+            content=data,
+            media_type="text/csv; charset=utf-8",
+            headers={"Content-Disposition": f'attachment; filename="{dataset_id}_export.csv"'},
+        )
+    return data
+
+
+@app.get("/api/v1/evaluation/research-report")
+def get_research_evaluation_report():
+    """Generate comprehensive, statistically grounded research evaluation report across ASR, MT, and Search."""
+    return generate_comprehensive_research_report()
 
 
 @app.get("/api/v1/archive/export")

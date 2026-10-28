@@ -177,3 +177,166 @@ export interface VerificationHistoryResponse {
   review_notes?: string;
   revisions: VerificationHistoryRevision[];
 }
+
+// Milestone 10: Research Datasets, Digital Preservation & Model Evaluation
+
+export interface DatasetSummary {
+  id: string;
+  name: string;
+  title: string;
+  version: string;
+  status: string;
+  release_date: string;
+  license: string;
+  languages_count: number;
+  total_records?: number;
+  maintainer: string;
+}
+
+export interface DatasetCard extends DatasetSummary {
+  description: string;
+  license_details?: Array<{ license: string; attribution_required: boolean; commercial_use: boolean }>;
+  provenance: {
+    primary_sources: Array<{ name: string; url?: string; license?: string; type?: string }>;
+    curation_method: string;
+    consent_protocol: string;
+  };
+  languages: Array<{ code: string; name: string; family?: string; dialect?: string; sample_count?: number }>;
+  file_formats: string[];
+  preprocessing_steps: string[];
+  known_gaps_and_limitations: string[];
+  quality_control: {
+    human_verified_count?: number;
+    community_verified_count?: number;
+    qc_protocol: string;
+  };
+  responsible_maintainer: string;
+}
+
+export interface DatasetIntegrityReport {
+  status: string;
+  dataset_id: string;
+  total_items_checked: number;
+  intact_items: number;
+  missing_items: number;
+  corrupt_items: number;
+  bit_level_health_percent: number;
+  scan_duration_ms: number;
+  timestamp: string;
+  integrity_summary: string;
+  details_sample?: Array<{
+    id?: number;
+    filename?: string;
+    title?: string;
+    status: 'intact' | 'missing' | 'corrupt';
+    sha256?: string;
+    expected_sha256?: string;
+    actual_sha256?: string;
+    size_bytes?: number;
+    error?: string;
+  }>;
+}
+
+export interface PreservationStatusResponse {
+  status: string;
+  preservation_architecture: {
+    master_recording_policy: string;
+    preservation_format: string;
+    database_engine: string;
+    search_vector_store: string;
+    storage_cost: string;
+    recommended_cold_storage_tier: string;
+  };
+  backup_telemetry: {
+    total_backup_snapshots: number;
+    latest_snapshot_file: string | null;
+    latest_snapshot_size_bytes: number;
+    backup_directory: string;
+  };
+  audio_storage_telemetry: {
+    total_master_recordings: number;
+    total_audio_bytes: number;
+    storage_directory: string;
+  };
+  restoration_drill: {
+    restoration_drill_status: string;
+    tested_tables: string[];
+    record_counts: Record<string, number>;
+    error: string | null;
+  };
+  timestamp: string;
+}
+
+export interface ResearchEvaluationReport {
+  report_id: string;
+  title: string;
+  status: string;
+  generated_at: string;
+  total_evaluation_duration_ms: number;
+  methodology: {
+    speech_metric_standards: string;
+    translation_metric_standards: string;
+    search_metric_standards: string;
+    split_assignment: string;
+    data_leakage_mitigation: string;
+  };
+  speech_recognition: {
+    evaluation_name: string;
+    split_evaluated: string;
+    total_requested: number;
+    evaluated_sample_size: number;
+    failed_transcriptions_count: number;
+    failed_rate: number;
+    empty_transcriptions_count: number;
+    empty_rate: number;
+    languages: Record<string, {
+      sample_size: number;
+      dialects_represented: string[];
+      acoustic_conditions: string[];
+      average_wer: number;
+      wer_standard_error?: number | null;
+      average_cer: number;
+      cer_standard_error?: number | null;
+      average_chrf: number;
+      is_oral_language: boolean;
+      metric_recommendation: string;
+      sample_size_caveat: string;
+    }>;
+    performance_by_acoustic_condition: Record<string, {
+      sample_size: number;
+      average_wer: number;
+      average_cer: number;
+    }>;
+    primary_model: string;
+  };
+  translation_guardrails: {
+    evaluation_name: string;
+    elder_review_guardrail_status: {
+      tested_oral_cases: number;
+      guardrail_violations: number;
+      compliance_percent: number;
+      protected_tongues: string[];
+      rationale: string;
+    };
+    persistent_translations_telemetry: {
+      total_stored_translations: number;
+      human_verified_count: number;
+      human_verified_percent: number;
+    };
+  };
+  search_and_discovery: {
+    mean_reciprocal_rank: number;
+    precision_at_1: number;
+    precision_at_3: number;
+    benchmark_queries_count: number;
+    avg_latency_ms: number;
+    validated_languages: string[];
+  };
+  operating_cost_telemetry: {
+    external_api_charges_usd: number;
+    inference_mode: string;
+    compute_platform: string;
+  };
+  ethical_disclosure: string;
+}
+
