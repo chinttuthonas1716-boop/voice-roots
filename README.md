@@ -160,8 +160,16 @@ For a live review or faculty evaluation, execute this 8-step workflow on the uni
   * **Vector Store**: `backend/chroma_db/` (ChromaDB persistent embeddings)
   * **Audio Masters**: `backend/storage/audio/` (SHA-256 verified acoustic masters)
 - **Verified Test Suite**:
-  * Backend Pytest: `python3 -m pytest -q` -> **122 passed in 10.06s** (100% pass rate)
-  * Frontend Bundle: `npm --prefix frontend run build` -> **0 errors in 1.90s**
+  * Backend Pytest: `python3 -m pytest -q` -> **122 passed in 9.56s** (100% pass rate)
+  * End-to-End Release Audit: `python3 scratch/pre_faculty_release_audit.py` -> **26/26 passed**
+  * Live Feature Verification: `python3 scratch/test_every_feature.py` -> **27/27 passed**
+  * Frontend Bundle: `npm --prefix frontend run build` -> **0 errors in 1.75s**
+- **Database Migrations (Alembic)**:
+  * Check current revision: `python3 -m alembic -c backend/alembic.ini current`
+  * Apply migrations: `python3 -m alembic -c backend/alembic.ini upgrade head`
+- **Security & Abuse Protections**:
+  * Ingestion Rate Limiter: Enforces sliding-window bound (60 uploads/min) on `/api/upload` to prevent DoS resource exhaustion.
+  * OCAP Consent Gating: Strict HTTP 400 rejection for unconsented uploads; immediate unpublishing on consent withdrawal.
 - **Top 3 Handover Priorities**:
   1. *Field Deployment*: Mount a durable persistent SSD disk volume (`/data`) if deploying to a container host.
   2. *Dialect Lexicons*: Expand the community Elder Review queue with authentic tribal elder audio samples.

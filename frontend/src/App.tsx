@@ -472,6 +472,16 @@ export function App() {
   const [feedbackRecommendation, setFeedbackRecommendation] = useState('Approved for community archiving');
   const [feedbackExportMsg, setFeedbackExportMsg] = useState<string | null>(null);
 
+  // Option 1: Live Demo Preset State
+  const [isLoadingDemoPreset, setIsLoadingDemoPreset] = useState(false);
+
+  // Option 2: Faculty Viva Overview Modal State
+  const [showFacultyVivaModal, setShowFacultyVivaModal] = useState(false);
+  const [facultyVivaTab, setFacultyVivaTab] = useState<'problem' | 'ocap' | 'guardrails' | 'architecture' | 'qa'>('problem');
+
+  // Option 3: Archive Linguistic Category Filter State
+  const [archiveCategoryFilter, setArchiveCategoryFilter] = useState<'all' | 'oral' | 'verified' | 'pending'>('all');
+
   // Check Backend Health
   const checkHealth = async () => {
     try {
@@ -951,6 +961,142 @@ ${feedbackRecommendation}
     URL.revokeObjectURL(url);
     setFeedbackExportMsg('Feedback report downloaded as Markdown (.md)!');
     setTimeout(() => setFeedbackExportMsg(null), 3000);
+  };
+
+  // ─── Option 1: Authentic Demo Preset Loader Handler ───
+  const handleLoadDemoPreset = async () => {
+    try {
+      setIsLoadingDemoPreset(true);
+      setSubmitError(null);
+      setSubmitSuccess(null);
+
+      // Fetch pre-packaged authentic Gondi oral sample from static web server
+      const demoUrl = apiUrl('/demo_sample_verified.wav');
+      const resp = await fetch(demoUrl);
+      if (!resp.ok) {
+        throw new Error(`Demo audio sample fetch returned status ${resp.status}`);
+      }
+      const blob = await resp.blob();
+      const demoFile = new File([blob], 'demo_sample_verified.wav', { type: 'audio/wav' });
+
+      // Configure upload mode with preset metadata
+      setMode('upload');
+      setSelectedFile(demoFile);
+      if (fileAudioUrl) {
+        URL.revokeObjectURL(fileAudioUrl);
+      }
+      setFileAudioUrl(URL.createObjectURL(demoFile));
+      setTitle('Gondi Oral Heritage Sample — Folk Creation Lore');
+      setSelectedLanguage('Gondi');
+      setDialect('Central Gondi (Adilabad / Bastar)');
+      setHasConsent(true);
+      setWantsTranscriptionConsent(true);
+      setSubmitSuccess('✨ Authentic Gondi oral sample loaded with affirmative OCAP consent. Click "Upload Audio" below to trigger offline Whisper ASR in ~1.8 seconds!');
+    } catch (err: any) {
+      console.error('Demo sample loader error:', err);
+      setSubmitError(`Could not load demo sample: ${err.message || 'Please check server connection'}`);
+    } finally {
+      setIsLoadingDemoPreset(false);
+    }
+  };
+
+  // ─── Option 3: Bulk Linguistic Corpus Export Handlers (JSON & CSV) ───
+  const handleExportBulkJson = () => {
+    const exportData = {
+      project: "Voice Roots: Indigenous & Oral Language Digital Repository",
+      version: "1.0.0",
+      license: "OCAP Indigenous Data Sovereignty Academic Research License",
+      exported_at: new Date().toISOString(),
+      total_records: transcripts.length,
+      provenance_summary: {
+        total_audio_masters: transcripts.length,
+        verified_by_elders: transcripts.filter(t => t.status === 'verified').length,
+        oral_tongue_count: transcripts.filter(t => ['Gondi', 'Koya', 'Santhali', 'Lambadi', 'gon', 'kff', 'sat', 'lmn'].some(k => t.language.toLowerCase().includes(k.toLowerCase()))).length
+      },
+      records: transcripts.map(t => ({
+        id: t.id,
+        uuid_id: t.uuid_id,
+        title: t.title,
+        language: t.language,
+        dialect: t.dialect || null,
+        audio_filename: t.audio_filename,
+        audio_sha256: t.audio_sha256,
+        audio_url: t.audio_url,
+        duration_seconds: t.duration_seconds || null,
+        file_size_bytes: t.file_size_bytes || null,
+        machine_transcript: t.machine_transcript_text || null,
+        community_transcript: t.transcript_text || null,
+        transcription_status: t.transcription_status || 'completed',
+        transcription_provider: t.transcription_provider || 'whisper-local',
+        transcription_model: t.transcription_model || 'whisper-base',
+        validation_status: t.status,
+        speaker_consent_at: t.consent_at || t.created_at,
+        speaker_consent_version: t.consent_version || 'voice-roots-consent-v1',
+        ai_transcription_consent_at: t.transcription_consent_at || null,
+        created_at: t.created_at,
+        updated_at: t.updated_at
+      }))
+    };
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `voice_roots_linguistic_corpus_${new Date().toISOString().slice(0, 10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setFeedbackExportMsg(`Successfully exported ${transcripts.length} research corpus records as JSON!`);
+    setTimeout(() => setFeedbackExportMsg(null), 3500);
+  };
+
+  const handleExportBulkCsv = () => {
+    const headers = [
+      "ID",
+      "UUID",
+      "Title",
+      "Language",
+      "Dialect",
+      "Status",
+      "Duration (s)",
+      "Audio SHA256",
+      "ASR Provider",
+      "Machine Transcript",
+      "Community Elder Transcript",
+      "Consent Date",
+      "Created At"
+    ];
+
+    const escapeCsv = (str: any) => {
+      if (str === null || str === undefined) return '""';
+      const s = String(str).replace(/"/g, '""');
+      return `"${s}"`;
+    };
+
+    const rows = transcripts.map(t => [
+      t.id,
+      escapeCsv(t.uuid_id),
+      escapeCsv(t.title),
+      escapeCsv(t.language),
+      escapeCsv(t.dialect || 'Standard'),
+      escapeCsv(t.status),
+      t.duration_seconds || 0,
+      escapeCsv(t.audio_sha256 || 'N/A'),
+      escapeCsv(t.transcription_provider || 'whisper-local'),
+      escapeCsv(t.machine_transcript_text || ''),
+      escapeCsv(t.transcript_text || ''),
+      escapeCsv(t.consent_at || t.created_at),
+      escapeCsv(t.created_at)
+    ].join(','));
+
+    const csvContent = "\uFEFF" + [headers.join(','), ...rows].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `voice_roots_linguistic_corpus_${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    setFeedbackExportMsg(`Successfully exported ${transcripts.length} records as CSV spreadsheet!`);
+    setTimeout(() => setFeedbackExportMsg(null), 3500);
   };
 
   // Community Corrections Handlers
@@ -1796,6 +1942,29 @@ ${feedbackRecommendation}
 
           <button
             type="button"
+            onClick={() => setShowFacultyVivaModal(true)}
+            title="Open Faculty Presentation Deck, Research Innovations & Architecture Guide"
+            style={{
+              background: 'rgba(212, 175, 55, 0.15)',
+              border: '1px solid #D4AF37',
+              borderRadius: '20px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              color: '#F9E79F',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: '600',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <Award size={13} color="#D4AF37" />
+            <span>Faculty Viva Guide</span>
+          </button>
+
+          <button
+            type="button"
             onClick={() => handleTabChange('login')}
             className="btn-secondary"
             style={{
@@ -1909,6 +2078,55 @@ ${feedbackRecommendation}
                 Upload File
               </button>
             </div>
+          </div>
+
+          {/* ─── Option 1: Live Faculty Demo Preset Shortcut ─── */}
+          <div style={{
+            background: 'rgba(212, 175, 55, 0.08)',
+            border: '1px dashed rgba(212, 175, 55, 0.45)',
+            borderRadius: '10px',
+            padding: '10px 14px',
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '16px',
+            flexWrap: 'wrap',
+            gap: '8px'
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <Sparkles size={16} color="#D4AF37" />
+              <div>
+                <span style={{ fontSize: '12px', color: '#F9E79F', fontWeight: '700', display: 'block' }}>
+                  Live Faculty Demo Preset
+                </span>
+                <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>
+                  Pre-loads authentic Gondi oral sample & affirmative OCAP consent
+                </span>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={handleLoadDemoPreset}
+              disabled={isLoadingDemoPreset}
+              style={{
+                background: '#D4AF37',
+                color: '#051F20',
+                border: 'none',
+                borderRadius: '8px',
+                padding: '6px 14px',
+                fontSize: '12px',
+                fontWeight: '700',
+                cursor: 'pointer',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '6px',
+                boxShadow: '0 2px 8px rgba(212, 175, 55, 0.25)',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              {isLoadingDemoPreset ? <Loader2 size={13} className="spin" /> : <Award size={13} />}
+              <span>{isLoadingDemoPreset ? 'Loading Sample...' : 'Load Gondi Sample'}</span>
+            </button>
           </div>
 
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
@@ -3381,6 +3599,116 @@ ${feedbackRecommendation}
           </div>
         </div>
 
+        {/* ─── Option 3: Bulk Corpus Export & Archive Classification Filter Toolbar ─── */}
+        <div style={{ 
+          display: 'flex', 
+          justifyContent: 'space-between', 
+          alignItems: 'center', 
+          marginBottom: '18px', 
+          flexWrap: 'wrap', 
+          gap: '10px',
+          paddingBottom: '14px',
+          borderBottom: '1px solid rgba(35, 83, 71, 0.6)'
+        }}>
+          {/* Classification Filter Chips */}
+          <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
+            <span style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.6)', marginRight: '4px' }}>Filter:</span>
+            <button
+              type="button"
+              onClick={() => { setArchiveCategoryFilter('all'); setArchiveDisplayLimit(15); }}
+              style={{
+                background: archiveCategoryFilter === 'all' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'all' ? '#051F20' : '#DAF1DE',
+                border: '1px solid ' + (archiveCategoryFilter === 'all' ? '#8EB69B' : '#235347'),
+                borderRadius: '16px',
+                padding: '4px 12px',
+                fontSize: '12px',
+                fontWeight: archiveCategoryFilter === 'all' ? '700' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              All ({transcripts.length})
+            </button>
+            <button
+              type="button"
+              onClick={() => { setArchiveCategoryFilter('oral'); setArchiveDisplayLimit(15); }}
+              style={{
+                background: archiveCategoryFilter === 'oral' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'oral' ? '#051F20' : '#DAF1DE',
+                border: '1px solid ' + (archiveCategoryFilter === 'oral' ? '#8EB69B' : '#235347'),
+                borderRadius: '16px',
+                padding: '4px 12px',
+                fontSize: '12px',
+                fontWeight: archiveCategoryFilter === 'oral' ? '700' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Oral Tongues (Gondi / Koya / Lambadi)
+            </button>
+            <button
+              type="button"
+              onClick={() => { setArchiveCategoryFilter('verified'); setArchiveDisplayLimit(15); }}
+              style={{
+                background: archiveCategoryFilter === 'verified' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'verified' ? '#051F20' : '#DAF1DE',
+                border: '1px solid ' + (archiveCategoryFilter === 'verified' ? '#8EB69B' : '#235347'),
+                borderRadius: '16px',
+                padding: '4px 12px',
+                fontSize: '12px',
+                fontWeight: archiveCategoryFilter === 'verified' ? '700' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Elder Verified ({transcripts.filter(t => t.status === 'verified').length})
+            </button>
+            <button
+              type="button"
+              onClick={() => { setArchiveCategoryFilter('pending'); setArchiveDisplayLimit(15); }}
+              style={{
+                background: archiveCategoryFilter === 'pending' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'pending' ? '#051F20' : '#DAF1DE',
+                border: '1px solid ' + (archiveCategoryFilter === 'pending' ? '#8EB69B' : '#235347'),
+                borderRadius: '16px',
+                padding: '4px 12px',
+                fontSize: '12px',
+                fontWeight: archiveCategoryFilter === 'pending' ? '700' : '500',
+                cursor: 'pointer',
+                transition: 'all 0.15s ease'
+              }}
+            >
+              Awaiting Elder Review ({transcripts.filter(t => t.status !== 'verified').length})
+            </button>
+          </div>
+
+          {/* Research Corpus Bulk Export Toolbar */}
+          <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '600' }}>Research Corpus:</span>
+            <button
+              type="button"
+              onClick={handleExportBulkJson}
+              className="btn-secondary"
+              title="Download entire linguistic dataset as JSON with SHA-256 integrity hashes"
+              style={{ fontSize: '12px', padding: '5px 12px', gap: '6px', borderRadius: '8px' }}
+            >
+              <Download size={13} color="#8EB69B" />
+              <span>Export JSON</span>
+            </button>
+            <button
+              type="button"
+              onClick={handleExportBulkCsv}
+              className="btn-secondary"
+              title="Download dataset as CSV spreadsheet for Excel / computational analysis"
+              style={{ fontSize: '12px', padding: '5px 12px', gap: '6px', borderRadius: '8px' }}
+            >
+              <FileText size={13} color="#8EB69B" />
+              <span>Export CSV</span>
+            </button>
+          </div>
+        </div>
+
         {isLoadingArchive ? (
           <p style={{ padding: '24px', textAlign: 'center', color: 'rgba(218, 241, 222, 0.72)' }}>Loading saved transcripts from SQLite...</p>
         ) : transcripts.length === 0 ? (
@@ -3391,7 +3719,18 @@ ${feedbackRecommendation}
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {(() => {
+              const isOralTongue = (lang: string) => {
+                const l = (lang || '').toLowerCase();
+                return ['gondi', 'koya', 'santhali', 'lambadi', 'gon', 'kff', 'sat', 'lmn', 'oral', 'indigenous'].some(k => l.includes(k));
+              };
+
               const filteredTranscripts = transcripts.filter((t) => {
+                // Category classification filter
+                if (archiveCategoryFilter === 'oral' && !isOralTongue(t.language)) return false;
+                if (archiveCategoryFilter === 'verified' && t.status !== 'verified') return false;
+                if (archiveCategoryFilter === 'pending' && t.status === 'verified') return false;
+
+                // Search query match
                 if (!archiveSearchQuery.trim()) return true;
                 const q = archiveSearchQuery.toLowerCase();
                 return (
@@ -5304,6 +5643,333 @@ ${feedbackRecommendation}
                   <span>Download Report</span>
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* ─── Option 2: Faculty Viva Overview & Architecture Modal ─── */}
+      {showFacultyVivaModal && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          backgroundColor: 'rgba(0, 0, 0, 0.82)',
+          backdropFilter: 'blur(10px)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1100,
+          padding: '20px'
+        }}>
+          <div className="glass-card" style={{ maxWidth: '820px', width: '100%', maxHeight: '90vh', overflowY: 'auto', border: '1px solid #D4AF37' }}>
+            {/* Modal Header */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', borderBottom: '1px solid rgba(212, 175, 55, 0.3)', paddingBottom: '12px' }}>
+              <div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                  <Award size={22} color="#D4AF37" />
+                  <h3 style={{ fontSize: '19px', fontWeight: '800', color: '#F9E79F', margin: 0 }}>
+                    Voice Roots — Faculty Viva & Architecture Guide
+                  </h3>
+                </div>
+                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.75)', margin: 0 }}>
+                  Preserving Indigenous Oral Languages via OCAP Sovereignty, AI Guardrails & Local Offline Edge Stack
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowFacultyVivaModal(false)}
+                className="btn-secondary"
+                style={{ padding: '6px 10px', minHeight: '30px', borderColor: '#235347' }}
+                aria-label="Close viva modal"
+              >
+                <X size={16} />
+              </button>
+            </div>
+
+            {/* Navigation Tabs */}
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap', borderBottom: '1px solid rgba(35, 83, 71, 0.6)', paddingBottom: '10px' }}>
+              <button
+                type="button"
+                onClick={() => setFacultyVivaTab('problem')}
+                style={{
+                  background: facultyVivaTab === 'problem' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
+                  color: facultyVivaTab === 'problem' ? '#051F20' : '#DAF1DE',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                🔬 Research Motivation
+              </button>
+              <button
+                type="button"
+                onClick={() => setFacultyVivaTab('ocap')}
+                style={{
+                  background: facultyVivaTab === 'ocap' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
+                  color: facultyVivaTab === 'ocap' ? '#051F20' : '#DAF1DE',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                🛡️ OCAP Sovereignty
+              </button>
+              <button
+                type="button"
+                onClick={() => setFacultyVivaTab('guardrails')}
+                style={{
+                  background: facultyVivaTab === 'guardrails' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
+                  color: facultyVivaTab === 'guardrails' ? '#051F20' : '#DAF1DE',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                🚫 Hallucination Guardrails
+              </button>
+              <button
+                type="button"
+                onClick={() => setFacultyVivaTab('architecture')}
+                style={{
+                  background: facultyVivaTab === 'architecture' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
+                  color: facultyVivaTab === 'architecture' ? '#051F20' : '#DAF1DE',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                ⚡ $0 Offline Stack
+              </button>
+              <button
+                type="button"
+                onClick={() => setFacultyVivaTab('qa')}
+                style={{
+                  background: facultyVivaTab === 'qa' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
+                  color: facultyVivaTab === 'qa' ? '#051F20' : '#DAF1DE',
+                  border: 'none',
+                  borderRadius: '16px',
+                  padding: '6px 14px',
+                  fontSize: '12px',
+                  fontWeight: '700',
+                  cursor: 'pointer',
+                  transition: 'all 0.15s ease'
+                }}
+              >
+                🎯 Faculty Q&A / Defense
+              </button>
+            </div>
+
+            {/* Tab 1: Research Motivation */}
+            {facultyVivaTab === 'problem' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', color: '#DAF1DE' }}>
+                <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '10px', padding: '14px' }}>
+                  <h4 style={{ color: '#FCA5A5', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
+                    The Extinction Crisis (197+ Endangered Indian Languages)
+                  </h4>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.85)' }}>
+                    Over 197 languages in India are vulnerable or critically endangered (UNESCO). Unwritten oral tribal languages like <strong>Gondi, Koya, Santhali, and Lambadi</strong> possess centuries of ecological lore, ancestral epics, and botanical medicines transmitted purely by word of mouth.
+                  </p>
+                </div>
+
+                <div style={{ background: 'rgba(142, 182, 155, 0.1)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
+                  <h4 style={{ color: '#8EB69B', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
+                    Why Commercial AI Models Fail on Oral Tongues
+                  </h4>
+                  <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px', color: 'rgba(218, 241, 222, 0.85)' }}>
+                    <li><strong>Lack of Written Scripts:</strong> Big-tech models (Google Translate, ChatGPT) rely on massive written text corpora. Oral languages lack standardized scripts, so models hallucinate non-existent translations.</li>
+                    <li><strong>Extractive Data Mining:</strong> Commercial models vacuum indigenous knowledge into cloud data lakes without consent, removing ownership from native custodians.</li>
+                    <li><strong>Mandatory Internet Requirement:</strong> Remote tribal settlements lack reliable 4G/5G, making cloud-tethered AI inaccessible in the field.</li>
+                  </ul>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 2: OCAP Sovereignty */}
+            {facultyVivaTab === 'ocap' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', lineHeight: '1.6' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px' }}>
+                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                      Ownership (O)
+                    </span>
+                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                      The indigenous community retains moral, cultural, and legal ownership of all voice recordings. Voice Roots makes zero claim of copyright or intellectual property over community speech.
+                    </p>
+                  </div>
+
+                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                      Control (C) & Cultural Privacy Gates
+                    </span>
+                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                      Sacred, secret, or ritualistic lore is protected under strict privacy gates. Accessing restricted content triggers an automated <strong>HTTP 403 Forbidden</strong> to shield sacred folklore from public scraping.
+                    </p>
+                  </div>
+
+                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                      Access (A) & Immediate Consent Withdrawal
+                    </span>
+                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                      Affirmative speaker consent is mandatory (HTTP 400 rejection if absent). If a speaker or elder requests consent withdrawal, the recording is instantly unpublished and hidden from public search.
+                    </p>
+                  </div>
+
+                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                      Possession (P) & Immutable Master Audio
+                    </span>
+                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                      The original audio master is the immutable single source of truth, protected with SHA-256 cryptographic hashes. Machine transcripts are only secondary annotation layers and can never overwrite voice masters.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 3: Hallucination Guardrails */}
+            {facultyVivaTab === 'guardrails' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6' }}>
+                <div style={{ background: 'rgba(245, 158, 11, 0.12)', border: '1px solid rgba(245, 158, 11, 0.45)', borderRadius: '10px', padding: '14px' }}>
+                  <h4 style={{ color: '#FCD34D', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
+                    Automatic Translation Guardrail Engine (HTTP 503)
+                  </h4>
+                  <p style={{ margin: 0, color: 'rgba(255,255,255,0.9)' }}>
+                    When a user requests automated machine translation for unwritten oral tongues (e.g. <strong>Gondi, Koya, Santhali, Lambadi</strong>), Voice Roots deliberately refuses with an explicit <strong>HTTP 503 Guardrail Error</strong>:
+                  </p>
+                  <blockquote style={{ margin: '8px 0 0 0', padding: '8px 12px', background: 'rgba(0,0,0,0.3)', borderLeft: '3px solid #FCD34D', fontStyle: 'italic', fontSize: '12px', color: '#FDE68A' }}>
+                    "Language 'Gondi' is an unwritten oral heritage tongue. Automated AI translation without community elder review is prohibited to prevent linguistic hallucination."
+                  </blockquote>
+                </div>
+
+                <div style={{ background: 'rgba(142, 182, 155, 0.1)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
+                  <h4 style={{ color: '#8EB69B', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
+                    Dual-Tier Annotation Pipeline
+                  </h4>
+                  <p style={{ margin: '0 0 8px 0', color: 'rgba(218, 241, 222, 0.85)' }}>
+                    Voice Roots maintains a strict technical separation between two distinct layers of truth:
+                  </p>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
+                    <div style={{ background: 'rgba(5, 31, 32, 0.8)', padding: '10px', borderRadius: '8px', border: '1px solid #235347' }}>
+                      <span style={{ color: '#8EB69B', fontWeight: '700', display: 'block', fontSize: '12px' }}>Tier 1: Machine Draft (Whisper)</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)' }}>Acoustic baseline, labeled clearly as machine output; never treated as definitive ground truth.</span>
+                    </div>
+                    <div style={{ background: 'rgba(5, 31, 32, 0.8)', padding: '10px', borderRadius: '8px', border: '1px solid #D4AF37' }}>
+                      <span style={{ color: '#F9E79F', fontWeight: '700', display: 'block', fontSize: '12px' }}>Tier 2: Elder-Verified Transcript</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)' }}>Reviewed, corrected, and certified by native community elders before indexing into ChromaDB.</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 4: Offline Architecture */}
+            {facultyVivaTab === 'architecture' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6' }}>
+                <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', borderRadius: '10px', padding: '14px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                    <h4 style={{ color: '#6EE7B7', margin: 0, fontSize: '14px', fontWeight: '700' }}>
+                      100% Offline Edge Stack ($0 Recurring Cloud Fees)
+                    </h4>
+                    <span className="badge badge-green">100% Local CPU/GPU</span>
+                  </div>
+                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.9)' }}>
+                    Voice Roots has zero mandatory external API subscriptions. All inference and storage run on the local host machine, making it viable for rural battery/solar-powered edge boxes:
+                  </p>
+                </div>
+
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
+                  <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ color: '#8EB69B', fontWeight: '700', fontSize: '13px', display: 'block' }}>Speech ASR</span>
+                    <span style={{ color: '#DAF1DE', fontSize: '12px', fontWeight: '600' }}>Local Whisper (Base Model)</span>
+                    <p style={{ margin: '4px 0 0 0', color: 'rgba(218, 241, 222, 0.65)', fontSize: '11px' }}>Runs CPU inference in ~1.8s. 0 paid tokens.</p>
+                  </div>
+
+                  <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ color: '#8EB69B', fontWeight: '700', fontSize: '13px', display: 'block' }}>Semantic Search</span>
+                    <span style={{ color: '#DAF1DE', fontSize: '12px', fontWeight: '600' }}>Embedded ChromaDB</span>
+                    <p style={{ margin: '4px 0 0 0', color: 'rgba(218, 241, 222, 0.65)', fontSize: '11px' }}>384-dim subword embeddings indexed locally on disk.</p>
+                  </div>
+
+                  <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ color: '#8EB69B', fontWeight: '700', fontSize: '13px', display: 'block' }}>Relational Persistence</span>
+                    <span style={{ color: '#DAF1DE', fontSize: '12px', fontWeight: '600' }}>SQLite (voice_roots.db)</span>
+                    <p style={{ margin: '4px 0 0 0', color: 'rgba(218, 241, 222, 0.65)', fontSize: '11px' }}>ACID atomic transactions with point-in-time backup snapshots.</p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Tab 5: Faculty Q&A / Viva Defense */}
+            {facultyVivaTab === 'qa' && (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px', lineHeight: '1.6' }}>
+                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                  <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+                    Q1: How does your system differ from standard Google Translate or commercial Whisper APIs?
+                  </span>
+                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                    <strong>Defense:</strong> Commercial APIs treat languages extractively and require internet connectivity. Unwritten oral languages like Gondi have no standardized script, causing commercial MT to hallucinate words. Voice Roots enforces OCAP data sovereignty, operates 100% offline, blocks automated MT for unwritten tongues, and mandates elder community verification.
+                  </p>
+                </div>
+
+                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                  <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+                    Q2: What happens if an elder rejects an AI transcription?
+                  </span>
+                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                    <strong>Defense:</strong> The machine transcript is never considered ground truth; it is only a raw annotation. Elders can correct or reject it in the Community Moderation queue. The original audio master remains untouched and verified by SHA-256 hash.
+                  </p>
+                </div>
+
+                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                  <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+                    Q3: How is speaker consent enforced from a software engineering perspective?
+                  </span>
+                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                    <strong>Defense:</strong> In <code>backend/main.py</code>, <code>has_consent</code> is validated at the endpoint level. Any upload without explicit consent is rejected with <code>HTTP 400</code> before any audio is written to disk. Consent timestamps and version strings are permanently logged.
+                  </p>
+                </div>
+
+                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                  <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
+                    Q4: What is the cost of operating Voice Roots?
+                  </span>
+                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                    <strong>Defense:</strong> $0 per month. The entire pipeline—Whisper ASR, ChromaDB vector search, SQLite database, and FastAPI server—runs locally on standard commodity hardware without cloud subscriptions.
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Modal Footer */}
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '18px', borderTop: '1px solid rgba(35, 83, 71, 0.6)', paddingTop: '12px' }}>
+              <button
+                type="button"
+                onClick={() => setShowFacultyVivaModal(false)}
+                className="btn-primary"
+                style={{ padding: '8px 20px', fontSize: '13px' }}
+              >
+                Close Viva Guide
+              </button>
             </div>
           </div>
         </div>

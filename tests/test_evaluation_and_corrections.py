@@ -461,3 +461,39 @@ def test_community_reviewed_evaluation_performance():
     assert "community_reviewed_performance" in full_data
 
 
+def test_calculate_evaluation_endpoint():
+    """Verify live ad-hoc calculation of WER, CER, chrF and edit distances."""
+    res = client.post(
+        "/api/v1/evaluation/calculate",
+        json={
+            "reference": "voice roots preserves oral languages",
+            "hypothesis": "voice roots preserves oral songs",
+        },
+    )
+    assert res.status_code == 200
+    data = res.json()
+    assert data["reference_word_count"] == 5
+    assert data["hypothesis_word_count"] == 5
+    assert data["word_edit_distance"] == 1
+    assert data["wer"] == 0.2
+    assert data["wer_percent"] == 20.0
+    assert data["cer"] > 0.0
+    assert 0.0 < data["chrf"] < 1.0
+
+    # Test exact match
+    res_exact = client.post(
+        "/api/v1/evaluation/calculate",
+        json={
+            "reference": "నండ్రాయి గోండ్వానా",
+            "hypothesis": "నండ్రాయి గోండ్వానా",
+        },
+    )
+    assert res_exact.status_code == 200
+    data_exact = res_exact.json()
+    assert data_exact["wer"] == 0.0
+    assert data_exact["wer_percent"] == 0.0
+    assert data_exact["cer"] == 0.0
+    assert data_exact["cer_percent"] == 0.0
+    assert data_exact["chrf"] == 1.0
+
+

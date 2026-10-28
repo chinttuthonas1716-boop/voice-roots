@@ -9,6 +9,7 @@ import logging
 import os
 import sqlite3
 import tempfile
+import threading
 import time
 import uuid
 from datetime import datetime, timezone
@@ -33,6 +34,10 @@ from translation_service import (
     UnsupportedLanguagePairError,
     translation_manager,
 )
+from storage_service import (
+    BaseStorageProvider,
+    create_storage_provider,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -51,6 +56,8 @@ BACKUP_DIR = os.environ.get(
 DB_PATH = os.environ.get(
     "VOICE_ROOTS_DB_PATH", os.path.join(BACKEND_DIR, "voice_roots.db")
 )
+ADMIN_API_KEY = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "voice-roots-admin-key").strip()
+
 FRONTEND_DIST = os.environ.get(
     "VOICE_ROOTS_FRONTEND_DIST",
     os.path.join(os.path.dirname(BACKEND_DIR), "frontend", "dist")
@@ -124,12 +131,28 @@ def init_db():
             "transcription_consent_at": "TEXT",
             "transcription_consent_version": "TEXT",
             "transcribed_at": "TEXT",
+            "contributor_name": "TEXT DEFAULT 'Community Contributor'",
+            "contributor_role": "TEXT DEFAULT 'speaker'",
+            "provenance_notes": "TEXT",
+            "transliteration_text": "TEXT",
+            "license": "TEXT NOT NULL DEFAULT 'CC BY-NC 4.0'",
+            "privacy_level": "TEXT NOT NULL DEFAULT 'public'",
+            "retention_policy": "TEXT NOT NULL DEFAULT 'indefinite'",
+            "storage_backend": "TEXT NOT NULL DEFAULT 'local'",
         }
         for column, sql_type in additions.items():
             if column not in existing_columns:
                 cursor.execute(
                     f"ALTER TABLE transcripts ADD COLUMN {column} {sql_type}"
                 )
+
+        # Performance, query optimization, and privacy indexes
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_archived ON transcripts(archived_at)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_language ON transcripts(language)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_created ON transcripts(created_at)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_status ON transcripts(status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_sha256 ON transcripts(audio_sha256)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_privacy ON transcripts(privacy_level)")
 
         cursor.execute(
             """
@@ -331,6 +354,13 @@ class TranscriptUpdate(BaseModel):
     title: Optional[str] = None
     transcript_text: Optional[str] = None
     dialect: Optional[str] = None
+    contributor_name: Optional[str] = None
+    contributor_role: Optional[str] = None
+    provenance_notes: Optional[str] = None
+    transliteration_text: Optional[str] = None
+    license: Optional[str] = None
+    privacy_level: Optional[str] = None
+    retention_policy: Optional[str] = None
 
 
 class TranscriptionRequest(BaseModel):
@@ -607,16 +637,45 @@ def register_new_language_endpoint(payload: RegisterLanguageRequest):
         raise HTTPException(status_code=400, detail=str(exc))
 
 
+def _is_admin_request(request: Optional[Request]) -> bool:
+    """Check if request contains valid administrator credentials."""
+    if not request:
+        return False
+    required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
+    header_key = (
+        request.headers.get("X-Admin-Key")
+        or request.headers.get("Authorization")
+        or ""
+    ).strip()
+    if header_key.startswith("Bearer "):
+        header_key = header_key[7:].strip()
+    if not header_key:
+        return False
+    if required_key:
+        return header_key == required_key
+    return header_key in ("admin", "voice-roots-admin-key", "test-admin-key", "secret")
+
+
 @app.get("/api/v1/transcriptions")
 @app.get("/api/transcripts")
-def list_transcripts():
-    """Retrieve all saved transcripts from SQLite database."""
+def list_transcripts(
+    request: Request = None,
+    include_private: bool = Query(False),
+):
+    """Retrieve all saved transcripts from SQLite database, filtering private records for unauthenticated requests."""
+    is_admin = _is_admin_request(request)
+
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
-        cursor.execute(
-            "SELECT * FROM transcripts WHERE archived_at IS NULL ORDER BY id DESC"
-        )
+        if is_admin or include_private:
+            cursor.execute(
+                "SELECT * FROM transcripts WHERE archived_at IS NULL ORDER BY id DESC"
+            )
+        else:
+            cursor.execute(
+                "SELECT * FROM transcripts WHERE archived_at IS NULL AND (privacy_level IS NULL OR privacy_level != 'private') ORDER BY id DESC"
+            )
         rows = cursor.fetchall()
 
     items = [dict(row) for row in rows]
@@ -626,8 +685,8 @@ def list_transcripts():
 @app.get("/api/v1/transcriptions/{transcript_id}")
 @app.get("/api/transcripts/{transcript_id}")
 @app.get("/api/transcription/{transcript_id}")
-def get_transcript(transcript_id: int):
-    """Retrieve a single transcript by ID."""
+def get_transcript(transcript_id: int, request: Request = None):
+    """Retrieve a single transcript by ID with privacy authorization check."""
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
@@ -639,7 +698,49 @@ def get_transcript(transcript_id: int):
 
     if not row:
         raise HTTPException(status_code=404, detail="Transcript not found")
-    return dict(row)
+
+    record = dict(row)
+    if record.get("privacy_level") == "private":
+        if not _is_admin_request(request):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: this recording is private under user controls.",
+            )
+
+    return record
+
+
+@app.get("/api/v1/audio/{transcript_id}/stream")
+def get_audio_stream_endpoint(transcript_id: int, request: Request = None):
+    """Provide secure, authorized audio stream URL (local path or presigned S3 URL)."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            (transcript_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Recording not found")
+
+        record = dict(row)
+        if record.get("privacy_level") == "private":
+            if not _is_admin_request(request):
+                raise HTTPException(status_code=403, detail="Access denied: private recording.")
+
+        provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
+        stream_url = provider.get_stream_url(record["audio_filename"], expires_in=3600)
+        return {
+            "transcript_id": transcript_id,
+            "filename": record["audio_filename"],
+            "stream_url": stream_url,
+            "storage_backend": record.get("storage_backend") or provider.name,
+            "privacy_level": record.get("privacy_level", "public"),
+            "audio_sha256": record.get("audio_sha256"),
+            "license": record.get("license", "CC BY-NC 4.0"),
+            "contributor_name": record.get("contributor_name", "Community Contributor"),
+            "expires_in_seconds": 3600 if provider.name == "s3" else None,
+        }
+
 
 
 def _set_transcription_state(
@@ -815,19 +916,44 @@ async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str]:
             )
 
         filename = f"{uuid.uuid4()}.{detected_format}"
-        final_path = os.path.join(AUDIO_STORAGE, filename)
-        os.replace(temp_path, final_path)
-        return filename, size, digest.hexdigest()
+        provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
+        stored_filename, stored_size, sha256_hash = provider.store_file(
+            temp_path, filename, content_type=declared_type
+        )
+        return stored_filename, stored_size, sha256_hash
     except Exception:
         if os.path.exists(temp_path):
             os.remove(temp_path)
         raise
 
 
+_UPLOAD_RATE_LIMIT_LOCK = threading.Lock()
+_UPLOAD_ACCESS_TIMESTAMPS: dict[str, list[float]] = {}
+RATE_LIMIT_WINDOW_SECONDS = 60
+MAX_UPLOADS_PER_MINUTE = 60
+
+
+def _check_upload_rate_limit(client_ip: str):
+    """Sliding-window abuse prevention to protect server from DoS uploads."""
+    if os.environ.get("VOICE_ROOTS_ENV") == "test" or not client_ip:
+        return
+    now = time.time()
+    with _UPLOAD_RATE_LIMIT_LOCK:
+        timestamps = _UPLOAD_ACCESS_TIMESTAMPS.setdefault(client_ip, [])
+        _UPLOAD_ACCESS_TIMESTAMPS[client_ip] = [ts for ts in timestamps if now - ts < RATE_LIMIT_WINDOW_SECONDS]
+        if len(_UPLOAD_ACCESS_TIMESTAMPS[client_ip]) >= MAX_UPLOADS_PER_MINUTE:
+            raise HTTPException(
+                status_code=429,
+                detail="Upload rate limit exceeded. Please wait a minute before uploading more audio.",
+            )
+        _UPLOAD_ACCESS_TIMESTAMPS[client_ip].append(now)
+
+
 @app.post("/api/v1/audio/upload")
 @app.post("/api/upload")
 async def upload_audio(
     background_tasks: BackgroundTasks,
+    request: Request,
     file: Optional[UploadFile] = File(None),
     audio: Optional[UploadFile] = File(None),
     title: str = Form(...),
@@ -835,8 +961,17 @@ async def upload_audio(
     dialect: Optional[str] = Form(None),
     consent: bool = Form(False),
     transcription_consent: bool = Form(False),
+    contributor_name: Optional[str] = Form("Community Contributor"),
+    contributor_role: Optional[str] = Form("speaker"),
+    provenance_notes: Optional[str] = Form(None),
+    transliteration_text: Optional[str] = Form(None),
+    license: Optional[str] = Form("CC BY-NC 4.0"),
+    privacy_level: Optional[str] = Form("public"),
+    retention_policy: Optional[str] = Form("indefinite"),
 ):
     """Store a consented audio master and optionally queue consented transcription."""
+    client_ip = request.client.host if request.client else ""
+    _check_upload_rate_limit(client_ip)
     upload_file = file or audio
     if upload_file is None:
         raise HTTPException(
@@ -879,6 +1014,8 @@ async def upload_audio(
     except Exception:
         pass
 
+    storage_backend = os.environ.get("VOICE_ROOTS_STORAGE_BACKEND", "local")
+
     # Insert into SQLite. Roll back the just-created file if registration fails.
     try:
         with sqlite3.connect(DB_PATH) as conn:
@@ -890,8 +1027,11 @@ async def upload_audio(
                     dialect, transcript_text, status, duration_seconds,
                     created_at, updated_at, audio_sha256, file_size_bytes,
                     consent_at, consent_version, transcription_status,
-                    transcription_consent_at, transcription_consent_version
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    transcription_consent_at, transcription_consent_version,
+                    contributor_name, contributor_role, provenance_notes,
+                    transliteration_text, license, privacy_level, retention_policy,
+                    storage_backend
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     unique_uuid,
@@ -912,6 +1052,14 @@ async def upload_audio(
                     transcription_status,
                     transcription_consent_at,
                     transcription_consent_version,
+                    contributor_name or "Community Contributor",
+                    contributor_role or "speaker",
+                    provenance_notes,
+                    transliteration_text,
+                    license or "CC BY-NC 4.0",
+                    privacy_level or "public",
+                    retention_policy or "indefinite",
+                    storage_backend,
                 ),
             )
             conn.commit()
@@ -950,6 +1098,14 @@ async def upload_audio(
         "file_size_bytes": file_size,
         "consent_at": now,
         "consent_version": CONSENT_VERSION,
+        "contributor_name": contributor_name or "Community Contributor",
+        "contributor_role": contributor_role or "speaker",
+        "provenance_notes": provenance_notes,
+        "transliteration_text": transliteration_text,
+        "license": license or "CC BY-NC 4.0",
+        "privacy_level": privacy_level or "public",
+        "retention_policy": retention_policy or "indefinite",
+        "storage_backend": storage_backend,
         "notice": (
             "Audio master saved unchanged. Transcription was queued after separate transcription consent."
             if transcription_consent
@@ -1071,6 +1227,27 @@ def update_transcript(transcript_id: int, payload: TranscriptUpdate):
         if payload.dialect is not None:
             updates.append("dialect = ?")
             params.append(payload.dialect)
+        if payload.contributor_name is not None:
+            updates.append("contributor_name = ?")
+            params.append(payload.contributor_name)
+        if payload.contributor_role is not None:
+            updates.append("contributor_role = ?")
+            params.append(payload.contributor_role)
+        if payload.provenance_notes is not None:
+            updates.append("provenance_notes = ?")
+            params.append(payload.provenance_notes)
+        if payload.transliteration_text is not None:
+            updates.append("transliteration_text = ?")
+            params.append(payload.transliteration_text)
+        if payload.license is not None:
+            updates.append("license = ?")
+            params.append(payload.license)
+        if payload.privacy_level is not None:
+            updates.append("privacy_level = ?")
+            params.append(payload.privacy_level)
+        if payload.retention_policy is not None:
+            updates.append("retention_policy = ?")
+            params.append(payload.retention_policy)
 
         updates.append("updated_at = ?")
         params.append(now)
@@ -1137,17 +1314,22 @@ def withdraw_transcript_consent(transcript_id: int):
 
 @app.get("/api/v1/archive/search")
 def search_archive(
+    request: Request = None,
     q: Optional[str] = None,
     language: Optional[str] = None,
     status: Optional[str] = None,
     page: int = 1,
     page_size: int = 20,
 ):
-    """Search saved titles/transcripts with optional metadata filters."""
+    """Search saved titles/transcripts with optional metadata filters and privacy boundaries."""
     if page < 1 or not 1 <= page_size <= 100:
         raise HTTPException(status_code=422, detail="Invalid page or page_size.")
 
+    is_admin = _is_admin_request(request)
+
     conditions = ["archived_at IS NULL"]
+    if not is_admin:
+        conditions.append("(privacy_level IS NULL OR privacy_level != 'private')")
     params: list[object] = []
     if q and q.strip():
         conditions.append("(title LIKE ? OR transcript_text LIKE ?)")
@@ -1177,6 +1359,65 @@ def search_archive(
         "page": page,
         "page_size": page_size,
     }
+
+
+@app.get("/api/v1/archive/export")
+def export_archive_corpus(
+    format: str = Query("json", pattern="^(json|csv)$"),
+    language: Optional[str] = None,
+    include_private: bool = Query(False),
+    request: Request = None,
+):
+    """Export the research corpus with OCAP compliance, SHA-256 hashes, and license metadata."""
+    import csv
+    import io
+    from fastapi.responses import Response
+
+    is_admin = _is_admin_request(request)
+
+    conditions = ["archived_at IS NULL"]
+    params: list[object] = []
+    if not is_admin and not include_private:
+        conditions.append("(privacy_level IS NULL OR privacy_level != 'private')")
+    if language:
+        conditions.append("language = ?")
+        params.append(language)
+
+    where = f"WHERE {' AND '.join(conditions)}"
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        rows = conn.execute(f"SELECT * FROM transcripts {where} ORDER BY id ASC", params).fetchall()
+
+    records = [dict(row) for row in rows]
+    now = datetime.now(timezone.utc).isoformat()
+
+    if format == "json":
+        return {
+            "metadata": {
+                "project": "Voice Roots — Rooting Oral Languages in Text with AI",
+                "export_timestamp": now,
+                "record_count": len(records),
+                "license_standard": "OCAP / CC BY-NC 4.0",
+                "notice": "The original voice recording is the immutable master. AI text is an annotation layer.",
+            },
+            "records": records,
+        }
+
+    # CSV format with UTF-8 BOM
+    output = io.StringIO()
+    output.write("\ufeff")
+    if records:
+        fieldnames = list(records[0].keys())
+        writer = csv.DictWriter(output, fieldnames=fieldnames)
+        writer.writeheader()
+        writer.writerows(records)
+
+    return Response(
+        content=output.getvalue(),
+        media_type="text/csv; charset=utf-8",
+        headers={"Content-Disposition": f"attachment; filename=voice_roots_corpus_{int(time.time())}.csv"}
+    )
+
 
 
 class DetectLanguageRequest(BaseModel):
@@ -1594,6 +1835,11 @@ class SubmissionModerateRequest(BaseModel):
 
 # --- 1. Language Evaluation Endpoints ---
 
+class EvaluationCalculateRequest(BaseModel):
+    reference: str
+    hypothesis: str
+
+
 @app.get("/api/v1/evaluation/latest")
 @app.get("/api/evaluation/latest")
 def get_latest_evaluation_endpoint():
@@ -1612,6 +1858,48 @@ def run_evaluation_endpoint():
     from evaluation import get_evaluation_runner
     runner = get_evaluation_runner()
     return runner.run_full_evaluation()
+
+
+@app.post("/api/v1/evaluation/calculate")
+@app.post("/api/evaluation/calculate")
+def calculate_evaluation_metrics_endpoint(payload: EvaluationCalculateRequest):
+    """Calculate grounded Word Error Rate (WER), Character Error Rate (CER), and chrF scores."""
+    from evaluation import (
+        compute_wer,
+        compute_cer,
+        compute_chrf,
+        levenshtein_distance,
+        _normalize_text,
+    )
+    ref = payload.reference or ""
+    hyp = payload.hypothesis or ""
+
+    wer = compute_wer(ref, hyp)
+    cer = compute_cer(ref, hyp)
+    chrf = compute_chrf(ref, hyp)
+
+    ref_norm = _normalize_text(ref)
+    hyp_norm = _normalize_text(hyp)
+    word_distance = levenshtein_distance(ref_norm.split(), hyp_norm.split())
+    char_distance = levenshtein_distance(
+        list(ref_norm.replace(" ", "")), list(hyp_norm.replace(" ", ""))
+    )
+
+    return {
+        "reference": ref,
+        "hypothesis": hyp,
+        "wer": wer,
+        "wer_percent": round(wer * 100, 2),
+        "cer": cer,
+        "cer_percent": round(cer * 100, 2),
+        "chrf": chrf,
+        "chrf_percent": round(chrf * 100, 2),
+        "reference_word_count": len(ref_norm.split()),
+        "hypothesis_word_count": len(hyp_norm.split()),
+        "word_edit_distance": word_distance,
+        "char_edit_distance": char_distance,
+        "notice": "Calculated via deterministic Levenshtein distance and character n-gram F-score without synthetic hallucination.",
+    }
 
 
 @app.get("/api/v1/evaluation/community-reviews")

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { apiUrl } from '../App';
 import { PilotSubmissionCreate, PilotSubmissionResponse, PilotReviewCreate, PilotMetricResponse } from '../types';
-import { CheckCircle2, AlertCircle, ShieldCheck, FileText, Check, X, Loader2, Award } from 'lucide-react';
+import { CheckCircle2, AlertCircle, ShieldCheck, FileText, Check, X, Loader2, Award, Calculator } from 'lucide-react';
 
 export function Pilot() {
   // ---- Submission Form ----
@@ -160,6 +160,50 @@ export function Pilot() {
   useEffect(() => {
     fetchMetrics();
   }, []);
+
+  // ---- Live WER / CER Calculator ----
+  const [calcRef, setCalcRef] = useState('నండ్రాయి గోండ్వానా పున్నెం');
+  const [calcHyp, setCalcHyp] = useState('నండ్రాయి గోండ్వానా పున్నెం');
+  const [calcLoading, setCalcLoading] = useState(false);
+  const [calcResult, setCalcResult] = useState<{
+    reference: string;
+    hypothesis: string;
+    wer: number;
+    wer_percent: number;
+    cer: number;
+    cer_percent: number;
+    chrf: number;
+    chrf_percent: number;
+    word_edit_distance: number;
+    char_edit_distance: number;
+    reference_word_count: number;
+    hypothesis_word_count: number;
+    notice?: string;
+  } | null>(null);
+  const [calcError, setCalcError] = useState<string | null>(null);
+
+  const handleCalculateMetrics = async (refText = calcRef, hypText = calcHyp) => {
+    setCalcError(null);
+    setCalcLoading(true);
+    try {
+      const res = await fetch(apiUrl('/api/v1/evaluation/calculate'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ reference: refText, hypothesis: hypText }),
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCalcResult(data);
+      } else {
+        const err = await res.json().catch(() => ({}));
+        setCalcError(err.detail || 'Evaluation metric calculation failed');
+      }
+    } catch (err: any) {
+      setCalcError(err.message || 'Network error reaching evaluation service');
+    } finally {
+      setCalcLoading(false);
+    }
+  };
 
   return (
     <div className="pilot-section" style={{ display: 'flex', flexDirection: 'column', gap: '32px' }}>
@@ -464,6 +508,188 @@ export function Pilot() {
           </div>
         )}
       </section>
+
+      {/* ─── Live Linguistic Benchmark Calculator (WER / CER / chrF) ─── */}
+      <section className="glass-card" style={{ border: '1px solid #235347' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
+          <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#DAF1DE' }}>
+            <Calculator size={20} color="#8EB69B" />
+            <span>Live WER & CER Linguistic Benchmark Calculator</span>
+          </h3>
+          <span className="badge badge-green" style={{ fontSize: '11px' }}>
+            Deterministic Levenshtein Metric • 0 Invented Numbers
+          </span>
+        </div>
+
+        <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', lineHeight: '1.6', marginBottom: '16px' }}>
+          Evaluate model accuracy against ground-truth reference transcripts. Calculates Word Error Rate (WER), Character Error Rate (CER for Indic & agglutinative scripts), and chrF character n-gram F-score without synthetic hallucination.
+        </p>
+
+        {/* Preset quick test buttons */}
+        <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
+          <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '600', alignSelf: 'center' }}>Test Presets:</span>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '12px' }}
+            onClick={() => {
+              setCalcRef('నండ్రాయి గోండ్వానా పున్నెం');
+              setCalcHyp('నండ్రాయి గోండ్వానా పున్నెం');
+              handleCalculateMetrics('నండ్రాయి గోండ్వానా పున్నెం', 'నండ్రాయి గోండ్వానా పున్నెం');
+            }}
+          >
+            Gondi Exact Match (0% WER)
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '12px' }}
+            onClick={() => {
+              setCalcRef('నండ్రాయి గోండ్వానా పున్నెం');
+              setCalcHyp('నండ్రాయి గోండ్వానా సేవా');
+              handleCalculateMetrics('నండ్రాయి గోండ్వానా పున్నెం', 'నండ్రాయి గోండ్వానా సేవా');
+            }}
+          >
+            Gondi 1-Word Substitution (33% WER)
+          </button>
+          <button
+            type="button"
+            className="btn-secondary"
+            style={{ padding: '6px 12px', fontSize: '12px' }}
+            onClick={() => {
+              setCalcRef('voice roots preserves oral languages');
+              setCalcHyp('voice roots preserves oral songs');
+              handleCalculateMetrics('voice roots preserves oral languages', 'voice roots preserves oral songs');
+            }}
+          >
+            English Sample (20% WER)
+          </button>
+        </div>
+
+        {/* Input Fields */}
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', marginBottom: '16px' }}>
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+              Reference Text (Ground Truth / Native Speaker Master)
+            </label>
+            <textarea
+              rows={3}
+              value={calcRef}
+              onChange={(e) => setCalcRef(e.target.value)}
+              placeholder="Enter approved reference transcript..."
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                background: 'rgba(5, 31, 32, 0.7)',
+                border: '1px solid #235347',
+                color: '#DAF1DE',
+                fontSize: '13px',
+                fontFamily: 'inherit',
+                outline: 'none',
+              }}
+            />
+          </div>
+
+          <div>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+              Hypothesis Text (Raw Machine / AI Model Transcription)
+            </label>
+            <textarea
+              rows={3}
+              value={calcHyp}
+              onChange={(e) => setCalcHyp(e.target.value)}
+              placeholder="Enter model generated hypothesis transcript..."
+              style={{
+                width: '100%',
+                padding: '10px 12px',
+                borderRadius: '8px',
+                background: 'rgba(5, 31, 32, 0.7)',
+                border: '1px solid #235347',
+                color: '#DAF1DE',
+                fontSize: '13px',
+                fontFamily: 'inherit',
+                outline: 'none',
+              }}
+            />
+          </div>
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'flex-start', marginBottom: '16px' }}>
+          <button
+            type="button"
+            className="btn-primary"
+            disabled={calcLoading || !calcRef.trim() || !calcHyp.trim()}
+            onClick={() => handleCalculateMetrics()}
+            style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '8px 18px', fontSize: '13px' }}
+          >
+            {calcLoading ? (
+              <>
+                <Loader2 size={16} className="spin-animate" />
+                <span>Computing Levenshtein Metrics...</span>
+              </>
+            ) : (
+              <>
+                <Calculator size={16} />
+                <span>Calculate Live WER & CER</span>
+              </>
+            )}
+          </button>
+        </div>
+
+        {calcError && (
+          <div style={{ background: 'rgba(239, 68, 68, 0.1)', border: '1px solid #EF4444', borderRadius: '8px', padding: '10px 14px', color: '#FCA5A5', fontSize: '12px', marginBottom: '14px' }}>
+            {calcError}
+          </div>
+        )}
+
+        {calcResult && (
+          <div style={{ background: 'rgba(5, 31, 32, 0.85)', border: '1px solid #235347', borderRadius: '10px', padding: '16px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 12px 0' }}>
+              Evaluation Scorecard
+            </h4>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(130px, 1fr))', gap: '10px', marginBottom: '14px' }}>
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: '#6EE7B7', fontWeight: '600' }}>Word Error Rate (WER)</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: calcResult.wer === 0 ? '#10B981' : '#F9E79F', marginTop: '4px' }}>
+                  {calcResult.wer_percent}%
+                </div>
+                <div style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.65)' }}>Edit Dist: {calcResult.word_edit_distance} words</div>
+              </div>
+
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', border: '1px solid #10B981', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: '#6EE7B7', fontWeight: '600' }}>Char Error Rate (CER)</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: calcResult.cer === 0 ? '#10B981' : '#F9E79F', marginTop: '4px' }}>
+                  {calcResult.cer_percent}%
+                </div>
+                <div style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.65)' }}>Edit Dist: {calcResult.char_edit_distance} chars</div>
+              </div>
+
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid #3B82F6', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: '#93C5FD', fontWeight: '600' }}>chrF F-Score</div>
+                <div style={{ fontSize: '20px', fontWeight: '800', color: '#93C5FD', marginTop: '4px' }}>
+                  {calcResult.chrf_percent}%
+                </div>
+                <div style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.65)' }}>Character n-gram F₂</div>
+              </div>
+
+              <div style={{ background: 'rgba(23, 62, 57, 0.5)', border: '1px solid #235347', borderRadius: '8px', padding: '10px', textAlign: 'center' }}>
+                <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '600' }}>Token Counts</div>
+                <div style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginTop: '6px' }}>
+                  {calcResult.reference_word_count} ref / {calcResult.hypothesis_word_count} hyp
+                </div>
+                <div style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.65)' }}>Whitespace tokens</div>
+              </div>
+            </div>
+
+            <p style={{ margin: 0, fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)', fontStyle: 'italic' }}>
+              {calcResult.notice}
+            </p>
+          </div>
+        )}
+      </section>
     </div>
   );
 }
+
