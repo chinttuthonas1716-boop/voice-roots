@@ -38,6 +38,15 @@ from storage_service import (
     BaseStorageProvider,
     create_storage_provider,
 )
+from search_service import (
+    evaluate_multilingual_discovery,
+    get_archive_vector_collection,
+    hybrid_discovery_search,
+    index_transcript_in_vector_store,
+    init_fts_index,
+    reindex_all_search,
+    sync_transcript_fts,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -303,6 +312,31 @@ def init_db():
 
 # Initialize database upon module import
 init_db()
+try:
+    init_fts_index()
+except Exception as _e:
+    logger.debug("FTS5 table initialization: %s", _e)
+
+
+def _sync_transcript_to_search(transcript_id: int):
+    """Synchronize an individual transcript and its translations into FTS5 and vector index."""
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            sync_transcript_fts(conn, transcript_id)
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM transcripts WHERE id = ?", (transcript_id,))
+            t_row = cursor.fetchone()
+            if t_row:
+                cursor.execute(
+                    "SELECT translated_text, target_language FROM translations WHERE transcript_id = ?",
+                    (transcript_id,),
+                )
+                tr_rows = [dict(r) for r in cursor.fetchall()]
+                index_transcript_in_vector_store(dict(t_row), tr_rows)
+    except Exception as exc:
+        logger.debug("Failed auto-sync search index for transcript %s: %s", transcript_id, exc)
+
 
 app = FastAPI(
     title="Voice Roots API",
@@ -829,6 +863,8 @@ def _set_transcription_state(
                 (state, provider, model, error, now, transcript_id),
             )
         conn.commit()
+    if state == "completed":
+        _sync_transcript_to_search(transcript_id)
 
 
 def process_saved_transcription(transcript_id: int):
@@ -1150,6 +1186,7 @@ async def upload_audio(
             )
             conn.commit()
             transcript_id = cursor.lastrowid
+            _sync_transcript_to_search(transcript_id)
     except Exception:
         stored_path = os.path.join(AUDIO_STORAGE, unique_filename)
         if os.path.exists(stored_path):
@@ -1374,6 +1411,7 @@ def delete_transcript(transcript_id: int):
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="Transcript not found")
         conn.commit()
+    _sync_transcript_to_search(transcript_id)
     return {
         "success": True,
         "message": f"Transcript {transcript_id} archived; original audio retained",
@@ -1397,6 +1435,7 @@ def withdraw_transcript_consent(transcript_id: int):
         if cursor.rowcount == 0:
             raise HTTPException(status_code=404, detail="Transcript not found or already archived.")
         conn.commit()
+    _sync_transcript_to_search(transcript_id)
     return {
         "success": True,
         "message": f"Consent withdrawn for recording {transcript_id}. Recording removed from active archive.",
@@ -1406,12 +1445,31 @@ def withdraw_transcript_consent(transcript_id: int):
     }
 
 
+class DiscoverySearchRequest(BaseModel):
+    query: Optional[str] = None
+    q: Optional[str] = None
+    mode: str = "hybrid"  # 'hybrid', 'semantic', 'keyword'
+    language: Optional[str] = None
+    dialect: Optional[str] = None
+    verification_status: Optional[str] = None
+    topic: Optional[str] = None
+    date_from: Optional[str] = None
+    date_to: Optional[str] = None
+    has_audio: Optional[bool] = None
+    has_translation: Optional[bool] = None
+    page: int = 1
+    page_size: int = 20
+    sort_by: str = "relevance"
+
+
 @app.get("/api/v1/archive/search")
 def search_archive(
     request: Request = None,
     q: Optional[str] = None,
+    query: Optional[str] = None,
     language: Optional[str] = None,
     status: Optional[str] = None,
+    mode: Optional[str] = Query(None),
     page: int = 1,
     page_size: int = 20,
 ):
@@ -1420,14 +1478,36 @@ def search_archive(
         raise HTTPException(status_code=422, detail="Invalid page or page_size.")
 
     is_admin = _is_admin_request(request)
+    search_q = query if query is not None else q
 
+    if mode in ("hybrid", "semantic", "keyword"):
+        res = hybrid_discovery_search(
+            query=search_q,
+            mode=mode,
+            language=language,
+            verification_status=status,
+            page=page,
+            page_size=page_size,
+            is_admin=is_admin,
+        )
+        return {
+            "transcripts": res["results"],
+            "count": res["total_count"],
+            "page": res["page"],
+            "page_size": res["page_size"],
+            "results": res["results"],
+            "mode": res["mode"],
+            "latency_ms": res["latency_ms"],
+        }
+
+    # Default legacy archive search (Milestones 1–8 contract)
     conditions = ["archived_at IS NULL"]
     if not is_admin:
         conditions.append("(privacy_level IS NULL OR privacy_level != 'private')")
     params: list[object] = []
-    if q and q.strip():
+    if search_q and search_q.strip():
         conditions.append("(title LIKE ? OR transcript_text LIKE ?)")
-        term = f"%{q.strip()}%"
+        term = f"%{search_q.strip()}%"
         params.extend([term, term])
     if language:
         conditions.append("language = ?")
@@ -1452,7 +1532,116 @@ def search_archive(
         "count": total,
         "page": page,
         "page_size": page_size,
+        "results": [dict(row) for row in rows],
+        "mode": "legacy",
     }
+
+
+@app.get("/api/v1/discovery/search")
+def discovery_search_get(
+    request: Request,
+    q: Optional[str] = Query(None),
+    query: Optional[str] = Query(None),
+    mode: str = Query("hybrid", pattern="^(hybrid|semantic|keyword)$"),
+    language: Optional[str] = Query(None),
+    dialect: Optional[str] = Query(None),
+    verification_status: Optional[str] = Query(None),
+    topic: Optional[str] = Query(None),
+    date_from: Optional[str] = Query(None),
+    date_to: Optional[str] = Query(None),
+    has_audio: Optional[bool] = Query(None),
+    has_translation: Optional[bool] = Query(None),
+    page: int = Query(1, ge=1),
+    page_size: int = Query(20, ge=1, le=100),
+    sort_by: str = Query("relevance", pattern="^(relevance|date_desc|date_asc|title_asc|duration_desc)$"),
+):
+    """Execute hybrid, semantic, or keyword discovery search across oral transcripts and authorized translations."""
+    is_admin = _is_admin_request(request)
+    search_q = query if query is not None else q
+    return hybrid_discovery_search(
+        query=search_q,
+        mode=mode,
+        language=language,
+        dialect=dialect,
+        verification_status=verification_status,
+        topic=topic,
+        date_from=date_from,
+        date_to=date_to,
+        has_audio=has_audio,
+        has_translation=has_translation,
+        page=page,
+        page_size=page_size,
+        sort_by=sort_by,
+        is_admin=is_admin,
+    )
+
+
+@app.post("/api/v1/discovery/search")
+def discovery_search_post(request: Request, payload: DiscoverySearchRequest):
+    """POST variant of discovery search for rich filter payloads and programmatic queries."""
+    is_admin = _is_admin_request(request)
+    search_q = payload.query if payload.query is not None else payload.q
+    return hybrid_discovery_search(
+        query=search_q,
+        mode=payload.mode or "hybrid",
+        language=payload.language,
+        dialect=payload.dialect,
+        verification_status=payload.verification_status,
+        topic=payload.topic,
+        date_from=payload.date_from,
+        date_to=payload.date_to,
+        has_audio=payload.has_audio,
+        has_translation=payload.has_translation,
+        page=payload.page,
+        page_size=payload.page_size,
+        sort_by=payload.sort_by or "relevance",
+        is_admin=is_admin,
+    )
+
+
+@app.post("/api/v1/discovery/reindex")
+def trigger_discovery_reindex(request: Request):
+    """Rebuild SQLite FTS5 index and ChromaDB archive embeddings across all active transcripts."""
+    init_fts_index()
+    return reindex_all_search()
+
+
+@app.get("/api/v1/discovery/stats")
+def get_discovery_stats():
+    """Return index statistics and status for FTS5 and semantic vector collections."""
+    init_fts_index()
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM transcripts WHERE archived_at IS NULL AND verification_status != 'withdrawn_or_rejected'")
+        active_count = cursor.fetchone()[0]
+
+        cursor.execute("SELECT COUNT(*) FROM transcripts_fts")
+        fts_count = cursor.fetchone()[0]
+
+    vec_count = 0
+    collection = get_archive_vector_collection()
+    if collection is not None:
+        try:
+            vec_count = collection.count()
+        except Exception:
+            vec_count = 0
+
+    return {
+        "active_transcripts": active_count,
+        "fts_indexed_transcripts": fts_count,
+        "vector_indexed_transcripts": vec_count,
+        "search_modes": ["hybrid", "semantic", "keyword"],
+        "fts_engine": "SQLite FTS5 (unicode61 remove_diacritics 2)",
+        "embedding_model": "voiceroots_multilingual_v1 (384-dim subword n-grams)",
+        "vector_store": "ChromaDB Archive Collection",
+        "cost": "$0.00 (Self-hosted offline execution)",
+    }
+
+
+@app.get("/api/v1/discovery/evaluate")
+def run_discovery_benchmark_evaluation():
+    """Run benchmark evaluation suite measuring cross-lingual search precision, MRR, and latency."""
+    return evaluate_multilingual_discovery()
 
 
 @app.get("/api/v1/archive/export")
@@ -2810,6 +2999,7 @@ def update_contribution_draft(transcript_id: int, payload: ContributionDraftUpda
             ),
         )
         conn.commit()
+        _sync_transcript_to_search(transcript_id)
         cursor.execute("SELECT * FROM transcripts WHERE id = ?", (transcript_id,))
         return dict(cursor.fetchone())
 
@@ -2834,6 +3024,7 @@ def withdraw_contribution(transcript_id: int):
             (now, transcript_id),
         )
         conn.commit()
+        _sync_transcript_to_search(transcript_id)
         return {
             "success": True,
             "id": transcript_id,
@@ -3014,6 +3205,7 @@ def review_verification(
             ),
         )
         conn.commit()
+        _sync_transcript_to_search(transcript_id)
         cursor.execute("SELECT * FROM transcripts WHERE id = ?", (transcript_id,))
         return dict(cursor.fetchone())
 
@@ -3096,6 +3288,7 @@ def publish_verified_transcript(
             (now, transcript_id),
         )
         conn.commit()
+        _sync_transcript_to_search(transcript_id)
         return {
             "success": True,
             "id": transcript_id,

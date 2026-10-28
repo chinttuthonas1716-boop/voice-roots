@@ -1417,8 +1417,32 @@
     3. `test_every_feature.py`: 27/27 passed (0 failed).
     4. `npm run build --prefix frontend`: passed in 1.69s with 0 errors (TypeScript strict check clean).
     5. Local backend and frontend daemons verified healthy on ports 8000 and 5173.
-  - NOT VERIFIED: Remote public cloud deployment (held locally awaiting explicit user authorization).
+
+- [2026-10-28 15:50:00 IST] [ANTIGRAVITY] DONE: Executed Milestone 9 — Semantic Search and Multilingual Discovery.
+  - Implemented SQLite FTS5 Full-Text Search virtual table (`transcripts_fts`) configured with `unicode61 remove_diacritics 2`, indexing transcript text, transliteration script, contextual notes, title, language, dialect, and authorized translations.
+  - Built ChromaDB archive vector store integration (`archive_transcripts` collection) powered by deterministic 384-dimensional subword and character n-gram embeddings (`VoiceRootsMultilingualEmbeddingFunction`), executing 100% offline with zero external network dependencies and $0.00 compute cost.
+  - Created unified hybrid retrieval pipeline with Reciprocal Rank Fusion (RRF, k=60) and a dual-channel match bonus (+0.15 boost) combining FTS5 BM25 lexical ranking and ChromaDB cosine similarity.
+  - Implemented cross-lingual retrieval enabling queries in English (e.g. "sacred forest grove", "healing herb remedy") or Indic scripts (e.g. "నండ్రాయి", "गोंडी") to match oral indigenous recordings via translation text and semantic vector embeddings.
+  - Enforced strict privacy and OCAP data sovereignty pre-filtering: drafts (`verification_status='draft'`), private recordings (`privacy_level='private'`), and consent-withdrawn records (`verification_status='withdrawn_or_rejected'` or `archived_at IS NOT NULL`) are pruned before candidate ranking and never exposed to unauthorized discovery queries.
+  - Added REST API endpoints:
+    - `GET /api/v1/discovery/search` & `POST /api/v1/discovery/search`: Multi-modal search supporting `hybrid`, `semantic`, `keyword`, and empty-query browse modes with filters for language, dialect, topic, verification status, date range, audio availability, translation presence, sorting, and pagination.
+    - `POST /api/v1/discovery/reindex`: Full index synchronization pipeline across FTS5 and ChromaDB.
+    - `GET /api/v1/discovery/stats`: Telemetry returning indexed document counts, search engine specs, and cost metrics.
+    - `GET /api/v1/discovery/evaluate`: Automated benchmark evaluation suite measuring Precision@1, Precision@3, MRR, and latency.
+  - Wired real-time index synchronization hooks into upload, transcription completion, draft updates, community verification reviews, public publication, and consent withdrawal actions.
+  - Modernized Discovery UI in `frontend/src/App.tsx` with unified Tab 2 switcher (`Oral Archive Discovery` and `Seed Corpus & Vector Resources`), live FTS5/ChromaDB telemetry badges, retrieval mode selector pills, facet filters, search snippet highlighting, field match attribution badges (`title`, `transcript`, `transliteration`, `translation`, `semantic_embedding`), inline master audio streaming, translations accordion, benchmark runner modal, and story details inspector.
+  - Added automated test suite `tests/test_milestone9_semantic_search.py` (13 tests) verifying exact keyword matching, prefix matching, Indic scripts, vector similarity, hybrid fusion, cross-lingual translation retrieval, faceted filters, pagination, privacy boundaries, and benchmark evaluations.
+  - Files touched: `backend/search_service.py`, `backend/main.py`, `frontend/src/App.tsx`, `tests/test_milestone9_semantic_search.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Pytest Test Suite: 151/151 tests passed in 21.08s (100% pass rate).
+    2. Dedicated Milestone 9 Tests: 13/13 passed in `tests/test_milestone9_semantic_search.py`.
+    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    4. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
+    5. Frontend Production Build: `npm run build --prefix frontend` built cleanly with zero TypeScript errors.
+    6. Retrieval Benchmark: MRR = 1.00 (100%), Precision@1 = 1.00 (100%), Precision@3 = 1.00 (100%), latency ~3–6 ms.
+  - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
 
 
 

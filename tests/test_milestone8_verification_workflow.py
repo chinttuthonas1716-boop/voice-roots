@@ -371,3 +371,4 @@ def test_contributor_right_to_withdraw():
     )
     assert res_claim.status_code == 400
     assert "withdrawn_or_rejected" in res_claim.json()["detail"]
+

@@ -75,3 +75,4 @@ def downgrade() -> None:
 
     if "idx_transcripts_verification_status" in existing_indexes:
         op.drop_index("idx_transcripts_verification_status", table_name="transcripts")
+
