@@ -813,7 +813,7 @@ def _is_admin_request(request: Optional[Request]) -> bool:
 @app.get("/api/v1/transcriptions")
 @app.get("/api/transcripts")
 def list_transcripts(
-    request: Request = None,
+    request: Request,
     include_private: bool = Query(False),
 ):
     """Retrieve all saved transcripts from SQLite database, filtering private records for unauthenticated requests."""
@@ -839,7 +839,7 @@ def list_transcripts(
 @app.get("/api/v1/transcriptions/{transcript_id}")
 @app.get("/api/transcripts/{transcript_id}")
 @app.get("/api/transcription/{transcript_id}")
-def get_transcript(transcript_id: int, request: Request = None):
+def get_transcript(transcript_id: int, request: Request):
     """Retrieve a single transcript by ID with privacy authorization check."""
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
@@ -865,7 +865,7 @@ def get_transcript(transcript_id: int, request: Request = None):
 
 
 @app.get("/api/v1/audio/{transcript_id}/stream")
-def get_audio_stream_endpoint(transcript_id: int, request: Request = None):
+def get_audio_stream_endpoint(transcript_id: int, request: Request):
     """Provide secure, authorized audio stream URL (local path or presigned S3 URL)."""
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
@@ -1273,7 +1273,9 @@ async def upload_audio(
                 ),
             )
             conn.commit()
-            transcript_id = cursor.lastrowid
+            if cursor.lastrowid is None:
+                raise RuntimeError("Failed to obtain transcript ID after insert.")
+            transcript_id = int(cursor.lastrowid)
             _sync_transcript_to_search(transcript_id)
     except Exception:
         stored_path = os.path.join(AUDIO_STORAGE, unique_filename)
@@ -1552,7 +1554,7 @@ class DiscoverySearchRequest(BaseModel):
 
 @app.get("/api/v1/archive/search")
 def search_archive(
-    request: Request = None,
+    request: Request,
     q: Optional[str] = None,
     query: Optional[str] = None,
     language: Optional[str] = None,
@@ -2051,10 +2053,10 @@ def get_pronunciation_guidance_endpoint(payload: VoiceAssistantPronounceRequest)
 
 @app.get("/api/v1/archive/export")
 def export_archive_corpus(
+    request: Request,
     format: str = Query("json", pattern="^(json|csv)$"),
     language: Optional[str] = None,
     include_private: bool = Query(False),
-    request: Request = None,
 ):
     """Export the research corpus with OCAP compliance, SHA-256 hashes, and license metadata."""
     import csv
@@ -3789,13 +3791,13 @@ def api_register_organization(req: OrganizationRegisterRequest):
         return org
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to register organization: %s", e)
+    except Exception:
+        logger.exception("Failed to register organization")
         raise HTTPException(status_code=500, detail="Internal server error registering organization.")
 
 
 @app.get("/api/v1/governance/organizations")
-def api_list_organizations(status: Optional[str] = Query(None)):
+def api_list_organizations(status: str | None = Query(None)):
     return list_organizations(status=status, db_path=DB_PATH)
 
 
@@ -3811,7 +3813,7 @@ def api_get_organization(id_or_slug: str):
 def api_accredit_organization(
     org_id: int,
     req: OrganizationAccreditRequest,
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     key = req.admin_key or x_admin_key or ""
     try:
@@ -3827,8 +3829,8 @@ def api_accredit_organization(
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to accredit organization: %s", e)
+    except Exception:
+        logger.exception("Failed to accredit organization")
         raise HTTPException(status_code=500, detail="Internal server error accrediting organization.")
 
 
@@ -3848,15 +3850,15 @@ def api_create_project(org_id: int, req: ProjectCreateRequest):
         return project
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to create project: %s", e)
+    except Exception:
+        logger.exception("Failed to create project")
         raise HTTPException(status_code=500, detail="Internal server error creating project.")
 
 
 @app.get("/api/v1/governance/projects")
 def api_list_projects(
-    org_id: Optional[int] = Query(None),
-    language: Optional[str] = Query(None),
+    org_id: int | None = Query(None),
+    language: str | None = Query(None),
 ):
     return list_partnership_projects(org_id=org_id, language=language, db_path=DB_PATH)
 
@@ -3874,15 +3876,15 @@ def api_register_reviewer(req: ReviewerRegisterRequest):
         return reviewer
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to register reviewer: %s", e)
+    except Exception:
+        logger.exception("Failed to register reviewer")
         raise HTTPException(status_code=500, detail="Internal server error registering reviewer.")
 
 
 @app.get("/api/v1/governance/reviewers")
 def api_list_reviewers(
-    language: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
+    language: str | None = Query(None),
+    status: str | None = Query(None),
 ):
     return list_expert_reviewers(language=language, status=status, db_path=DB_PATH)
 
@@ -3891,7 +3893,7 @@ def api_list_reviewers(
 def api_accredit_reviewer(
     reviewer_id: int,
     req: ReviewerAccreditRequest,
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     key = req.admin_key or x_admin_key or ""
     try:
@@ -3907,8 +3909,8 @@ def api_accredit_reviewer(
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to accredit reviewer: %s", e)
+    except Exception:
+        logger.exception("Failed to accredit reviewer")
         raise HTTPException(status_code=500, detail="Internal server error accrediting reviewer.")
 
 
@@ -3928,15 +3930,15 @@ def api_assign_review(req: ReviewAssignRequest):
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to assign review: %s", e)
+    except Exception:
+        logger.exception("Failed to assign review")
         raise HTTPException(status_code=500, detail="Internal server error assigning review.")
 
 
 @app.get("/api/v1/governance/assignments")
 def api_list_assignments(
-    reviewer_id: Optional[int] = Query(None),
-    status: Optional[str] = Query(None),
+    reviewer_id: int | None = Query(None),
+    status: str | None = Query(None),
 ):
     return list_review_assignments(reviewer_id=reviewer_id, status=status, db_path=DB_PATH)
 
@@ -3957,13 +3959,13 @@ def api_file_dispute(req: DisputeFileRequest):
         return dispute
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to file dispute: %s", e)
+    except Exception:
+        logger.exception("Failed to file dispute")
         raise HTTPException(status_code=500, detail="Internal server error filing dispute.")
 
 
 @app.get("/api/v1/governance/disputes")
-def api_list_disputes(status: Optional[str] = Query(None)):
+def api_list_disputes(status: str | None = Query(None)):
     return list_governance_disputes(status=status, db_path=DB_PATH)
 
 
@@ -3983,8 +3985,8 @@ def api_resolve_dispute(dispute_id: int, req: DisputeResolveRequest):
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
-    except Exception as e:
-        logger.exception("Failed to resolve dispute: %s", e)
+    except Exception:
+        logger.exception("Failed to resolve dispute")
         raise HTTPException(status_code=500, detail="Internal server error resolving dispute.")
 
 
