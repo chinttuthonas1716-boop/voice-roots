@@ -137,3 +137,4 @@ def test_offline_sync_enforces_mandatory_consent(client):
     res = client.post("/api/v1/transcripts/upload", data=upload_data, files=files)
     assert res.status_code == 400
     assert "consent is required" in res.json()["detail"].lower()
+

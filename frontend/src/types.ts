@@ -397,3 +397,108 @@ export interface SavedConversationSummary {
   };
 }
 
+// Milestone 14: Community Partnerships & Language Governance
+export interface PartnerOrganization {
+  id: number;
+  slug: string;
+  name: string;
+  org_type: string;
+  description?: string;
+  website_url?: string;
+  contact_email: string;
+  lead_coordinator_name: string;
+  target_languages: string[];
+  verification_status: 'verified_partner' | 'pending_accreditation' | 'suspended';
+  accreditation_notes?: string;
+  created_at: string;
+  updated_at: string;
+  projects?: PartnershipProject[];
+  reviewers?: ExpertReviewer[];
+}
+
+export interface PartnershipProject {
+  id: number;
+  org_id: number;
+  project_name: string;
+  slug: string;
+  target_languages: string[];
+  collection_goal?: string;
+  license_policy: string;
+  tk_labels: string[];
+  status: 'active' | 'review_phase' | 'completed' | 'archived';
+  created_at: string;
+  updated_at: string;
+  org_name?: string;
+  org_slug?: string;
+}
+
+export interface ExpertReviewer {
+  id: number;
+  reviewer_name: string;
+  reviewer_role: string;
+  org_id?: number;
+  languages_qualified: string[];
+  accreditation_status: 'accredited' | 'pending' | 'revoked';
+  accredited_by?: string;
+  accredited_at?: string;
+  total_reviews_completed: number;
+  created_at: string;
+  updated_at: string;
+  org_name?: string;
+}
+
+export interface ReviewAssignment {
+  id: number;
+  transcript_id: number;
+  reviewer_id: number;
+  assigned_by: string;
+  project_id?: number;
+  status: 'assigned' | 'in_progress' | 'completed' | 'reassigned';
+  due_date?: string;
+  created_at: string;
+  transcript_title?: string;
+  transcript_language?: string;
+  reviewer_name?: string;
+  reviewer_role?: string;
+}
+
+export interface GovernanceDispute {
+  id: number;
+  target_type: string;
+  target_id: number;
+  dispute_type: string;
+  filed_by_name: string;
+  filed_by_role: string;
+  description: string;
+  suggested_resolution?: string;
+  status: 'open' | 'under_elder_review' | 'resolved' | 'dismissed';
+  resolved_by?: string;
+  resolved_at?: string;
+  resolution_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface GovernanceTelemetry {
+  timestamp: string;
+  partnerships_summary: {
+    verified_partner_organizations: number;
+    pending_accreditations: number;
+    active_partnership_projects: number;
+    accredited_expert_reviewers: number;
+    completed_review_assignments: number;
+  };
+  disputes_and_appeals: {
+    open_disputes: number;
+    resolved_disputes: number;
+    appeal_mechanism_active: boolean;
+  };
+  verified_language_preservation_records: Record<string, number>;
+  ethical_principles: {
+    non_competitive_reporting: string;
+    attribution_preference: string;
+    ocap_compliance: string;
+  };
+}
+
+

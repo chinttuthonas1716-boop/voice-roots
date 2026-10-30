@@ -1561,6 +1561,33 @@
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-10-30] [ANTIGRAVITY] DONE: Milestone 14: Community Partnerships and Language Governance.
+  - Implemented comprehensive partnership and language governance service in `backend/governance_service.py`:
+    - SQLite schema tables: `organizations`, `partnership_projects`, `expert_reviewers`, `review_assignments`, `governance_disputes`, `governance_audit_logs`.
+    - Seeded initial accredited partnership: `Adivasi Gondwana Mahasabha & Language Preservation Council` (`gondi-tribal-council`), project `Godavari Basin Gondi & Koya Oral Corpus` (TK Notice, Clan Attribution, CC BY-NC 4.0), and certified linguist reviewer `Dr. K. Sunitha Rao`.
+    - Organization registration with default `pending_accreditation` and administrative authorization gate.
+    - Scoped project workspaces with explicit license policies and Traditional Knowledge (TK) labels.
+    - Accredited expert and elder reviewers with qualified language arrays and strict assignment language checking.
+    - Formal governance dispute and appeal workflows (misattribution, sacred leaks, dialect mismatch) resolvable only by Elders, Coordinators, or Admins.
+    - Immutable governance audit log tracking all operational actions.
+    - Non-competitive community telemetry aggregating preservation counts without competitive volume or accuracy ranking.
+  - Wired REST API routes in `backend/main.py` under `/api/v1/governance/*`.
+  - Added TypeScript interfaces in `frontend/src/types.ts` and interactive Governance dashboard in `frontend/src/components/Pilot.tsx` (Subtab 5: "Community Partnerships & Governance").
+  - Authored automated test suite `tests/test_milestone14_partnerships_governance.py` (9/9 tests passed).
+  - Files touched: `backend/governance_service.py`, `backend/main.py`, `tests/test_milestone14_partnerships_governance.py`, `frontend/src/types.ts`, `frontend/src/components/Pilot.tsx`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 14 Tests: 9/9 passed in `tests/test_milestone14_partnerships_governance.py`.
+    2. Full Repository Pytest Suite: 152/152 passed in 39.66s (100% pass rate).
+    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    4. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
+    5. Frontend Production Build: `npm run build --prefix frontend` compiled in 1.90s with zero TypeScript errors.
+  - NOT VERIFIED: Direct out-of-band external contact with live external organizations (prohibited without explicit user authorization).
+  - REMAINING LIMITATIONS:
+    - Initial registry contains one pre-seeded accredited tribal organization; external organizations must register and be accredited by an authorized administrator/elder council key.
+    - Automated AI translation remains strictly prohibited on unwritten oral heritage tongues without human elder review.
+  - NEEDS FROM OTHER AGENT: none.
+
+
 
 
 

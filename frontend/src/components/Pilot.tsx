@@ -14,6 +14,11 @@ import {
   DatasetIntegrityReport,
   PreservationStatusResponse,
   ResearchEvaluationReport,
+  PartnerOrganization,
+  PartnershipProject,
+  ExpertReviewer,
+  GovernanceDispute,
+  GovernanceTelemetry,
 } from '../types';
 import {
   CheckCircle2,
@@ -38,11 +43,15 @@ import {
   HardDrive,
   Download,
   CheckSquare,
+  Users,
+  Scale,
+  Building,
+  Send,
 } from 'lucide-react';
 
 export function Pilot() {
-  // Top-level View Switcher: Contributor Portal vs Human Verification vs Evaluation Metrics vs Research Governance
-  const [activeSubTab, setActiveSubTab] = useState<'portal' | 'verification' | 'metrics' | 'research'>('portal');
+  // Top-level View Switcher: Contributor Portal vs Human Verification vs Evaluation Metrics vs Research Governance vs Language Governance
+  const [activeSubTab, setActiveSubTab] = useState<'portal' | 'verification' | 'metrics' | 'research' | 'governance'>('portal');
 
   // Shared Languages from backend
   const [languages, setLanguages] = useState<any[]>([]);
@@ -645,6 +654,106 @@ export function Pilot() {
     }
   }, [activeSubTab]);
 
+  // ════════════════════════════════════════════════════════════════════════════
+  // 5. COMMUNITY PARTNERSHIPS & LANGUAGE GOVERNANCE STATE (Milestone 14)
+  // ════════════════════════════════════════════════════════════════════════════
+  const [organizations, setOrganizations] = useState<PartnerOrganization[]>([]);
+  const [projects, setProjects] = useState<PartnershipProject[]>([]);
+  const [reviewers, setReviewers] = useState<ExpertReviewer[]>([]);
+  const [disputes, setDisputes] = useState<GovernanceDispute[]>([]);
+  const [governanceTelemetry, setGovernanceTelemetry] = useState<GovernanceTelemetry | null>(null);
+  const [isLoadingGovernance, setIsLoadingGovernance] = useState(false);
+
+  // Dispute form state
+  const [newDisputeTargetId, setNewDisputeTargetId] = useState<string>('');
+  const [newDisputeTargetType, setNewDisputeTargetType] = useState<string>('transcript');
+  const [newDisputeType, setNewDisputeType] = useState<string>('misattribution');
+  const [newDisputeFilerName, setNewDisputeFilerName] = useState<string>('');
+  const [newDisputeFilerRole, setNewDisputeFilerRole] = useState<string>('community_elder');
+  const [newDisputeDesc, setNewDisputeDesc] = useState<string>('');
+  const [newDisputeSuggestedRes, setNewDisputeSuggestedRes] = useState<string>('');
+  const [disputeMessage, setDisputeMessage] = useState<string | null>(null);
+  const [disputeError, setDisputeError] = useState<string | null>(null);
+  const [isSubmittingDispute, setIsSubmittingDispute] = useState(false);
+
+  const fetchGovernanceData = async () => {
+    setIsLoadingGovernance(true);
+    try {
+      const [telemetryRes, orgsRes, projectsRes, revsRes, disputesRes] = await Promise.all([
+        fetch(apiUrl('/api/v1/governance/telemetry')),
+        fetch(apiUrl('/api/v1/governance/organizations')),
+        fetch(apiUrl('/api/v1/governance/projects')),
+        fetch(apiUrl('/api/v1/governance/reviewers')),
+        fetch(apiUrl('/api/v1/governance/disputes')),
+      ]);
+
+      if (telemetryRes.ok) setGovernanceTelemetry(await telemetryRes.json());
+      if (orgsRes.ok) setOrganizations(await orgsRes.json());
+      if (projectsRes.ok) setProjects(await projectsRes.json());
+      if (revsRes.ok) setReviewers(await revsRes.json());
+      if (disputesRes.ok) setDisputes(await disputesRes.json());
+    } catch (err) {
+      console.warn('Failed to fetch governance data:', err);
+    } finally {
+      setIsLoadingGovernance(false);
+    }
+  };
+
+  useEffect(() => {
+    if (activeSubTab === 'governance') {
+      fetchGovernanceData();
+    }
+  }, [activeSubTab]);
+
+  const handleFileDispute = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setDisputeMessage(null);
+    setDisputeError(null);
+
+    const targetIdNum = parseInt(newDisputeTargetId, 10);
+    if (isNaN(targetIdNum) || targetIdNum <= 0) {
+      setDisputeError('Please specify a valid Target Recording or Submission ID.');
+      return;
+    }
+    if (!newDisputeDesc.trim()) {
+      setDisputeError('Please provide a description of the dispute or sacred concern.');
+      return;
+    }
+
+    setIsSubmittingDispute(true);
+    try {
+      const res = await fetch(apiUrl('/api/v1/governance/disputes'), {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          target_type: newDisputeTargetType,
+          target_id: targetIdNum,
+          dispute_type: newDisputeType,
+          filed_by_name: newDisputeFilerName.trim() || 'Anonymous Community Filer',
+          filed_by_role: newDisputeFilerRole,
+          description: newDisputeDesc.trim(),
+          suggested_resolution: newDisputeSuggestedRes.trim() || undefined,
+        }),
+      });
+
+      if (res.ok) {
+        setDisputeMessage('Dispute lodged successfully. It has been routed to the Community Elder Assembly.');
+        setNewDisputeDesc('');
+        setNewDisputeSuggestedRes('');
+        setNewDisputeTargetId('');
+        fetchGovernanceData();
+      } else {
+        const errData = await res.json().catch(() => ({}));
+        setDisputeError(errData.detail || 'Failed to file governance dispute.');
+      }
+    } catch (err: any) {
+      setDisputeError(err.message || 'Network error filing dispute.');
+    } finally {
+      setIsSubmittingDispute(false);
+    }
+  };
+
+
   return (
     <div className="pilot-section" style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
       {/* ─── Top Level Navigation Tabs ─── */}
@@ -687,6 +796,16 @@ export function Pilot() {
         >
           <Database size={16} />
           <span>Research Datasets & Digital Preservation</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveSubTab('governance')}
+          className={activeSubTab === 'governance' ? 'btn-primary' : 'btn-secondary'}
+          style={{ padding: '8px 18px', fontSize: '14px', minHeight: '38px' }}
+        >
+          <Scale size={16} />
+          <span>Community Partnerships & Governance</span>
         </button>
       </div>
 
@@ -2382,6 +2501,332 @@ export function Pilot() {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ════════════════════════════════════════════════════════════════════════
+          VIEW 5: COMMUNITY PARTNERSHIPS & LANGUAGE GOVERNANCE (Milestone 14)
+          ════════════════════════════════════════════════════════════════════════ */}
+      {activeSubTab === 'governance' && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
+          {/* Header & Ethics Banner */}
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '4px solid #8EB69B' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
+              <div>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Scale size={20} color="#8EB69B" />
+                  <span>Community Partnerships & Language Governance</span>
+                </h3>
+                <p style={{ margin: 0, fontSize: '13px', color: 'rgba(218,241,222,0.8)', maxWidth: '780px', lineHeight: '1.5' }}>
+                  Voice Roots partners transparently with tribal councils, language committees, and university researchers. All oral preservation adheres strictly to <strong>OCAP® Principles (Ownership, Control, Access, Possession)</strong>. Communities are never ranked competitively by volume or model accuracy.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={fetchGovernanceData}
+                disabled={isLoadingGovernance}
+                className="btn-secondary"
+                style={{ padding: '8px 16px', fontSize: '13px', display: 'flex', alignItems: 'center', gap: '6px' }}
+              >
+                <RefreshCw size={14} className={isLoadingGovernance ? 'spin' : ''} />
+                <span>Refresh Registry</span>
+              </button>
+            </div>
+
+            {/* Governance Telemetry Metrics */}
+            {governanceTelemetry && (
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px', marginTop: '12px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
+                <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
+                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>VERIFIED PARTNERS</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#DAF1DE' }}>{governanceTelemetry.partnerships_summary.verified_partner_organizations}</span>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
+                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>ACTIVE WORKSPACES</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#DAF1DE' }}>{governanceTelemetry.partnerships_summary.active_partnership_projects}</span>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
+                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>ACCREDITED REVIEWERS</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#DAF1DE' }}>{governanceTelemetry.partnerships_summary.accredited_expert_reviewers}</span>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
+                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>OPEN DISPUTES</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: governanceTelemetry.disputes_and_appeals.open_disputes > 0 ? '#F39C12' : '#DAF1DE' }}>
+                    {governanceTelemetry.disputes_and_appeals.open_disputes}
+                  </span>
+                </div>
+                <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
+                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>RESOLVED APPEALS</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#27AE60' }}>{governanceTelemetry.disputes_and_appeals.resolved_disputes}</span>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Section 1: Verified Partner Organizations & Projects */}
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
+              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Building size={18} color="#8EB69B" />
+                <span>Accredited Partner Organizations & Community Workspaces</span>
+              </h4>
+              <span style={{ fontSize: '12px', color: '#8EB69B' }}>{organizations.length} Organizations Registered</span>
+            </div>
+
+            {organizations.length === 0 ? (
+              <p style={{ fontSize: '13px', color: 'rgba(218,241,222,0.7)', margin: 0 }}>No partner organizations registered yet.</p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {organizations.map(org => (
+                  <div key={org.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '18px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
+                      <div>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
+                          <span style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE' }}>{org.name}</span>
+                          <span style={{
+                            padding: '2px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: '700',
+                            background: org.verification_status === 'verified_partner' ? 'rgba(39, 174, 96, 0.2)' : 'rgba(243, 156, 18, 0.2)',
+                            color: org.verification_status === 'verified_partner' ? '#2ECC71' : '#F39C12',
+                            border: `1px solid ${org.verification_status === 'verified_partner' ? '#27AE60' : '#F39C12'}`
+                          }}>
+                            {org.verification_status === 'verified_partner' ? 'Accredited Partner' : 'Pending Review'}
+                          </span>
+                          <span style={{ fontSize: '12px', color: 'rgba(218,241,222,0.6)' }}>({org.org_type.replace('_', ' ')})</span>
+                        </div>
+                        <p style={{ margin: '6px 0 0 0', fontSize: '13px', color: 'rgba(218,241,222,0.85)', lineHeight: '1.4' }}>
+                          {org.description || 'Community language preservation partner.'}
+                        </p>
+                      </div>
+                      <div style={{ textAlign: 'right', fontSize: '12px', color: '#8EB69B' }}>
+                        <div>Lead: <strong>{org.lead_coordinator_name}</strong></div>
+                        <div>Contact: {org.contact_email}</div>
+                      </div>
+                    </div>
+
+                    {org.accreditation_notes && (
+                      <div style={{ fontSize: '12px', fontStyle: 'italic', color: '#8EB69B', background: 'rgba(142,182,155,0.06)', padding: '6px 10px', borderRadius: '4px' }}>
+                        Accreditation: {org.accreditation_notes}
+                      </div>
+                    )}
+
+                    {/* Scoped Workspaces / Projects */}
+                    {projects.filter(p => p.org_id === org.id).length > 0 && (
+                      <div style={{ marginTop: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B', display: 'block', marginBottom: '8px' }}>
+                          AFFILIATED WORKSPACES:
+                        </span>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
+                          {projects.filter(p => p.org_id === org.id).map(proj => (
+                            <div key={proj.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                <strong style={{ fontSize: '13px', color: '#DAF1DE' }}>{proj.project_name}</strong>
+                                <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: 'rgba(142,182,155,0.15)', color: '#8EB69B' }}>
+                                  {proj.license_policy}
+                                </span>
+                              </div>
+                              {proj.collection_goal && (
+                                <p style={{ fontSize: '11px', color: 'rgba(218,241,222,0.7)', margin: '4px 0 6px 0', lineHeight: '1.3' }}>
+                                  {proj.collection_goal}
+                                </p>
+                              )}
+                              {proj.tk_labels && proj.tk_labels.length > 0 && (
+                                <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap', marginTop: '4px' }}>
+                                  {proj.tk_labels.map((tk, idx) => (
+                                    <span key={idx} style={{ fontSize: '10px', padding: '1px 5px', borderRadius: '3px', background: 'rgba(243, 156, 18, 0.15)', color: '#F39C12', border: '1px solid rgba(243, 156, 18, 0.3)' }}>
+                                      {tk}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+
+          {/* Section 2: Accredited Reviewers & Elders */}
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
+              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Users size={18} color="#8EB69B" />
+                <span>Accredited Expert & Elder Reviewers</span>
+              </h4>
+              <span style={{ fontSize: '12px', color: '#8EB69B' }}>{reviewers.length} Reviewers Accredited</span>
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
+              {reviewers.map(r => (
+                <div key={r.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE' }}>{r.reviewer_name}</span>
+                    <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '3px', background: r.accreditation_status === 'accredited' ? 'rgba(39, 174, 96, 0.2)' : 'rgba(243, 156, 18, 0.2)', color: r.accreditation_status === 'accredited' ? '#2ECC71' : '#F39C12' }}>
+                      {r.accreditation_status}
+                    </span>
+                  </div>
+                  <div style={{ fontSize: '12px', color: '#8EB69B' }}>Role: <strong>{r.reviewer_role.replace('_', ' ')}</strong></div>
+                  <div style={{ fontSize: '12px', color: 'rgba(218,241,222,0.8)' }}>
+                    Qualified Tongues: <strong>{(r.languages_qualified || []).join(', ').toUpperCase()}</strong>
+                  </div>
+                  <div style={{ fontSize: '11px', color: 'rgba(218,241,222,0.6)', marginTop: '4px' }}>
+                    Reviews Completed: {r.total_reviews_completed}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Section 3: Community Disputes, Sacred Leaks & Elder Appeals */}
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
+            <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
+              <h4 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={18} color="#8EB69B" />
+                <span>Linguistic Disputes, Sacred Knowledge & Elder Appeals</span>
+              </h4>
+              <p style={{ margin: 0, fontSize: '13px', color: 'rgba(218,241,222,0.75)' }}>
+                Community members and elders can file formal appeals regarding misattribution, sacred clan secrets, dialect mismatch, or transcription disputes. Only designated Elders and Coordinators can resolve disputes.
+              </p>
+            </div>
+
+            {/* Lodge New Dispute Form */}
+            <form onSubmit={handleFileDispute} style={{ background: 'rgba(0,0,0,0.25)', padding: '16px', borderRadius: '8px', border: '1px solid rgba(243, 156, 18, 0.2)', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <span style={{ fontSize: '13px', fontWeight: '700', color: '#F39C12' }}>File Formal Dispute or Sacred Knowledge Notice</span>
+
+              {disputeMessage && (
+                <div style={{ padding: '8px 12px', borderRadius: '4px', background: 'rgba(39, 174, 96, 0.2)', color: '#2ECC71', fontSize: '12px' }}>
+                  {disputeMessage}
+                </div>
+              )}
+              {disputeError && (
+                <div style={{ padding: '8px 12px', borderRadius: '4px', background: 'rgba(231, 76, 60, 0.2)', color: '#E74C3C', fontSize: '12px' }}>
+                  {disputeError}
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
+                <div>
+                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Target Entity Type</label>
+                  <select
+                    value={newDisputeTargetType}
+                    onChange={e => setNewDisputeTargetType(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                  >
+                    <option value="transcript">Oral Transcript</option>
+                    <option value="translation">Translation</option>
+                    <option value="publication">Public Publication</option>
+                    <option value="attribution">Clan Attribution</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Target ID #</label>
+                  <input
+                    type="number"
+                    placeholder="e.g. 656"
+                    value={newDisputeTargetId}
+                    onChange={e => setNewDisputeTargetId(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                  />
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Dispute Category</label>
+                  <select
+                    value={newDisputeType}
+                    onChange={e => setNewDisputeType(e.target.value)}
+                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                  >
+                    <option value="misattribution">Clan / Individual Misattribution</option>
+                    <option value="sacred_knowledge_leak">Sacred / Ritual Knowledge Leak</option>
+                    <option value="inaccurate_transcription">Inaccurate Linguistic Transcription</option>
+                    <option value="unauthorized_dialect">Unauthorized Dialect / Speech Claim</option>
+                    <option value="elder_disagreement">Elder Review Disagreement</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Filer Name & Role</label>
+                  <div style={{ display: 'flex', gap: '6px' }}>
+                    <input
+                      type="text"
+                      placeholder="Your name / Elder"
+                      value={newDisputeFilerName}
+                      onChange={e => setNewDisputeFilerName(e.target.value)}
+                      style={{ flex: 1, padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                    />
+                    <select
+                      value={newDisputeFilerRole}
+                      onChange={e => setNewDisputeFilerRole(e.target.value)}
+                      style={{ padding: '6px 8px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '12px' }}
+                    >
+                      <option value="community_elder">Elder</option>
+                      <option value="linguist">Linguist</option>
+                      <option value="speaker">Speaker</option>
+                      <option value="contributor">Contributor</option>
+                    </select>
+                  </div>
+                </div>
+              </div>
+
+              <div>
+                <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Description of Concern</label>
+                <textarea
+                  rows={2}
+                  placeholder="Describe why this recording, transcript, or attribution violates community conventions..."
+                  value={newDisputeDesc}
+                  onChange={e => setNewDisputeDesc(e.target.value)}
+                  style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px', resize: 'vertical' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
+                <button
+                  type="submit"
+                  disabled={isSubmittingDispute}
+                  className="btn-primary"
+                  style={{ padding: '6px 18px', fontSize: '13px', minHeight: '34px' }}
+                >
+                  {isSubmittingDispute ? <Loader2 size={14} className="spin" /> : <Send size={14} />}
+                  <span>Submit to Elder Assembly</span>
+                </button>
+              </div>
+            </form>
+
+            {/* List of Filed Disputes */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B' }}>DISPUTE & APPEAL AUDIT TRAIL:</span>
+              {disputes.length === 0 ? (
+                <p style={{ fontSize: '12px', color: 'rgba(218,241,222,0.6)', margin: 0 }}>No active or historical disputes recorded.</p>
+              ) : (
+                disputes.map(d => (
+                  <div key={d.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
+                    <div>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <strong style={{ fontSize: '13px', color: '#DAF1DE' }}>#{d.id}: {d.dispute_type.replace('_', ' ').toUpperCase()}</strong>
+                        <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: d.status === 'resolved' ? 'rgba(39, 174, 96, 0.2)' : 'rgba(243, 156, 18, 0.2)', color: d.status === 'resolved' ? '#2ECC71' : '#F39C12' }}>
+                          {d.status}
+                        </span>
+                        <span style={{ fontSize: '11px', color: 'rgba(218,241,222,0.6)' }}>Target: {d.target_type} #{d.target_id}</span>
+                      </div>
+                      <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'rgba(218,241,222,0.8)' }}>{d.description}</p>
+                      {d.resolution_notes && (
+                        <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#8EB69B', fontStyle: 'italic' }}>
+                          Resolution by {d.resolved_by}: {d.resolution_notes}
+                        </p>
+                      )}
+                    </div>
+                    <span style={{ fontSize: '11px', color: 'rgba(218,241,222,0.5)' }}>Filer: {d.filed_by_name} ({d.filed_by_role})</span>
+                  </div>
+                ))
+              )}
+            </div>
+          </div>
         </div>
       )}
     </div>

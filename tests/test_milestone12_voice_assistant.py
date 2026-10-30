@@ -241,3 +241,4 @@ def test_save_and_delete_conversation_lifecycle(client):
     # Confirm deletion from list
     res_list_after = client.get("/api/v1/voice-assistant/saved")
     assert not any(c["id"] == conv_id for c in res_list_after.json()["saved_conversations"])
+

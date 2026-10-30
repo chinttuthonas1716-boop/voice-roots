@@ -212,3 +212,4 @@ def test_model_promotion_and_rollback_lifecycle(client):
     models_after = {m["id"]: m for m in res_models_after.json()["models"]}
     assert models_after["whisper-base-local"]["is_active_production"] is True
     assert models_after["whisper-small-local"]["is_active_production"] is False
+

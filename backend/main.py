@@ -76,6 +76,28 @@ from voice_assistant import (
     list_saved_conversations,
     save_conversation_history,
 )
+from governance_service import (
+    accredit_expert_reviewer,
+    accredit_organization,
+    assign_review,
+    create_partnership_project,
+    file_governance_dispute,
+    get_community_partnership_telemetry,
+    get_governance_audit_logs,
+    get_organization,
+    init_governance_tables,
+    list_expert_reviewers,
+    list_governance_disputes,
+    list_organizations,
+    list_partnership_projects,
+    list_review_assignments,
+    record_governance_audit,
+    register_expert_reviewer,
+    register_organization,
+    resolve_governance_dispute,
+    seed_default_partnerships_if_empty,
+)
+
 
 logger = logging.getLogger(__name__)
 
@@ -364,6 +386,13 @@ try:
     init_fts_index()
 except Exception as _e:
     logger.debug("FTS5 table initialization: %s", _e)
+
+try:
+    init_governance_tables(DB_PATH)
+    seed_default_partnerships_if_empty(DB_PATH)
+except Exception as _e:
+    logger.debug("Governance tables initialization: %s", _e)
+
 
 
 def _sync_transcript_to_search(transcript_id: int):
@@ -3673,6 +3702,300 @@ def publish_verified_transcript(
             "privacy_level": "public",
             "message": "Transcript and recording published to community corpus successfully.",
         }
+
+
+# ==============================================================================
+# Milestone 14: Community Partnerships and Language Governance
+# ==============================================================================
+
+class OrganizationRegisterRequest(BaseModel):
+    name: str
+    slug: str
+    org_type: str
+    contact_email: str
+    lead_coordinator_name: str
+    target_languages: List[str]
+    description: Optional[str] = None
+    website_url: Optional[str] = None
+
+
+class OrganizationAccreditRequest(BaseModel):
+    admin_key: Optional[str] = None
+    status: str = "verified_partner"
+    accreditation_notes: str = "Verified by Voice Roots Governance Council"
+
+
+class ProjectCreateRequest(BaseModel):
+    project_name: str
+    slug: str
+    target_languages: List[str]
+    collection_goal: Optional[str] = None
+    license_policy: str = "CC BY-NC 4.0"
+    tk_labels: Optional[List[str]] = None
+
+
+class ReviewerRegisterRequest(BaseModel):
+    reviewer_name: str
+    reviewer_role: str
+    languages_qualified: List[str]
+    org_id: Optional[int] = None
+
+
+class ReviewerAccreditRequest(BaseModel):
+    admin_key: Optional[str] = None
+    status: str = "accredited"
+    accredited_by: str = "Voice Roots Linguistic Committee"
+
+
+class ReviewAssignRequest(BaseModel):
+    transcript_id: int
+    reviewer_id: int
+    assigned_by: str
+    project_id: Optional[int] = None
+    due_date: Optional[str] = None
+
+
+class DisputeFileRequest(BaseModel):
+    target_type: str
+    target_id: int
+    dispute_type: str
+    filed_by_name: str
+    filed_by_role: str
+    description: str
+    suggested_resolution: Optional[str] = None
+
+
+class DisputeResolveRequest(BaseModel):
+    resolver_name: str
+    resolver_role: str
+    decision: str
+    resolution_notes: str
+
+
+@app.post("/api/v1/governance/organizations")
+def api_register_organization(req: OrganizationRegisterRequest):
+    try:
+        org = register_organization(
+            name=req.name,
+            slug=req.slug,
+            org_type=req.org_type,
+            contact_email=req.contact_email,
+            lead_coordinator_name=req.lead_coordinator_name,
+            target_languages=req.target_languages,
+            description=req.description,
+            website_url=req.website_url,
+            db_path=DB_PATH,
+        )
+        return org
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to register organization: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error registering organization.")
+
+
+@app.get("/api/v1/governance/organizations")
+def api_list_organizations(status: Optional[str] = Query(None)):
+    return list_organizations(status=status, db_path=DB_PATH)
+
+
+@app.get("/api/v1/governance/organizations/{id_or_slug}")
+def api_get_organization(id_or_slug: str):
+    org = get_organization(id_or_slug, db_path=DB_PATH)
+    if not org:
+        raise HTTPException(status_code=404, detail="Organization not found.")
+    return org
+
+
+@app.post("/api/v1/governance/organizations/{org_id}/accredit")
+def api_accredit_organization(
+    org_id: int,
+    req: OrganizationAccreditRequest,
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+):
+    key = req.admin_key or x_admin_key or ""
+    try:
+        updated = accredit_organization(
+            org_id=org_id,
+            admin_key=key,
+            accreditation_notes=req.accreditation_notes,
+            status=req.status,
+            db_path=DB_PATH,
+        )
+        return updated
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to accredit organization: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error accrediting organization.")
+
+
+@app.post("/api/v1/governance/organizations/{org_id}/projects")
+def api_create_project(org_id: int, req: ProjectCreateRequest):
+    try:
+        project = create_partnership_project(
+            org_id=org_id,
+            project_name=req.project_name,
+            slug=req.slug,
+            target_languages=req.target_languages,
+            collection_goal=req.collection_goal,
+            license_policy=req.license_policy,
+            tk_labels=req.tk_labels,
+            db_path=DB_PATH,
+        )
+        return project
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to create project: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error creating project.")
+
+
+@app.get("/api/v1/governance/projects")
+def api_list_projects(
+    org_id: Optional[int] = Query(None),
+    language: Optional[str] = Query(None),
+):
+    return list_partnership_projects(org_id=org_id, language=language, db_path=DB_PATH)
+
+
+@app.post("/api/v1/governance/reviewers")
+def api_register_reviewer(req: ReviewerRegisterRequest):
+    try:
+        reviewer = register_expert_reviewer(
+            reviewer_name=req.reviewer_name,
+            reviewer_role=req.reviewer_role,
+            languages_qualified=req.languages_qualified,
+            org_id=req.org_id,
+            db_path=DB_PATH,
+        )
+        return reviewer
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to register reviewer: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error registering reviewer.")
+
+
+@app.get("/api/v1/governance/reviewers")
+def api_list_reviewers(
+    language: Optional[str] = Query(None),
+    status: Optional[str] = Query(None),
+):
+    return list_expert_reviewers(language=language, status=status, db_path=DB_PATH)
+
+
+@app.post("/api/v1/governance/reviewers/{reviewer_id}/accredit")
+def api_accredit_reviewer(
+    reviewer_id: int,
+    req: ReviewerAccreditRequest,
+    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+):
+    key = req.admin_key or x_admin_key or ""
+    try:
+        updated = accredit_expert_reviewer(
+            reviewer_id=reviewer_id,
+            admin_key=key,
+            accredited_by=req.accredited_by,
+            status=req.status,
+            db_path=DB_PATH,
+        )
+        return updated
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to accredit reviewer: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error accrediting reviewer.")
+
+
+@app.post("/api/v1/governance/assignments")
+def api_assign_review(req: ReviewAssignRequest):
+    try:
+        assignment = assign_review(
+            transcript_id=req.transcript_id,
+            reviewer_id=req.reviewer_id,
+            assigned_by=req.assigned_by,
+            project_id=req.project_id,
+            due_date=req.due_date,
+            db_path=DB_PATH,
+        )
+        return assignment
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to assign review: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error assigning review.")
+
+
+@app.get("/api/v1/governance/assignments")
+def api_list_assignments(
+    reviewer_id: Optional[int] = Query(None),
+    status: Optional[str] = Query(None),
+):
+    return list_review_assignments(reviewer_id=reviewer_id, status=status, db_path=DB_PATH)
+
+
+@app.post("/api/v1/governance/disputes")
+def api_file_dispute(req: DisputeFileRequest):
+    try:
+        dispute = file_governance_dispute(
+            target_type=req.target_type,
+            target_id=req.target_id,
+            dispute_type=req.dispute_type,
+            filed_by_name=req.filed_by_name,
+            filed_by_role=req.filed_by_role,
+            description=req.description,
+            suggested_resolution=req.suggested_resolution,
+            db_path=DB_PATH,
+        )
+        return dispute
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to file dispute: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error filing dispute.")
+
+
+@app.get("/api/v1/governance/disputes")
+def api_list_disputes(status: Optional[str] = Query(None)):
+    return list_governance_disputes(status=status, db_path=DB_PATH)
+
+
+@app.post("/api/v1/governance/disputes/{dispute_id}/resolve")
+def api_resolve_dispute(dispute_id: int, req: DisputeResolveRequest):
+    try:
+        res = resolve_governance_dispute(
+            dispute_id=dispute_id,
+            resolver_name=req.resolver_name,
+            resolver_role=req.resolver_role,
+            decision=req.decision,
+            resolution_notes=req.resolution_notes,
+            db_path=DB_PATH,
+        )
+        return res
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception as e:
+        logger.exception("Failed to resolve dispute: %s", e)
+        raise HTTPException(status_code=500, detail="Internal server error resolving dispute.")
+
+
+@app.get("/api/v1/governance/audit-logs")
+def api_get_audit_logs(limit: int = Query(50, ge=1, le=500)):
+    return get_governance_audit_logs(limit=limit, db_path=DB_PATH)
+
+
+@app.get("/api/v1/governance/telemetry")
+def api_get_governance_telemetry():
+    return get_community_partnership_telemetry(db_path=DB_PATH)
 
 
 @app.get("/{full_path:path}")
