@@ -1587,66 +1587,18 @@
     - Automated AI translation remains strictly prohibited on unwritten oral heritage tongues without human elder review.
   - NEEDS FROM OTHER AGENT: none.
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+- [2026-10-30] [ANTIGRAVITY] DONE: Code quality, Pylance type safety, and Ruff linter cleanup.
+  - Resolved Pylance `reportArgumentType` on FastAPI route handlers by removing invalid `= None` default from Starlette `Request` dependencies in `list_transcripts`, `get_transcript`, `get_audio_stream_endpoint`, `search_archive`, and `export_archive_corpus`.
+  - Resolved `reportArgumentType` on `transcript_id` in `backend/main.py` by asserting `cursor.lastrowid` is not None and casting to int before passing to `_sync_transcript_to_search` and `process_saved_transcription`.
+  - Updated `backend/alembic/versions/8a13948f3a26_oral_language_preservation_schema.py` to use `collections.abc.Sequence`, PEP 604 union syntax (`str | Sequence[str] | None`), and sorted imports (Ruff UP035, UP007, I001 clean).
+  - Resolved all Ruff `TRY401` redundant exception logging arguments and `UP045` optional annotations across governance endpoints in `backend/main.py`.
+  - Files touched: `backend/main.py`, `backend/alembic/versions/8a13948f3a26_oral_language_preservation_schema.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Full Pytest Suite: 152/152 passed in 39.22s (100% pass rate).
+    2. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    3. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
+    4. Frontend Production Build: `npm run build --prefix frontend` compiled in 1.66s with 0 errors.
+    5. Ruff & Pylance Check: `backend/alembic/versions/8a13948f3a26_oral_language_preservation_schema.py` and `backend/main.py` pass clean.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
 
