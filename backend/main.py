@@ -97,6 +97,20 @@ from governance_service import (
     resolve_governance_dispute,
     seed_default_partnerships_if_empty,
 )
+from knowledge_graph_service import (
+    create_knowledge_graph_node,
+    create_knowledge_graph_relationship,
+    delete_knowledge_graph_relationship,
+    get_kg_node_details,
+    get_kg_nodes,
+    get_kg_overview,
+    get_subgraph,
+    init_knowledge_graph_tables,
+    list_kg_languages,
+    search_knowledge_graph,
+    seed_knowledge_graph_catalog,
+    update_knowledge_graph_node,
+)
 
 
 logger = logging.getLogger(__name__)
@@ -392,6 +406,13 @@ try:
     seed_default_partnerships_if_empty(DB_PATH)
 except Exception as _e:
     logger.debug("Governance tables initialization: %s", _e)
+
+try:
+    with sqlite3.connect(DB_PATH) as _kg_conn:
+        init_knowledge_graph_tables(_kg_conn)
+        seed_knowledge_graph_catalog(_kg_conn)
+except Exception as _e:
+    logger.debug("Knowledge Graph initialization: %s", _e)
 
 
 
@@ -3998,6 +4019,256 @@ def api_get_audit_logs(limit: int = Query(50, ge=1, le=500)):
 @app.get("/api/v1/governance/telemetry")
 def api_get_governance_telemetry():
     return get_community_partnership_telemetry(db_path=DB_PATH)
+
+
+# ==============================================================================
+# MILESTONE 16: LANGUAGE KNOWLEDGE GRAPH API
+# ==============================================================================
+
+
+class KGNodeCreateRequest(BaseModel):
+    entity_type: str
+    name: str
+    node_id: str | None = None
+    native_name: str | None = None
+    primary_language: str | None = None
+    script: str | None = None
+    category: str | None = None
+    summary: str | None = None
+    source_reference: str | None = None
+    source_organization: str | None = None
+    dataset_version: str | None = None
+    metadata: dict[str, Any] | None = None
+    verification_status: str | None = None
+    vocabulary_details: dict[str, Any] | None = None
+
+
+class KGRelationshipCreateRequest(BaseModel):
+    source_id: str
+    target_id: str
+    relationship_type: str
+    weight: float = 1.0
+    confidence_score: float = 1.0
+    provenance: str | None = None
+    source_reference: str | None = None
+    verification_status: str | None = None
+
+
+class KGNodeUpdateRequest(BaseModel):
+    name: str | None = None
+    native_name: str | None = None
+    script: str | None = None
+    category: str | None = None
+    summary: str | None = None
+    verification_status: str | None = None
+    source_reference: str | None = None
+    source_organization: str | None = None
+    metadata: dict[str, Any] | None = None
+
+
+@app.get("/api/v1/knowledge-graph/overview")
+@app.get("/api/v1/kg/overview")
+def api_get_kg_overview():
+    """Retrieve high-level summary and health metrics of the Language Knowledge Graph."""
+    return get_kg_overview(db_path=DB_PATH)
+
+
+@app.get("/api/v1/knowledge-graph/languages")
+@app.get("/api/v1/kg/languages")
+def api_list_kg_languages():
+    """List all languages currently structured in the Knowledge Graph with entity counts."""
+    return list_kg_languages(db_path=DB_PATH)
+
+
+@app.get("/api/v1/knowledge-graph/nodes")
+@app.get("/api/v1/kg/nodes")
+def api_get_kg_nodes(
+    entity_type: str | None = None,
+    language: str | None = None,
+    script: str | None = None,
+    category: str | None = None,
+    verification_status: str | None = None,
+    limit: int = Query(50, ge=1, le=500),
+    offset: int = Query(0, ge=0),
+):
+    """List knowledge graph nodes filtered by type, language, script, or verification status."""
+    return get_kg_nodes(
+        entity_type=entity_type,
+        language=language,
+        script=script,
+        category=category,
+        verification_status=verification_status,
+        limit=limit,
+        offset=offset,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/knowledge-graph/nodes/{node_id}")
+@app.get("/api/v1/kg/nodes/{node_id}")
+def api_get_kg_node_details(node_id: str, x_admin_key: str | None = Header(None, alias="X-Admin-Key")):
+    """Get full details of a knowledge graph entity, including edges and vocabulary info."""
+    is_admin = (x_admin_key == ADMIN_API_KEY) if x_admin_key else False
+    res = get_kg_node_details(node_id=node_id, is_admin=is_admin, db_path=DB_PATH)
+    if not res:
+        raise HTTPException(status_code=404, detail=f"Knowledge graph node '{node_id}' not found.")
+    return res
+
+
+@app.get("/api/v1/knowledge-graph/graph")
+@app.get("/api/v1/kg/graph")
+def api_get_kg_subgraph(
+    center_node_id: str | None = None,
+    language: str | None = None,
+    entity_types: str | None = None,
+    max_nodes: int = Query(60, ge=1, le=200),
+):
+    """Retrieve connected nodes and edges for visual interactive graph exploration."""
+    type_list = [t.strip() for t in entity_types.split(",") if t.strip()] if entity_types else None
+    return get_subgraph(
+        center_node_id=center_node_id,
+        language=language,
+        entity_types=type_list,
+        max_nodes=max_nodes,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/knowledge-graph/search")
+@app.get("/api/v1/kg/search")
+def api_search_kg(
+    q: str = Query(..., min_length=1),
+    language: str | None = None,
+    entity_type: str | None = None,
+    limit: int = Query(25, ge=1, le=100),
+):
+    """Search knowledge graph entities using Indic-preserving FTS5 Unicode matching."""
+    return search_knowledge_graph(
+        query=q,
+        language=language,
+        entity_type=entity_type,
+        limit=limit,
+        db_path=DB_PATH,
+    )
+
+
+@app.post("/api/v1/knowledge-graph/nodes", status_code=201)
+@app.post("/api/v1/kg/nodes", status_code=201)
+def api_create_kg_node(
+    req: KGNodeCreateRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+):
+    """Create a new knowledge graph node. Authorized admins can verify directly; public contributions are proposed."""
+    is_admin = (x_admin_key == ADMIN_API_KEY) if x_admin_key else False
+    status = req.verification_status if (is_admin and req.verification_status) else ("VERIFIED" if is_admin else "PROPOSED")
+
+    try:
+        created = create_knowledge_graph_node(
+            entity_type=req.entity_type,
+            name=req.name,
+            node_id=req.node_id,
+            native_name=req.native_name,
+            primary_language=req.primary_language,
+            script=req.script,
+            category=req.category,
+            summary=req.summary,
+            source_reference=req.source_reference,
+            source_organization=req.source_organization,
+            dataset_version=req.dataset_version,
+            metadata=req.metadata,
+            verification_status=status,
+            vocabulary_details=req.vocabulary_details,
+            db_path=DB_PATH,
+        )
+        return created
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Failed to create knowledge graph node")
+        raise HTTPException(status_code=500, detail="Internal server error creating knowledge graph node.")
+
+
+@app.post("/api/v1/knowledge-graph/relationships", status_code=201)
+@app.post("/api/v1/kg/relationships", status_code=201)
+def api_create_kg_relationship(
+    req: KGRelationshipCreateRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+):
+    """Create a semantic link between two knowledge graph nodes."""
+    is_admin = (x_admin_key == ADMIN_API_KEY) if x_admin_key else False
+    status = req.verification_status if (is_admin and req.verification_status) else ("VERIFIED" if is_admin else "PROPOSED")
+
+    try:
+        created = create_knowledge_graph_relationship(
+            source_id=req.source_id,
+            target_id=req.target_id,
+            relationship_type=req.relationship_type,
+            weight=req.weight,
+            confidence_score=req.confidence_score,
+            provenance=req.provenance,
+            source_reference=req.source_reference,
+            verification_status=status,
+            db_path=DB_PATH,
+        )
+        return created
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Failed to create knowledge graph relationship")
+        raise HTTPException(status_code=500, detail="Internal server error creating knowledge graph relationship.")
+
+
+@app.patch("/api/v1/knowledge-graph/nodes/{node_id}")
+@app.patch("/api/v1/kg/nodes/{node_id}")
+def api_update_kg_node(
+    node_id: str,
+    req: KGNodeUpdateRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+):
+    """Update metadata or verification status for a knowledge graph node."""
+    is_admin = (x_admin_key == ADMIN_API_KEY) if x_admin_key else False
+    if req.verification_status and req.verification_status != "PROPOSED" and not is_admin:
+        raise HTTPException(status_code=403, detail="Admin authorization required to change verification status.")
+
+    try:
+        updated = update_knowledge_graph_node(
+            node_id=node_id,
+            name=req.name,
+            native_name=req.native_name,
+            script=req.script,
+            category=req.category,
+            summary=req.summary,
+            verification_status=req.verification_status,
+            source_reference=req.source_reference,
+            source_organization=req.source_organization,
+            metadata=req.metadata,
+            is_admin=is_admin,
+            db_path=DB_PATH,
+        )
+        if not updated:
+            raise HTTPException(status_code=404, detail=f"Knowledge graph node '{node_id}' not found.")
+        return updated
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Failed to update knowledge graph node")
+        raise HTTPException(status_code=500, detail="Internal server error updating knowledge graph node.")
+
+
+@app.delete("/api/v1/knowledge-graph/relationships/{rel_id}")
+@app.delete("/api/v1/kg/relationships/{rel_id}")
+def api_delete_kg_relationship(
+    rel_id: int,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+):
+    """Delete a knowledge graph relationship (admin only)."""
+    if x_admin_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=403, detail="Admin authorization required to delete relationships.")
+
+    deleted = delete_knowledge_graph_relationship(relationship_id=rel_id, is_admin=True, db_path=DB_PATH)
+    if not deleted:
+        raise HTTPException(status_code=404, detail=f"Relationship ID {rel_id} not found.")
+    return {"deleted": True, "id": rel_id}
 
 
 @app.get("/{full_path:path}")

@@ -1602,3 +1602,26 @@
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-10-31] [ANTIGRAVITY] DONE: Milestone 16: Language Knowledge Graph Implementation.
+  - Implemented comprehensive Language Knowledge Graph architecture on SQLite and FTS5 without external paid graph databases:
+    - Alembic migration `backend/alembic/versions/c4820d491f21_language_knowledge_graph_schema.py` creating `kg_nodes`, `kg_relationships`, `kg_vocabulary_details`, `kg_search_fts` (Unicode Indic-preserving tokenize='unicode61 remove_diacritics 0'), and indexes.
+    - Knowledge Graph Service in `backend/knowledge_graph_service.py` supporting 10 entity types (`language`, `variety`, `script`, `vocabulary`, `phrase`, `story`, `transcript`, `translation`, `resource`, `dataset`), 10 typed semantic relationships, and 6 verification tiers (`VERIFIED`, `COMMUNITY_REVIEWED`, `UNVERIFIED`, `PROPOSED`, `AI_GENERATED`, `REJECTED`).
+    - Ground-truth catalog seeding 98 nodes (44 languages from Dynamic Language Registry, 8 scripts including Gunjala Gondi and Ol Chiki, 6 regional varieties, 15 verified indigenous vocabulary items, 25 oral stories) and 60 relationships.
+    - Indic-preserving FTS5 Unicode search supporting Telugu, Devanagari, Ol Chiki, and Latin script terms.
+    - Subgraph extraction for visual force graph exploration and accessible hierarchical tree view.
+    - REST API endpoints in `backend/main.py`: `GET /api/v1/knowledge-graph/overview` (and `/api/v1/kg/overview`), `GET /api/v1/knowledge-graph/languages`, `GET /api/v1/knowledge-graph/nodes`, `GET /api/v1/knowledge-graph/nodes/{node_id}`, `GET /api/v1/knowledge-graph/graph`, `GET /api/v1/knowledge-graph/search`, `POST /api/v1/knowledge-graph/nodes` (public defaults to PROPOSED, admin verified), `POST /api/v1/knowledge-graph/relationships`, `PATCH /api/v1/knowledge-graph/nodes/{node_id}`, `DELETE /api/v1/knowledge-graph/relationships/{rel_id}`.
+    - TypeScript definitions in `frontend/src/types.ts` (`KGNode`, `KGRelationship`, `KGVocabularyDetail`, `KGOverviewResponse`, `KGSubgraphResponse`, `KGNodeDetailResponse`).
+    - Interactive dual-mode component `frontend/src/components/KnowledgeGraph.tsx` with SVG visual force graph, accessible semantic tree view, Indic search, telemetry cards, entity details drawer, and proposal modal.
+    - Navigation integration in `frontend/src/App.tsx` (`Graph` tab with deep linking `#graph`).
+    - Dedicated test suite `tests/test_milestone16_knowledge_graph.py` (13/13 tests passed).
+  - Files touched: `backend/alembic/versions/c4820d491f21_language_knowledge_graph_schema.py`, `backend/knowledge_graph_service.py`, `backend/main.py`, `frontend/src/types.ts`, `frontend/src/components/KnowledgeGraph.tsx`, `frontend/src/App.tsx`, `tests/test_milestone16_knowledge_graph.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 16 Tests: 13/13 passed in `tests/test_milestone16_knowledge_graph.py`.
+    2. Full Repository Pytest Suite: 165/165 passed in 32.67s (100% pass rate).
+    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    4. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
+    5. Frontend Production Build: `npm run build --prefix frontend` compiled in 1.71s with zero TypeScript errors.
+    6. Indic Unicode Search: Verified exact and prefix search for Telugu (`పెన్`), Ol Chiki (`ᱵᱟᱦᱟ`), and transliteration.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
+

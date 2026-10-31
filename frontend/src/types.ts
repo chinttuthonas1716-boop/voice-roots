@@ -501,4 +501,124 @@ export interface GovernanceTelemetry {
   };
 }
 
+// ==============================================================================
+// Milestone 16: Language Knowledge Graph Interfaces
+// ==============================================================================
+
+export type KGEntityType =
+  | 'language'
+  | 'variety'
+  | 'script'
+  | 'vocabulary'
+  | 'phrase'
+  | 'story'
+  | 'transcript'
+  | 'translation'
+  | 'resource'
+  | 'dataset';
+
+export type KGRelationshipType =
+  | 'LANGUAGE_HAS_VARIETY'
+  | 'LANGUAGE_USES_SCRIPT'
+  | 'WORD_BELONGS_TO_LANGUAGE'
+  | 'WORD_HAS_MEANING'
+  | 'WORD_TRANSLATED_AS'
+  | 'STORY_RECORDED_IN_LANGUAGE'
+  | 'STORY_HAS_TRANSCRIPT'
+  | 'TRANSCRIPT_HAS_TRANSLATION'
+  | 'RESOURCE_DOCUMENTS_LANGUAGE'
+  | 'DATASET_CONTAINS_RECORDS';
+
+export type KGVerificationStatus =
+  | 'VERIFIED'
+  | 'COMMUNITY_REVIEWED'
+  | 'UNVERIFIED'
+  | 'PROPOSED'
+  | 'AI_GENERATED'
+  | 'REJECTED';
+
+export interface KGNode {
+  node_id: string;
+  entity_type: KGEntityType;
+  name: string;
+  native_name?: string | null;
+  primary_language?: string | null;
+  script?: string | null;
+  category?: string | null;
+  summary?: string | null;
+  verification_status: KGVerificationStatus;
+  source_reference?: string | null;
+  source_organization?: string | null;
+  source_url?: string | null;
+  dataset_version?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface KGRelationship {
+  id: number;
+  source_id: string;
+  target_id: string;
+  relationship_type: KGRelationshipType;
+  label?: string | null;
+  verification_status: KGVerificationStatus;
+  weight?: number;
+  confidence_score?: number;
+  provenance?: string | null;
+  source_reference?: string | null;
+  metadata?: Record<string, any>;
+  created_at: string;
+  updated_at: string;
+  source_name?: string;
+  source_type?: string;
+  source_native?: string;
+  target_name?: string;
+  target_type?: string;
+  target_native?: string;
+}
+
+export interface KGVocabularyDetail {
+  word_id: string;
+  language_code: string;
+  original_word: string;
+  script?: string | null;
+  transliteration?: string | null;
+  meaning: string;
+  grammatical_category?: string | null;
+  cultural_context?: string | null;
+  pronunciation_guide?: string | null;
+  audio_transcript_id?: number | null;
+  audio_url?: string | null;
+  review_status: string;
+}
+
+export interface KGOverviewResponse {
+  status: string;
+  total_nodes: number;
+  total_relationships: number;
+  languages_represented: number;
+  node_counts_by_type: Record<string, number>;
+  relationship_counts_by_type: Record<string, number>;
+  verification_status_counts: Record<string, number>;
+  verified_ratio: number;
+}
+
+export interface KGSubgraphResponse {
+  nodes: KGNode[];
+  edges: KGRelationship[];
+  total_nodes: number;
+  total_edges: number;
+}
+
+export interface KGNodeDetailResponse {
+  node: KGNode;
+  vocabulary_details?: KGVocabularyDetail | null;
+  outgoing_relationships: KGRelationship[];
+  incoming_relationships: KGRelationship[];
+  connected_edges_count: number;
+}
+
 
