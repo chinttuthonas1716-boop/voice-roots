@@ -45,6 +45,7 @@ import { KnowledgeGraph } from './components/KnowledgeGraph';
 import { CulturalArchives } from './components/CulturalArchives';
 import { SpeechIntelligence } from './components/SpeechIntelligence';
 import { LanguageLearning } from './components/LanguageLearning';
+import { ResearchPortal } from './components/ResearchPortal';
 
 interface Language {
   code: string;
@@ -340,8 +341,8 @@ export function App() {
   const [archiveDisplayLimit, setArchiveDisplayLimit] = useState(15);
   const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
 
-  // Active Navigation Tab (Matching Reference: Home, Record, Assistant, Translate, Languages, Graph, Cultural, Speech, Learning, Search, Archive, Community, Login)
-  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'speech' | 'learning' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
+  // Active Navigation Tab (Matching Reference: Home, Record, Assistant, Translate, Languages, Graph, Cultural, Speech, Learning, Research, Search, Archive, Community, Login)
+  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'speech' | 'learning' | 'research' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
 
   const normalizeTab = (raw: string | null | undefined): NavTab => {
     if (!raw) return 'home';
@@ -355,7 +356,8 @@ export function App() {
     if (t === 'cultural' || t === 'cultural-archives' || t === 'oral-archives' || t === 'oral-history') return 'cultural';
     if (t === 'speech' || t === 'pronunciation' || t === 'speech-intelligence' || t === 'phonetics') return 'speech';
     if (t === 'learning' || t === 'education' || t === 'practice' || t === 'lessons') return 'learning';
-    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'speech', 'learning', 'search', 'archive', 'community', 'login'].includes(t)) {
+    if (t === 'research' || t === 'research-api' || t === 'interoperability' || t === 'academic') return 'research';
+    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'speech', 'learning', 'research', 'search', 'archive', 'community', 'login'].includes(t)) {
       return t as NavTab;
     }
     return 'home';
@@ -2121,6 +2123,31 @@ ${feedbackRecommendation}
           >
             <GraduationCap size={14} />
             Language Learning
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'research'}
+            onClick={() => handleTabChange('research')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'research' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'research' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'research' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Database size={14} />
+            Research API
           </button>
 
           <button
@@ -6054,6 +6081,13 @@ ${feedbackRecommendation}
       {activeNavTab === 'learning' && (
         <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
           <LanguageLearning />
+        </section>
+      )}
+
+      {/* ─── TAB: Institutional Research API & Interoperability (Milestone 20) ─── */}
+      {activeNavTab === 'research' && (
+        <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
+          <ResearchPortal />
         </section>
       )}
 

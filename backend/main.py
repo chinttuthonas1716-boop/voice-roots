@@ -17,6 +17,7 @@ from typing import Any
 
 import cultural_archive_service
 import learning_service
+import research_interoperability_service
 import speech_analysis_service
 from dataset_service import (
     generate_research_export,
@@ -431,6 +432,11 @@ try:
     learning_service.seed_default_learning_data(DB_PATH)
 except Exception as _e:  # noqa: BLE001
     logger.debug("Language Learning initialization: %s", _e)
+
+try:
+    research_interoperability_service.seed_default_research_institutions(DB_PATH)
+except Exception as _e:  # noqa: BLE001
+    logger.debug("Research Interoperability initialization: %s", _e)
 
 
 
@@ -4930,6 +4936,148 @@ def submit_practice_attempt_endpoint(req: PracticeSubmitRequest):
 def get_learner_progress_endpoint(learner_id: str):
     """Retrieve personal learner progress and module mastery history."""
     return learning_service.get_learner_progress(learner_id, db_path=DB_PATH)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MILESTONE 20: INSTITUTIONAL RESEARCH API & INTEROPERABILITY
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ResearchKeyCreateRequest(BaseModel):
+    organization_name: str
+    contact_email: str
+    scopes: list[str] = ["read:registry", "read:transcripts"]
+    rate_limit_per_minute: int = 60
+    expires_in_days: int = 365
+
+
+def _extract_research_token(
+    x_research_token: str | None = Header(None, alias="X-Research-Token"),
+    authorization: str | None = Header(None, alias="Authorization"),
+) -> str | None:
+    """Extract raw research token from either X-Research-Token header or Bearer header."""
+    if x_research_token:
+        return x_research_token.strip()
+    if authorization and authorization.lower().startswith("bearer "):
+        return authorization[7:].strip()
+    return None
+
+
+@app.get("/api/v1/research/overview")
+def get_research_overview():
+    """Retrieve research interoperability telemetry, registered partners, and manifest summary."""
+    manifest = research_interoperability_service.get_corpus_version_manifest(DB_PATH)
+    keys = research_interoperability_service.list_research_api_keys(DB_PATH)
+    return {
+        "status": "active",
+        "registered_institutions_count": len(keys),
+        "corpus_manifest": manifest,
+        "supported_scopes": [
+            "read:registry",
+            "read:vocabulary",
+            "read:transcripts",
+            "read:metadata",
+            "export:corpus",
+        ],
+        "ocap_boundaries": {
+            "strict_research_consent_enforced": True,
+            "private_sacred_content_excluded": True,
+            "commercial_resale_strictly_prohibited": True,
+        },
+    }
+
+
+@app.post("/api/v1/research/keys/register")
+def register_research_api_key(
+    req: ResearchKeyCreateRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+):
+    """Register and issue a scoped research API token to an accredited institution."""
+    _is_auth, _roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    new_key = research_interoperability_service.create_research_api_key(
+        organization_name=req.organization_name,
+        contact_email=req.contact_email,
+        scopes=req.scopes,
+        rate_limit_per_minute=req.rate_limit_per_minute,
+        expires_in_days=req.expires_in_days,
+        db_path=DB_PATH,
+    )
+    return new_key
+
+
+@app.get("/api/v1/research/keys")
+def list_research_keys_endpoint(
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+):
+    """List registered institutional keys with masked token hashes."""
+    return {"keys": research_interoperability_service.list_research_api_keys(DB_PATH)}
+
+
+@app.get("/api/v1/research/manifest")
+def get_research_manifest_endpoint():
+    """Public version manifest describing release versions, languages, and hours."""
+    return research_interoperability_service.get_corpus_version_manifest(DB_PATH)
+
+
+@app.get("/api/v1/research/corpus/export")
+def export_research_corpus_endpoint(
+    request: Request,
+    language: str | None = Query(None, description="Optional filter by language"),
+    x_research_token: str | None = Header(None, alias="X-Research-Token"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Export research corpus records strictly enforcing OCAP research consent."""
+    token = _extract_research_token(x_research_token, authorization)
+    try:
+        auth_info = research_interoperability_service.validate_research_token(
+            token, required_scope="export:corpus", db_path=DB_PATH
+        )
+    except PermissionError as e:
+        # Also allow read:transcripts scope
+        try:
+            auth_info = research_interoperability_service.validate_research_token(
+                token, required_scope="read:transcripts", db_path=DB_PATH
+            )
+        except PermissionError:
+            raise HTTPException(status_code=403, detail=str(e))
+
+    res = research_interoperability_service.export_research_corpus(language=language, db_path=DB_PATH)
+    research_interoperability_service.log_research_access(
+        key_id=auth_info["key_id"],
+        endpoint=str(request.url.path),
+        method="GET",
+        status_code=200,
+        db_path=DB_PATH,
+    )
+    return res
+
+
+@app.get("/api/v1/research/lexicon/export")
+def export_research_lexicon_endpoint(
+    request: Request,
+    language: str | None = Query(None, description="Optional filter by language"),
+    x_research_token: str | None = Header(None, alias="X-Research-Token"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Export computational lexicon entries with phonetics and script representations."""
+    token = _extract_research_token(x_research_token, authorization)
+    try:
+        auth_info = research_interoperability_service.validate_research_token(
+            token, required_scope="read:vocabulary", db_path=DB_PATH
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+    res = research_interoperability_service.export_research_lexicon(language=language, db_path=DB_PATH)
+    research_interoperability_service.log_research_access(
+        key_id=auth_info["key_id"],
+        endpoint=str(request.url.path),
+        method="GET",
+        status_code=200,
+        db_path=DB_PATH,
+    )
+    return res
 
 
 @app.get("/{full_path:path}")
