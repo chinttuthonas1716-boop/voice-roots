@@ -1625,3 +1625,25 @@
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-01] [ANTIGRAVITY] DONE: Milestone 17: Interactive Cultural and Oral History Archives Implementation.
+  - Implemented Interactive Cultural and Oral History Archives module extending SQLite and Alembic:
+    - Alembic migration `backend/alembic/versions/e7193b58f012_cultural_archives_schema.py` creating `archive_collections`, `cultural_stories`, `cultural_submissions`, and `cultural_stories_fts` with Indic Unicode preservation (`tokenize='unicode61 remove_diacritics 0'`).
+    - Domain service `backend/cultural_archive_service.py` implementing 4 access tiers (`PUBLIC`, `COMMUNITY_RESTRICTED`, `SACRED_ELDER_ONLY`, `RESEARCH_ONLY`), 6-facet OCAP affirmative consent matrix (`recording`, `transcription`, `translation`, `public_display`, `research_reuse`, `educational_reuse`), sacred ceremonial knowledge protection, submission review lifecycle, and bi-directional synchronization with Milestone 16 Language Knowledge Graph.
+    - Ground-truth curated collections seeded: *Pahandi Kupar Lingo Gondi Epic*, *Koya Ethnobotanical Chants*, *Santhali Sohrai Songs*, *Lambadi Banjara Ghor Ballads*, and *Gondi Clan Sacred Totem Recitations*.
+    - REST API endpoints in `backend/main.py`: `GET /api/v1/cultural-archives/overview`, `GET /api/v1/cultural-archives/collections`, `GET /api/v1/cultural-archives/collections/{id}`, `POST /api/v1/cultural-archives/collections` (Elder/Admin), `GET /api/v1/cultural-archives/stories`, `GET /api/v1/cultural-archives/stories/{id}`, `GET /api/v1/cultural-archives/stories/{id}/audio` (auth-gated master streaming), `POST /api/v1/cultural-archives/submissions`, `POST /api/v1/cultural-archives/submissions/upload-audio`, `PATCH /api/v1/cultural-archives/submissions/{id}/review`, `POST /api/v1/cultural-archives/withdraw`.
+    - TypeScript definitions in `frontend/src/types.ts` (`ArchiveCollection`, `CulturalStory`, `CulturalConsentMatrix`, `CulturalSubmission`, `CulturalArchiveOverview`).
+    - Interactive component `frontend/src/components/CulturalArchives.tsx` featuring curated collections gallery, oral story cards, audio master player with speed controls (0.75x, 1x, 1.25x), phonetic transcript & human translation inspector, controlled community submission modal, and elder moderation portal.
+    - Integrated into `frontend/src/App.tsx` (`Cultural Archives` tab with deep linking `#cultural` / `#archives`).
+    - Dedicated test suite `tests/test_milestone17_cultural_archives.py` (12/12 tests passed).
+  - Files touched: `backend/alembic/versions/e7193b58f012_cultural_archives_schema.py`, `backend/cultural_archive_service.py`, `backend/knowledge_graph_service.py`, `backend/main.py`, `backend/voice_roots.db`, `frontend/src/types.ts`, `frontend/src/components/CulturalArchives.tsx`, `frontend/src/App.tsx`, `tests/test_milestone17_cultural_archives.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 17 Tests: 12/12 passed in `tests/test_milestone17_cultural_archives.py`.
+    2. Full Repository Pytest Suite: 177/177 passed in 25.91s (100% pass rate).
+    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    4. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
+    5. Frontend Production Build: `npm run build --prefix frontend` compiled in 2.06s with zero TypeScript errors.
+    6. Ruff Linter: Passed clean with zero warnings or errors.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
+
+
