@@ -33,7 +33,8 @@ import {
   Award,
   Sprout,
   Network,
-  BookOpen
+  BookOpen,
+  Headphones
 } from 'lucide-react';
 import { Pilot } from './components/Pilot';
 import { Home } from './components/Home';
@@ -41,6 +42,7 @@ import { VoiceAssistant } from './components/VoiceAssistant';
 import { OfflineManager } from './components/OfflineManager';
 import { KnowledgeGraph } from './components/KnowledgeGraph';
 import { CulturalArchives } from './components/CulturalArchives';
+import { SpeechIntelligence } from './components/SpeechIntelligence';
 
 interface Language {
   code: string;
@@ -336,8 +338,8 @@ export function App() {
   const [archiveDisplayLimit, setArchiveDisplayLimit] = useState(15);
   const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
 
-  // Active Navigation Tab (Matching Reference: Home, Record, Assistant, Translate, Languages, Graph, Cultural, Search, Archive, Community, Login)
-  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
+  // Active Navigation Tab (Matching Reference: Home, Record, Assistant, Translate, Languages, Graph, Cultural, Speech, Search, Archive, Community, Login)
+  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'speech' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
 
   const normalizeTab = (raw: string | null | undefined): NavTab => {
     if (!raw) return 'home';
@@ -349,7 +351,8 @@ export function App() {
     if (t === 'voice-assistant') return 'assistant';
     if (t === 'graph' || t === 'knowledge-graph' || t === 'kg') return 'graph';
     if (t === 'cultural' || t === 'cultural-archives' || t === 'oral-archives' || t === 'oral-history') return 'cultural';
-    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'search', 'archive', 'community', 'login'].includes(t)) {
+    if (t === 'speech' || t === 'pronunciation' || t === 'speech-intelligence' || t === 'phonetics') return 'speech';
+    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'speech', 'search', 'archive', 'community', 'login'].includes(t)) {
       return t as NavTab;
     }
     return 'home';
@@ -2065,6 +2068,31 @@ ${feedbackRecommendation}
           >
             <BookOpen size={14} />
             Cultural Archives
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'speech'}
+            onClick={() => handleTabChange('speech')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'speech' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'speech' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'speech' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <Headphones size={14} />
+            Speech & Pronunciation
           </button>
 
           <button
@@ -5984,6 +6012,13 @@ ${feedbackRecommendation}
       {activeNavTab === 'cultural' && (
         <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
           <CulturalArchives apiBaseUrl={API_BASE} />
+        </section>
+      )}
+
+      {/* ─── TAB: Advanced Speech & Pronunciation Intelligence (Milestone 18) ─── */}
+      {activeNavTab === 'speech' && (
+        <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
+          <SpeechIntelligence />
         </section>
       )}
 

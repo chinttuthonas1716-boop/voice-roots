@@ -715,4 +715,147 @@ export interface CulturalArchiveOverview {
   status: string;
 }
 
+// Milestone 18: Advanced Speech & Pronunciation Intelligence
+export interface SpeechTranscriptItem {
+  id: number;
+  uuid_id?: string;
+  title: string;
+  audio_filename?: string;
+  audio_url: string;
+  language: string;
+  dialect?: string | null;
+  transcript_text?: string;
+  status?: string;
+  duration_seconds?: number;
+  created_at?: string;
+}
+
+export interface SpeechAlignment {
+  word_index: number;
+  word_text: string;
+  start_time: number;
+  end_time: number;
+  confidence: number;
+  phonetic_tokens: string;
+}
+
+export interface SpeechAcousticMetrics {
+  id?: number;
+  transcript_id: number;
+  audio_filename: string;
+  duration_seconds: number;
+  speaking_rate_wpm: number;
+  articulation_rate: number;
+  total_silence_seconds: number;
+  pause_count: number;
+  average_pause_duration: number;
+  waveform_peaks: number[];
+  created_at: string;
+}
+
+export interface PronunciationExercise {
+  id?: number;
+  exercise_id: string;
+  language: string;
+  variety?: string | null;
+  exercise_type: string;
+  target_text: string;
+  target_native_script?: string | null;
+  phonetic_target_ipa: string;
+  minimal_pair_with?: string | null;
+  minimal_pair_ipa?: string | null;
+  distinction_note?: string | null;
+  difficulty_level: string;
+  cultural_context?: string | null;
+  audio_reference_url?: string | null;
+  is_verified: boolean;
+  created_at: string;
+}
+
+export interface PronunciationAttempt {
+  id: number;
+  exercise_id: string;
+  learner_id: string;
+  audio_path?: string | null;
+  acoustic_score: number;
+  phoneme_accuracy: number;
+  status: "PENDING_REVIEW" | "VERIFIED" | "RETRY_SUGGESTED";
+  elder_review_notes?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+}
+
+// Milestone 19: Language Learning & Interactive Practice
+export interface LearningCollection {
+  id?: number;
+  collection_id: string;
+  language: string;
+  variety?: string | null;
+  title: string;
+  description: string;
+  proficiency_level: "BEGINNER" | "INTERMEDIATE" | "ADVANCED";
+  is_published: boolean;
+  created_at?: string;
+  modules?: LearningModule[];
+  module_count?: number;
+}
+
+export interface LearningModule {
+  id?: number;
+  module_id: string;
+  collection_id: string;
+  order_index: number;
+  title: string;
+  module_type: "VOCABULARY" | "LISTENING_COMPREHENSION" | "PHRASE_BUILDER" | "CULTURAL_DIALOGUE";
+  prompt_native_script?: string | null;
+  prompt_latin: string;
+  prompt_translation: string;
+  audio_url?: string | null;
+  options: string[];
+  correct_answer: string;
+  cultural_note?: string | null;
+  consent_educational_reuse: boolean;
+}
+
+export interface LearnerProgressRecord {
+  id?: number;
+  learner_id: string;
+  module_id: string;
+  status: "NOT_STARTED" | "IN_PROGRESS" | "COMPLETED" | "MASTERED";
+  score: number;
+  attempts_count: number;
+  last_attempt_at: string;
+}
+
+// Milestone 20: Institutional Research API & Interoperability
+export interface ResearchApiKey {
+  id?: number;
+  key_id: string;
+  organization_name: string;
+  contact_email: string;
+  scopes: string[];
+  rate_limit_per_minute: number;
+  is_active: boolean;
+  created_at: string;
+  expires_at: string;
+}
+
+export interface ResearchCorpusManifest {
+  corpus_version: string;
+  total_languages: number;
+  total_transcripts: number;
+  total_audio_hours: number;
+  license: string;
+  ocap_compliance: boolean;
+  generated_at: string;
+  download_url?: string;
+  languages: Array<{
+    language: string;
+    transcript_count: number;
+    hours: number;
+    variety_count: number;
+  }>;
+}
+
 

@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import cultural_archive_service
+import speech_analysis_service
 from dataset_service import (
     generate_research_export,
     get_dataset_details,
@@ -419,6 +420,11 @@ try:
     cultural_archive_service.seed_default_cultural_archives(DB_PATH)
 except Exception as _e:  # noqa: BLE001
     logger.debug("Cultural Archives initialization: %s", _e)
+
+try:
+    speech_analysis_service.seed_default_pronunciation_exercises(DB_PATH)
+except Exception as _e:  # noqa: BLE001
+    logger.debug("Speech Intelligence initialization: %s", _e)
 
 
 
@@ -4675,6 +4681,182 @@ def api_withdraw_cultural_record(
     except Exception:
         logger.exception("Error processing withdrawal")
         raise HTTPException(status_code=500, detail="Internal server error processing record withdrawal.")
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Milestone 18: Advanced Speech Intelligence & Pronunciation Routes
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PronunciationPracticeRequest(BaseModel):
+    exercise_id: str
+    user_id: str | None = "anonymous"
+    audio_filename: str | None = None
+    recorded_duration: float = 1.5
+
+
+class PronunciationReviewRequest(BaseModel):
+    reviewer_name: str
+    elder_score: float
+    status: str = "VERIFIED"
+    feedback_notes: str | None = None
+
+
+@app.get("/api/v1/speech/overview")
+def api_speech_overview():
+    """Retrieve speech intelligence metrics overview."""
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute("SELECT COUNT(*) FROM speech_alignments")
+        alignments_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM speech_acoustic_metrics")
+        metrics_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM pronunciation_exercises")
+        exercises_count = cursor.fetchone()[0]
+        cursor.execute("SELECT COUNT(*) FROM pronunciation_attempts")
+        attempts_count = cursor.fetchone()[0]
+    return {
+        "status": "active",
+        "alignments_count": alignments_count,
+        "acoustic_metrics_count": metrics_count,
+        "pronunciation_exercises_count": exercises_count,
+        "pronunciation_attempts_count": attempts_count,
+        "supported_features": [
+            "word_level_alignments",
+            "speaking_rate_wpm",
+            "articulation_rate",
+            "silence_pause_patterns",
+            "waveform_peaks",
+            "minimal_pairs",
+            "elder_pronunciation_review_gate",
+        ],
+    }
+
+
+@app.post("/api/v1/speech/analyze/{transcript_id}")
+def api_speech_analyze_transcript(transcript_id: int):
+    """Run acoustic analysis (speaking rate, pause patterns, waveform peaks) on transcript audio."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT id, audio_filename, transcript_text, duration_seconds FROM transcripts WHERE id = ?",
+            (transcript_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+
+        audio_filename = row["audio_filename"]
+        transcript_text = row["transcript_text"]
+
+    audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
+    metrics = speech_analysis_service.analyze_acoustic_metrics(
+        audio_path=audio_path,
+        transcript_text=transcript_text,
+        transcript_id=transcript_id,
+        db_path=DB_PATH,
+    )
+    alignments = speech_analysis_service.get_or_generate_word_alignments(transcript_id, db_path=DB_PATH)
+    return {
+        "transcript_id": transcript_id,
+        "audio_filename": audio_filename,
+        "acoustic_metrics": metrics,
+        "alignments": alignments,
+    }
+
+
+@app.get("/api/v1/speech/alignments/{transcript_id}")
+def api_speech_get_alignments(transcript_id: int):
+    """Retrieve word-level timestamps and alignments for synchronized audio playback."""
+    with sqlite3.connect(DB_PATH) as conn:
+        exists = conn.execute("SELECT id FROM transcripts WHERE id = ?", (transcript_id,)).fetchone()
+        if not exists:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+
+    alignments = speech_analysis_service.get_or_generate_word_alignments(transcript_id, db_path=DB_PATH)
+    return {"transcript_id": transcript_id, "alignments": alignments}
+
+
+@app.get("/api/v1/speech/waveform/{transcript_id}")
+def api_speech_get_waveform(transcript_id: int):
+    """Retrieve downsampled waveform peaks [0.0 - 1.0] for responsive audio scrubber visualizer."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT audio_filename FROM transcripts WHERE id = ?", (transcript_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+        audio_filename = row["audio_filename"]
+
+    audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
+    peaks = speech_analysis_service.compute_waveform_peaks(audio_path, num_peaks=120)
+    return {"transcript_id": transcript_id, "audio_filename": audio_filename, "waveform_peaks": peaks}
+
+
+@app.get("/api/v1/speech/pronunciation/exercises")
+def api_speech_list_pronunciation_exercises(
+    language: str | None = Query(None),
+    difficulty: str | None = Query(None),
+    exercise_type: str | None = Query(None),
+):
+    """List curated minimal pairs and pronunciation exercises."""
+    exercises = speech_analysis_service.list_pronunciation_exercises(
+        language=language,
+        difficulty=difficulty,
+        exercise_type=exercise_type,
+        db_path=DB_PATH,
+    )
+    return {"exercises": exercises, "count": len(exercises)}
+
+
+@app.get("/api/v1/speech/pronunciation/exercises/{exercise_id}")
+def api_speech_get_pronunciation_exercise(exercise_id: str):
+    """Get single pronunciation exercise details."""
+    exercise = speech_analysis_service.get_pronunciation_exercise(exercise_id, db_path=DB_PATH)
+    if not exercise:
+        raise HTTPException(status_code=404, detail=f"Pronunciation exercise '{exercise_id}' not found.")
+    return exercise
+
+
+@app.post("/api/v1/speech/pronunciation/practice")
+def api_speech_submit_practice(req: PronunciationPracticeRequest):
+    """Submit pronunciation recording attempt for acoustic scoring and elder review."""
+    try:
+        res = speech_analysis_service.submit_pronunciation_practice(
+            exercise_id=req.exercise_id,
+            user_id=req.user_id or "anonymous",
+            audio_filename=req.audio_filename,
+            recorded_duration=req.recorded_duration,
+            db_path=DB_PATH,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception:
+        logger.exception("Error submitting pronunciation practice")
+        raise HTTPException(status_code=500, detail="Internal server error submitting pronunciation practice.")
+
+
+@app.patch("/api/v1/speech/pronunciation/attempts/{attempt_id}/review")
+def api_speech_review_attempt(
+    attempt_id: str,
+    req: PronunciationReviewRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+):
+    """Elder or Admin review gate for human confirmation of pronunciation scores."""
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    if "admin" not in roles and "elder" not in roles and "reviewer" not in roles:
+        raise HTTPException(status_code=403, detail="Elder or Reviewer authorization required to score attempts.")
+    try:
+        res = speech_analysis_service.review_pronunciation_attempt(
+            attempt_id=attempt_id,
+            reviewer_name=req.reviewer_name,
+            elder_score=req.elder_score,
+            status=req.status,
+            feedback_notes=req.feedback_notes,
+            db_path=DB_PATH,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @app.get("/{full_path:path}")
