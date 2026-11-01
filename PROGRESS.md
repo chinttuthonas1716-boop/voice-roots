@@ -1646,4 +1646,20 @@
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-01] [ANTIGRAVITY] DONE: Resolved all reported Ruff linter issues and modernized type annotations in backend/main.py.
+  - Organized and sorted all imports (`I001`).
+  - Upgraded deprecated `typing` generics (`Dict`, `List`, `Optional[T]`) to modern Python 3.10+ PEP 585/604 built-in syntax (`dict`, `list`, `T | None`).
+  - Removed unused imports and prefixed dummy unpacked auth parameters (`_is_auth`).
+  - Replaced nested conditionals with composite logic (`SIM102`) and removed redundant `.keys()` lookups (`SIM118`).
+  - Resolved `ASYNC230` in `api_upload_submission_audio` by converting the route to synchronous `def`, offloading disk I/O to FastAPI's threadpool.
+  - Added appropriate `# noqa: B008` annotations for FastAPI dependency defaults and specific exception shielding (`# noqa: BLE001`).
+  - Files touched: `backend/main.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. `python3 -m ruff check backend/main.py` -> 0 errors, 0 warnings (All checks passed!).
+    2. Full Repository Pytest Suite: `PYTHONPATH=backend python3 -m pytest tests/` -> 177/177 passed in 25.26s (100% pass rate).
+    3. Frontend Production Build: `npm run build --prefix frontend` -> compiled in 1.60s with 0 errors.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
+
+
 

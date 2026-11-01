@@ -13,69 +13,33 @@ import threading
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional
+from typing import Any
 
-from fastapi import BackgroundTasks, FastAPI, File, Form, Header, HTTPException, Query, Request, UploadFile
-from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
-from fastapi.staticfiles import StaticFiles
-from pydantic import BaseModel
-
-from transcription_service import (
-    BaseTranscriptionProvider,
-    LocalWhisperTranscriptionProvider,
-    TranscriptionNotConfiguredError,
-    TranscriptionProviderError,
-    create_transcription_provider,
-    get_speech_provider_status,
-)
-from translation_service import (
-    OralLanguageElderReviewRequiredError,
-    UnsupportedLanguagePairError,
-    translation_manager,
-)
-from storage_service import (
-    BaseStorageProvider,
-    create_storage_provider,
-)
-from search_service import (
-    evaluate_multilingual_discovery,
-    get_archive_vector_collection,
-    hybrid_discovery_search,
-    index_transcript_in_vector_store,
-    init_fts_index,
-    reindex_all_search,
-    sync_transcript_fts,
-)
+import cultural_archive_service
 from dataset_service import (
-    get_dataset_details,
     generate_research_export,
+    get_dataset_details,
     list_registered_datasets,
     verify_dataset_integrity,
     verify_preservation_and_backup,
 )
 from evaluation_service import (
-    evaluate_speech_recognition_research,
-    evaluate_translation_research,
-    evaluate_discovery_research,
     generate_comprehensive_research_report,
 )
-from model_registry import (
-    OFFICIAL_MODEL_REGISTRY,
-    assess_fine_tuning_feasibility,
-    get_model_comparison_matrix,
-    get_model_details,
-    list_registered_models,
-    promote_candidate_model,
-    rollback_production_model,
+from fastapi import (
+    BackgroundTasks,
+    FastAPI,
+    File,
+    Form,
+    Header,
+    HTTPException,
+    Query,
+    Request,
+    UploadFile,
 )
-from voice_assistant import (
-    assistant_manager,
-    delete_saved_conversation,
-    generate_pronunciation_guidance,
-    list_saved_conversations,
-    save_conversation_history,
-)
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse
+from fastapi.staticfiles import StaticFiles
 from governance_service import (
     accredit_expert_reviewer,
     accredit_organization,
@@ -91,7 +55,6 @@ from governance_service import (
     list_organizations,
     list_partnership_projects,
     list_review_assignments,
-    record_governance_audit,
     register_expert_reviewer,
     register_organization,
     resolve_governance_dispute,
@@ -111,8 +74,45 @@ from knowledge_graph_service import (
     seed_knowledge_graph_catalog,
     update_knowledge_graph_node,
 )
-import cultural_archive_service
-
+from model_registry import (
+    assess_fine_tuning_feasibility,
+    get_model_comparison_matrix,
+    get_model_details,
+    list_registered_models,
+    promote_candidate_model,
+    rollback_production_model,
+)
+from pydantic import BaseModel
+from search_service import (
+    evaluate_multilingual_discovery,
+    get_archive_vector_collection,
+    hybrid_discovery_search,
+    index_transcript_in_vector_store,
+    init_fts_index,
+    reindex_all_search,
+    sync_transcript_fts,
+)
+from storage_service import (
+    create_storage_provider,
+)
+from transcription_service import (
+    TranscriptionNotConfiguredError,
+    TranscriptionProviderError,
+    create_transcription_provider,
+    get_speech_provider_status,
+)
+from translation_service import (
+    OralLanguageElderReviewRequiredError,
+    UnsupportedLanguagePairError,
+    translation_manager,
+)
+from voice_assistant import (
+    assistant_manager,
+    delete_saved_conversation,
+    generate_pronunciation_guidance,
+    list_saved_conversations,
+    save_conversation_history,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -399,25 +399,25 @@ def init_db():
 init_db()
 try:
     init_fts_index()
-except Exception as _e:
+except Exception as _e:  # noqa: BLE001
     logger.debug("FTS5 table initialization: %s", _e)
 
 try:
     init_governance_tables(DB_PATH)
     seed_default_partnerships_if_empty(DB_PATH)
-except Exception as _e:
+except Exception as _e:  # noqa: BLE001
     logger.debug("Governance tables initialization: %s", _e)
 
 try:
     with sqlite3.connect(DB_PATH) as _kg_conn:
         init_knowledge_graph_tables(_kg_conn)
         seed_knowledge_graph_catalog(_kg_conn)
-except Exception as _e:
+except Exception as _e:  # noqa: BLE001
     logger.debug("Knowledge Graph initialization: %s", _e)
 
 try:
     cultural_archive_service.seed_default_cultural_archives(DB_PATH)
-except Exception as _e:
+except Exception as _e:  # noqa: BLE001
     logger.debug("Cultural Archives initialization: %s", _e)
 
 
@@ -438,7 +438,7 @@ def _sync_transcript_to_search(transcript_id: int):
                 )
                 tr_rows = [dict(r) for r in cursor.fetchall()]
                 index_transcript_in_vector_store(dict(t_row), tr_rows)
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.debug("Failed auto-sync search index for transcript %s: %s", transcript_id, exc)
 
 
@@ -501,16 +501,16 @@ if os.path.exists(_assets_dir):
 
 # Pydantic schemas for data validation
 class TranscriptUpdate(BaseModel):
-    title: Optional[str] = None
-    transcript_text: Optional[str] = None
-    dialect: Optional[str] = None
-    contributor_name: Optional[str] = None
-    contributor_role: Optional[str] = None
-    provenance_notes: Optional[str] = None
-    transliteration_text: Optional[str] = None
-    license: Optional[str] = None
-    privacy_level: Optional[str] = None
-    retention_policy: Optional[str] = None
+    title: str | None = None
+    transcript_text: str | None = None
+    dialect: str | None = None
+    contributor_name: str | None = None
+    contributor_role: str | None = None
+    provenance_notes: str | None = None
+    transliteration_text: str | None = None
+    license: str | None = None
+    privacy_level: str | None = None
+    retention_policy: str | None = None
 
 
 class TranscriptionRequest(BaseModel):
@@ -524,50 +524,50 @@ class TranscriptResponse(BaseModel):
     audio_filename: str
     audio_url: str
     language: str
-    dialect: Optional[str] = None
+    dialect: str | None = None
     transcript_text: str
     status: str
     duration_seconds: float
     created_at: str
     updated_at: str
-    audio_sha256: Optional[str] = None
-    file_size_bytes: Optional[int] = None
-    consent_at: Optional[str] = None
-    consent_version: Optional[str] = None
-    archived_at: Optional[str] = None
+    audio_sha256: str | None = None
+    file_size_bytes: int | None = None
+    consent_at: str | None = None
+    consent_version: str | None = None
+    archived_at: str | None = None
     machine_transcript_text: str = ""
     transcription_status: str = "not_requested"
-    transcription_provider: Optional[str] = None
-    transcription_model: Optional[str] = None
-    transcription_error: Optional[str] = None
-    transcription_consent_at: Optional[str] = None
-    transcription_consent_version: Optional[str] = None
-    transcribed_at: Optional[str] = None
-    verification_status: Optional[str] = "submitted"
-    consent_private_storage: Optional[int] = 1
-    consent_community_access: Optional[int] = 1
-    consent_public_publication: Optional[int] = 0
-    consent_ai_training: Optional[int] = 0
-    is_anonymous: Optional[int] = 0
-    contextual_notes: Optional[str] = None
-    reviewer_uncertainty: Optional[str] = None
-    verified_by: Optional[str] = None
-    verified_at: Optional[str] = None
-    review_notes: Optional[str] = None
+    transcription_provider: str | None = None
+    transcription_model: str | None = None
+    transcription_error: str | None = None
+    transcription_consent_at: str | None = None
+    transcription_consent_version: str | None = None
+    transcribed_at: str | None = None
+    verification_status: str | None = "submitted"
+    consent_private_storage: int | None = 1
+    consent_community_access: int | None = 1
+    consent_public_publication: int | None = 0
+    consent_ai_training: int | None = 0
+    is_anonymous: int | None = 0
+    contextual_notes: str | None = None
+    reviewer_uncertainty: str | None = None
+    verified_by: str | None = None
+    verified_at: str | None = None
+    review_notes: str | None = None
 
 # Pilot testing schemas
 class PilotSubmissionCreate(BaseModel):
     transcript_id: int
     tester_name: str
     consent: bool
-    notes: Optional[str] = None
+    notes: str | None = None
 
 class PilotSubmissionResponse(BaseModel):
     id: int
     transcript_id: int
     tester_name: str
     consent: int
-    notes: Optional[str]
+    notes: str | None
     withdrawn: int
     created_at: str
     updated_at: str
@@ -576,50 +576,50 @@ class PilotReviewCreate(BaseModel):
     submission_id: int
     reviewer_name: str
     approval: int  # 0 or 1
-    uncertainty: Optional[str] = None
-    corrected_transcript: Optional[str] = None
-    corrected_translation: Optional[str] = None
-    review_notes: Optional[str] = None
+    uncertainty: str | None = None
+    corrected_transcript: str | None = None
+    corrected_translation: str | None = None
+    review_notes: str | None = None
 
 class PilotReviewResponse(BaseModel):
     id: int
     submission_id: int
     reviewer_name: str
     approval: int
-    uncertainty: Optional[str]
-    corrected_transcript: Optional[str]
-    corrected_translation: Optional[str]
-    review_notes: Optional[str]
+    uncertainty: str | None
+    corrected_transcript: str | None
+    corrected_translation: str | None
+    review_notes: str | None
     reviewed_at: str
 
 class PilotMetricCreate(BaseModel):
     language: str
-    dialect: Optional[str] = None
+    dialect: str | None = None
     model: str
     sample_size: int
-    wer: Optional[float] = None
-    cer: Optional[float] = None
-    bleu: Optional[float] = None
+    wer: float | None = None
+    cer: float | None = None
+    bleu: float | None = None
     evaluation_date: str  # ISO date string
 
 class PilotMetricResponse(BaseModel):
     id: int
     language: str
-    dialect: Optional[str]
+    dialect: str | None
     model: str
     sample_size: int
-    wer: Optional[float]
-    cer: Optional[float]
-    bleu: Optional[float]
+    wer: float | None
+    cer: float | None
+    bleu: float | None
     evaluation_date: str
 
 
 class ContributionDraftUpdateRequest(BaseModel):
-    title: Optional[str] = None
-    dialect: Optional[str] = None
-    contextual_notes: Optional[str] = None
-    transcript_text: Optional[str] = None
-    transliteration_text: Optional[str] = None
+    title: str | None = None
+    dialect: str | None = None
+    contextual_notes: str | None = None
+    transcript_text: str | None = None
+    transliteration_text: str | None = None
     submit: bool = False  # If True, transitions 'draft' -> 'submitted'
 
 
@@ -627,41 +627,36 @@ class VerificationReviewRequest(BaseModel):
     reviewer_name: str
     reviewer_role: str
     decision: str  # verified, changes_requested, corrected, withdrawn_or_rejected
-    corrected_transcript: Optional[str] = None
-    corrected_translation: Optional[str] = None
-    reviewer_uncertainty: Optional[str] = None  # low, medium, high, unclear_audio, unknown_dialect
-    review_notes: Optional[str] = None
-    admin_key: Optional[str] = None
+    corrected_transcript: str | None = None
+    corrected_translation: str | None = None
+    reviewer_uncertainty: str | None = None  # low, medium, high, unclear_audio, unknown_dialect
+    review_notes: str | None = None
+    admin_key: str | None = None
 
 
 from language_registry import (
-    get_all_capabilities,
-    get_capability_by_name_or_code,
     get_language,
     get_system_capabilities,
-    is_oral_or_endangered,
-    language_registry,
     list_languages,
     register_language,
-    resolve_language_code,
 )
 
 
 class RegisterLanguageRequest(BaseModel):
     name: str
     code: str
-    native: Optional[str] = None
-    script: Optional[str] = None
-    family: Optional[str] = None
-    region: Optional[str] = None
-    category: Optional[str] = "indigenous"
-    speech_recognition: Optional[str] = "experimental"
-    speech_model: Optional[str] = "whisper-local"
-    translation: Optional[str] = "elder_review_required"
-    translation_models: Optional[str] = "Community review required"
-    resource_search: Optional[str] = "available"
-    tested_status: Optional[str] = "dynamically_registered"
-    known_limitations: Optional[str] = None
+    native: str | None = None
+    script: str | None = None
+    family: str | None = None
+    region: str | None = None
+    category: str | None = "indigenous"
+    speech_recognition: str | None = "experimental"
+    speech_model: str | None = "whisper-local"
+    translation: str | None = "elder_review_required"
+    translation_models: str | None = "Community review required"
+    resource_search: str | None = "available"
+    tested_status: str | None = "dynamically_registered"
+    known_limitations: str | None = None
 
 
 # Backwards-compatibility alias populated dynamically
@@ -708,7 +703,7 @@ def health_check():
     try:
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("SELECT 1").fetchone()
-    except Exception:
+    except Exception:  # noqa: BLE001
         # Keep internal paths and exception details out of the public health response.
         db_status = "error"
         status = "degraded"
@@ -738,7 +733,7 @@ def readiness_check():
     try:
         with sqlite3.connect(DB_PATH) as conn:
             conn.execute("SELECT 1 FROM transcripts LIMIT 1")
-    except Exception:
+    except Exception:  # noqa: BLE001
         checks["database"] = "unready"
         is_ready = False
 
@@ -750,7 +745,7 @@ def readiness_check():
         stats = get_vector_stats()
         if stats.get("status") != "healthy":
             checks["vector_store"] = "degraded"
-    except Exception:
+    except Exception:  # noqa: BLE001
         checks["vector_store"] = "degraded"
 
     if not is_ready:
@@ -771,12 +766,12 @@ def readiness_check():
 @app.get("/api/languages")
 @app.get("/api/v1/languages")
 def get_languages(
-    q: Optional[str] = None,
-    category: Optional[str] = None,
-    family: Optional[str] = None,
-    script: Optional[str] = None,
-    region: Optional[str] = None,
-    limit: Optional[int] = None,
+    q: str | None = None,
+    category: str | None = None,
+    family: str | None = None,
+    script: str | None = None,
+    region: str | None = None,
+    limit: int | None = None,
 ):
     """Retrieve dynamic list of supported world languages with filtering and provider capabilities."""
     langs = list_languages(query=q, category=category, family=family, script=script, region=region, limit=limit)
@@ -814,11 +809,11 @@ def register_new_language_endpoint(payload: RegisterLanguageRequest):
     try:
         registered = register_language(payload.dict())
         return {"status": "success", "language": registered}
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=str(exc))
 
 
-def _is_admin_request(request: Optional[Request]) -> bool:
+def _is_admin_request(request: Request | None) -> bool:
     """Check if request contains valid administrator credentials."""
     if not request:
         return False
@@ -881,12 +876,11 @@ def get_transcript(transcript_id: int, request: Request):
         raise HTTPException(status_code=404, detail="Transcript not found")
 
     record = dict(row)
-    if record.get("privacy_level") == "private":
-        if not _is_admin_request(request):
-            raise HTTPException(
-                status_code=403,
-                detail="Access denied: this recording is private under user controls.",
-            )
+    if record.get("privacy_level") == "private" and not _is_admin_request(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Access denied: this recording is private under user controls.",
+        )
 
     return record
 
@@ -904,9 +898,8 @@ def get_audio_stream_endpoint(transcript_id: int, request: Request):
             raise HTTPException(status_code=404, detail="Recording not found")
 
         record = dict(row)
-        if record.get("privacy_level") == "private":
-            if not _is_admin_request(request):
-                raise HTTPException(status_code=403, detail="Access denied: private recording.")
+        if record.get("privacy_level") == "private" and not _is_admin_request(request):
+            raise HTTPException(status_code=403, detail="Access denied: private recording.")
 
         provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
         stream_url = provider.get_stream_url(record["audio_filename"], expires_in=3600)
@@ -928,10 +921,10 @@ def _set_transcription_state(
     transcript_id: int,
     *,
     state: str,
-    error: Optional[str] = None,
-    provider: Optional[str] = None,
-    model: Optional[str] = None,
-    text: Optional[str] = None,
+    error: str | None = None,
+    provider: str | None = None,
+    model: str | None = None,
+    text: str | None = None,
 ):
     """Persist transcription state without touching the original audio."""
     now = datetime.now(timezone.utc).isoformat()
@@ -986,7 +979,7 @@ def process_saved_transcription(transcript_id: int):
     _set_transcription_state(transcript_id, state="processing")
     try:
         provider = create_transcription_provider()
-        recording_language = row["language"] if "language" in row.keys() else None
+        recording_language = row.get("language", None)
         if recording_language and str(recording_language).strip().lower() in {"auto", "auto-detect", "detect", ""}:
             recording_language = None
         try:
@@ -1001,7 +994,7 @@ def process_saved_transcription(transcript_id: int):
     except TranscriptionProviderError as exc:
         _set_transcription_state(transcript_id, state="failed", error=str(exc))
         return
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         # Log only the type; avoid SDK bodies or credential-bearing details.
         logger.error(
             "Transcription failed for recording %s (%s)",
@@ -1024,7 +1017,7 @@ def process_saved_transcription(transcript_id: int):
     )
 
 
-def _audio_format(prefix: bytes) -> Optional[str]:
+def _audio_format(prefix: bytes) -> str | None:
     if len(prefix) >= 12 and prefix[:4] == b"RIFF" and prefix[8:12] == b"WAVE":
         return "wav"
     if prefix.startswith(b"fLaC"):
@@ -1138,29 +1131,29 @@ def _check_upload_rate_limit(client_ip: str):
 async def upload_audio(
     background_tasks: BackgroundTasks,
     request: Request,
-    file: Optional[UploadFile] = File(None),
-    audio: Optional[UploadFile] = File(None),
+    file: UploadFile | None = File(None),  # noqa: B008
+    audio: UploadFile | None = File(None),  # noqa: B008
     title: str = Form(...),
     language: str = Form(...),
-    dialect: Optional[str] = Form(None),
+    dialect: str | None = Form(None),
     consent: bool = Form(False),
     transcription_consent: bool = Form(False),
-    contributor_name: Optional[str] = Form("Community Contributor"),
-    contributor_role: Optional[str] = Form("speaker"),
-    provenance_notes: Optional[str] = Form(None),
-    transliteration_text: Optional[str] = Form(None),
-    license: Optional[str] = Form("CC BY-NC 4.0"),
-    privacy_level: Optional[str] = Form("public"),
-    retention_policy: Optional[str] = Form("indefinite"),
+    contributor_name: str | None = Form("Community Contributor"),
+    contributor_role: str | None = Form("speaker"),
+    provenance_notes: str | None = Form(None),
+    transliteration_text: str | None = Form(None),
+    license: str | None = Form("CC BY-NC 4.0"),
+    privacy_level: str | None = Form("public"),
+    retention_policy: str | None = Form("indefinite"),
     is_draft: bool = Form(False),
-    verification_status: Optional[str] = Form(None),
+    verification_status: str | None = Form(None),
     consent_private_storage: bool = Form(False),
     consent_community_access: bool = Form(False),
     consent_public_publication: bool = Form(False),
     consent_ai_training: bool = Form(False),
     is_anonymous: bool = Form(False),
-    contextual_notes: Optional[str] = Form(None),
-    client_uuid: Optional[str] = Form(None),
+    contextual_notes: str | None = Form(None),
+    client_uuid: str | None = Form(None),
 ):
     """Store a consented audio master and optionally queue consented transcription."""
     client_ip = request.client.host if request.client else ""
@@ -1214,8 +1207,8 @@ async def upload_audio(
                 framerate = wf.getframerate()
                 if framerate > 0:
                     calculated_duration = round(wf.getnframes() / float(framerate), 2)
-    except Exception:
-        pass
+    except (wave.Error, OSError) as _exc:
+        logger.debug("Failed reading wave duration for %s: %s", unique_filename, _exc)
 
     storage_backend = os.environ.get("VOICE_ROOTS_STORAGE_BACKEND", "local")
 
@@ -1419,9 +1412,9 @@ def request_transcription(
 
 
 class TranscribeActionRequest(BaseModel):
-    id: Optional[int] = None
-    transcript_id: Optional[int] = None
-    recording_id: Optional[int] = None
+    id: int | None = None
+    transcript_id: int | None = None
+    recording_id: int | None = None
     transcription_consent: bool = False
 
 
@@ -1563,17 +1556,17 @@ def withdraw_transcript_consent(transcript_id: int):
 
 
 class DiscoverySearchRequest(BaseModel):
-    query: Optional[str] = None
-    q: Optional[str] = None
+    query: str | None = None
+    q: str | None = None
     mode: str = "hybrid"  # 'hybrid', 'semantic', 'keyword'
-    language: Optional[str] = None
-    dialect: Optional[str] = None
-    verification_status: Optional[str] = None
-    topic: Optional[str] = None
-    date_from: Optional[str] = None
-    date_to: Optional[str] = None
-    has_audio: Optional[bool] = None
-    has_translation: Optional[bool] = None
+    language: str | None = None
+    dialect: str | None = None
+    verification_status: str | None = None
+    topic: str | None = None
+    date_from: str | None = None
+    date_to: str | None = None
+    has_audio: bool | None = None
+    has_translation: bool | None = None
     page: int = 1
     page_size: int = 20
     sort_by: str = "relevance"
@@ -1582,11 +1575,11 @@ class DiscoverySearchRequest(BaseModel):
 @app.get("/api/v1/archive/search")
 def search_archive(
     request: Request,
-    q: Optional[str] = None,
-    query: Optional[str] = None,
-    language: Optional[str] = None,
-    status: Optional[str] = None,
-    mode: Optional[str] = Query(None),
+    q: str | None = None,
+    query: str | None = None,
+    language: str | None = None,
+    status: str | None = None,
+    mode: str | None = Query(None),
     page: int = 1,
     page_size: int = 20,
 ):
@@ -1657,17 +1650,17 @@ def search_archive(
 @app.get("/api/v1/discovery/search")
 def discovery_search_get(
     request: Request,
-    q: Optional[str] = Query(None),
-    query: Optional[str] = Query(None),
+    q: str | None = Query(None),
+    query: str | None = Query(None),
     mode: str = Query("hybrid", pattern="^(hybrid|semantic|keyword)$"),
-    language: Optional[str] = Query(None),
-    dialect: Optional[str] = Query(None),
-    verification_status: Optional[str] = Query(None),
-    topic: Optional[str] = Query(None),
-    date_from: Optional[str] = Query(None),
-    date_to: Optional[str] = Query(None),
-    has_audio: Optional[bool] = Query(None),
-    has_translation: Optional[bool] = Query(None),
+    language: str | None = Query(None),
+    dialect: str | None = Query(None),
+    verification_status: str | None = Query(None),
+    topic: str | None = Query(None),
+    date_from: str | None = Query(None),
+    date_to: str | None = Query(None),
+    has_audio: bool | None = Query(None),
+    has_translation: bool | None = Query(None),
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     sort_by: str = Query("relevance", pattern="^(relevance|date_desc|date_asc|title_asc|duration_desc)$"),
@@ -1740,7 +1733,7 @@ def get_discovery_stats():
     if collection is not None:
         try:
             vec_count = collection.count()
-        except Exception:
+        except Exception:  # noqa: BLE001
             vec_count = 0
 
     return {
@@ -1836,12 +1829,12 @@ def get_research_evaluation_report():
 
 class ModelPromotionRequest(BaseModel):
     target_slot: str = "speech_to_text"
-    admin_key: Optional[str] = None
+    admin_key: str | None = None
 
 
 class ModelRollbackRequest(BaseModel):
     target_slot: str = "speech_to_text"
-    admin_key: Optional[str] = None
+    admin_key: str | None = None
 
 
 @app.get("/api/v1/models")
@@ -1883,7 +1876,7 @@ def get_model_specification_card(model_id: str):
 def promote_model_endpoint(
     model_id: str,
     payload: ModelPromotionRequest,
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """Promote a candidate model to production slot under strict release gates & OCAP compliance."""
     admin_key = payload.admin_key or x_admin_key
@@ -1900,7 +1893,7 @@ def promote_model_endpoint(
 @app.post("/api/v1/models/rollback")
 def rollback_model_endpoint(
     payload: ModelRollbackRequest,
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """Rollback current production model in target slot to its designated baseline target."""
     admin_key = payload.admin_key or x_admin_key
@@ -1925,13 +1918,13 @@ class VoiceAssistantSessionCreate(BaseModel):
 
 class VoiceAssistantTurnTextRequest(BaseModel):
     text: str
-    override_source_lang: Optional[str] = None
-    override_target_lang: Optional[str] = None
+    override_source_lang: str | None = None
+    override_target_lang: str | None = None
 
 
 class VoiceAssistantSaveRequest(BaseModel):
     consent_confirmed: bool = False
-    user_name: Optional[str] = None
+    user_name: str | None = None
 
 
 class VoiceAssistantPronounceRequest(BaseModel):
@@ -1979,10 +1972,10 @@ def get_voice_assistant_history(session_id: str):
 @app.post("/api/v1/voice-assistant/sessions/{session_id}/turn")
 async def process_voice_turn_audio(
     session_id: str,
-    audio: Optional[UploadFile] = File(None),
-    text_input: Optional[str] = Form(None),
-    override_source_lang: Optional[str] = Form(None),
-    override_target_lang: Optional[str] = Form(None),
+    audio: UploadFile | None = File(None),  # noqa: B008
+    text_input: str | None = Form(None),
+    override_source_lang: str | None = Form(None),
+    override_target_lang: str | None = Form(None),
 ):
     """
     Process an interactive audio or text turn:
@@ -2082,12 +2075,13 @@ def get_pronunciation_guidance_endpoint(payload: VoiceAssistantPronounceRequest)
 def export_archive_corpus(
     request: Request,
     format: str = Query("json", pattern="^(json|csv)$"),
-    language: Optional[str] = None,
+    language: str | None = None,
     include_private: bool = Query(False),
 ):
     """Export the research corpus with OCAP compliance, SHA-256 hashes, and license metadata."""
     import csv
     import io
+
     from fastapi.responses import Response
 
     is_admin = _is_admin_request(request)
@@ -2138,9 +2132,9 @@ def export_archive_corpus(
 
 
 class DetectLanguageRequest(BaseModel):
-    id: Optional[int] = None
-    transcript_id: Optional[int] = None
-    recording_id: Optional[int] = None
+    id: int | None = None
+    transcript_id: int | None = None
+    recording_id: int | None = None
 
 
 @app.post("/api/detect-language")
@@ -2187,25 +2181,25 @@ def detect_language_endpoint(payload: DetectLanguageRequest):
         raise
     except TranscriptionNotConfiguredError as exc:
         raise HTTPException(status_code=503, detail=str(exc))
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.error("Language detection failed for %s: %s", target_id, exc)
         raise HTTPException(status_code=500, detail="Language detection failed due to an internal processing error.")
 
 
 class TranslateRequest(BaseModel):
     text: str
-    source_language: Optional[str] = None
-    sourceLang: Optional[str] = None
-    target_language: Optional[str] = "en"
-    targetLang: Optional[str] = "en"
-    transcript_id: Optional[int] = None
-    recording_id: Optional[int] = None
+    source_language: str | None = None
+    sourceLang: str | None = None
+    target_language: str | None = "en"
+    targetLang: str | None = "en"
+    transcript_id: int | None = None
+    recording_id: int | None = None
 
 
 class TranslationUpdate(BaseModel):
-    translated_text: Optional[str] = None
-    verified: Optional[bool] = None
-    limitation_note: Optional[str] = None
+    translated_text: str | None = None
+    verified: bool | None = None
+    limitation_note: str | None = None
 
 
 @app.post("/api/translate")
@@ -2276,7 +2270,7 @@ def translate_text_endpoint(payload: TranslateRequest):
         raise HTTPException(
             status_code=503,
             detail=(
-                f"Translation restricted: {str(o_err)} "
+                f"Translation restricted: {o_err!s} "
                 f"Oral languages require community elder verification."
             ),
         )
@@ -2290,7 +2284,7 @@ def translate_text_endpoint(payload: TranslateRequest):
         )
     except HTTPException:
         raise
-    except Exception as exc:
+    except Exception as exc:  # noqa: BLE001
         logger.error("Translation provider error: %s", exc)
         raise HTTPException(status_code=502, detail=f"Translation provider request failed: {type(exc).__name__}")
 
@@ -2378,7 +2372,6 @@ def check_translation_pair_support(
 
 
 from vector_store import (
-    delete_resource as vs_delete_resource,
     get_vector_stats,
     search_resources,
     upsert_resources,
@@ -2408,10 +2401,10 @@ def get_resources_statistics():
 
 class ResourceSearchRequest(BaseModel):
     query: str
-    language: Optional[str] = None
-    dialect: Optional[str] = None
-    document_type: Optional[str] = None
-    verification_status: Optional[str] = None
+    language: str | None = None
+    dialect: str | None = None
+    document_type: str | None = None
+    verification_status: str | None = None
     limit: int = 10
 
 
@@ -2445,13 +2438,13 @@ def search_language_resources(payload: ResourceSearchRequest):
 
 
 class ResourceIngestRequest(BaseModel):
-    admin_key: Optional[str] = None
-    resources: Optional[List[Dict[str, Any]]] = None
+    admin_key: str | None = None
+    resources: list[dict[str, Any]] | None = None
 
 ResourceIngestRequest.model_rebuild()
 
 
-def _verify_admin(admin_key: Optional[str] = None, header_key: Optional[str] = None):
+def _verify_admin(admin_key: str | None = None, header_key: str | None = None):
     required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
     provided_key = (admin_key or header_key or "").strip()
     if required_key and provided_key != required_key:
@@ -2461,8 +2454,8 @@ def _verify_admin(admin_key: Optional[str] = None, header_key: Optional[str] = N
 @app.post("/api/v1/resources/ingest")
 @app.post("/api/resources/ingest")
 def ingest_resources_endpoint(
-    payload: Optional[ResourceIngestRequest] = None,
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    payload: ResourceIngestRequest | None = None,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """Idempotently ingest language resources into ChromaDB."""
     req = payload or ResourceIngestRequest()
@@ -2500,8 +2493,8 @@ def ingest_resources_endpoint(
 @app.post("/api/v1/resources/reindex")
 @app.post("/api/resources/reindex")
 def reindex_resources_endpoint(
-    payload: Optional[ResourceIngestRequest] = None,
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    payload: ResourceIngestRequest | None = None,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """Re-index all language resources into ChromaDB."""
     return ingest_resources_endpoint(payload, x_admin_key=x_admin_key)
@@ -2513,41 +2506,41 @@ def reindex_resources_endpoint(
 
 class CorrectionCreateRequest(BaseModel):
     suggested_text: str
-    contributor_name: Optional[str] = "Community Contributor"
-    contributor_role: Optional[str] = "community_member"
-    rationale: Optional[str] = None
+    contributor_name: str | None = "Community Contributor"
+    contributor_role: str | None = "community_member"
+    rationale: str | None = None
     consent_confirmed: bool = True
 
 
 class CorrectionReviewRequest(BaseModel):
     status: str  # approved | rejected
-    reviewed_by: Optional[str] = "Community Elder"
-    reviewer_role: Optional[str] = "community_elder"
-    review_notes: Optional[str] = None
-    reviewer_uncertainty: Optional[str] = None  # e.g., 'certain', 'uncertain_dialect_variation', 'needs_second_elder'
+    reviewed_by: str | None = "Community Elder"
+    reviewer_role: str | None = "community_elder"
+    review_notes: str | None = None
+    reviewer_uncertainty: str | None = None  # e.g., 'certain', 'uncertain_dialect_variation', 'needs_second_elder'
 
 
 class ResourceSubmissionRequest(BaseModel):
     submission_type: str = "vocabulary"
     language_code: str
     language_name: str
-    dialect: Optional[str] = None
+    dialect: str | None = None
     term_or_text: str
-    translation_text: Optional[str] = None
-    cultural_context: Optional[str] = None
-    contributor_name: Optional[str] = "Community Contributor"
-    contributor_affiliation: Optional[str] = None
+    translation_text: str | None = None
+    cultural_context: str | None = None
+    contributor_name: str | None = "Community Contributor"
+    contributor_affiliation: str | None = None
     license: str = "CC BY 4.0"
     attribution: str
-    source_url: Optional[str] = None
+    source_url: str | None = None
     speaker_consent_given: bool = True
     is_sacred_or_restricted: bool = False
 
 
 class SubmissionModerateRequest(BaseModel):
     status: str  # verified | rejected
-    reviewer_notes: Optional[str] = None
-    admin_key: Optional[str] = None
+    reviewer_notes: str | None = None
+    admin_key: str | None = None
 
 
 # --- 1. Language Evaluation Endpoints ---
@@ -2582,11 +2575,11 @@ def run_evaluation_endpoint():
 def calculate_evaluation_metrics_endpoint(payload: EvaluationCalculateRequest):
     """Calculate grounded Word Error Rate (WER), Character Error Rate (CER), and chrF scores."""
     from evaluation import (
-        compute_wer,
+        _normalize_text,
         compute_cer,
         compute_chrf,
+        compute_wer,
         levenshtein_distance,
-        _normalize_text,
     )
     ref = payload.reference or ""
     hyp = payload.hypothesis or ""
@@ -2925,7 +2918,7 @@ def submit_language_resource(payload: ResourceSubmissionRequest):
 
 
 @app.get("/api/v1/resources/submissions")
-def list_resource_submissions(status: Optional[str] = None):
+def list_resource_submissions(status: str | None = None):
     """List contributed language resources with optional verification status filter."""
     with get_db_connection() as conn:
         cursor = conn.cursor()
@@ -2940,7 +2933,7 @@ def list_resource_submissions(status: Optional[str] = None):
 def moderate_resource_submission(
     submission_id: int,
     payload: SubmissionModerateRequest,
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """Moderate a contributed resource: approve and index into ChromaDB, or reject."""
     _verify_admin(payload.admin_key, x_admin_key)
@@ -3016,7 +3009,7 @@ def withdraw_resource_submission(submission_id: int):
         try:
             from vector_store import delete_resource
             delete_resource(doc_id)
-        except Exception as e:
+        except Exception as e:  # noqa: BLE001
             logger.warning("Could not delete %s from vector store on withdrawal: %s", doc_id, e)
 
         return {
@@ -3036,7 +3029,7 @@ def audit_dataset_quality():
         os.path.dirname(BACKEND_DIR), "data", "processed", "language_resources.jsonl"
     )
 
-    records: List[Dict[str, Any]] = []
+    records: list[dict[str, Any]] = []
     if os.path.exists(processed_path):
         with open(processed_path, "r", encoding="utf-8") as f:
             for line in f:
@@ -3046,8 +3039,8 @@ def audit_dataset_quality():
     seen_ids = set()
     seen_texts = set()
     duplicate_count = 0
-    license_counts: Dict[str, int] = {}
-    lang_counts: Dict[str, int] = {}
+    license_counts: dict[str, int] = {}
+    lang_counts: dict[str, int] = {}
     invalid_url_count = 0
 
     for r in records:
@@ -3070,7 +3063,7 @@ def audit_dataset_quality():
         lang_counts[lang] = lang_counts.get(lang, 0) + 1
 
         url = r.get("source_url", "")
-        if url and not (url.startswith("http://") or url.startswith("https://") or url.startswith("archive://")):
+        if url and not (url.startswith(("http://", "https://", "archive://"))):
             invalid_url_count += 1
 
     with get_db_connection() as conn:
@@ -3100,7 +3093,7 @@ def audit_dataset_quality():
 
 @app.post("/api/v1/system/backup")
 def create_database_backup(
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """Trigger safe atomic SQLite database snapshot."""
     _verify_admin(None, x_admin_key)
@@ -3235,8 +3228,8 @@ def get_pilot_submission(submission_id: int):
         if not row:
             raise HTTPException(status_code=404, detail="Pilot submission not found.")
         # Separate dicts
-        sub_dict = {k: row[k] for k in row.keys() if k in ["id", "transcript_id", "tester_name", "consent", "notes", "withdrawn", "created_at", "updated_at"]}
-        transcript_dict = {k: row[k] for k in row.keys() if k.startswith("transcript_") or k in ["title", "audio_filename", "language", "dialect", "transcript_text", "status", "duration_seconds", "created_at", "updated_at"]}
+        sub_dict = {k: row[k] for k in row if k in ["id", "transcript_id", "tester_name", "consent", "notes", "withdrawn", "created_at", "updated_at"]}
+        transcript_dict = {k: row[k] for k in row if k.startswith("transcript_") or k in ["title", "audio_filename", "language", "dialect", "transcript_text", "status", "duration_seconds", "created_at", "updated_at"]}
     return {"submission": sub_dict, "transcript": transcript_dict}
 
 @app.post("/api/v1/pilot/reviews")
@@ -3277,14 +3270,14 @@ def create_pilot_review(payload: PilotReviewCreate):
 
 @app.get("/api/v1/pilot/metrics")
 def list_pilot_metrics(
-    language: Optional[str] = Query(None),
-    model: Optional[str] = Query(None),
-    start_date: Optional[str] = Query(None),
-    end_date: Optional[str] = Query(None),
+    language: str | None = Query(None),
+    model: str | None = Query(None),
+    start_date: str | None = Query(None),
+    end_date: str | None = Query(None),
 ):
     """List pilot metrics with optional filters."""
     query = "SELECT * FROM pilot_metrics WHERE 1=1"
-    params: List[Any] = []
+    params: list[Any] = []
     if language:
         query += " AND language = ?"
         params.append(language)
@@ -3358,14 +3351,14 @@ VALID_UNCERTAINTIES = {
 
 @app.get("/api/v1/contributions/my-submissions")
 def list_my_contributions(
-    contributor_name: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    verification_status: Optional[str] = Query(None),
+    contributor_name: str | None = Query(None),
+    status: str | None = Query(None),
+    verification_status: str | None = Query(None),
     limit: int = Query(50),
 ):
     """Retrieve contributions with verification status for the contributor portal."""
     query = "SELECT * FROM transcripts WHERE archived_at IS NULL"
-    params: List[Any] = []
+    params: list[Any] = []
     if contributor_name:
         query += " AND contributor_name = ?"
         params.append(contributor_name)
@@ -3470,9 +3463,9 @@ def withdraw_contribution(transcript_id: int):
 
 @app.get("/api/v1/verification/queue")
 def list_verification_queue(
-    reviewer_role: Optional[str] = Query(None),
-    status: Optional[str] = Query(None),
-    language: Optional[str] = Query(None),
+    reviewer_role: str | None = Query(None),
+    status: str | None = Query(None),
+    language: str | None = Query(None),
     limit: int = Query(50),
 ):
     """List recordings awaiting human transcript verification. Requires reviewer role."""
@@ -3480,7 +3473,7 @@ def list_verification_queue(
         raise HTTPException(status_code=403, detail="Access denied: Reviewer authorization required.")
 
     query = "SELECT * FROM transcripts WHERE archived_at IS NULL"
-    params: List[Any] = []
+    params: list[Any] = []
     if status:
         if status not in VALID_VERIFICATION_STATUSES:
             raise HTTPException(status_code=400, detail=f"Invalid verification status: {status}")
@@ -3679,8 +3672,8 @@ def get_transcript_verification_history(transcript_id: int):
 def publish_verified_transcript(
     transcript_id: int,
     publisher_role: str = Query(...),
-    admin_key: Optional[str] = Query(None),
-    x_admin_key: Optional[str] = Header(None, alias="X-Admin-Key"),
+    admin_key: str | None = Query(None),
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
     """Publish a human-verified transcript. Enforces OCAP public consent & role authorization."""
     if publisher_role not in ("moderator", "admin", "community_elder"):
@@ -3743,13 +3736,13 @@ class OrganizationRegisterRequest(BaseModel):
     org_type: str
     contact_email: str
     lead_coordinator_name: str
-    target_languages: List[str]
-    description: Optional[str] = None
-    website_url: Optional[str] = None
+    target_languages: list[str]
+    description: str | None = None
+    website_url: str | None = None
 
 
 class OrganizationAccreditRequest(BaseModel):
-    admin_key: Optional[str] = None
+    admin_key: str | None = None
     status: str = "verified_partner"
     accreditation_notes: str = "Verified by Voice Roots Governance Council"
 
@@ -3757,21 +3750,21 @@ class OrganizationAccreditRequest(BaseModel):
 class ProjectCreateRequest(BaseModel):
     project_name: str
     slug: str
-    target_languages: List[str]
-    collection_goal: Optional[str] = None
+    target_languages: list[str]
+    collection_goal: str | None = None
     license_policy: str = "CC BY-NC 4.0"
-    tk_labels: Optional[List[str]] = None
+    tk_labels: list[str] | None = None
 
 
 class ReviewerRegisterRequest(BaseModel):
     reviewer_name: str
     reviewer_role: str
-    languages_qualified: List[str]
-    org_id: Optional[int] = None
+    languages_qualified: list[str]
+    org_id: int | None = None
 
 
 class ReviewerAccreditRequest(BaseModel):
-    admin_key: Optional[str] = None
+    admin_key: str | None = None
     status: str = "accredited"
     accredited_by: str = "Voice Roots Linguistic Committee"
 
@@ -3780,8 +3773,8 @@ class ReviewAssignRequest(BaseModel):
     transcript_id: int
     reviewer_id: int
     assigned_by: str
-    project_id: Optional[int] = None
-    due_date: Optional[str] = None
+    project_id: int | None = None
+    due_date: str | None = None
 
 
 class DisputeFileRequest(BaseModel):
@@ -3791,7 +3784,7 @@ class DisputeFileRequest(BaseModel):
     filed_by_name: str
     filed_by_role: str
     description: str
-    suggested_resolution: Optional[str] = None
+    suggested_resolution: str | None = None
 
 
 class DisputeResolveRequest(BaseModel):
@@ -4410,7 +4403,7 @@ def api_create_archive_collection(
     x_user_role: str | None = Header(None, alias="X-User-Role"),
 ):
     """Create a new cultural archive collection (Elder or Admin authorized)."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
     if "admin" not in roles and "elder" not in roles:
         raise HTTPException(status_code=403, detail="Elder or Administrator credentials required to create collections.")
 
@@ -4550,8 +4543,8 @@ def api_create_cultural_submission(
 
 
 @app.post("/api/v1/cultural-archives/submissions/upload-audio")
-async def api_upload_submission_audio(
-    file: UploadFile = File(...),
+def api_upload_submission_audio(
+    file: UploadFile = File(...),  # noqa: B008
     title: str = Form(...),
     language: str = Form(...),
     contributor_name: str = Form(...),
@@ -4578,7 +4571,7 @@ async def api_upload_submission_audio(
     if ext not in {".wav", ".mp3", ".m4a", ".ogg", ".webm", ".flac"}:
         raise HTTPException(status_code=400, detail=f"Unsupported audio format: {ext}")
 
-    content = await file.read()
+    content = file.file.read()
     if len(content) == 0:
         raise HTTPException(status_code=400, detail="Uploaded audio file cannot be empty.")
     if len(content) > 50 * 1024 * 1024:
@@ -4633,7 +4626,7 @@ def api_review_cultural_submission(
     x_user_role: str | None = Header(None, alias="X-User-Role"),
 ):
     """Review and approve/reject a community submission (Elder or Admin authorized)."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
     if "admin" not in roles and "elder" not in roles:
         raise HTTPException(status_code=403, detail="Elder or Administrator credentials required to review submissions.")
 
@@ -4663,7 +4656,7 @@ def api_withdraw_cultural_record(
     x_user_role: str | None = Header(None, alias="X-User-Role"),
 ):
     """Revoke consent and withdraw a submission or story from public access under OCAP principles."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
     is_admin = "admin" in roles or "elder" in roles
     try:
         res = cultural_archive_service.withdraw_cultural_record(
