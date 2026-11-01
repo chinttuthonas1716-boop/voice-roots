@@ -450,7 +450,7 @@ def get_kg_overview(db_path: str = DB_PATH) -> dict[str, Any]:
         "node_counts_by_type": node_counts,
         "relationship_counts_by_type": rel_counts,
         "verification_status_counts": status_counts,
-        "verified_ratio": round(status_counts.get("VERIFIED", 0) / max(total_nodes, 1), 3),
+        "verified_ratio": round((status_counts.get("VERIFIED", 0) + status_counts.get("COMMUNITY_REVIEWED", 0)) / max(total_nodes, 1), 3),
     }
 
 

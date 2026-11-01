@@ -621,4 +621,98 @@ export interface KGNodeDetailResponse {
   connected_edges_count: number;
 }
 
+// =========================================================================
+// Milestone 17: Interactive Cultural and Oral History Archives Interfaces
+// =========================================================================
+
+export interface ArchiveCollection {
+  collection_id: string;
+  title: string;
+  description?: string | null;
+  primary_language: string;
+  category: string;
+  cover_image_url?: string | null;
+  creator_organization_id?: string | null;
+  creator_name: string;
+  provenance_details?: string | null;
+  access_classification: "PUBLIC" | "COMMUNITY_RESTRICTED" | "SACRED_ELDER_ONLY" | "RESEARCH_ONLY";
+  traditional_knowledge_label?: string | null;
+  created_at: string;
+  updated_at: string;
+  story_count?: number;
+  stories?: CulturalStory[];
+}
+
+export interface CulturalStory {
+  story_id: string;
+  collection_id?: string | null;
+  transcript_id?: number | null;
+  title: string;
+  native_title?: string | null;
+  description?: string | null;
+  primary_language: string;
+  dialect_variety?: string | null;
+  transliteration?: string | null;
+  translation_text?: string | null;
+  audio_reference?: string | null;
+  audio_duration_seconds?: number;
+  audio_sha256?: string | null;
+  recording_date?: string | null;
+  location_name?: string | null;
+  contributor_name: string;
+  attribution_preference: "BY_NAME" | "ANONYMOUS" | "COMMUNITY_CLAN";
+  access_classification: "PUBLIC" | "COMMUNITY_RESTRICTED" | "SACRED_ELDER_ONLY" | "RESEARCH_ONLY";
+  review_status: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED" | "WITHDRAWN";
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  collection_title?: string | null;
+  collection_category?: string | null;
+  traditional_knowledge_label?: string | null;
+}
+
+export interface CulturalConsentMatrix {
+  consent_recording: boolean;
+  consent_transcription: boolean;
+  consent_translation: boolean;
+  consent_public_display: boolean;
+  consent_research_reuse: boolean;
+  consent_educational_reuse: boolean;
+}
+
+export interface CulturalSubmission {
+  submission_id: string;
+  collection_id?: string | null;
+  contributor_name: string;
+  contributor_email?: string | null;
+  language: string;
+  variety?: string | null;
+  title: string;
+  description?: string | null;
+  original_audio_path?: string | null;
+  audio_sha256?: string | null;
+  transcript_draft?: string | null;
+  translation_draft?: string | null;
+  attribution_preference: string;
+  consent_matrix_json: string;
+  status: "DRAFT" | "SUBMITTED" | "UNDER_REVIEW" | "APPROVED" | "REJECTED" | "WITHDRAWN";
+  review_notes?: string | null;
+  reviewed_by?: string | null;
+  reviewed_at?: string | null;
+  created_at: string;
+  updated_at: string;
+  created_story_id?: string | null;
+}
+
+export interface CulturalArchiveOverview {
+  total_collections: number;
+  total_stories: number;
+  total_audio_duration_seconds: number;
+  languages_represented: Array<{ language: string; story_count: number }>;
+  categories: Array<{ category: string; collection_count: number }>;
+  submissions_by_status: Record<string, number>;
+  status: string;
+}
+
 

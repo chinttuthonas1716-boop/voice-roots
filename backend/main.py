@@ -111,6 +111,7 @@ from knowledge_graph_service import (
     seed_knowledge_graph_catalog,
     update_knowledge_graph_node,
 )
+import cultural_archive_service
 
 
 logger = logging.getLogger(__name__)
@@ -413,6 +414,11 @@ try:
         seed_knowledge_graph_catalog(_kg_conn)
 except Exception as _e:
     logger.debug("Knowledge Graph initialization: %s", _e)
+
+try:
+    cultural_archive_service.seed_default_cultural_archives(DB_PATH)
+except Exception as _e:
+    logger.debug("Cultural Archives initialization: %s", _e)
 
 
 
@@ -4269,6 +4275,413 @@ def api_delete_kg_relationship(
     if not deleted:
         raise HTTPException(status_code=404, detail=f"Relationship ID {rel_id} not found.")
     return {"deleted": True, "id": rel_id}
+
+
+# =========================================================================
+# Milestone 17: Interactive Cultural and Oral History Archives API
+# =========================================================================
+
+class CreateCulturalCollectionRequest(BaseModel):
+    title: str
+    description: str | None = None
+    primary_language: str
+    category: str = "Oral History"
+    cover_image_url: str | None = None
+    creator_organization_id: str | None = None
+    creator_name: str = "Community Elder Council"
+    provenance_details: str | None = None
+    access_classification: str = "PUBLIC"
+    traditional_knowledge_label: str = "TK Notice (Open)"
+
+class CreateCulturalSubmissionRequest(BaseModel):
+    contributor_name: str
+    language: str
+    title: str
+    contributor_email: str | None = None
+    variety: str | None = None
+    description: str | None = None
+    transcript_draft: str | None = None
+    translation_draft: str | None = None
+    attribution_preference: str = "BY_NAME"
+    collection_id: str | None = None
+    consent_recording: bool = True
+    consent_transcription: bool = True
+    consent_translation: bool = False
+    consent_public_display: bool = True
+    consent_research_reuse: bool = True
+    consent_educational_reuse: bool = True
+    is_sacred_ceremonial: bool = False
+
+class ReviewCulturalSubmissionRequest(BaseModel):
+    decision: str  # APPROVED, REJECTED, UNDER_REVIEW
+    reviewer_name: str = "Community Elder Reviewer"
+    review_notes: str | None = None
+    create_story_on_approval: bool = True
+    target_collection_id: str | None = None
+    access_classification: str = "PUBLIC"
+
+class WithdrawCulturalRecordRequest(BaseModel):
+    record_id: str
+    requester_name: str
+    reason: str | None = None
+
+def _extract_archive_auth_context(
+    x_admin_key: str | None = None,
+    x_user_role: str | None = None,
+    x_user_language: str | None = None,
+) -> tuple[bool, list[str], str | None]:
+    is_auth = False
+    roles: list[str] = []
+    if x_admin_key == ADMIN_API_KEY:
+        is_auth = True
+        roles.append("admin")
+    if x_user_role:
+        is_auth = True
+        for r in x_user_role.split(","):
+            rc = r.strip().lower()
+            if rc:
+                roles.append(rc)
+    return is_auth, roles, x_user_language
+
+
+@app.get("/api/v1/cultural-archives/overview")
+@app.get("/api/v1/archives/overview")
+def api_cultural_archives_overview(
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+):
+    """Retrieve cultural archive telemetry metrics and categories."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    return cultural_archive_service.get_cultural_archive_overview(
+        DB_PATH, is_authenticated=is_auth, user_roles=roles
+    )
+
+
+@app.get("/api/v1/cultural-archives/collections")
+@app.get("/api/v1/archives/collections")
+def api_list_archive_collections(
+    language: str | None = None,
+    category: str | None = None,
+    access_level: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+):
+    """List accessible cultural collections with permission gating."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    return cultural_archive_service.list_archive_collections(
+        DB_PATH,
+        language=language,
+        category=category,
+        access_level=access_level,
+        is_authenticated=is_auth,
+        user_roles=roles,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@app.get("/api/v1/cultural-archives/collections/{collection_id}")
+@app.get("/api/v1/archives/collections/{collection_id}")
+def api_get_archive_collection(
+    collection_id: str,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+):
+    """Get collection details, provenance, and contained stories."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    res = cultural_archive_service.get_archive_collection(
+        DB_PATH, collection_id, is_authenticated=is_auth, user_roles=roles
+    )
+    if not res:
+        raise HTTPException(status_code=404, detail=f"Collection '{collection_id}' not found or access restricted.")
+    return res
+
+
+@app.post("/api/v1/cultural-archives/collections")
+@app.post("/api/v1/archives/collections")
+def api_create_archive_collection(
+    req: CreateCulturalCollectionRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+):
+    """Create a new cultural archive collection (Elder or Admin authorized)."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    if "admin" not in roles and "elder" not in roles:
+        raise HTTPException(status_code=403, detail="Elder or Administrator credentials required to create collections.")
+
+    try:
+        created = cultural_archive_service.create_archive_collection(
+            DB_PATH,
+            title=req.title,
+            description=req.description,
+            primary_language=req.primary_language,
+            category=req.category,
+            cover_image_url=req.cover_image_url,
+            creator_organization_id=req.creator_organization_id,
+            creator_name=req.creator_name,
+            provenance_details=req.provenance_details,
+            access_classification=req.access_classification,
+            traditional_knowledge_label=req.traditional_knowledge_label,
+            is_admin="admin" in roles,
+        )
+        return created
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Error creating archive collection")
+        raise HTTPException(status_code=500, detail="Internal server error creating archive collection.")
+
+
+@app.get("/api/v1/cultural-archives/stories")
+@app.get("/api/v1/archives/stories")
+def api_list_cultural_stories(
+    collection_id: str | None = None,
+    language: str | None = None,
+    category: str | None = None,
+    q: str | None = None,
+    query: str | None = None,
+    limit: int = 50,
+    offset: int = 0,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+):
+    """List and search approved cultural stories with FTS5 search and permission filtering."""
+    search_query = q or query
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    return cultural_archive_service.list_cultural_stories(
+        DB_PATH,
+        collection_id=collection_id,
+        language=language,
+        category=category,
+        query=search_query,
+        is_authenticated=is_auth,
+        user_roles=roles,
+        limit=limit,
+        offset=offset,
+    )
+
+
+@app.get("/api/v1/cultural-archives/stories/{story_id}")
+@app.get("/api/v1/archives/stories/{story_id}")
+def api_get_cultural_story(
+    story_id: str,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+):
+    """Retrieve an individual cultural story with translation and contributor provenance."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    res = cultural_archive_service.get_cultural_story(
+        DB_PATH, story_id, is_authenticated=is_auth, user_roles=roles
+    )
+    if not res:
+        raise HTTPException(status_code=404, detail=f"Story '{story_id}' not found or access restricted.")
+    return res
+
+
+@app.get("/api/v1/cultural-archives/stories/{story_id}/audio")
+@app.get("/api/v1/archives/stories/{story_id}/audio")
+def api_stream_cultural_story_audio(
+    story_id: str,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+):
+    """Stream master audio for an authorized cultural story with permission checks."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    info = cultural_archive_service.get_story_audio_stream_info(
+        DB_PATH,
+        story_id,
+        AUDIO_STORAGE,
+        is_authenticated=is_auth,
+        user_roles=roles,
+    )
+    if not info:
+        raise HTTPException(
+            status_code=404,
+            detail="Audio recording not found or access restricted under OCAP community protocols."
+        )
+    target_path, mime = info
+    return FileResponse(target_path, media_type=mime, filename=os.path.basename(target_path))
+
+
+@app.post("/api/v1/cultural-archives/submissions")
+@app.post("/api/v1/archives/submissions")
+def api_create_cultural_submission(
+    req: CreateCulturalSubmissionRequest,
+):
+    """Submit an oral recording contribution with mandatory 6-facet OCAP consent validation."""
+    try:
+        consent_matrix = {
+            "consent_recording": req.consent_recording,
+            "consent_transcription": req.consent_transcription,
+            "consent_translation": req.consent_translation,
+            "consent_public_display": req.consent_public_display,
+            "consent_research_reuse": req.consent_research_reuse,
+            "consent_educational_reuse": req.consent_educational_reuse,
+        }
+        res = cultural_archive_service.create_cultural_submission(
+            DB_PATH,
+            contributor_name=req.contributor_name,
+            language=req.language,
+            title=req.title,
+            consent_matrix=consent_matrix,
+            contributor_email=req.contributor_email,
+            variety=req.variety,
+            description=req.description,
+            transcript_draft=req.transcript_draft,
+            translation_draft=req.translation_draft,
+            attribution_preference=req.attribution_preference,
+            collection_id=req.collection_id,
+            is_sacred_ceremonial=req.is_sacred_ceremonial,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Error processing cultural submission")
+        raise HTTPException(status_code=500, detail="Internal server error submitting oral history record.")
+
+
+@app.post("/api/v1/cultural-archives/submissions/upload-audio")
+async def api_upload_submission_audio(
+    file: UploadFile = File(...),
+    title: str = Form(...),
+    language: str = Form(...),
+    contributor_name: str = Form(...),
+    contributor_email: str | None = Form(None),
+    variety: str | None = Form(None),
+    description: str | None = Form(None),
+    transcript_draft: str | None = Form(None),
+    translation_draft: str | None = Form(None),
+    attribution_preference: str = Form("BY_NAME"),
+    collection_id: str | None = Form(None),
+    consent_recording: bool = Form(True),
+    consent_transcription: bool = Form(True),
+    consent_translation: bool = Form(False),
+    consent_public_display: bool = Form(True),
+    consent_research_reuse: bool = Form(True),
+    consent_educational_reuse: bool = Form(True),
+    is_sacred_ceremonial: bool = Form(False),
+):
+    """Upload audio master and create a community oral recording submission."""
+    if not file.filename:
+        raise HTTPException(status_code=422, detail="Filename required for audio upload.")
+
+    ext = os.path.splitext(file.filename)[1].lower()
+    if ext not in {".wav", ".mp3", ".m4a", ".ogg", ".webm", ".flac"}:
+        raise HTTPException(status_code=400, detail=f"Unsupported audio format: {ext}")
+
+    content = await file.read()
+    if len(content) == 0:
+        raise HTTPException(status_code=400, detail="Uploaded audio file cannot be empty.")
+    if len(content) > 50 * 1024 * 1024:
+        raise HTTPException(status_code=413, detail="Audio file exceeds 50 MB limit.")
+
+    sha256 = hashlib.sha256(content).hexdigest()
+    unique_filename = f"cult_{uuid.uuid4().hex[:12]}{ext}"
+    dest_path = os.path.join(AUDIO_STORAGE, unique_filename)
+    with open(dest_path, "wb") as f_out:
+        f_out.write(content)
+
+    consent_matrix = {
+        "consent_recording": consent_recording,
+        "consent_transcription": consent_transcription,
+        "consent_translation": consent_translation,
+        "consent_public_display": consent_public_display,
+        "consent_research_reuse": consent_research_reuse,
+        "consent_educational_reuse": consent_educational_reuse,
+    }
+
+    try:
+        sub = cultural_archive_service.create_cultural_submission(
+            DB_PATH,
+            contributor_name=contributor_name,
+            language=language,
+            title=title,
+            consent_matrix=consent_matrix,
+            contributor_email=contributor_email,
+            variety=variety,
+            description=description,
+            original_audio_path=unique_filename,
+            audio_sha256=sha256,
+            transcript_draft=transcript_draft,
+            translation_draft=translation_draft,
+            attribution_preference=attribution_preference,
+            collection_id=collection_id,
+            is_sacred_ceremonial=is_sacred_ceremonial,
+        )
+        return sub
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Error processing audio upload submission")
+        raise HTTPException(status_code=500, detail="Internal server error processing audio submission.")
+
+
+@app.patch("/api/v1/cultural-archives/submissions/{submission_id}/review")
+def api_review_cultural_submission(
+    submission_id: str,
+    req: ReviewCulturalSubmissionRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+):
+    """Review and approve/reject a community submission (Elder or Admin authorized)."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    if "admin" not in roles and "elder" not in roles:
+        raise HTTPException(status_code=403, detail="Elder or Administrator credentials required to review submissions.")
+
+    try:
+        res = cultural_archive_service.review_cultural_submission(
+            DB_PATH,
+            submission_id=submission_id,
+            review_decision=req.decision,
+            reviewer_name=req.reviewer_name,
+            review_notes=req.review_notes,
+            create_story_on_approval=req.create_story_on_approval,
+            target_collection_id=req.target_collection_id,
+            access_classification=req.access_classification,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+    except Exception:
+        logger.exception("Error reviewing cultural submission")
+        raise HTTPException(status_code=500, detail="Internal server error reviewing submission.")
+
+
+@app.post("/api/v1/cultural-archives/withdraw")
+def api_withdraw_cultural_record(
+    req: WithdrawCulturalRecordRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+):
+    """Revoke consent and withdraw a submission or story from public access under OCAP principles."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    is_admin = "admin" in roles or "elder" in roles
+    try:
+        res = cultural_archive_service.withdraw_cultural_record(
+            DB_PATH,
+            record_id=req.record_id,
+            requester_name=req.requester_name,
+            reason=req.reason,
+            is_contributor=True,
+            is_admin=is_admin,
+        )
+        return res
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except Exception:
+        logger.exception("Error processing withdrawal")
+        raise HTTPException(status_code=500, detail="Internal server error processing record withdrawal.")
 
 
 @app.get("/{full_path:path}")
