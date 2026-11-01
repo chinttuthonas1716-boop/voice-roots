@@ -16,6 +16,7 @@ from datetime import datetime, timezone
 from typing import Any
 
 import cultural_archive_service
+import learning_service
 import speech_analysis_service
 from dataset_service import (
     generate_research_export,
@@ -425,6 +426,11 @@ try:
     speech_analysis_service.seed_default_pronunciation_exercises(DB_PATH)
 except Exception as _e:  # noqa: BLE001
     logger.debug("Speech Intelligence initialization: %s", _e)
+
+try:
+    learning_service.seed_default_learning_data(DB_PATH)
+except Exception as _e:  # noqa: BLE001
+    logger.debug("Language Learning initialization: %s", _e)
 
 
 
@@ -4857,6 +4863,73 @@ def api_speech_review_attempt(
         return res
     except ValueError as e:
         raise HTTPException(status_code=404, detail=str(e))
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# MILESTONE 19: LANGUAGE LEARNING & INTERACTIVE PRACTICE ENDPOINTS
+# ─────────────────────────────────────────────────────────────────────────────
+
+class PracticeSubmitRequest(BaseModel):
+    learner_id: str = "learner_anonymous"
+    module_id: str
+    selected_answer: str
+
+
+@app.get("/api/v1/learning/overview")
+def get_learning_overview_endpoint():
+    """Retrieve learning resource ecosystem metrics."""
+    return learning_service.get_learning_overview(DB_PATH)
+
+
+@app.get("/api/v1/learning/collections")
+def list_learning_collections(
+    language: str | None = Query(None, description="Optional filter by language"),
+    proficiency: str | None = Query(None, description="Optional filter by proficiency level"),
+):
+    """List published learning collections with module counts."""
+    cols = learning_service.get_learning_collections(language=language, proficiency=proficiency, db_path=DB_PATH)
+    return {"collections": cols, "count": len(cols)}
+
+
+@app.get("/api/v1/learning/collections/{collection_id}")
+def get_learning_collection_endpoint(collection_id: str):
+    """Get single collection details including verified modules."""
+    col = learning_service.get_collection_details(collection_id, db_path=DB_PATH)
+    if not col:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    return col
+
+
+@app.get("/api/v1/learning/collections/{collection_id}/modules")
+def get_learning_collection_modules_endpoint(collection_id: str):
+    """Get modules for a collection gated strictly by OCAP educational reuse consent."""
+    col = learning_service.get_collection_details(collection_id, db_path=DB_PATH)
+    if not col:
+        raise HTTPException(status_code=404, detail="Collection not found")
+    return {"collection_id": collection_id, "modules": col.get("modules", []), "count": len(col.get("modules", []))}
+
+
+@app.post("/api/v1/learning/practice/submit")
+def submit_practice_attempt_endpoint(req: PracticeSubmitRequest):
+    """Submit answer for an educational practice module."""
+    try:
+        res = learning_service.submit_module_practice(
+            learner_id=req.learner_id,
+            module_id=req.module_id,
+            selected_answer=req.selected_answer,
+            db_path=DB_PATH,
+        )
+        return res
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+
+
+@app.get("/api/v1/learning/progress/{learner_id}")
+def get_learner_progress_endpoint(learner_id: str):
+    """Retrieve personal learner progress and module mastery history."""
+    return learning_service.get_learner_progress(learner_id, db_path=DB_PATH)
 
 
 @app.get("/{full_path:path}")
