@@ -1661,3 +1661,54 @@
     3. Frontend Production Build: `npm run build --prefix frontend` -> compiled in 1.60s with 0 errors.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-01] [ANTIGRAVITY] DONE: Milestone 18: Advanced Speech Intelligence & Pronunciation Practice.
+  - Implemented word-level acoustic alignment, waveform peak extraction, speaking rate (WPM) / articulation rate analysis, curated minimal pairs for Gondi, Koya, Santhali, and Lambadi, and an OCAP native-speaker elder verification gate.
+  - Alembic migration `backend/alembic/versions/9eb5cd35b326_advanced_speech_and_pronunciation_schema.py` creating `speech_alignments`, `speech_acoustic_metrics`, `pronunciation_exercises`, and `pronunciation_attempts`.
+  - Service `backend/speech_analysis_service.py` with monotonic timestamp alignment, acoustic silence detection, and provisional pronunciation scoring with elder review status.
+  - REST API routes in `backend/main.py`: `/api/v1/speech/overview`, `/api/v1/speech/analyze/{transcript_id}`, `/api/v1/speech/alignments/{transcript_id}`, `/api/v1/speech/waveform/{transcript_id}`, `/api/v1/speech/pronunciation/exercises`, `/api/v1/speech/pronunciation/practice`, `/api/v1/speech/pronunciation/attempts/{attempt_id}/review`.
+  - Frontend component `frontend/src/components/SpeechIntelligence.tsx` with audio player, speed controls, A-B loop drill, interactive waveform peaks canvas, karaoke transcript word highlighting, minimal pairs catalog, and elder moderation panel.
+  - Test suite `tests/test_milestone18_advanced_speech.py` (8/8 passed).
+  - Files touched: `backend/alembic/versions/9eb5cd35b326_advanced_speech_and_pronunciation_schema.py`, `backend/speech_analysis_service.py`, `backend/main.py`, `frontend/src/types.ts`, `frontend/src/components/SpeechIntelligence.tsx`, `frontend/src/App.tsx`, `tests/test_milestone18_advanced_speech.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 18 Tests: 8/8 passed in `tests/test_milestone18_advanced_speech.py`.
+    2. Frontend Production Build: `npm run build --prefix frontend` compiled in 1.64s with 0 errors.
+    3. Monotonic Timestamp Intervals: Non-overlapping alignment intervals verified across audio recordings.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-01] [ANTIGRAVITY] DONE: Milestone 19: Language Learning & Interactive Practice.
+  - Implemented interactive vocabulary flashcards, listening comprehension exercises, cultural dialogue quizzes, and learner progress tracking.
+  - Alembic migration `backend/alembic/versions/2a8b3c4d5e6f_language_learning_and_education_schema.py` creating `learning_collections`, `learning_modules`, and `learner_progress`.
+  - Domain service `backend/learning_service.py` strictly enforcing OCAP affirmative consent (`consent_educational_reuse == 1`) before serving community lore or vocabulary in learning modules.
+  - Curated seed collections for Gondi, Koya, Santhali, and Lambadi featuring authentic native script and cultural context notes.
+  - REST API routes in `backend/main.py`: `/api/v1/learning/overview`, `/api/v1/learning/collections`, `/api/v1/learning/collections/{id}`, `/api/v1/learning/collections/{id}/modules`, `/api/v1/learning/practice/submit`, `/api/v1/learning/progress/{learner_id}`.
+  - Frontend component `frontend/src/components/LanguageLearning.tsx` with interactive quizzes, instant answer verification, cultural lore context, and mastery telemetry dashboard.
+  - Test suite `tests/test_milestone19_language_learning.py` (7/7 passed).
+  - Files touched: `backend/alembic/versions/2a8b3c4d5e6f_language_learning_and_education_schema.py`, `backend/learning_service.py`, `backend/main.py`, `frontend/src/types.ts`, `frontend/src/components/LanguageLearning.tsx`, `frontend/src/App.tsx`, `tests/test_milestone19_language_learning.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 19 Tests: 7/7 passed in `tests/test_milestone19_language_learning.py`.
+    2. Frontend Production Build: `npm run build --prefix frontend` compiled in 1.78s with 0 errors.
+    3. OCAP Consent Gating: Unconsented or private content strictly barred from educational tracks.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-01] [ANTIGRAVITY] DONE: Milestone 20: Institutional Research API & Interoperability.
+  - Implemented token-scoped research credentials, SHA-256 hashed token storage, academic research access audit logs, standardized corpus manifests, and computational lexicon exports.
+  - Alembic migration `backend/alembic/versions/4c5d6e7f8a9b_institutional_research_api_and_interoperability.py` creating `research_api_keys` and `research_access_logs`.
+  - Domain service `backend/research_interoperability_service.py` with granular scope authorization (`read:registry`, `read:vocabulary`, `read:transcripts`, `read:metadata`, `export:corpus`), seeded credentials for CIIL, Osmania University, and TCRTI, and OCAP research privacy filtering.
+  - REST API routes in `backend/main.py`: `/api/v1/research/overview`, `/api/v1/research/keys/register`, `/api/v1/research/keys`, `/api/v1/research/manifest`, `/api/v1/research/corpus/export`, `/api/v1/research/lexicon/export`.
+  - Frontend component `frontend/src/components/ResearchPortal.tsx` with token inspector, key issuance form, corpus release manifest viewer, export payload inspector, and JSON download utility.
+  - Test suite `tests/test_milestone20_research_api.py` (7/7 passed).
+  - Regression testing across all 199 tests in repository (199/199 passed in 30.67s, 100% pass rate).
+  - Pre-faculty release audit (26/26 passed) and live feature verification (27/27 passed).
+  - Files touched: `backend/alembic/versions/4c5d6e7f8a9b_institutional_research_api_and_interoperability.py`, `backend/research_interoperability_service.py`, `backend/main.py`, `backend/voice_roots.db`, `frontend/src/types.ts`, `frontend/src/components/ResearchPortal.tsx`, `frontend/src/App.tsx`, `tests/test_milestone20_research_api.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Milestone 20 Tests: 7/7 passed in `tests/test_milestone20_research_api.py`.
+    2. Full Repository Pytest Suite: 199/199 passed in 30.67s (100% pass rate).
+    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
+    4. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
+    5. Frontend Production Build: `npm run build --prefix frontend` compiled in 1.92s with zero TypeScript errors.
+    6. Token Scope Enforcement: Verified 403 Forbidden on missing tokens, invalid tokens, or unauthorized scopes.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
