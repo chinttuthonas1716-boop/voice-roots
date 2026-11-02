@@ -17,6 +17,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+import auth_service
 import backup_retention_service
 import cultural_archive_service
 import learning_service
@@ -270,6 +271,11 @@ def init_db():
         except Exception:  # noqa: BLE001
             pass
         cursor = conn.cursor()
+        try:
+            auth_service.init_auth_tables(conn)
+            auth_service.seed_default_accounts(conn)
+        except Exception as e:
+            logger.warning(f"Auth tables initialization skipped: {e}")
         cursor.execute(
             """
             CREATE TABLE IF NOT EXISTS transcripts (
@@ -596,6 +602,14 @@ def _extract_admin_identity(request: Request | None = None, header_key: str | No
 
     if not provided_key:
         return False, "anonymous"
+
+    # Check if provided_key is a valid JWT session token with admin role
+    try:
+        claims = auth_service.decode_access_token(provided_key)
+        if claims and claims.get("role") == "admin":
+            return True, claims.get("username", "jwt_admin")
+    except Exception:
+        pass
 
     required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
     is_prod = os.environ.get("VOICE_ROOTS_ENV") == "production"
@@ -1052,6 +1066,106 @@ def register_new_language_endpoint(payload: RegisterLanguageRequest):
         return {"status": "success", "language": registered}
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=str(exc))
+
+
+# ============================================================================
+# User Authentication & Role-Based Access Control (RBAC) Endpoints
+# ============================================================================
+
+class UserRegisterRequest(BaseModel):
+    username: str
+    email: str
+    password: str
+    full_name: str
+    role: str = "contributor"
+    bio: str | None = None
+
+
+class UserLoginRequest(BaseModel):
+    identifier: str | None = None
+    email: str | None = None
+    username: str | None = None
+    password: str
+
+
+@app.post("/api/v1/auth/register", status_code=201)
+@app.post("/api/auth/register", status_code=201)
+def api_auth_register(payload: UserRegisterRequest):
+    """Register a new user account with secure password hashing and role assignment."""
+    try:
+        user = auth_service.register_user(
+            DB_PATH,
+            username=payload.username,
+            email=payload.email,
+            password=payload.password,
+            full_name=payload.full_name,
+            role=payload.role,
+            bio=payload.bio,
+        )
+        return {"status": "success", "message": "User registered successfully.", "data": user}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc))
+    except Exception:  # noqa: BLE001
+        logger.exception("Registration failed")
+        raise HTTPException(status_code=500, detail="Registration failed due to internal error.")
+
+
+@app.post("/api/v1/auth/login")
+@app.post("/api/auth/login")
+def api_auth_login(payload: UserLoginRequest):
+    """Authenticate a user by username or email and return JWT access token."""
+    ident = payload.identifier or payload.email or payload.username or ""
+    if not ident:
+        raise HTTPException(status_code=400, detail="Username or email identifier is required.")
+    try:
+        user = auth_service.authenticate_user(DB_PATH, ident, payload.password)
+        if not user:
+            raise HTTPException(
+                status_code=401,
+                detail="Invalid credentials. Please check your username/email and password.",
+            )
+        return {"status": "success", "message": "Authentication successful.", "data": user}
+    except ValueError as exc:
+        raise HTTPException(status_code=403, detail=str(exc))
+    except HTTPException:
+        raise
+    except Exception:  # noqa: BLE001
+        logger.exception("Login failed")
+        raise HTTPException(status_code=500, detail="Login failed due to internal error.")
+
+
+@app.get("/api/v1/auth/me")
+@app.get("/api/auth/me")
+def api_auth_me(request: Request):
+    """Return currently authenticated user profile based on Bearer token."""
+    auth_header = (request.headers.get("Authorization") or "").strip()
+    if not auth_header.startswith("Bearer "):
+        raise HTTPException(status_code=401, detail="Authorization Bearer token required.")
+    token = auth_header[7:].strip()
+    claims = auth_service.decode_access_token(token)
+    if not claims:
+        raise HTTPException(status_code=401, detail="Invalid or expired access token.")
+    user = auth_service.get_user_by_id(DB_PATH, claims.get("sub", ""))
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found.")
+    return {"status": "success", "user": user}
+
+
+@app.post("/api/v1/auth/logout")
+@app.post("/api/auth/logout")
+def api_auth_logout():
+    """Client session logout endpoint."""
+    return {"status": "success", "message": "Logged out successfully."}
+
+
+@app.get("/api/v1/auth/users")
+@app.get("/api/auth/users")
+def api_auth_list_users(request: Request):
+    """List all registered users (Administrator only)."""
+    if not _is_admin_request(request):
+        raise HTTPException(status_code=403, detail="Administrator authorization required to list users.")
+    users = auth_service.list_users(DB_PATH)
+    return {"status": "success", "total_users": len(users), "users": users}
 
 
 @app.get("/api/v1/transcriptions")
@@ -4600,6 +4714,21 @@ def _extract_archive_auth_context(
     if x_admin_key == ADMIN_API_KEY:
         is_auth = True
         roles.extend(["admin", "elder"])
+    elif x_admin_key:
+        cleaned_key = x_admin_key.strip()
+        if cleaned_key.startswith("Bearer "):
+            cleaned_key = cleaned_key[7:].strip()
+        try:
+            claims = auth_service.decode_access_token(cleaned_key)
+            if claims:
+                is_auth = True
+                user_role = claims.get("role", "contributor")
+                if user_role not in roles:
+                    roles.append(user_role)
+                if user_role == "admin" and "elder" not in roles:
+                    roles.append("elder")
+        except Exception:
+            pass
     if x_user_role:
         is_prod = os.environ.get("VOICE_ROOTS_ENV") == "production"
         # SEC-02: In production, unauthenticated client-provided roles are strictly ignored

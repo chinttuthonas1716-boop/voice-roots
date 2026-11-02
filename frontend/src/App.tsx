@@ -400,6 +400,125 @@ export function App() {
     }
   };
 
+  // ─── User Authentication & Session State ───
+  interface AuthUser {
+    id: string;
+    username: string;
+    email: string;
+    full_name: string;
+    role: 'admin' | 'researcher' | 'reviewer' | 'contributor';
+    is_active: boolean;
+    is_verified: boolean;
+    bio?: string;
+  }
+
+  const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
+    try {
+      const stored = localStorage.getItem('vr_user');
+      return stored ? JSON.parse(stored) : null;
+    } catch {
+      return null;
+    }
+  });
+  const [authToken, setAuthToken] = useState<string | null>(() => {
+    try {
+      return localStorage.getItem('vr_access_token');
+    } catch {
+      return null;
+    }
+  });
+
+  // Helper to attach authorization header if authenticated
+  const getAuthHeaders = (): Record<string, string> => {
+    return authToken ? { Authorization: `Bearer ${authToken}` } : {};
+  };
+  const [authMode, setAuthMode] = useState<'login' | 'signup'>('login');
+  const [authIdentifier, setAuthIdentifier] = useState('field.worker@voiceroots.org');
+  const [authPassword, setAuthPassword] = useState('preservation2026');
+  const [authEmail, setAuthEmail] = useState('');
+  const [authUsername, setAuthUsername] = useState('');
+  const [authFullName, setAuthFullName] = useState('');
+  const [authRole, setAuthRole] = useState<'contributor' | 'researcher' | 'reviewer' | 'admin'>('contributor');
+  const [authLoading, setAuthLoading] = useState(false);
+  const [authError, setAuthError] = useState<string | null>(null);
+  const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+
+  const handleAuthLogin = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+    setAuthSuccess(null);
+    try {
+      const res = await fetch('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ identifier: authIdentifier, password: authPassword }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || 'Login failed.');
+      }
+      const user = data.data;
+      setCurrentUser(user);
+      setAuthToken(user.access_token);
+      localStorage.setItem('vr_user', JSON.stringify(user));
+      localStorage.setItem('vr_access_token', user.access_token);
+      setAuthSuccess(`Welcome back, ${user.full_name}! Authenticated as ${user.role}.`);
+      setTimeout(() => {
+        handleTabChange('home');
+      }, 800);
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to authenticate.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleAuthSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setAuthLoading(true);
+    setAuthError(null);
+    setAuthSuccess(null);
+    try {
+      const res = await fetch('/api/v1/auth/register', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: authUsername,
+          email: authEmail,
+          password: authPassword,
+          full_name: authFullName,
+          role: authRole,
+        }),
+      });
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.detail || data.message || 'Registration failed.');
+      }
+      const user = data.data;
+      setCurrentUser(user);
+      setAuthToken(user.access_token);
+      localStorage.setItem('vr_user', JSON.stringify(user));
+      localStorage.setItem('vr_access_token', user.access_token);
+      setAuthSuccess(`Registration successful! Account created as ${user.role}.`);
+      setTimeout(() => {
+        handleTabChange('home');
+      }, 800);
+    } catch (err: any) {
+      setAuthError(err.message || 'Failed to register account.');
+    } finally {
+      setAuthLoading(false);
+    }
+  };
+
+  const handleAuthLogout = () => {
+    setCurrentUser(null);
+    setAuthToken(null);
+    localStorage.removeItem('vr_user');
+    localStorage.removeItem('vr_access_token');
+    fetch('/api/v1/auth/logout', { method: 'POST' }).catch(() => {});
+  };
+
   // Freeform Translation State for Dedicated Translate View (Reference Panel 3)
   const [freeformSrcLang, setFreeformSrcLang] = useState('Telugu');
   const [freeformTgtLang, setFreeformTgtLang] = useState('English');
@@ -581,7 +700,7 @@ export function App() {
   const fetchTranscripts = async () => {
     setIsLoadingArchive(true);
     try {
-      const res = await fetch(apiUrl('/api/transcripts'));
+      const res = await fetch(apiUrl('/api/transcripts'), { headers: getAuthHeaders() });
       if (res.ok) {
         const data = await res.json();
         setTranscripts(data.transcripts || []);
@@ -2273,36 +2392,90 @@ ${feedbackRecommendation}
             <span>Faculty Viva Guide</span>
           </button>
 
-          <button
-            type="button"
-            onClick={() => handleTabChange('login')}
-            className="btn-secondary"
-            style={{
-              padding: '6px 16px',
-              minHeight: '34px',
-              fontSize: '13px',
-              borderRadius: '20px',
-              background: activeNavTab === 'login' ? 'rgba(142, 182, 155, 0.2)' : 'rgba(11, 43, 38, 0.6)',
-              borderColor: activeNavTab === 'login' ? '#8EB69B' : '#235347'
-            }}
-          >
-            Login
-          </button>
+          {currentUser ? (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+              <button
+                type="button"
+                onClick={() => handleTabChange('login')}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(35, 83, 71, 0.5)',
+                  border: '1px solid #8EB69B',
+                  borderRadius: '20px',
+                  padding: '4px 12px',
+                  color: '#DAF1DE',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  cursor: 'pointer'
+                }}
+              >
+                <span style={{
+                  background: currentUser.role === 'admin' ? '#E11D48' : currentUser.role === 'reviewer' ? '#D97706' : currentUser.role === 'researcher' ? '#2563EB' : '#10B981',
+                  color: '#FFF',
+                  fontSize: '10px',
+                  fontWeight: 800,
+                  padding: '2px 6px',
+                  borderRadius: '10px',
+                  textTransform: 'uppercase'
+                }}>
+                  {currentUser.role}
+                </span>
+                <span>{currentUser.full_name || currentUser.username}</span>
+              </button>
+              <button
+                type="button"
+                onClick={handleAuthLogout}
+                className="btn-secondary"
+                style={{
+                  padding: '4px 12px',
+                  minHeight: '30px',
+                  fontSize: '11px',
+                  borderRadius: '20px',
+                  background: 'rgba(239, 68, 68, 0.15)',
+                  borderColor: '#EF4444',
+                  color: '#FCA5A5',
+                  cursor: 'pointer'
+                }}
+              >
+                Log Out
+              </button>
+            </div>
+          ) : (
+            <>
+              <button
+                type="button"
+                onClick={() => { setAuthMode('login'); handleTabChange('login'); }}
+                className="btn-secondary"
+                style={{
+                  padding: '6px 16px',
+                  minHeight: '34px',
+                  fontSize: '13px',
+                  borderRadius: '20px',
+                  background: activeNavTab === 'login' && authMode === 'login' ? 'rgba(142, 182, 155, 0.2)' : 'rgba(11, 43, 38, 0.6)',
+                  borderColor: activeNavTab === 'login' && authMode === 'login' ? '#8EB69B' : '#235347'
+                }}
+              >
+                Login
+              </button>
 
-          <button
-            type="button"
-            onClick={() => handleTabChange('login')}
-            className="btn-primary"
-            style={{
-              padding: '6px 18px',
-              minHeight: '34px',
-              fontSize: '13px',
-              borderRadius: '20px',
-              fontWeight: '700'
-            }}
-          >
-            Sign Up
-          </button>
+              <button
+                type="button"
+                onClick={() => { setAuthMode('signup'); handleTabChange('login'); }}
+                className="btn-primary"
+                style={{
+                  padding: '6px 18px',
+                  minHeight: '34px',
+                  fontSize: '13px',
+                  borderRadius: '20px',
+                  fontWeight: '700'
+                }}
+              >
+                Sign Up
+              </button>
+            </>
+          )}
         </div>
       </header>
 
@@ -6098,135 +6271,495 @@ ${feedbackRecommendation}
         </section>
       )}
 
-      {/* ─── TAB 5: Login / Sign Up (Matching Reference 8. Login / Signup) ─── */}
+      {/* ─── TAB 5: Login / Sign Up / User Profile ─── */}
       {activeNavTab === 'login' && (
-        <section style={{ maxWidth: '880px', margin: '40px auto 60px' }}>
-          <div className="glass-card" style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
-            gap: '0', 
-            overflow: 'hidden', 
-            padding: 0,
-            borderRadius: '24px',
-            border: '1px solid #235347',
-            boxShadow: '0 20px 50px rgba(5, 31, 32, 0.7)'
-          }}>
-            {/* Left Column: Form */}
-            <div style={{ background: '#FFFFFF', color: '#0F172A', padding: '44px 36px' }}>
-              <h3 style={{ fontSize: '24px', fontWeight: '800', color: '#0F172A', marginBottom: '6px' }}>
-                Welcome Back
-              </h3>
-              <p style={{ fontSize: '13px', color: '#64748B', marginBottom: '28px' }}>
-                Login to continue your language preservation journey.
-              </p>
-
-              <form onSubmit={(e) => { e.preventDefault(); handleTabChange('home'); }} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
-                    Email Address
-                  </label>
-                  <input 
-                    type="email" 
-                    placeholder="name@community.org" 
-                    defaultValue="field.worker@voiceroots.org"
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: '10px',
-                      border: '1px solid #CBD5E1',
-                      fontSize: '14px',
-                      color: '#0F172A',
-                      outline: 'none'
-                    }}
-                  />
+        <section style={{ maxWidth: '880px', margin: '40px auto 60px', padding: '0 16px' }}>
+          {currentUser ? (
+            <div className="glass-card" style={{
+              background: '#FFFFFF',
+              color: '#0F172A',
+              padding: '36px',
+              borderRadius: '24px',
+              border: '1px solid #CBD5E1',
+              boxShadow: '0 20px 50px rgba(5, 31, 32, 0.5)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+                  <div style={{
+                    width: '64px',
+                    height: '64px',
+                    borderRadius: '20px',
+                    background: currentUser.role === 'admin' ? '#FFE4E6' : currentUser.role === 'reviewer' ? '#FEF3C7' : currentUser.role === 'researcher' ? '#DBEAFE' : '#D1FAE5',
+                    color: currentUser.role === 'admin' ? '#E11D48' : currentUser.role === 'reviewer' ? '#D97706' : currentUser.role === 'researcher' ? '#2563EB' : '#059669',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '24px',
+                    fontWeight: 800
+                  }}>
+                    {currentUser.full_name?.charAt(0) || currentUser.username.charAt(0).toUpperCase()}
+                  </div>
+                  <div>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
+                      <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                        {currentUser.full_name || currentUser.username}
+                      </h3>
+                      <span style={{
+                        background: currentUser.role === 'admin' ? '#E11D48' : currentUser.role === 'reviewer' ? '#D97706' : currentUser.role === 'researcher' ? '#2563EB' : '#10B981',
+                        color: '#FFF',
+                        fontSize: '11px',
+                        fontWeight: 800,
+                        padding: '3px 8px',
+                        borderRadius: '12px',
+                        textTransform: 'uppercase'
+                      }}>
+                        {currentUser.role}
+                      </span>
+                    </div>
+                    <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>
+                      @{currentUser.username} • {currentUser.email}
+                    </p>
+                  </div>
                 </div>
 
-                <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '6px' }}>
-                    Password
-                  </label>
-                  <input 
-                    type="password" 
-                    placeholder="••••••••••••" 
-                    defaultValue="preservation2026"
-                    style={{
-                      width: '100%',
-                      padding: '12px 14px',
-                      borderRadius: '10px',
-                      border: '1px solid #CBD5E1',
-                      fontSize: '14px',
-                      color: '#0F172A',
-                      outline: 'none'
-                    }}
-                  />
-                </div>
-
-                <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-                  <span style={{ fontSize: '12px', color: '#163832', fontWeight: '600', cursor: 'pointer' }}>
-                    Forgot password?
-                  </span>
-                </div>
-
-                <button 
-                  type="submit"
+                <button
+                  type="button"
+                  onClick={handleAuthLogout}
                   style={{
-                    width: '100%',
-                    padding: '12px',
+                    padding: '8px 18px',
+                    borderRadius: '12px',
+                    background: '#FEE2E2',
+                    border: '1px solid #FCA5A5',
+                    color: '#DC2626',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Log Out
+                </button>
+              </div>
+
+              {currentUser.bio && (
+                <div style={{ padding: '14px 18px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
+                    Profile Biography
+                  </span>
+                  <p style={{ fontSize: '13px', color: '#334155', margin: 0 }}>
+                    {currentUser.bio}
+                  </p>
+                </div>
+              )}
+
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
+                <div style={{ padding: '16px', background: '#F1F5F9', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Active Role</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginTop: '4px', textTransform: 'capitalize' }}>
+                    {currentUser.role}
+                  </div>
+                </div>
+                <div style={{ padding: '16px', background: '#F1F5F9', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Account Status</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
+                    Active & Verified
+                  </div>
+                </div>
+                <div style={{ padding: '16px', background: '#F1F5F9', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Data Sovereignty Tier</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
+                    OCAP® Protected
+                  </div>
+                </div>
+              </div>
+
+              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('home')}
+                  style={{
+                    padding: '10px 20px',
                     borderRadius: '10px',
                     background: '#163832',
                     color: '#DAF1DE',
-                    fontWeight: '700',
-                    fontSize: '14px',
+                    fontWeight: 700,
+                    fontSize: '13px',
                     border: 'none',
-                    cursor: 'pointer',
-                    marginTop: '8px',
-                    boxShadow: '0 4px 12px rgba(22, 56, 50, 0.3)'
+                    cursor: 'pointer'
                   }}
                 >
-                  Login
+                  Return to Dashboard
                 </button>
-
-                <p style={{ textAlign: 'center', fontSize: '12px', color: '#64748B', marginTop: '12px' }}>
-                  Don't have an account? <span style={{ color: '#163832', fontWeight: '700', cursor: 'pointer' }}>Sign Up</span>
-                </p>
-              </form>
+                <button
+                  type="button"
+                  onClick={() => handleTabChange('cultural')}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '10px',
+                    background: '#E2E8F0',
+                    color: '#0F172A',
+                    fontWeight: 700,
+                    fontSize: '13px',
+                    border: 'none',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Explore Cultural Archives
+                </button>
+              </div>
             </div>
-
-            {/* Right Column: Forest Heritage Hero Brand */}
-            <div style={{ 
-              background: 'linear-gradient(135deg, #0B2B26 0%, #163832 50%, #051F20 100%)',
-              padding: '44px 36px',
-              display: 'flex',
-              flexDirection: 'column',
-              justifyContent: 'center',
-              alignItems: 'center',
-              textAlign: 'center',
-              position: 'relative'
+          ) : (
+            <div className="glass-card" style={{ 
+              display: 'grid', 
+              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
+              gap: '0', 
+              overflow: 'hidden', 
+              padding: 0,
+              borderRadius: '24px',
+              border: '1px solid #235347',
+              boxShadow: '0 20px 50px rgba(5, 31, 32, 0.7)'
             }}>
-              <div style={{ 
-                width: '64px', 
-                height: '64px', 
-                borderRadius: '18px', 
-                background: 'rgba(142, 182, 155, 0.15)', 
-                border: '1px solid #235347',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center',
-                marginBottom: '16px'
-              }}>
-                <Sparkles size={32} color="#8EB69B" />
+              {/* Left Column: Interactive Form */}
+              <div style={{ background: '#FFFFFF', color: '#0F172A', padding: '36px 32px' }}>
+                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: '#F1F5F9', padding: '4px', borderRadius: '12px' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('login'); setAuthError(null); }}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: authMode === 'login' ? '#FFFFFF' : 'transparent',
+                      color: authMode === 'login' ? '#0F172A' : '#64748B',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      boxShadow: authMode === 'login' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none'
+                    }}
+                  >
+                    Login
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => { setAuthMode('signup'); setAuthError(null); }}
+                    style={{
+                      flex: 1,
+                      padding: '8px',
+                      borderRadius: '8px',
+                      border: 'none',
+                      background: authMode === 'signup' ? '#FFFFFF' : 'transparent',
+                      color: authMode === 'signup' ? '#0F172A' : '#64748B',
+                      fontWeight: 700,
+                      fontSize: '13px',
+                      cursor: 'pointer',
+                      boxShadow: authMode === 'signup' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none'
+                    }}
+                  >
+                    Sign Up
+                  </button>
+                </div>
+
+                <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#0F172A', marginBottom: '4px' }}>
+                  {authMode === 'login' ? 'Welcome Back' : 'Create an Account'}
+                </h3>
+                <p style={{ fontSize: '12px', color: '#64748B', marginBottom: '20px' }}>
+                  {authMode === 'login' 
+                    ? 'Login to preserve, review, or research indigenous oral heritage.' 
+                    : 'Join the community-governed speech preservation initiative.'}
+                </p>
+
+                {/* Quick Presets for Evaluator */}
+                {authMode === 'login' && (
+                  <div style={{ marginBottom: '20px', padding: '12px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
+                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '8px', textTransform: 'uppercase' }}>
+                      Quick Evaluation Presets:
+                    </div>
+                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setAuthIdentifier('field.worker@voiceroots.org'); setAuthPassword('preservation2026'); }}
+                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
+                      >
+                        Worker (Contributor)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setAuthIdentifier('elder.reviewer@gondi.org'); setAuthPassword('ElderReviewer2026!'); }}
+                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
+                      >
+                        Elder Reviewer
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setAuthIdentifier('researcher@ciil.res.in'); setAuthPassword('ResearchScholar2026!'); }}
+                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
+                      >
+                        Researcher
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => { setAuthIdentifier('admin@voiceroots.ai'); setAuthPassword('VoiceRootsAdmin2026!'); }}
+                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
+                      >
+                        Admin
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {authError && (
+                  <div style={{ padding: '10px 14px', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '8px', color: '#DC2626', fontSize: '12px', marginBottom: '16px' }}>
+                    {authError}
+                  </div>
+                )}
+
+                {authSuccess && (
+                  <div style={{ padding: '10px 14px', background: '#D1FAE5', border: '1px solid #6EE7B7', borderRadius: '8px', color: '#065F46', fontSize: '12px', marginBottom: '16px' }}>
+                    {authSuccess}
+                  </div>
+                )}
+
+                {authMode === 'login' ? (
+                  <form onSubmit={handleAuthLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>
+                        Email or Username
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        value={authIdentifier}
+                        onChange={(e) => setAuthIdentifier(e.target.value)}
+                        placeholder="user@community.org" 
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>
+                        Password
+                      </label>
+                      <input 
+                        type="password" 
+                        required
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="••••••••••••" 
+                        style={{
+                          width: '100%',
+                          padding: '10px 12px',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <button 
+                      type="submit"
+                      disabled={authLoading}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '10px',
+                        background: '#163832',
+                        color: '#DAF1DE',
+                        fontWeight: '700',
+                        fontSize: '13px',
+                        border: 'none',
+                        cursor: authLoading ? 'not-allowed' : 'pointer',
+                        marginTop: '6px',
+                        opacity: authLoading ? 0.7 : 1,
+                        boxShadow: '0 4px 12px rgba(22, 56, 50, 0.3)'
+                      }}
+                    >
+                      {authLoading ? 'Signing In...' : 'Login to Account'}
+                    </button>
+                  </form>
+                ) : (
+                  <form onSubmit={handleAuthSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
+                        Full Name
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        value={authFullName}
+                        onChange={(e) => setAuthFullName(e.target.value)}
+                        placeholder="Elder Ramu Gond" 
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
+                        Username
+                      </label>
+                      <input 
+                        type="text" 
+                        required
+                        value={authUsername}
+                        onChange={(e) => setAuthUsername(e.target.value)}
+                        placeholder="ramu_gond" 
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
+                        Email Address
+                      </label>
+                      <input 
+                        type="email" 
+                        required
+                        value={authEmail}
+                        onChange={(e) => setAuthEmail(e.target.value)}
+                        placeholder="ramu@gondi-council.org" 
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
+                        Password (Min 6 Characters)
+                      </label>
+                      <input 
+                        type="password" 
+                        required
+                        value={authPassword}
+                        onChange={(e) => setAuthPassword(e.target.value)}
+                        placeholder="••••••••••••" 
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          outline: 'none'
+                        }}
+                      />
+                    </div>
+
+                    <div>
+                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
+                        Community Role
+                      </label>
+                      <select
+                        value={authRole}
+                        onChange={(e) => setAuthRole(e.target.value as any)}
+                        style={{
+                          width: '100%',
+                          padding: '8px 10px',
+                          borderRadius: '8px',
+                          border: '1px solid #CBD5E1',
+                          fontSize: '13px',
+                          color: '#0F172A',
+                          outline: 'none',
+                          background: '#FFF'
+                        }}
+                      >
+                        <option value="contributor">Contributor / Native Speaker</option>
+                        <option value="reviewer">Community Elder / Reviewer</option>
+                        <option value="researcher">Academic Researcher (CIIL / University)</option>
+                      </select>
+                    </div>
+
+                    <button 
+                      type="submit"
+                      disabled={authLoading}
+                      style={{
+                        width: '100%',
+                        padding: '12px',
+                        borderRadius: '10px',
+                        background: '#163832',
+                        color: '#DAF1DE',
+                        fontWeight: '700',
+                        fontSize: '13px',
+                        border: 'none',
+                        cursor: authLoading ? 'not-allowed' : 'pointer',
+                        marginTop: '6px',
+                        opacity: authLoading ? 0.7 : 1,
+                        boxShadow: '0 4px 12px rgba(22, 56, 50, 0.3)'
+                      }}
+                    >
+                      {authLoading ? 'Creating Account...' : 'Complete Registration'}
+                    </button>
+                  </form>
+                )}
               </div>
-              <h4 style={{ fontSize: '26px', fontWeight: '800', color: '#DAF1DE', marginBottom: '8px' }}>
-                Voice <span style={{ color: '#8EB69B' }}>Roots</span>
-              </h4>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: 'rgba(218, 241, 222, 0.75)', fontSize: '13px', marginTop: '14px' }}>
-                <span>Preserve</span>
-                <span>Explore</span>
-                <span>Share</span>
-                <span>Together</span>
+
+              {/* Right Column: Forest Heritage Hero Brand */}
+              <div style={{ 
+                background: 'linear-gradient(135deg, #0B2B26 0%, #163832 50%, #051F20 100%)',
+                padding: '40px 32px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'center',
+                alignItems: 'center',
+                textAlign: 'center',
+                position: 'relative'
+              }}>
+                <div style={{ 
+                  width: '64px', 
+                  height: '64px', 
+                  borderRadius: '18px', 
+                  background: 'rgba(142, 182, 155, 0.15)', 
+                  border: '1px solid #235347',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '16px'
+                }}>
+                  <Sparkles size={32} color="#8EB69B" />
+                </div>
+                <h4 style={{ fontSize: '26px', fontWeight: '800', color: '#DAF1DE', marginBottom: '8px' }}>
+                  Voice <span style={{ color: '#8EB69B' }}>Roots</span>
+                </h4>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: 'rgba(218, 241, 222, 0.75)', fontSize: '13px', marginTop: '14px' }}>
+                  <span>🌱 Sovereign Indigenous Knowledge</span>
+                  <span>🔒 Offline OCAP® Privacy Protection</span>
+                  <span>🎙️ Immutable Lossless Audio Masters</span>
+                  <span>🤝 Elder Human Review Layer</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </section>
       )}
 

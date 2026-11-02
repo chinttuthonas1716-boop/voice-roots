@@ -1,338 +1,156 @@
-# Deployment and Operations Guide: Voice Roots
+# Voice Roots — Production Deployment & Infrastructure Guide
+## Containerized Non-Root Runtime, Turnkey Edge TLS Proxy, Persistent Volumes, and Disaster Rollback
 
-> **"Voice Roots: Rooting Oral Languages in Text with AI"**  
-> A source-grounded, privacy-preserving oral language preservation platform.
+> **Deployment Version**: `1.0.0-production`  
+> **Container Security**: Non-Root System User (`appuser:appgroup`, UID 1000)  
+> **Persistent Storage Vault**: `/data` (Host Volume Mount)  
+> **Edge Reverse Proxy**: Caddy (Automated Let's Encrypt TLS) or Nginx (TLS 1.3)
 
 ---
 
-## 1. System Architecture
+## 1. Deployment Architecture Overview
 
 ```mermaid
 graph TD
-    Client[Browser / Mobile Web Client] -->|HTTPS| CDN[Vercel / Cloudflare Pages / Nginx]
-    CDN -->|Static Assets| SPA[React 18 + Vite SPA]
-    Client -->|REST API / Audio Stream| API[FastAPI Backend - Uvicorn]
-    
-    subgraph Persistent Storage Mount [/data]
-        API -->|Read / Write| DB[(SQLite: voice_roots.db)]
-        API -->|Immutable Masters| AudioStore[Master Audio Files: /storage/audio]
-        API -->|Linguistic Vectors| ChromaStore[(ChromaDB: /chroma_db)]
+    subgraph Internet
+        Browser["User Browser / Mobile Phone"]
+        Linguist["Institutional Researcher (API)"]
     end
 
-    subgraph Offline AI Inference
-        API -->|Local Speech-to-Text| Whisper[OpenAI Whisper CPU/GPU Engine]
-        API -->|Audio Preprocessing| FFmpeg[System FFmpeg Binary]
-        API -->|Semantic Embedding| MiniLM[all-MiniLM-L6-v2 Embeddings]
+    subgraph Edge["Edge Infrastructure"]
+        Caddy["Caddy / Nginx Reverse Proxy<br/>TLS 1.3 Termination (Port 443)<br/>Rate Limiting (60 req/min)"]
     end
+
+    subgraph Container["Voice Roots Container (UID 1000)"]
+        ASGI["Uvicorn ASGI Server (Port 8000)<br/>FastAPI + Local Whisper + MiniLM"]
+    end
+
+    subgraph Host["Host Storage (chown -R 1000:1000 /data)"]
+        DB[("voice_roots.db (SQLite WAL)")]
+        Audio[("/data/audio (Lossless WAV Masters)")]
+        Backups[("/data/backups (Rolling Snapshots)")]
+        Chroma[("/data/chroma_db (Vector Index)")]
+    end
+
+    Browser -->|HTTPS| Caddy
+    Linguist -->|HTTPS| Caddy
+    Caddy -->|HTTP Proxy| ASGI
+    ASGI --> DB
+    ASGI --> Audio
+    ASGI --> Backups
+    ASGI --> Chroma
 ```
 
-### Core Components
-1. **Frontend**: React 18 + TypeScript + Vite Single Page Application.
-2. **Backend**: FastAPI (Python 3.10–3.14) ASGI service managed by Uvicorn.
-3. **Local AI Models**: Offline `whisper-base` + local `all-MiniLM-L6-v2` embeddings for zero external API costs and offline indigenous data sovereignty.
-4. **Persistent State**:
-   - `voice_roots.db`: SQLite database recording transcript annotations, timestamps, speaker consent records (OCAP protocol), and verified community translations.
-   - `storage/audio/`: Master audio recordings (WAV/FLAC/MP3/M4A), preserved immutably with SHA-256 integrity checksums.
-   - `chroma_db/`: Persistent local vector store with indexed oral language corpora across 21+ languages.
-
 ---
 
-## 2. Recommended Deployment Platform & Rationale
+## 2. Host Storage Preparation & Non-Root Permissions
 
-### Platform: Dockerized Web Service with Persistent Disk on Render, Railway, or Linux VPS
-- **Why**:
-  1. **Persistent Volume Requirement**: SQLite, local ChromaDB, and master audio recordings are stateful and require durable disk storage across container restarts and redeployments. Serverless runtimes (such as AWS Lambda or Vercel Serverless Functions) lack persistent disk and will lose user audio and database records upon instance recycling.
-  2. **System Binary Dependency**: The local transcription pipeline requires `ffmpeg` installed directly in the runtime environment. Docker containers guarantee the presence of system `ffmpeg` without host-level discrepancies.
-  3. **Zero Recurring API Costs**: Running offline Whisper (`whisper-base`) locally within a persistent container eliminates recurring per-minute speech-to-text API charges.
-  4. **Decoupled Frontend Option**: The frontend production build (`frontend/dist`) can either be hosted on a global edge CDN (Vercel, Cloudflare Pages) pointing `VITE_API_URL` to the backend, or served directly from the same container via Nginx/FastAPI.
+To ensure the non-root container (`appuser`, UID 1000) can read and write persistently without root escalation:
 
----
-
-## 3. Environment Variables
-
-Create your production environment file from `.env.example`:
-
-| Variable | Required | Default / Example | Purpose |
-|---|---|---|---|
-| `VOICE_ROOTS_ENV` | Yes | `production` | Enables production security checks and disables dev debug banners |
-| `PORT` | No | `8000` | Port for Uvicorn to listen on |
-| `VOICE_ROOTS_ALLOWED_ORIGINS` | Yes | `https://your-frontend.vercel.app` | Comma-separated CORS origins permitted to access API |
-| `VOICE_ROOTS_ADMIN_KEY` | Recommended | `secure_token_abc123` | Secret required for POST `/api/v1/resources/ingest` and `/reindex` |
-| `VOICE_ROOTS_DB_PATH` | Yes | `/data/voice_roots.db` | Path to persistent SQLite database |
-| `VOICE_ROOTS_STORAGE_DIR` | Yes | `/data/storage/audio` | Path to persistent master audio directory |
-| `VOICE_ROOTS_CHROMA_DIR` | Yes | `/data/chroma_db` | Path to persistent ChromaDB vector store directory |
-| `VOICE_ROOTS_TRANSCRIPTION_PROVIDER`| No | `whisper-local` | Speech recognition provider (`whisper-local` \| `mock`) |
-| `VOICE_ROOTS_WHISPER_MODEL_SIZE` | No | `base` | Whisper model size (`tiny`, `base`, `small`, `medium`) |
-| `VOICE_ROOTS_TRANSLATION_PROVIDER` | No | `offline-rule` | Translation adapter (`offline-rule` \| `indictrans2`) |
-| `VITE_API_URL` | Frontend | `https://api.yourdomain.com` | Base URL used by the frontend to contact backend |
-
----
-
-## 4. Step-by-Step Deployment Instructions
-
-### Option A: Single-Host Docker Deployment (Recommended)
-
-#### Step 1: Create `Dockerfile` in Repository Root
-```dockerfile
-FROM python:3.11-slim
-
-# Install system dependencies including FFmpeg
-RUN apt-get update && apt-get install -y --no-install-recommends \
-    ffmpeg \
-    curl \
-    && rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-# Install backend dependencies
-COPY backend/requirements.txt backend/
-RUN pip install --no-cache-dir -r backend/requirements.txt
-
-# Copy backend application code and seeded datasets
-COPY backend/ backend/
-COPY data/ data/
-
-# Create persistent storage directories
-RUN mkdir -p /data/storage/audio /data/chroma_db
-
-# Configure environment defaults
-ENV VOICE_ROOTS_ENV=production \
-    VOICE_ROOTS_DB_PATH=/data/voice_roots.db \
-    VOICE_ROOTS_STORAGE_DIR=/data/storage/audio \
-    VOICE_ROOTS_CHROMA_DIR=/data/chroma_db \
-    VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local \
-    VOICE_ROOTS_WHISPER_MODEL_SIZE=base \
-    PYTHONPATH=/app/backend
-
-EXPOSE 8000
-
-# Health check using the readiness probe
-HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-  CMD curl -f http://localhost:8000/ready || exit 1
-
-CMD ["python", "-m", "uvicorn", "main:app", "--app-dir", "backend", "--host", "0.0.0.0", "--port", "8000"]
-```
-
-#### Step 2: Build and Run Container with Persistent Volume
 ```bash
-# 1. Build the production image
-docker build -t voice-roots-backend:1.0.0 .
+# 1. Create dedicated host storage directories
+sudo mkdir -p /data/audio /data/backups /data/chroma_db
 
-# 2. Run container with persistent host volume mounted to /data
-docker run -d \
-  --name voice-roots-api \
-  -p 8000:8000 \
-  -v /var/lib/voice-roots-data:/data \
-  --env-file .env.production \
-  --restart unless-stopped \
-  voice-roots-backend:1.0.0
+# 2. Grant ownership to UID 1000 (appuser)
+sudo chown -R 1000:1000 /data
+
+# 3. Set secure permissions (read/write by appuser only)
+sudo chmod -R 750 /data
 ```
 
-#### Step 3: Build & Deploy Frontend (Vercel / Cloudflare Pages / Static Nginx)
+---
+
+## 3. Option A: Turnkey Deployment with Docker Compose (Recommended)
+
+The repository provides a complete turnkey deployment composition in [`deployment/docker-compose.pilot.yml`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/deployment/docker-compose.pilot.yml).
+
+### Step 1: Configure Production Environment
+Create `/opt/voice-roots/.env`:
+```ini
+VOICE_ROOTS_ENV=production
+VOICE_ROOTS_ADMIN_KEY=YourStrongProductionSecretKey2026!
+VOICE_ROOTS_JWT_SECRET=Your64CharacterRandomProductionJwtSigningSecretKeyHere!
+VOICE_ROOTS_STORAGE_PATH=/data
+AI_PROVIDER=whisper-local
+WHISPER_MODEL_SIZE=base
+```
+
+### Step 2: Launch Containers
 ```bash
-cd frontend
-# Set production backend endpoint
-export VITE_API_URL=https://api.yourdomain.com
+docker compose -f deployment/docker-compose.pilot.yml up -d --build
+```
+This launches:
+1. `voiceroots-app`: FastAPI application running as `appuser:1000` with volume `/data` mounted.
+2. `voiceroots-caddy`: Caddy edge proxy automatically provisioning Let's Encrypt TLS certificates and proxying to port 8000.
 
-# Install dependencies and build static bundle
-npm install
-npm run build
+### Step 3: Verify Container Health
+```bash
+# Check container status
+docker ps
 
-# Output directory: frontend/dist
-# Deploy frontend/dist to Vercel, Cloudflare Pages, or static Nginx root
+# Query live storage health probe
+curl https://pilot.voiceroots.ai/api/v1/system/storage-probe
 ```
 
 ---
 
-### Option B: Deploying to Render.com with Persistent Disk
+## 4. Option B: Standalone Nginx Reverse Proxy Configuration
 
-1. **Create Web Service**:
-   - Environment: `Python 3` or `Docker`.
-   - Build Command: `pip install -r backend/requirements.txt && apt-get install -y ffmpeg` (or use Dockerfile).
-   - Start Command: `python -m uvicorn main:app --app-dir backend --host 0.0.0.0 --port $PORT`
-2. **Attach Persistent Disk**:
-   - Mount Path: `/data`
-   - Size: `10 GB` (or larger depending on expected recording volume).
-3. **Set Environment Variables**:
-   - `VOICE_ROOTS_DB_PATH=/data/voice_roots.db`
-   - `VOICE_ROOTS_STORAGE_DIR=/data/storage/audio`
-   - `VOICE_ROOTS_CHROMA_DIR=/data/chroma_db`
-   - `VOICE_ROOTS_ALLOWED_ORIGINS=https://your-frontend.vercel.app`
-   - `VOICE_ROOTS_ADMIN_KEY=<generate-strong-key>`
-4. **Deploy Frontend on Vercel**:
-   - Framework Preset: `Vite`
-   - Root Directory: `frontend`
-   - Environment Variable: `VITE_API_URL=https://<your-render-service>.onrender.com`
+If using standard Nginx on Ubuntu/Debian instead of Caddy:
 
----
+```bash
+# Copy provided production Nginx template
+sudo cp deployment/nginx.conf /etc/nginx/sites-available/voiceroots.conf
+sudo ln -s /etc/nginx/sites-available/voiceroots.conf /etc/nginx/sites-enabled/
 
-## 5. Health & Readiness Monitoring
+# Test syntax and reload
+sudo nginx -t
+sudo systemctl reload nginx
 
-The backend exposes standardized monitoring probes:
-
-- **Readiness Probe (`GET /ready` or `GET /api/v1/ready`)**:
-  - Verifies database connectivity.
-  - Verifies audio storage directory write permissions.
-  - Verifies ChromaDB vector database connectivity.
-  - Returns HTTP 200 `{"status": "ready", "checks": {"database": "ok", "storage": "ok", "vector_store": "ok"}}` when ready for traffic.
-  - Returns HTTP 503 if any dependency check fails.
-
-- **Liveness Probe (`GET /health` or `GET /api/v1/health`)**:
-  - Verifies process liveness.
-  - Returns HTTP 200 `{"status": "healthy", "database": "sqlite", "database_status": "ok", "storage_status": "ok"}`.
-  - Sanitized in production (no internal system directory paths leaked).
-
----
-
-## 6. Backup and Recovery Procedures
-
-### Backup Execution (Daily / Scheduled Cron)
-
-State is consolidated under the persistent data directory (`/data`):
-1. **SQLite Database Backup**:
-   Use SQLite's online safe backup API to avoid database locks:
-   ```bash
-   sqlite3 /data/voice_roots.db ".backup '/backup/voice_roots_$(date +%Y%m%d_%H%M%S).db'"
-   ```
-2. **Master Audio Files Backup**:
-   Sync immutable audio master files to an offsite secure bucket (e.g. AWS S3 Glacier / Cloudflare R2 / local cold storage):
-   ```bash
-   rsync -avz /data/storage/audio/ /backup/storage/audio/
-   ```
-3. **ChromaDB Vector Store**:
-   Sync ChromaDB SQLite and parquet index files:
-   ```bash
-   rsync -avz /data/chroma_db/ /backup/chroma_db/
-   ```
-
-### Restoration Procedure
-1. Stop the backend service to prevent live writes:
-   ```bash
-   docker stop voice-roots-api
-   ```
-2. Restore SQLite database:
-   ```bash
-   cp /backup/voice_roots_YYYYMMDD_HHMMSS.db /data/voice_roots.db
-   ```
-3. Restore audio storage and vector embeddings:
-   ```bash
-   rsync -av /backup/storage/audio/ /data/storage/audio/
-   rsync -av /backup/chroma_db/ /data/chroma_db/
-   ```
-4. Start the backend service and verify readiness:
-   ```bash
-   docker start voice-roots-api
-   curl -s http://localhost:8000/ready
-   ```
-
----
-
-## 7. Rollback Plan
-
-1. **Application Code Rollback**:
-   - In containerized deployments, redeploy previous container tag (e.g. `voice-roots-backend:0.9.9`).
-   - In Git-based deployments: `git checkout <previous-tag-or-commit>` followed by service restart.
-2. **Database Compatibility**:
-   - All Voice Roots database migrations are non-destructive and additive (columns like `consent_at`, `machine_transcript_text`, and tables like `translations` were added using `ALTER TABLE ADD COLUMN` and `CREATE TABLE IF NOT EXISTS`).
-   - Rolling back backend application code does not require rolling back the SQLite database schema. Existing recordings and transcripts remain intact.
-3. **Emergency Verification**:
-   - Run verification test suite against rollback instance:
-     ```bash
-     PYTHONPATH=backend python3 -m pytest tests/test_e2e_workflow.py -v
-     ```
-
----
-
-## 8. Render Blueprint Specification & Cost Breakdown
-
-### Render Infrastructure Blueprint (`render.yaml`)
-For automated infrastructure-as-code deployment on Render:
-
-```yaml
-services:
-  # Voice Roots FastAPI Backend with Persistent Disk
-  - type: web
-    name: voice-roots-backend
-    runtime: docker
-    dockerfilePath: ./Dockerfile
-    plan: standard
-    region: oregon
-    disk:
-      name: voice-roots-data
-      mountPath: /data
-      sizeGB: 10
-    envVars:
-      - key: VOICE_ROOTS_ENV
-        value: production
-      - key: VOICE_ROOTS_DB_PATH
-        value: /data/voice_roots.db
-      - key: VOICE_ROOTS_STORAGE_DIR
-        value: /data/storage
-      - key: VOICE_ROOTS_BACKUP_DIR
-        value: /data/backups
-      - key: VOICE_ROOTS_CHROMA_DIR
-        value: /data/chroma_db
-      - key: VOICE_ROOTS_TRANSCRIPTION_PROVIDER
-        value: whisper-local
-      - key: VOICE_ROOTS_WHISPER_MODEL_SIZE
-        value: base
-      - key: VOICE_ROOTS_TRANSLATION_PROVIDER
-        value: offline-rule
-      - key: VOICE_ROOTS_ALLOWED_ORIGINS
-        value: https://voice-roots-frontend.onrender.com,https://voice-roots.onrender.com
-      - key: VOICE_ROOTS_ADMIN_KEY
-        generateValue: true
-
-  # Voice Roots React / Vite Static Web Frontend
-  - type: web
-    name: voice-roots-frontend
-    runtime: docker
-    dockerfilePath: ./frontend/Dockerfile
-    plan: free
-    region: oregon
-    envVars:
-      - key: VITE_API_URL
-        fromService:
-          type: web
-          name: voice-roots-backend
-          property: host
+# Issue Let's Encrypt certificate
+sudo certbot --nginx -d pilot.voiceroots.ai
 ```
 
-### Potential Monthly Cost Breakdown
-
-| Resource | Service / Provider | Tier | Estimated Cost |
-| :--- | :--- | :--- | :--- |
-| **Backend Compute** | Render Web Service / VPS | Standard (2 GB RAM, 1 CPU) | ~$7.00 / mo |
-| **Persistent Storage** | Render Persistent Disk | 10 GB SSD (`/data`) | ~$2.50 / mo |
-| **Frontend CDN** | Cloudflare Pages / Render | Free Tier | $0.00 / mo |
-| **Speech-to-Text API** | Local Whisper `base` | 100% Offline (Local CPU) | $0.00 / mo |
-| **Translation API** | Rule Guardrails + SQLite | 100% Offline (Local) | $0.00 / mo |
-| **Total Estimated Cost** | — | — | **~$9.50 / month** |
+Key features configured in `deployment/nginx.conf`:
+- **TLS 1.3 & HSTS**: Strict transport security enabled.
+- **Audio Range Buffering**: `proxy_cache_bypass $http_range;` ensures smooth audio scrubbing.
+- **Rate Limiting Zones**: 60 requests/minute per IP zone to prevent corpus scraping abuse.
+- **Payload Bound**: 500 MB max upload for multi-minute high-definition audio recordings.
 
 ---
 
-## 10. Local Demonstration & Faculty Handover Protocol
+## 5. Zero-Downtime Deployment & Rollback Procedure
 
-### Unified Local Architecture
-The application runs as a unified single-origin service on port 8000:
-- **Local URL**: `http://127.0.0.1:8000/`
-- **Execution Command**:
-  ```bash
-  PATH="scratch/bin:$PATH" VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local VOICE_ROOTS_WHISPER_MODEL_SIZE=base python3 -m uvicorn main:app --app-dir backend --port 8000 --reload
-  ```
-- **Stateful Assets on Host**:
-  * SQLite DB: `backend/voice_roots.db` (194 recordings, consent logs, community revisions)
-  * Vector Store: `backend/chroma_db/` (28 indexed documents, 384 dimensions)
-  * Audio Masters: `backend/storage/audio/` (lossless WAV/FLAC files with SHA-256 integrity)
+### Zero-Downtime Update
+```bash
+# 1. Pull latest verified integration branch
+git pull origin integration/milestones-16-23
 
-### Automated Test Verification
-- Backend Pytest Suite: `python3 -m pytest -q` -> **122 of 122 tests passed** (10.06s).
-- Frontend Production Bundle: `npm --prefix frontend run build` -> **0 errors** (1.90s).
+# 2. Build updated frontend assets
+npm run build --prefix frontend
 
-### Top 3 Handover Priorities
-1. **Persistent Volume Attachment**: In remote environments, mount a durable SSD at `/data` to preserve master audio and SQLite across container lifecycles.
-2. **Community Elder Pilot Integration**: Conduct field sessions with tribal elders to annotate unwritten dialects (Gondi/Koya) and expand the review queue.
-3. **Mobile Client Reconnection**: Re-enable and test the React Native / Flutter mobile clients against the stabilized `/api/v1` routes once production deployment is scheduled.
+# 3. Execute database migration upgrade (if any pending)
+cd backend && alembic upgrade head && cd ..
 
+# 4. Gracefully reload application server
+docker compose -f deployment/docker-compose.pilot.yml restart app
+```
 
+### Immediate Rollback Procedure
+If an unexpected regression occurs in production:
 
+```bash
+# 1. Restore previous application container image
+docker compose -f deployment/docker-compose.pilot.yml down
+git checkout <previous_commit_sha>
+
+# 2. Restore database from pre-deployment snapshot
+cp /data/backups/voice_roots_backup_<PRE_DEPLOYMENT>.db /data/voice_roots.db
+
+# 3. Rerun migrations down if needed
+cd backend && alembic downgrade <previous_revision> && cd ..
+
+# 4. Restart container
+docker compose -f deployment/docker-compose.pilot.yml up -d
+```
+All audio masters in `/data/audio` remain completely untouched and preserved during rollback.
