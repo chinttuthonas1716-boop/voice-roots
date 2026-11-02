@@ -20,17 +20,14 @@ import os
 import sqlite3
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 from dataset_service import assign_dataset_split
 from evaluation import (
+    BENCHMARK_TRANSLATION_CASES,
     compute_cer,
     compute_chrf,
     compute_wer,
-    levenshtein_distance,
-    _normalize_text,
-    BENCHMARK_SPEECH_CASES,
-    BENCHMARK_TRANSLATION_CASES,
 )
 
 logger = logging.getLogger(__name__)
@@ -39,7 +36,7 @@ BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 DB_PATH = os.environ.get("VOICE_ROOTS_DB_PATH", os.path.join(BACKEND_DIR, "voice_roots.db"))
 
 
-def calculate_standard_error(scores: List[float]) -> Optional[float]:
+def calculate_standard_error(scores: list[float]) -> float | None:
     """Calculate standard error of the mean for sample size >= 2."""
     n = len(scores)
     if n < 2:
@@ -50,13 +47,13 @@ def calculate_standard_error(scores: List[float]) -> Optional[float]:
     return round(std_dev / math.sqrt(n), 4)
 
 
-def evaluate_speech_recognition_research(split_filter: Optional[str] = None) -> Dict[str, Any]:
+def evaluate_speech_recognition_research(split_filter: str | None = None) -> dict[str, Any]:
     """
     Evaluate speech recognition model performance across language, dialect,
     and recording conditions using paired machine and human reference transcripts.
     Calculates WER, CER, empty rate, failure rate, and sample confidence intervals.
     """
-    evaluated_records: List[Dict[str, Any]] = []
+    evaluated_records: list[dict[str, Any]] = []
     failed_count = 0
     empty_hyp_count = 0
     total_requested_records = 0
@@ -129,7 +126,7 @@ def evaluate_speech_recognition_research(split_filter: Optional[str] = None) -> 
         })
 
     # Group evaluation by language
-    by_language: Dict[str, Dict[str, Any]] = {}
+    by_language: dict[str, dict[str, Any]] = {}
     for item in evaluated_records:
         lang = item["language"]
         if lang not in by_language:
@@ -148,7 +145,7 @@ def evaluate_speech_recognition_research(split_filter: Optional[str] = None) -> 
         by_language[lang]["cer_scores"].append(item["cer"])
         by_language[lang]["chrf_scores"].append(item["chrf"])
 
-    lang_summaries: Dict[str, Any] = {}
+    lang_summaries: dict[str, Any] = {}
     for lang, data in by_language.items():
         n = len(data["records"])
         wer_list = data["wer_scores"]
@@ -184,7 +181,7 @@ def evaluate_speech_recognition_research(split_filter: Optional[str] = None) -> 
         }
 
     # Group evaluation by acoustic condition (Clean vs. Ambient Field)
-    by_condition: Dict[str, Dict[str, Any]] = {}
+    by_condition: dict[str, dict[str, Any]] = {}
     for cond in ["clean_speech", "ambient_field"]:
         cond_records = [r for r in evaluated_records if r["condition"] == cond]
         if cond_records:
@@ -216,16 +213,19 @@ def evaluate_speech_recognition_research(split_filter: Optional[str] = None) -> 
     }
 
 
-def evaluate_translation_research() -> Dict[str, Any]:
+def evaluate_translation_research() -> dict[str, Any]:
     """
     Evaluate machine translation quality, community verification status,
     and verify compliance with Indigenous Elder-Review guardrails.
     """
-    from translation_service import get_translation_manager, OralLanguageElderReviewRequiredError
+    from translation_service import (
+        OralLanguageElderReviewRequiredError,
+        get_translation_manager,
+    )
 
     manager = get_translation_manager()
-    guardrail_results: List[Dict[str, Any]] = []
-    supported_results: List[Dict[str, Any]] = []
+    guardrail_results: list[dict[str, Any]] = []
+    supported_results: list[dict[str, Any]] = []
 
     # 1. Evaluate benchmark translation cases and elder guardrails
     guardrail_violations = 0
@@ -310,13 +310,13 @@ def evaluate_translation_research() -> Dict[str, Any]:
     }
 
 
-def evaluate_discovery_research() -> Dict[str, Any]:
+def evaluate_discovery_research() -> dict[str, Any]:
     """Evaluate hybrid search retrieval precision, MRR, and latency on labeled test set."""
     from search_service import evaluate_multilingual_discovery
     return evaluate_multilingual_discovery()
 
 
-def generate_comprehensive_research_report() -> Dict[str, Any]:
+def generate_comprehensive_research_report() -> dict[str, Any]:
     """
     Generate unified, multi-modal research evaluation report covering
     Speech Recognition, Translation Guardrails, Semantic Discovery,

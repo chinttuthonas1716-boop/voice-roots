@@ -16,15 +16,15 @@ import tempfile
 import time
 import uuid
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
-from translation_service import (
-    OralLanguageElderReviewRequiredError,
-    translation_manager,
-)
 from transcription_service import (
     TranscriptionNotConfiguredError,
     create_transcription_provider,
+)
+from translation_service import (
+    OralLanguageElderReviewRequiredError,
+    translation_manager,
 )
 
 logger = logging.getLogger(__name__)
@@ -47,9 +47,9 @@ class VoiceAssistantTurn:
         original_transcript: str,
         source_language: str,
         target_language: str,
-        translated_text: Optional[str] = None,
-        transliteration: Optional[str] = None,
-        pronunciation_guidance: Optional[Dict[str, Any]] = None,
+        translated_text: str | None = None,
+        transliteration: str | None = None,
+        pronunciation_guidance: dict[str, Any] | None = None,
         latency_ms: float = 0.0,
         guardrail_triggered: bool = False,
     ):
@@ -65,7 +65,7 @@ class VoiceAssistantTurn:
         self.guardrail_triggered = guardrail_triggered
         self.timestamp = datetime.now(timezone.utc).isoformat()
 
-    def to_dict(self) -> Dict[str, Any]:
+    def to_dict(self) -> dict[str, Any]:
         return {
             "turn_id": self.turn_id,
             "speaker": self.speaker,
@@ -95,7 +95,7 @@ class VoiceAssistantSession:
         self.user_name = user_name
         self.created_at = datetime.now(timezone.utc)
         self.last_active = datetime.now(timezone.utc)
-        self.turns: List[VoiceAssistantTurn] = []
+        self.turns: list[VoiceAssistantTurn] = []
         self.is_active = True
 
     def is_expired(self) -> bool:
@@ -105,7 +105,7 @@ class VoiceAssistantSession:
     def touch(self):
         self.last_active = datetime.now(timezone.utc)
 
-    def to_summary(self) -> Dict[str, Any]:
+    def to_summary(self) -> dict[str, Any]:
         return {
             "session_id": self.session_id,
             "source_language": self.source_language,
@@ -125,7 +125,7 @@ class VoiceAssistantManager:
     """Manages ephemeral in-memory conversation sessions and real-time turn processing."""
 
     def __init__(self):
-        self._sessions: Dict[str, VoiceAssistantSession] = {}
+        self._sessions: dict[str, VoiceAssistantSession] = {}
 
     def _cleanup_expired_sessions(self):
         """Remove any sessions that have exceeded the 15-minute inactivity timeout."""
@@ -138,7 +138,7 @@ class VoiceAssistantManager:
         source_language: str = "te",
         target_language: str = "en",
         user_name: str = "Community Speaker",
-    ) -> Dict[str, Any]:
+    ) -> dict[str, Any]:
         self._cleanup_expired_sessions()
         session_id = f"vas_{uuid.uuid4().hex[:16]}"
         session = VoiceAssistantSession(
@@ -150,7 +150,7 @@ class VoiceAssistantManager:
         self._sessions[session_id] = session
         return session.to_summary()
 
-    def get_session(self, session_id: str) -> Optional[VoiceAssistantSession]:
+    def get_session(self, session_id: str) -> VoiceAssistantSession | None:
         self._cleanup_expired_sessions()
         session = self._sessions.get(session_id)
         if session and session.is_expired():
@@ -167,12 +167,12 @@ class VoiceAssistantManager:
     def process_turn(
         self,
         session_id: str,
-        audio_bytes: Optional[bytes] = None,
-        text_input: Optional[str] = None,
+        audio_bytes: bytes | None = None,
+        text_input: str | None = None,
         audio_format: str = "wav",
-        override_source_lang: Optional[str] = None,
-        override_target_lang: Optional[str] = None,
-    ) -> Dict[str, Any]:
+        override_source_lang: str | None = None,
+        override_target_lang: str | None = None,
+    ) -> dict[str, Any]:
         """
         Process an interactive voice or text turn:
         1. Validates session active state and rate limits.
@@ -200,7 +200,7 @@ class VoiceAssistantManager:
         transcript_text = ""
         if audio_bytes:
             if len(audio_bytes) > MAX_AUDIO_TURN_SIZE_BYTES:
-                raise ValueError(f"Audio chunk exceeds maximum size of 10 MB.")
+                raise ValueError("Audio chunk exceeds maximum size of 10 MB.")
 
             # Ephemeral file for local Whisper inference
             suffix = f".{audio_format.lstrip('.')}"
@@ -215,7 +215,7 @@ class VoiceAssistantManager:
             except TranscriptionNotConfiguredError:
                 transcript_text = "[Speech provider not configured: audio received]"
             except Exception as e:
-                transcript_text = f"[Speech recognition error: {str(e)}]"
+                transcript_text = f"[Speech recognition error: {e!s}]"
             finally:
                 if os.path.exists(tmp_path):
                     try:
@@ -260,7 +260,7 @@ class VoiceAssistantManager:
                 )
             except Exception as e:
                 # Graceful fallback without crashing
-                translated_text = f"[Translation unavailable for {src_lang}->{tgt_lang}: {str(e)}]"
+                translated_text = f"[Translation unavailable for {src_lang}->{tgt_lang}: {e!s}]"
 
         # Step 3: Phonetic Transliteration and Pronunciation Guidance
         pronunciation_guidance = generate_pronunciation_guidance(
@@ -298,7 +298,7 @@ class VoiceAssistantManager:
             },
         }
 
-    def get_session_history(self, session_id: str) -> Dict[str, Any]:
+    def get_session_history(self, session_id: str) -> dict[str, Any]:
         session = self.get_session(session_id)
         if not session:
             raise ValueError(f"Voice assistant session '{session_id}' not found or expired.")
@@ -317,7 +317,7 @@ assistant_manager = VoiceAssistantManager()
 # Pronunciation Guidance & Phonetic Transliteration Helper
 # ==============================================================================
 
-def generate_pronunciation_guidance(text: str, language: str) -> Dict[str, Any]:
+def generate_pronunciation_guidance(text: str, language: str) -> dict[str, Any]:
     """
     Generate pronunciation guidance, phoneme syllable breakdown, and Romanized
     phonetic transliteration for oral language learners and accessibility.
@@ -399,10 +399,10 @@ def _word_phonetic_hint(word: str, language: str) -> str:
 
 def save_conversation_history(
     session_id: str,
-    user_name: Optional[str] = None,
+    user_name: str | None = None,
     consent_confirmed: bool = False,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """
     Save ephemeral session conversation into SQLite history table.
     Strictly requires affirmative OCAP consent (consent_confirmed = True).
@@ -465,7 +465,7 @@ def save_conversation_history(
     }
 
 
-def list_saved_conversations(db_path: Optional[str] = None, limit: int = 50) -> List[Dict[str, Any]]:
+def list_saved_conversations(db_path: str | None = None, limit: int = 50) -> list[dict[str, Any]]:
     """Retrieve saved assistant conversation histories."""
     import json
     target_db = db_path or os.environ.get("VOICE_ROOTS_DB_PATH", os.path.join(os.path.dirname(__file__), "voice_roots.db"))
@@ -496,7 +496,7 @@ def list_saved_conversations(db_path: Optional[str] = None, limit: int = 50) -> 
     return conversations
 
 
-def delete_saved_conversation(conv_id: int, db_path: Optional[str] = None) -> bool:
+def delete_saved_conversation(conv_id: int, db_path: str | None = None) -> bool:
     """Purge a saved conversation history permanently under user right-to-be-forgotten."""
     target_db = db_path or os.environ.get("VOICE_ROOTS_DB_PATH", os.path.join(os.path.dirname(__file__), "voice_roots.db"))
     with sqlite3.connect(target_db) as conn:

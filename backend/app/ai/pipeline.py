@@ -10,18 +10,16 @@ Pipeline steps:
   6. Summarization & keyword extraction
   7. Semantic embedding generation
 """
-import asyncio
-import structlog
 from datetime import datetime, timezone
-from sqlalchemy.ext.asyncio import AsyncSession
 
+import structlog
 from app.ai.registry import get_provider
+from app.models.ai_job import AIProcessingJob, JobStatus, JobType
+from app.models.embedding import Embedding
 from app.models.recording import Recording, RecordingStatus
 from app.models.transcript import Transcript, TranscriptSegment, TranscriptType
 from app.models.translation import Translation
-from app.models.embedding import Embedding
-from app.models.ai_job import AIProcessingJob, JobType, JobStatus
-from app.models.speaker import Speaker
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 
@@ -131,7 +129,7 @@ async def run_full_pipeline(
             )
             db.add(ts_seg)
 
-        recording.speaker_count = len(set(s.speaker_label for s in speaker_segments))
+        recording.speaker_count = len({s.speaker_label for s in speaker_segments})
         results["transcript"] = {
             "id": str(transcript.id),
             "word_count": transcript.word_count,

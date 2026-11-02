@@ -12,7 +12,7 @@ and explicit linguistic constraint documentation.
 from __future__ import annotations
 
 import threading
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 
 class DynamicLanguageRegistry:
@@ -20,12 +20,12 @@ class DynamicLanguageRegistry:
 
     def __init__(self) -> None:
         self._lock = threading.Lock()
-        self._languages: Dict[str, Dict[str, Any]] = {}
+        self._languages: dict[str, dict[str, Any]] = {}
         self._initialize_default_catalog()
 
     def _initialize_default_catalog(self) -> None:
         """Seed the registry with a diverse global catalog of languages."""
-        initial_languages: List[Dict[str, Any]] = [
+        initial_languages: list[dict[str, Any]] = [
             # ─── Indigenous, Oral, and Endangered Languages ───
             {
                 "name": "Gondi",
@@ -740,7 +740,7 @@ class DynamicLanguageRegistry:
         for lang in initial_languages:
             self._languages[lang["code"].lower()] = lang
 
-    def register_language(self, lang_data: Dict[str, Any]) -> Dict[str, Any]:
+    def register_language(self, lang_data: dict[str, Any]) -> dict[str, Any]:
         """Dynamically register or update a language in the registry."""
         required = ["name", "code"]
         for field in required:
@@ -760,7 +760,7 @@ class DynamicLanguageRegistry:
 
         with self._lock:
             existing = self._languages.get(code, {})
-            record: Dict[str, Any] = {
+            record: dict[str, Any] = {
                 "name": name,
                 "code": code,
                 "native": lang_data.get("native") or existing.get("native") or name,
@@ -779,7 +779,7 @@ class DynamicLanguageRegistry:
             self._languages[code] = record
             return record
 
-    def get_language(self, code_or_name: str) -> Optional[Dict[str, Any]]:
+    def get_language(self, code_or_name: str) -> dict[str, Any] | None:
         """Look up a language by code or case-insensitive name."""
         if not code_or_name:
             return None
@@ -796,13 +796,13 @@ class DynamicLanguageRegistry:
 
     def list_languages(
         self,
-        query: Optional[str] = None,
-        category: Optional[str] = None,
-        family: Optional[str] = None,
-        script: Optional[str] = None,
-        region: Optional[str] = None,
-        limit: Optional[int] = None,
-    ) -> List[Dict[str, Any]]:
+        query: str | None = None,
+        category: str | None = None,
+        family: str | None = None,
+        script: str | None = None,
+        region: str | None = None,
+        limit: int | None = None,
+    ) -> list[dict[str, Any]]:
         """Filter and search languages dynamically."""
         with self._lock:
             results = list(self._languages.values())
@@ -835,7 +835,7 @@ class DynamicLanguageRegistry:
             results = [lang for lang in results if reg in lang.get("region", "").lower()]
 
         # Sort: indigenous and scheduled first, then alphabetical by name
-        def sort_key(l: Dict[str, Any]) -> tuple:
+        def sort_key(l: dict[str, Any]) -> tuple:
             cat_order = {"indigenous": 0, "scheduled": 1, "regional": 2, "national": 3, "official": 4, "global": 5}
             return (cat_order.get(l.get("category", "global"), 6), l["name"].lower())
 
@@ -846,16 +846,16 @@ class DynamicLanguageRegistry:
 
         return results
 
-    def get_all_capabilities(self) -> List[Dict[str, Any]]:
+    def get_all_capabilities(self) -> list[dict[str, Any]]:
         """Return all registered language capabilities."""
         with self._lock:
             return list(self._languages.values())
 
-    def get_capability_by_name_or_code(self, query: str) -> Optional[Dict[str, Any]]:
+    def get_capability_by_name_or_code(self, query: str) -> dict[str, Any] | None:
         """Find a language capability record by case-insensitive name or code."""
         return self.get_language(query)
 
-    def resolve_language_code(self, input_str: Optional[str]) -> Optional[str]:
+    def resolve_language_code(self, input_str: str | None) -> str | None:
         """Resolve a human string or code to standard lowercase language code."""
         if not input_str:
             return None
@@ -876,9 +876,9 @@ class DynamicLanguageRegistry:
 
     def get_system_capabilities(
         self,
-        speech_status: Optional[Dict[str, Any]] = None,
-        translation_providers: Optional[List[Dict[str, Any]]] = None,
-    ) -> Dict[str, Any]:
+        speech_status: dict[str, Any] | None = None,
+        translation_providers: list[dict[str, Any]] | None = None,
+    ) -> dict[str, Any]:
         """Dynamically evaluate language capabilities grounded in active backend providers."""
         with self._lock:
             raw_languages = list(self._languages.values())
@@ -925,7 +925,7 @@ class DynamicLanguageRegistry:
             evaluated.append(item)
 
         # Sort: indigenous and scheduled first, then alphabetical by name
-        def sort_key(l: Dict[str, Any]) -> tuple:
+        def sort_key(l: dict[str, Any]) -> tuple:
             cat_order = {"indigenous": 0, "scheduled": 1, "regional": 2, "national": 3, "official": 4, "global": 5}
             return (cat_order.get(l.get("category", "global"), 6), l["name"].lower())
 
@@ -948,37 +948,37 @@ class DynamicLanguageRegistry:
 language_registry = DynamicLanguageRegistry()
 
 # Backwards-compatible module-level functions
-def get_all_capabilities() -> List[Dict[str, Any]]:
+def get_all_capabilities() -> list[dict[str, Any]]:
     return language_registry.get_all_capabilities()
 
-def get_capability_by_name_or_code(query: str) -> Optional[Dict[str, Any]]:
+def get_capability_by_name_or_code(query: str) -> dict[str, Any] | None:
     return language_registry.get_capability_by_name_or_code(query)
 
-def get_language(code_or_name: str) -> Optional[Dict[str, Any]]:
+def get_language(code_or_name: str) -> dict[str, Any] | None:
     return language_registry.get_language(code_or_name)
 
 def list_languages(
-    query: Optional[str] = None,
-    category: Optional[str] = None,
-    family: Optional[str] = None,
-    script: Optional[str] = None,
-    region: Optional[str] = None,
-    limit: Optional[int] = None,
-) -> List[Dict[str, Any]]:
+    query: str | None = None,
+    category: str | None = None,
+    family: str | None = None,
+    script: str | None = None,
+    region: str | None = None,
+    limit: int | None = None,
+) -> list[dict[str, Any]]:
     return language_registry.list_languages(query, category, family, script, region, limit)
 
-def register_language(lang_data: Dict[str, Any]) -> Dict[str, Any]:
+def register_language(lang_data: dict[str, Any]) -> dict[str, Any]:
     return language_registry.register_language(lang_data)
 
-def resolve_language_code(input_str: Optional[str]) -> Optional[str]:
+def resolve_language_code(input_str: str | None) -> str | None:
     return language_registry.resolve_language_code(input_str)
 
 def is_oral_or_endangered(code_or_name: str) -> bool:
     return language_registry.is_oral_or_endangered(code_or_name)
 
 def get_system_capabilities(
-    speech_status: Optional[Dict[str, Any]] = None,
-    translation_providers: Optional[List[Dict[str, Any]]] = None,
-) -> Dict[str, Any]:
+    speech_status: dict[str, Any] | None = None,
+    translation_providers: list[dict[str, Any]] | None = None,
+) -> dict[str, Any]:
     return language_registry.get_system_capabilities(speech_status, translation_providers)
 

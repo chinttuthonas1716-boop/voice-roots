@@ -1,11 +1,10 @@
 """JWT token creation and verification."""
+import uuid
 from datetime import datetime, timedelta, timezone
 from typing import Any
-import uuid
-
-from jose import JWTError, jwt
 
 from app.config import settings
+from jose import jwt
 
 
 def create_access_token(subject: str | Any, expires_delta: timedelta | None = None) -> str:

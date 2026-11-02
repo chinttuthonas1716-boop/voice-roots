@@ -1,11 +1,12 @@
 """Test suite for Voice Roots Milestone 1 backend endpoints."""
 
-import os
+import hashlib
 import io
+import os
+import sqlite3
 import sys
 import tempfile
-import hashlib
-import sqlite3
+
 import pytest
 from fastapi.testclient import TestClient
 from transcription_service import (

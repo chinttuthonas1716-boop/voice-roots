@@ -12,14 +12,13 @@ Provides unified discovery capabilities across oral archives:
 
 from __future__ import annotations
 
-import html
 import logging
 import math
 import os
 import re
 import sqlite3
 import time
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -38,7 +37,7 @@ def get_db_connection() -> sqlite3.Connection:
     return conn
 
 
-def init_fts_index(conn: Optional[sqlite3.Connection] = None):
+def init_fts_index(conn: sqlite3.Connection | None = None):
     """Initialize or verify the SQLite FTS5 full-text search table for transcripts and translations."""
     should_close = False
     if conn is None:
@@ -152,8 +151,8 @@ def get_archive_vector_collection():
 
 
 def index_transcript_in_vector_store(
-    transcript_row: Dict[str, Any],
-    translations_rows: Optional[List[Dict[str, Any]]] = None,
+    transcript_row: dict[str, Any],
+    translations_rows: list[dict[str, Any]] | None = None,
 ) -> bool:
     """Index an oral transcript and its translations into ChromaDB for semantic search."""
     collection = get_archive_vector_collection()
@@ -209,7 +208,7 @@ def index_transcript_in_vector_store(
         return False
 
 
-def reindex_all_search(conn: Optional[sqlite3.Connection] = None) -> Dict[str, Any]:
+def reindex_all_search(conn: sqlite3.Connection | None = None) -> dict[str, Any]:
     """Rebuild both FTS5 index and ChromaDB vector store across all active transcripts."""
     t0 = time.time()
     should_close = False
@@ -343,7 +342,7 @@ def _clean_fts_query(query: str) -> str:
     return " AND ".join(processed)
 
 
-def _extract_matched_fields(row: sqlite3.Row, query_tokens: List[str]) -> List[str]:
+def _extract_matched_fields(row: sqlite3.Row, query_tokens: list[str]) -> list[str]:
     """Identify which fields in a transcript match any of the query tokens."""
     matched = []
     fields = [
@@ -363,7 +362,7 @@ def _extract_matched_fields(row: sqlite3.Row, query_tokens: List[str]) -> List[s
     return matched or ["transcript"]
 
 
-def _generate_snippet(text: str, query_tokens: List[str], max_len: int = 160) -> str:
+def _generate_snippet(text: str, query_tokens: list[str], max_len: int = 160) -> str:
     """Generate a contextual snippet around matched query tokens with ellipses."""
     if not text:
         return ""
@@ -391,23 +390,23 @@ def _generate_snippet(text: str, query_tokens: List[str], max_len: int = 160) ->
 
 
 def hybrid_discovery_search(
-    query: Optional[str] = None,
+    query: str | None = None,
     *,
     mode: str = "hybrid",  # 'hybrid', 'semantic', 'keyword'
-    language: Optional[str] = None,
-    dialect: Optional[str] = None,
-    verification_status: Optional[str] = None,
-    topic: Optional[str] = None,
-    date_from: Optional[str] = None,
-    date_to: Optional[str] = None,
-    has_audio: Optional[bool] = None,
-    has_translation: Optional[bool] = None,
+    language: str | None = None,
+    dialect: str | None = None,
+    verification_status: str | None = None,
+    topic: str | None = None,
+    date_from: str | None = None,
+    date_to: str | None = None,
+    has_audio: bool | None = None,
+    has_translation: bool | None = None,
     page: int = 1,
     page_size: int = 20,
     sort_by: str = "relevance",  # 'relevance', 'date_desc', 'date_asc', 'title_asc', 'duration_desc'
     is_admin: bool = False,
-    user_id: Optional[str] = None,
-) -> Dict[str, Any]:
+    user_id: str | None = None,
+) -> dict[str, Any]:
     """Execute hybrid search combining SQLite FTS5 lexical ranking and ChromaDB vector semantics.
     
     Applies strict OCAP access controls and privacy gates before returning results.
@@ -462,10 +461,10 @@ def hybrid_discovery_search(
     # ─────────────────────────────────────────────────────────────────
     # 2. Retrieval Branching: Keyword (FTS5) vs Semantic (ChromaDB) vs Hybrid
     # ─────────────────────────────────────────────────────────────────
-    candidate_scores: Dict[int, float] = {}
-    lexical_scores: Dict[int, float] = {}
-    semantic_scores: Dict[int, float] = {}
-    matched_fields_map: Dict[int, List[str]] = {}
+    candidate_scores: dict[int, float] = {}
+    lexical_scores: dict[int, float] = {}
+    semantic_scores: dict[int, float] = {}
+    matched_fields_map: dict[int, list[str]] = {}
 
     # If query is empty: Browse / Filter Mode
     if not q:
@@ -722,11 +721,11 @@ def hybrid_discovery_search(
 
 def _format_results(
     cursor: sqlite3.Cursor,
-    rows: List[sqlite3.Row],
-    candidate_scores: Dict[int, float],
-    matched_fields_map: Dict[int, List[str]],
-    query_tokens: List[str],
-) -> List[Dict[str, Any]]:
+    rows: list[sqlite3.Row],
+    candidate_scores: dict[int, float],
+    matched_fields_map: dict[int, list[str]],
+    query_tokens: list[str],
+) -> list[dict[str, Any]]:
     """Format relational SQLite rows into rich discovery items with translations and snippets."""
     results: list[dict[str, Any]] = []
     if not rows:
@@ -828,7 +827,7 @@ BENCHMARK_EVALUATION_QUERIES = [
 ]
 
 
-def evaluate_multilingual_discovery() -> Dict[str, Any]:
+def evaluate_multilingual_discovery() -> dict[str, Any]:
     """Run deterministic benchmark evaluation of cross-lingual search accuracy, MRR, and latency."""
     t0 = time.time()
     query_evaluations: list[dict[str, Any]] = []
@@ -845,7 +844,6 @@ def evaluate_multilingual_discovery() -> Dict[str, Any]:
         latencies.append(latency)
 
         hit_rank = 0
-        matched = False
         target_item = None
 
         for idx, r in enumerate(results):
@@ -865,7 +863,6 @@ def evaluate_multilingual_discovery() -> Dict[str, Any]:
                 or any(tok in all_text for tok in item["query"].lower().split() if len(tok) > 2)
             ):
                 hit_rank = idx + 1
-                matched = True
                 target_item = r
                 break
 

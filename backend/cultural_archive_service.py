@@ -518,10 +518,7 @@ def create_cultural_submission(
     is_sacred_ceremonial: bool = False,
 ) -> dict[str, Any]:
     """Submit a cultural oral recording with mandatory 6-facet consent validation."""
-    if isinstance(consent_matrix, dict):
-        c_matrix = ConsentMatrix.from_dict(consent_matrix)
-    else:
-        c_matrix = consent_matrix
+    c_matrix = ConsentMatrix.from_dict(consent_matrix) if isinstance(consent_matrix, dict) else consent_matrix
 
     # Mandatory affirmative consent to record
     if not c_matrix.consent_recording:

@@ -1,12 +1,17 @@
 """Whisper provider. Load/inference failures are surfaced without fake output."""
 import asyncio
-import structlog
 from typing import Any
 
+import structlog
 from app.ai.base import (
-    AIProvider, TranscriptionResult, LanguageDetectionResult,
-    TranslationResult, EmbeddingResult, SpeakerSegment, SummarizationResult,
+    AIProvider,
+    EmbeddingResult,
+    LanguageDetectionResult,
     ProviderUnavailableError,
+    SpeakerSegment,
+    SummarizationResult,
+    TranscriptionResult,
+    TranslationResult,
 )
 from app.config import settings
 

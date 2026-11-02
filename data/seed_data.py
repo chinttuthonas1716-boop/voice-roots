@@ -423,7 +423,7 @@ def generate_and_save():
 
     for item in SEED_ITEMS:
         # Generate stable deterministic document_id based on source_url + text_original
-        raw_key = f"{item['source_url']}:{item['text_original']}".encode("utf-8")
+        raw_key = f"{item['source_url']}:{item['text_original']}".encode()
         doc_id = f"vr-{hashlib.sha256(raw_key).hexdigest()[:16]}"
         content_hash = hashlib.sha256(item["text_original"].encode("utf-8")).hexdigest()
 

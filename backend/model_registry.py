@@ -11,9 +11,8 @@ from __future__ import annotations
 
 import logging
 import os
-import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -21,7 +20,7 @@ logger = logging.getLogger(__name__)
 # Model Catalog & Registry
 # ==============================================================================
 
-OFFICIAL_MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
+OFFICIAL_MODEL_REGISTRY: dict[str, dict[str, Any]] = {
     # ─── Speech-to-Text (ASR) Models ───
     "whisper-base-local": {
         "id": "whisper-base-local",
@@ -452,7 +451,7 @@ OFFICIAL_MODEL_REGISTRY: Dict[str, Dict[str, Any]] = {
 # Model Governance & Evaluation Services
 # ==============================================================================
 
-def list_registered_models() -> List[Dict[str, Any]]:
+def list_registered_models() -> list[dict[str, Any]]:
     """Return summary list of all models in the official Model Registry."""
     models = []
     for m in OFFICIAL_MODEL_REGISTRY.values():
@@ -471,12 +470,12 @@ def list_registered_models() -> List[Dict[str, Any]]:
     return models
 
 
-def get_model_details(model_id: str) -> Optional[Dict[str, Any]]:
+def get_model_details(model_id: str) -> dict[str, Any] | None:
     """Retrieve full model card and specification for a specific model."""
     return OFFICIAL_MODEL_REGISTRY.get(model_id)
 
 
-def get_model_comparison_matrix() -> Dict[str, Any]:
+def get_model_comparison_matrix() -> dict[str, Any]:
     """Generate cross-model comparison matrix across ASR, MT, and Embeddings."""
     asr_models = [m for m in OFFICIAL_MODEL_REGISTRY.values() if m["task"] == "speech_to_text"]
     mt_models = [m for m in OFFICIAL_MODEL_REGISTRY.values() if m["task"] == "translation"]
@@ -537,7 +536,7 @@ def get_model_comparison_matrix() -> Dict[str, Any]:
     }
 
 
-def assess_fine_tuning_feasibility() -> Dict[str, Any]:
+def assess_fine_tuning_feasibility() -> dict[str, Any]:
     """
     Perform rigorous feasibility assessment, data volume audit, OCAP consent check,
     and compute cost estimation for potential model fine-tuning.
@@ -632,8 +631,8 @@ def assess_fine_tuning_feasibility() -> Dict[str, Any]:
 def promote_candidate_model(
     model_id: str,
     target_slot: str = "speech_to_text",
-    admin_key: Optional[str] = None,
-) -> Dict[str, Any]:
+    admin_key: str | None = None,
+) -> dict[str, Any]:
     """
     Promote a candidate model to production slot after verifying strict release criteria:
     1. Admin authorization key match.
@@ -701,8 +700,8 @@ def promote_candidate_model(
 
 def rollback_production_model(
     target_slot: str = "speech_to_text",
-    admin_key: Optional[str] = None,
-) -> Dict[str, Any]:
+    admin_key: str | None = None,
+) -> dict[str, Any]:
     """Rollback current production model in target slot to its designated rollback target."""
     expected_admin_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "voice-roots-admin-key").strip()
     if not admin_key or admin_key.strip() != expected_admin_key:

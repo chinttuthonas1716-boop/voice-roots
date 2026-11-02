@@ -6,8 +6,9 @@ import os
 import shutil
 import threading
 from abc import ABC, abstractmethod
+from collections.abc import Mapping
 from dataclasses import dataclass
-from typing import Any, Mapping, Set
+from typing import Any
 
 
 class TranscriptionNotConfiguredError(RuntimeError):
@@ -52,7 +53,7 @@ class BaseTranscriptionProvider(ABC):
             f"Provider '{self.name}' does not support acoustic language detection."
         )
 
-    def get_supported_languages(self) -> Set[str] | None:
+    def get_supported_languages(self) -> set[str] | None:
         """Return set of ISO language codes supported by this model, or None if arbitrary/unknown."""
         return None
 
@@ -227,7 +228,7 @@ class LocalWhisperTranscriptionProvider(BaseTranscriptionProvider):
             "notice": "Detection performed on audio acoustic features using local Whisper model.",
         }
 
-    def get_supported_languages(self) -> Set[str]:
+    def get_supported_languages(self) -> set[str]:
         """Return the standard ISO 639-1 language codes recognized by Whisper."""
         try:
             import whisper.tokenizer

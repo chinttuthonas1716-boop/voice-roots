@@ -1,18 +1,20 @@
 """Recordings API endpoints."""
 import uuid
-import asyncio
-import structlog
-from fastapi import APIRouter, Depends, HTTPException, status, Query, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func, or_
 
-from app.database.session import get_db
+import structlog
 from app.auth.dependencies import get_current_user
+from app.database.session import get_db
+from app.models.recording import PrivacyLevel, Recording
 from app.models.user import User
-from app.models.recording import Recording, RecordingStatus, PrivacyLevel
 from app.schemas.recording import (
-    RecordingCreate, RecordingUpdate, RecordingResponse, RecordingListResponse
+    RecordingCreate,
+    RecordingListResponse,
+    RecordingResponse,
+    RecordingUpdate,
 )
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, Query, status
+from sqlalchemy import func, or_, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/recordings", tags=["Recordings"])
 logger = structlog.get_logger(__name__)

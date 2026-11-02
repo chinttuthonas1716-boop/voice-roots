@@ -2491,7 +2491,7 @@ def ingest_resources_endpoint(
             )
         import json
         items = []
-        with open(processed_path, "r", encoding="utf-8") as f:
+        with open(processed_path, encoding="utf-8") as f:
             for line in f:
                 if line.strip():
                     items.append(json.loads(line))
@@ -3049,7 +3049,7 @@ def audit_dataset_quality():
 
     records: list[dict[str, Any]] = []
     if os.path.exists(processed_path):
-        with open(processed_path, "r", encoding="utf-8") as f:
+        with open(processed_path, encoding="utf-8") as f:
             for line in f:
                 if line.strip():
                     records.append(json.loads(line))

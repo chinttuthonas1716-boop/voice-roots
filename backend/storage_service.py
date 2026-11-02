@@ -15,7 +15,7 @@ import logging
 import os
 import shutil
 from abc import ABC, abstractmethod
-from typing import Any, Dict, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -47,8 +47,8 @@ class BaseStorageProvider(ABC):
         self,
         temp_file_path: str,
         filename: str,
-        content_type: Optional[str] = None,
-    ) -> Tuple[str, int, str]:
+        content_type: str | None = None,
+    ) -> tuple[str, int, str]:
         """Store audio file, returning (stored_identifier, size_bytes, sha256_hash)."""
         ...
 
@@ -81,8 +81,8 @@ class LocalStorageProvider(BaseStorageProvider):
         self,
         temp_file_path: str,
         filename: str,
-        content_type: Optional[str] = None,
-    ) -> Tuple[str, int, str]:
+        content_type: str | None = None,
+    ) -> tuple[str, int, str]:
         if not os.path.isfile(temp_file_path):
             raise StorageError(f"Source file not found: {temp_file_path}")
 
@@ -130,10 +130,10 @@ class S3StorageProvider(BaseStorageProvider):
     def __init__(
         self,
         bucket: str,
-        aws_access_key_id: Optional[str] = None,
-        aws_secret_access_key: Optional[str] = None,
+        aws_access_key_id: str | None = None,
+        aws_secret_access_key: str | None = None,
         region_name: str = "ap-south-1",
-        endpoint_url: Optional[str] = None,
+        endpoint_url: str | None = None,
         client: Any = None,
     ):
         if not bucket:
@@ -153,7 +153,7 @@ class S3StorageProvider(BaseStorageProvider):
                     "boto3 is required for S3StorageProvider. Install backend dependencies."
                 ) from exc
 
-            client_kwargs: Dict[str, Any] = {
+            client_kwargs: dict[str, Any] = {
                 "service_name": "s3",
                 "region_name": region_name,
                 "config": Config(signature_version="s3v4", retries={"max_attempts": 3}),
@@ -170,8 +170,8 @@ class S3StorageProvider(BaseStorageProvider):
         self,
         temp_file_path: str,
         filename: str,
-        content_type: Optional[str] = None,
-    ) -> Tuple[str, int, str]:
+        content_type: str | None = None,
+    ) -> tuple[str, int, str]:
         if not os.path.isfile(temp_file_path):
             raise StorageError(f"Source file not found: {temp_file_path}")
 
@@ -185,7 +185,7 @@ class S3StorageProvider(BaseStorageProvider):
                 digest.update(chunk)
         sha256_hash = digest.hexdigest()
 
-        extra_args: Dict[str, Any] = {
+        extra_args: dict[str, Any] = {
             "Metadata": {
                 "sha256": sha256_hash,
                 "service": "voice-roots",
@@ -239,8 +239,8 @@ class S3StorageProvider(BaseStorageProvider):
 
 
 def create_storage_provider(
-    environ: Optional[Dict[str, str]] = None,
-    storage_dir: Optional[str] = None,
+    environ: dict[str, str] | None = None,
+    storage_dir: str | None = None,
 ) -> BaseStorageProvider:
     """Factory creating the configured storage provider without exposing credentials."""
     env = os.environ if environ is None else environ

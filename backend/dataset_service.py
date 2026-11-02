@@ -17,7 +17,7 @@ import os
 import sqlite3
 import time
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -39,7 +39,7 @@ PROCESSED_DATA_PATH = os.path.join(SEED_DATA_DIR, "processed", "language_resourc
 # 1. Dataset Registry & Metadata Definitions (W3C DCAT / Frictionless Compliant)
 # ==============================================================================
 
-OFFICIAL_DATASETS: Dict[str, Dict[str, Any]] = {
+OFFICIAL_DATASETS: dict[str, dict[str, Any]] = {
     "voice-roots-seed-v1.0.0": {
         "id": "voice-roots-seed-v1.0.0",
         "name": "Voice Roots Multilingual Seed Resource Corpus",
@@ -223,7 +223,7 @@ def assign_dataset_split(record_id: Any, salt: str = "voiceroots_split_v1") -> s
     based on a cryptographic hash of its identifier and salt.
     Guarantees 100% reproducibility across environments with zero data leakage.
     """
-    key = f"{salt}:{str(record_id)}".encode("utf-8")
+    key = f"{salt}:{record_id!s}".encode()
     digest = hashlib.sha256(key).hexdigest()
     # Use first 8 hex characters modulo 100
     bucket = int(digest[:8], 16) % 100
@@ -239,7 +239,7 @@ def assign_dataset_split(record_id: Any, salt: str = "voiceroots_split_v1") -> s
 # 3. Bit-Level File Integrity Verification (SHA-256)
 # ==============================================================================
 
-def verify_dataset_integrity(dataset_id: str) -> Dict[str, Any]:
+def verify_dataset_integrity(dataset_id: str) -> dict[str, Any]:
     """
     Verify the bit-level integrity of stored audio masters and dataset assets.
     Computes actual SHA-256 digests from disk and compares them against
@@ -252,7 +252,7 @@ def verify_dataset_integrity(dataset_id: str) -> Dict[str, Any]:
         }
 
     start_time = time.time()
-    results: List[Dict[str, Any]] = []
+    results: list[dict[str, Any]] = []
     intact_count = 0
     missing_count = 0
     corrupt_count = 0
@@ -260,7 +260,7 @@ def verify_dataset_integrity(dataset_id: str) -> Dict[str, Any]:
     if dataset_id == "voice-roots-seed-v1.0.0":
         # Verify seed records in processed language_resources.jsonl
         if os.path.exists(MANIFEST_PATH):
-            with open(MANIFEST_PATH, "r", encoding="utf-8") as f:
+            with open(MANIFEST_PATH, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -346,7 +346,7 @@ def verify_dataset_integrity(dataset_id: str) -> Dict[str, Any]:
             return {
                 "status": "error",
                 "dataset_id": dataset_id,
-                "error": f"Database integrity scan failed: {str(e)}",
+                "error": f"Database integrity scan failed: {e!s}",
             }
 
     duration_ms = round((time.time() - start_time) * 1000, 2)
@@ -382,7 +382,7 @@ def generate_research_export(
     dataset_id: str,
     export_format: str = "json",
     include_splits: bool = True,
-) -> Dict[str, Any] | str:
+) -> dict[str, Any] | str:
     """
     Generate a documented, reproducible research data package for an official dataset.
     Strictly enforces OCAP boundaries:
@@ -396,12 +396,12 @@ def generate_research_export(
         raise ValueError(f"Unknown dataset identifier '{dataset_id}'.")
 
     meta = OFFICIAL_DATASETS[dataset_id]
-    export_records: List[Dict[str, Any]] = []
-    checksums: Dict[str, str] = {}
+    export_records: list[dict[str, Any]] = []
+    checksums: dict[str, str] = {}
 
     if dataset_id == "voice-roots-seed-v1.0.0":
         if os.path.exists(PROCESSED_DATA_PATH):
-            with open(PROCESSED_DATA_PATH, "r", encoding="utf-8") as f:
+            with open(PROCESSED_DATA_PATH, encoding="utf-8") as f:
                 for line in f:
                     line = line.strip()
                     if not line:
@@ -471,7 +471,11 @@ def generate_research_export(
                 checksums[str(tid)] = hashlib.sha256(item_bytes).hexdigest()
 
     elif dataset_id == "voice-roots-eval-speech-v1.0.0":
-        from evaluation import BENCHMARK_SPEECH_CASES, BENCHMARK_TRANSLATION_CASES, BENCHMARK_SEARCH_CASES
+        from evaluation import (
+            BENCHMARK_SEARCH_CASES,
+            BENCHMARK_SPEECH_CASES,
+            BENCHMARK_TRANSLATION_CASES,
+        )
         benchmark_payload = {
             "speech_cases": BENCHMARK_SPEECH_CASES,
             "translation_cases": BENCHMARK_TRANSLATION_CASES,
@@ -519,7 +523,7 @@ def generate_research_export(
         # Prepend UTF-8 BOM for spreadsheet compatibility with Indic and multilingual scripts
         output.write("\ufeff")
         if export_records and isinstance(export_records[0], dict):
-            fieldnames = [k for k in export_records[0].keys() if k != "translations"]
+            fieldnames = [k for k in export_records[0] if k != "translations"]
             writer = csv.DictWriter(output, fieldnames=fieldnames, extrasaction="ignore")
             writer.writeheader()
             for rec in export_records:
@@ -534,7 +538,7 @@ def generate_research_export(
 # 5. Long-Term Preservation and Backup Restoration Verification
 # ==============================================================================
 
-def verify_preservation_and_backup() -> Dict[str, Any]:
+def verify_preservation_and_backup() -> dict[str, Any]:
     """
     Audit digital preservation procedures, backup snapshot existence,
     storage redundancy status, and test non-destructive database restoration.
@@ -625,10 +629,10 @@ def verify_preservation_and_backup() -> Dict[str, Any]:
 # 6. Service Helper Functions
 # ==============================================================================
 
-def list_registered_datasets() -> List[Dict[str, Any]]:
+def list_registered_datasets() -> list[dict[str, Any]]:
     """Return summary list of all registered research datasets."""
     datasets = []
-    for k, v in OFFICIAL_DATASETS.items():
+    for v in OFFICIAL_DATASETS.values():
         summary = {
             "id": v["id"],
             "name": v["name"],
@@ -663,7 +667,7 @@ def list_registered_datasets() -> List[Dict[str, Any]]:
     return datasets
 
 
-def get_dataset_details(dataset_id: str) -> Optional[Dict[str, Any]]:
+def get_dataset_details(dataset_id: str) -> dict[str, Any] | None:
     """Return full metadata card and specification for a specific dataset."""
     if dataset_id not in OFFICIAL_DATASETS:
         return None

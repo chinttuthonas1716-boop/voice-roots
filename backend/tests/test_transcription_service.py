@@ -3,7 +3,6 @@
 from types import SimpleNamespace
 
 import pytest
-
 from transcription_service import (
     MAX_TRANSCRIPTION_FILE_BYTES,
     LocalWhisperTranscriptionProvider,

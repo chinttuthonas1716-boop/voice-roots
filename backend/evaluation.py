@@ -14,9 +14,8 @@ from __future__ import annotations
 
 import os
 import re
-import json
 import time
-from typing import Dict, Any, List, Optional, Tuple
+from typing import Any
 
 
 def _normalize_text(text: str) -> str:
@@ -29,7 +28,7 @@ def _normalize_text(text: str) -> str:
     return re.sub(r"\s+", " ", text).strip()
 
 
-def levenshtein_distance(seq1: List[Any], seq2: List[Any]) -> int:
+def levenshtein_distance(seq1: list[Any], seq2: list[Any]) -> int:
     """Calculate standard Levenshtein edit distance between two sequences."""
     n, m = len(seq1), len(seq2)
     if n == 0:
@@ -100,12 +99,12 @@ def compute_chrf(reference: str, hypothesis: str, n_gram_max: int = 4, beta: flo
     recalls = []
 
     for n in range(1, n_gram_max + 1):
-        ref_ngrams: Dict[str, int] = {}
+        ref_ngrams: dict[str, int] = {}
         for i in range(len(ref_norm) - n + 1):
             ng = ref_norm[i : i + n]
             ref_ngrams[ng] = ref_ngrams.get(ng, 0) + 1
 
-        hyp_ngrams: Dict[str, int] = {}
+        hyp_ngrams: dict[str, int] = {}
         for i in range(len(hyp_norm) - n + 1):
             ng = hyp_norm[i : i + n]
             hyp_ngrams[ng] = hyp_ngrams.get(ng, 0) + 1
@@ -258,14 +257,17 @@ class LanguageEvaluationRunner:
     """Runs automated quality evaluations across speech, translation, and vector search."""
 
     def __init__(self):
-        self.cached_report: Optional[Dict[str, Any]] = None
+        self.cached_report: dict[str, Any] | None = None
 
-    def evaluate_translation(self) -> Dict[str, Any]:
+    def evaluate_translation(self) -> dict[str, Any]:
         """Evaluates translation quality and verifies OCAP elder-review guardrails."""
-        from translation_service import get_translation_manager, OralLanguageElderReviewRequiredError
+        from translation_service import (
+            OralLanguageElderReviewRequiredError,
+            get_translation_manager,
+        )
 
         manager = get_translation_manager()
-        results: List[Dict[str, Any]] = []
+        results: list[dict[str, Any]] = []
         guardrail_checks_passed = 0
         total_guardrail_checks = 0
 
@@ -275,7 +277,7 @@ class LanguageEvaluationRunner:
             text = case["source_text"]
             behavior = case["expected_behavior"]
 
-            item_result: Dict[str, Any] = {
+            item_result: dict[str, Any] = {
                 "id": case["id"],
                 "source_language": src,
                 "target_language": tgt,
@@ -297,7 +299,7 @@ class LanguageEvaluationRunner:
                     item_result["status"] = "passed"
                 except Exception as e:
                     item_result["status"] = "failed"
-                    item_result["error"] = f"Unexpected exception: {str(e)}"
+                    item_result["error"] = f"Unexpected exception: {e!s}"
 
             elif behavior == "identity_passthrough":
                 try:
@@ -321,7 +323,7 @@ class LanguageEvaluationRunner:
                 except OralLanguageElderReviewRequiredError:
                     item_result["guardrail_triggered"] = True
                 except Exception as e:
-                    item_result["note"] = f"Translation offline/rule fallback: {str(e)}"
+                    item_result["note"] = f"Translation offline/rule fallback: {e!s}"
 
             results.append(item_result)
 
@@ -339,15 +341,15 @@ class LanguageEvaluationRunner:
             "details": results,
         }
 
-    def evaluate_vector_search(self) -> Dict[str, Any]:
+    def evaluate_vector_search(self) -> dict[str, Any]:
         """Evaluates vector search relevance, MRR, and Hit@K against gold-standard queries."""
         from vector_store import search_resources
 
-        ranks: List[int] = []
+        ranks: list[int] = []
         hits_at_1 = 0
         hits_at_3 = 0
         total_queries = len(BENCHMARK_SEARCH_CASES)
-        query_details: List[Dict[str, Any]] = []
+        query_details: list[dict[str, Any]] = []
 
         for case in BENCHMARK_SEARCH_CASES:
             q = case["query"]
@@ -400,17 +402,17 @@ class LanguageEvaluationRunner:
             "details": query_details,
         }
 
-    def evaluate_speech_benchmarks(self) -> Dict[str, Any]:
+    def evaluate_speech_benchmarks(self) -> dict[str, Any]:
         """Evaluates speech recognition metrics (WER/CER) on benchmark test cases."""
-        speech_results: List[Dict[str, Any]] = []
+        speech_results: list[dict[str, Any]] = []
 
         for case in BENCHMARK_SPEECH_CASES:
             lang = case["language"]
             ref = case["reference_text"]
-            audio_path = case["audio_path"]
+            case["audio_path"]
             
             # Use real verified transcription results where available
-            res_item: Dict[str, Any] = {
+            res_item: dict[str, Any] = {
                 "id": case["id"],
                 "language": lang,
                 "language_name": case["language_name"],
@@ -451,7 +453,7 @@ class LanguageEvaluationRunner:
             "results": speech_results,
         }
 
-    def evaluate_community_reviewed_transcripts(self, db_path: Optional[str] = None) -> Dict[str, Any]:
+    def evaluate_community_reviewed_transcripts(self, db_path: str | None = None) -> dict[str, Any]:
         """
         Evaluate real performance by comparing model hypotheses against reviewer-approved
         reference transcripts in the SQLite database.
@@ -504,7 +506,7 @@ class LanguageEvaluationRunner:
             }
 
         evaluated_items = []
-        by_language: Dict[str, List[Dict[str, Any]]] = {}
+        by_language: dict[str, list[dict[str, Any]]] = {}
 
         for r in rows:
             ref = r["transcript_text"]
@@ -532,7 +534,7 @@ class LanguageEvaluationRunner:
             evaluated_items.append(item)
             by_language.setdefault(lang, []).append(item)
 
-        aggregated_languages: Dict[str, Any] = {}
+        aggregated_languages: dict[str, Any] = {}
         for lang_name, items in by_language.items():
             sample_count = len(items)
             avg_cer = round(sum(it["cer"] for it in items) / sample_count, 4)
@@ -541,8 +543,8 @@ class LanguageEvaluationRunner:
                 "sample_size": sample_count,
                 "average_cer": avg_cer,
                 "average_wer": avg_wer,
-                "models_used": list(set(it["model"] for it in items)),
-                "dialects_evaluated": list(set(it["dialect"] for it in items)),
+                "models_used": list({it["model"] for it in items}),
+                "dialects_evaluated": list({it["dialect"] for it in items}),
                 "evaluation_date": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime()),
                 "sample_size_caveat": (
                     f"Measured on {sample_count} community-verified sample(s). "
@@ -561,7 +563,7 @@ class LanguageEvaluationRunner:
             ),
         }
 
-    def run_full_evaluation(self) -> Dict[str, Any]:
+    def run_full_evaluation(self) -> dict[str, Any]:
         """Executes full multi-modal language evaluation and returns comprehensive report."""
         start_time = time.time()
         speech_eval = self.evaluate_speech_benchmarks()

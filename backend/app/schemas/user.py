@@ -1,8 +1,9 @@
 """Pydantic schemas for User endpoints."""
 import uuid
 from datetime import datetime
-from pydantic import BaseModel, EmailStr, Field, field_validator
+
 from app.models.user import UserRole
+from pydantic import BaseModel, EmailStr, Field
 
 
 class UserCreate(BaseModel):

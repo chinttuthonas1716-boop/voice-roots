@@ -38,8 +38,8 @@ def get_provider() -> AIProvider:
 
 
 # Register built-in providers
-from app.ai.mock_provider import MockAIProvider  # noqa: E402
-from app.ai.whisper_provider import WhisperProvider  # noqa: E402
+from app.ai.mock_provider import MockAIProvider
+from app.ai.whisper_provider import WhisperProvider
 
 register_provider("mock", MockAIProvider)
 register_provider("whisper", WhisperProvider)

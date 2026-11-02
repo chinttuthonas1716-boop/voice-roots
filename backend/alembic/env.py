@@ -1,9 +1,7 @@
 from logging.config import fileConfig
 
-from sqlalchemy import engine_from_config
-from sqlalchemy import pool
-
 from alembic import context
+from sqlalchemy import engine_from_config, pool
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -24,9 +22,8 @@ if backend_dir not in sys.path:
 
 try:
     from app.database.base import Base
-    import app.models  # load all models
     target_metadata = Base.metadata
-except Exception as exc:
+except Exception:
     target_metadata = None
 
 # Support dynamic DB URL from environment

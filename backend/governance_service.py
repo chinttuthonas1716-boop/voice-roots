@@ -13,7 +13,7 @@ import logging
 import os
 import sqlite3
 from datetime import datetime, timezone
-from typing import Any, Dict, List, Optional, Tuple
+from typing import Any
 
 logger = logging.getLogger(__name__)
 
@@ -50,7 +50,7 @@ def get_db_path() -> str:
     )
 
 
-def init_governance_tables(db_path: Optional[str] = None):
+def init_governance_tables(db_path: str | None = None):
     """Initialize governance and partnership schema tables if not existing."""
     target_db = db_path or get_db_path()
     with sqlite3.connect(target_db) as conn:
@@ -188,7 +188,7 @@ def init_governance_tables(db_path: Optional[str] = None):
 
 
 # Seed default accredited tribal preservation partnerships if empty
-def seed_default_partnerships_if_empty(db_path: Optional[str] = None):
+def seed_default_partnerships_if_empty(db_path: str | None = None):
     init_governance_tables(db_path)
     target_db = db_path or get_db_path()
     now = datetime.now(timezone.utc).isoformat()
@@ -298,11 +298,11 @@ def register_organization(
     org_type: str,
     contact_email: str,
     lead_coordinator_name: str,
-    target_languages: List[str],
-    description: Optional[str] = None,
-    website_url: Optional[str] = None,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    target_languages: list[str],
+    description: str | None = None,
+    website_url: str | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Register a new candidate organization with pending accreditation status."""
     if org_type not in VALID_ORG_TYPES:
         raise ValueError(f"Invalid organization type '{org_type}'. Must be one of {sorted(VALID_ORG_TYPES)}.")
@@ -366,8 +366,8 @@ def accredit_organization(
     admin_key: str,
     accreditation_notes: str = "Verified by Voice Roots Governance Council",
     status: str = "verified_partner",
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Accredit or update partnership status for an organization (Requires Admin Key)."""
     expected_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "voice-roots-admin-key").strip()
     if not admin_key or admin_key.strip() != expected_key:
@@ -406,7 +406,7 @@ def accredit_organization(
     return get_organization(org_id, db_path=target_db)
 
 
-def get_organization(id_or_slug: Any, db_path: Optional[str] = None) -> Optional[Dict[str, Any]]:
+def get_organization(id_or_slug: Any, db_path: str | None = None) -> dict[str, Any] | None:
     """Retrieve full organization profile, affiliated projects, and verified reviewers."""
     target_db = db_path or get_db_path()
     with sqlite3.connect(target_db) as conn:
@@ -457,7 +457,7 @@ def get_organization(id_or_slug: Any, db_path: Optional[str] = None) -> Optional
         return org
 
 
-def list_organizations(status: Optional[str] = None, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_organizations(status: str | None = None, db_path: str | None = None) -> list[dict[str, Any]]:
     """List partner organizations with optional status filter."""
     init_governance_tables(db_path)
     target_db = db_path or get_db_path()
@@ -491,12 +491,12 @@ def create_partnership_project(
     org_id: int,
     project_name: str,
     slug: str,
-    target_languages: List[str],
-    collection_goal: Optional[str] = None,
+    target_languages: list[str],
+    collection_goal: str | None = None,
     license_policy: str = "CC BY-NC 4.0",
-    tk_labels: Optional[List[str]] = None,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    tk_labels: list[str] | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Create a scoped project workspace for community lore collection."""
     target_db = db_path or get_db_path()
     now = datetime.now(timezone.utc).isoformat()
@@ -559,10 +559,10 @@ def create_partnership_project(
 
 
 def list_partnership_projects(
-    org_id: Optional[int] = None,
-    language: Optional[str] = None,
-    db_path: Optional[str] = None,
-) -> List[Dict[str, Any]]:
+    org_id: int | None = None,
+    language: str | None = None,
+    db_path: str | None = None,
+) -> list[dict[str, Any]]:
     """List project workspaces with optional organization or language filter."""
     init_governance_tables(db_path)
     target_db = db_path or get_db_path()
@@ -592,9 +592,8 @@ def list_partnership_projects(
                 pd["tk_labels"] = []
 
             # Filter by language if specified
-            if language:
-                if language.lower().strip() not in pd["target_languages"]:
-                    continue
+            if language and language.lower().strip() not in pd["target_languages"]:
+                continue
 
             projects.append(pd)
         return projects
@@ -607,10 +606,10 @@ def list_partnership_projects(
 def register_expert_reviewer(
     reviewer_name: str,
     reviewer_role: str,
-    languages_qualified: List[str],
-    org_id: Optional[int] = None,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    languages_qualified: list[str],
+    org_id: int | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Register an expert reviewer profile with qualification claims."""
     if reviewer_role not in VALID_REVIEWER_ROLES:
         raise ValueError(f"Invalid reviewer role '{reviewer_role}'. Must be one of {sorted(VALID_REVIEWER_ROLES)}.")
@@ -671,8 +670,8 @@ def accredit_expert_reviewer(
     admin_key: str,
     accredited_by: str = "Voice Roots Linguistic Committee",
     status: str = "accredited",
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Certify an expert reviewer profile (Requires Admin Key)."""
     expected_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "voice-roots-admin-key").strip()
     if not admin_key or admin_key.strip() != expected_key:
@@ -717,10 +716,10 @@ def accredit_expert_reviewer(
 
 
 def list_expert_reviewers(
-    language: Optional[str] = None,
-    status: Optional[str] = None,
-    db_path: Optional[str] = None,
-) -> List[Dict[str, Any]]:
+    language: str | None = None,
+    status: str | None = None,
+    db_path: str | None = None,
+) -> list[dict[str, Any]]:
     """List registered and accredited expert reviewers."""
     init_governance_tables(db_path)
     target_db = db_path or get_db_path()
@@ -760,10 +759,10 @@ def assign_review(
     transcript_id: int,
     reviewer_id: int,
     assigned_by: str,
-    project_id: Optional[int] = None,
-    due_date: Optional[str] = None,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    project_id: int | None = None,
+    due_date: str | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Assign a pending recording to an accredited reviewer qualified in that language."""
     target_db = db_path or get_db_path()
     now = datetime.now(timezone.utc).isoformat()
@@ -835,10 +834,10 @@ def assign_review(
 
 
 def list_review_assignments(
-    reviewer_id: Optional[int] = None,
-    status: Optional[str] = None,
-    db_path: Optional[str] = None,
-) -> List[Dict[str, Any]]:
+    reviewer_id: int | None = None,
+    status: str | None = None,
+    db_path: str | None = None,
+) -> list[dict[str, Any]]:
     """List review assignments with transcript and reviewer metadata."""
     init_governance_tables(db_path)
     target_db = db_path or get_db_path()
@@ -877,9 +876,9 @@ def file_governance_dispute(
     filed_by_name: str,
     filed_by_role: str,
     description: str,
-    suggested_resolution: Optional[str] = None,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    suggested_resolution: str | None = None,
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """File a formal community or ethical dispute regarding a transcript, translation, or publication."""
     if dispute_type not in VALID_DISPUTE_TYPES:
         raise ValueError(f"Invalid dispute type '{dispute_type}'. Must be one of {sorted(VALID_DISPUTE_TYPES)}.")
@@ -946,8 +945,8 @@ def resolve_governance_dispute(
     resolver_role: str,
     decision: str,
     resolution_notes: str,
-    db_path: Optional[str] = None,
-) -> Dict[str, Any]:
+    db_path: str | None = None,
+) -> dict[str, Any]:
     """Resolve an open dispute with community elder or coordinator decision."""
     if resolver_role not in ("community_elder", "admin", "project_coordinator"):
         raise PermissionError("Only Community Elders, Project Coordinators, or Admins can resolve governance disputes.")
@@ -991,7 +990,7 @@ def resolve_governance_dispute(
         return dict(cursor.fetchone())
 
 
-def list_governance_disputes(status: Optional[str] = None, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def list_governance_disputes(status: str | None = None, db_path: str | None = None) -> list[dict[str, Any]]:
     """List filed disputes with optional status filter."""
     init_governance_tables(db_path)
     target_db = db_path or get_db_path()
@@ -1019,8 +1018,8 @@ def record_governance_audit(
     actor_role: str,
     entity_type: str,
     entity_id: str,
-    details: Optional[Dict[str, Any]] = None,
-    db_path: Optional[str] = None,
+    details: dict[str, Any] | None = None,
+    db_path: str | None = None,
 ):
     """Write an immutable audit log entry for governance accountability."""
     target_db = db_path or get_db_path()
@@ -1049,7 +1048,7 @@ def record_governance_audit(
         logger.warning("Failed to record governance audit log: %s", e)
 
 
-def get_governance_audit_logs(limit: int = 50, db_path: Optional[str] = None) -> List[Dict[str, Any]]:
+def get_governance_audit_logs(limit: int = 50, db_path: str | None = None) -> list[dict[str, Any]]:
     """Retrieve immutable audit trail records."""
     init_governance_tables(db_path)
     target_db = db_path or get_db_path()
@@ -1073,7 +1072,7 @@ def get_governance_audit_logs(limit: int = 50, db_path: Optional[str] = None) ->
 # Non-Competitive Governance & Community Telemetry
 # ==============================================================================
 
-def get_community_partnership_telemetry(db_path: Optional[str] = None) -> Dict[str, Any]:
+def get_community_partnership_telemetry(db_path: str | None = None) -> dict[str, Any]:
     """
     Generate transparent, non-competitive community partnership telemetry.
     Aggregates verified contributions per accredited partner without ranking

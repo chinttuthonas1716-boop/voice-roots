@@ -13,7 +13,7 @@ import logging
 import os
 from abc import ABC, abstractmethod
 from dataclasses import dataclass
-from typing import Any, Dict, List, Optional, Set, Tuple
+from typing import Any
 
 from language_registry import is_oral_or_endangered, language_registry
 
@@ -30,7 +30,7 @@ class TranslationResult:
     model: str
     verified: bool
     pair_status: str = "supported"
-    limitation_note: Optional[str] = None
+    limitation_note: str | None = None
 
 
 class UnsupportedLanguagePairError(ValueError):
@@ -63,7 +63,7 @@ class BaseTranslationAdapter(ABC):
         ...
 
     @abstractmethod
-    def get_supported_languages(self) -> Set[str]:
+    def get_supported_languages(self) -> set[str]:
         """Return the set of language codes supported by this adapter."""
         ...
 
@@ -86,7 +86,7 @@ class IdentityTranslationAdapter(BaseTranslationAdapter):
     def is_configured(self) -> bool:
         return True
 
-    def get_supported_languages(self) -> Set[str]:
+    def get_supported_languages(self) -> set[str]:
         return {l["code"] for l in language_registry.get_all_capabilities()}
 
     def is_pair_supported(self, src: str, tgt: str) -> bool:
@@ -121,7 +121,7 @@ class OpenAITranslationAdapter(BaseTranslationAdapter):
     def is_configured(self) -> bool:
         return bool(self.api_key and self.allow_paid)
 
-    def get_supported_languages(self) -> Set[str]:
+    def get_supported_languages(self) -> set[str]:
         # OpenAI supports major written world languages
         return {
             "en", "es", "fr", "de", "it", "pt", "ru", "zh", "ja", "ko", "ar",
@@ -184,13 +184,13 @@ class NLLBTranslationAdapter(BaseTranslationAdapter):
 
     name = "nllb"
 
-    def __init__(self, endpoint_url: Optional[str] = None) -> None:
+    def __init__(self, endpoint_url: str | None = None) -> None:
         self.endpoint_url = endpoint_url or os.environ.get("VOICE_ROOTS_NLLB_URL", "").strip()
 
     def is_configured(self) -> bool:
         return bool(self.endpoint_url)
 
-    def get_supported_languages(self) -> Set[str]:
+    def get_supported_languages(self) -> set[str]:
         # NLLB-200 covers 200 languages including Quechua, Guarani, Swahili, Yoruba, Maori, Basque, Welsh
         return {
             "en", "es", "fr", "de", "pt", "ru", "zh", "ja", "ko", "ar",
@@ -214,7 +214,7 @@ class UniversalTranslationManager:
     """Manages translation adapters and verifies language pair capabilities."""
 
     def __init__(self) -> None:
-        self.adapters: List[BaseTranslationAdapter] = [
+        self.adapters: list[BaseTranslationAdapter] = [
             IdentityTranslationAdapter(),
             OpenAITranslationAdapter(),
             NLLBTranslationAdapter(),
@@ -225,7 +225,7 @@ class UniversalTranslationManager:
         self.adapters.insert(1, adapter)
         logger.info("Registered translation adapter: %s", adapter.name)
 
-    def get_available_providers(self) -> List[Dict[str, Any]]:
+    def get_available_providers(self) -> list[dict[str, Any]]:
         """Return list of registered translation adapters with active configuration status."""
         return [
             {
@@ -236,7 +236,7 @@ class UniversalTranslationManager:
             for a in self.adapters
         ]
 
-    def check_pair_support(self, src: str, tgt: str) -> Dict[str, Any]:
+    def check_pair_support(self, src: str, tgt: str) -> dict[str, Any]:
         """Check if a language pair is supported, explaining any limitations."""
         src_clean = (src or "").strip().lower()
         tgt_clean = (tgt or "en").strip().lower()

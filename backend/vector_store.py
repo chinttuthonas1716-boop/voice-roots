@@ -10,14 +10,12 @@ from __future__ import annotations
 import hashlib
 import logging
 import os
-from typing import Any, Dict, List, Optional
+from typing import Any
 
 import numpy as np
+from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
 logger = logging.getLogger(__name__)
-
-# Base directory for ChromaDB local persistence
-from chromadb.api.types import Documents, EmbeddingFunction, Embeddings
 
 BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
 CHROMA_PERSIST_DIR = os.environ.get(
@@ -43,11 +41,11 @@ class VoiceRootsMultilingualEmbeddingFunction(EmbeddingFunction[Documents]):
     def embed_query(self, input: Documents) -> Embeddings:
         return self.__call__(input)
 
-    def get_config(self) -> Dict[str, Any]:
+    def get_config(self) -> dict[str, Any]:
         return {"dim": self.dim}
 
     @staticmethod
-    def build_from_config(config: Dict[str, Any]) -> "VoiceRootsMultilingualEmbeddingFunction":
+    def build_from_config(config: dict[str, Any]) -> VoiceRootsMultilingualEmbeddingFunction:
         return VoiceRootsMultilingualEmbeddingFunction(dim=config.get("dim", 384))
 
     def __call__(self, input: Documents) -> Embeddings:
@@ -119,7 +117,7 @@ def get_resource_collection():
     return _CHROMA_COLLECTION
 
 
-def upsert_resources(resources: List[Dict[str, Any]]) -> int:
+def upsert_resources(resources: list[dict[str, Any]]) -> int:
     """Idempotently index or update a list of language resource records in ChromaDB."""
     collection = get_resource_collection()
     if collection is None:
@@ -140,10 +138,7 @@ def upsert_resources(resources: List[Dict[str, Any]]) -> int:
 
         translation = (item.get("text_translation") or item.get("translation_text") or "").strip()
         # Combine original text with translation if available for rich semantic search
-        if item.get("search_text"):
-            search_content = item.get("search_text").strip()
-        else:
-            search_content = f"{text} — {translation}" if translation else text
+        search_content = item.get("search_text").strip() if item.get("search_text") else f"{text} — {translation}" if translation else text
 
         meta: dict[str, Any] = {
             "document_id": doc_id,
@@ -174,12 +169,12 @@ def upsert_resources(resources: List[Dict[str, Any]]) -> int:
 def search_resources(
     query: str,
     *,
-    language: Optional[str] = None,
-    dialect: Optional[str] = None,
-    document_type: Optional[str] = None,
-    verification_status: Optional[str] = None,
+    language: str | None = None,
+    dialect: str | None = None,
+    document_type: str | None = None,
+    verification_status: str | None = None,
     limit: int = 10,
-) -> List[Dict[str, Any]]:
+) -> list[dict[str, Any]]:
     """Execute semantic vector search with optional metadata filters."""
     collection = get_resource_collection()
     if collection is None:
@@ -269,7 +264,7 @@ def search_resources(
     return matched_items[:limit]
 
 
-def ingest_from_jsonl(file_path: Optional[str] = None) -> int:
+def ingest_from_jsonl(file_path: str | None = None) -> int:
     """Read records from jsonl file and upsert them into ChromaDB."""
     if not file_path:
         default_path = os.path.join(
@@ -286,7 +281,7 @@ def ingest_from_jsonl(file_path: Optional[str] = None) -> int:
 
     import json
     records: list[dict[str, Any]] = []
-    with open(file_path, "r", encoding="utf-8") as f:
+    with open(file_path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -308,7 +303,7 @@ def delete_resource(document_id: str) -> bool:
         return False
 
 
-def get_vector_stats() -> Dict[str, Any]:
+def get_vector_stats() -> dict[str, Any]:
     """Return collection size, languages covered, and storage telemetry."""
     collection = get_resource_collection()
     if collection is None:

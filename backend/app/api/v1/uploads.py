@@ -3,17 +3,25 @@ import os
 import tempfile
 import uuid
 from collections.abc import Callable
+
 import aiofiles
 import structlog
-from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile, status, BackgroundTasks
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
-from app.database.session import get_db
 from app.auth.dependencies import get_current_user
-from app.models.user import User
-from app.models.recording import Recording, RecordingStatus
 from app.config import settings
+from app.database.session import get_db
+from app.models.recording import Recording, RecordingStatus
+from app.models.user import User
+from fastapi import (
+    APIRouter,
+    BackgroundTasks,
+    Depends,
+    File,
+    HTTPException,
+    UploadFile,
+    status,
+)
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/uploads", tags=["Uploads"])
 logger = structlog.get_logger(__name__)
@@ -177,8 +185,9 @@ async def upload_audio(
 
     # Try to get audio duration
     try:
-        import librosa  # type: ignore
         import asyncio
+
+        import librosa  # type: ignore
         loop = asyncio.get_event_loop()
         duration = await loop.run_in_executor(
             None, lambda: librosa.get_duration(path=recording.file_path)
