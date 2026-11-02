@@ -1750,3 +1750,16 @@
     5. Code Linter: `python3 -m ruff check` passed with 0 errors, 0 warnings across whole repository.
   - NOT VERIFIED: Remote DNS propagation for `pilot.voiceroots.ai`.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-02] [ANTIGRAVITY] DONE: Milestone 23: Controlled Institutional Pilot — Readiness Assessment & Remediation Verification Sign-off.
+  - Published comprehensive empirical verification report in `MILESTONE_23_REMEDIATION_VERIFICATION.md` (commit `df338bd`).
+  - Consolidated stable milestone baseline into branch `integration/milestones-16-23`.
+  - Established formal Operational Readiness Gates tracking: G-01 (IRB clearance), G-02 (Community Council sovereign consent), G-03 (Vernacular Gondi/Koya oral consent prompts), G-04 (Host persistent volume provisioning), G-05 (Edge reverse-proxy TLS certificates).
+  - Codebase status: 215/215 tests passing, 26/26 pre-faculty audit passing, 27/27 live features passing, 0 ruff errors.
+  - Working tree clean; `main` untouched; zero participant data collected; execution strictly halted at readiness gate boundary.
+  - VERIFIED:
+    1. Full Test Suite: 215/215 passed in `pytest tests/ -v` (exit code 0).
+    2. Repository Safety: `git status --short` clean, `git diff --check` clean.
+    3. Integration Baseline: `integration/milestones-16-23` established at `df338bd`.
+  - NOT VERIFIED: Real-world external pilot gates G-01 through G-05 (pending external partner agreements, ethics clearance, and infrastructure provisioning).
+  - NEEDS FROM OTHER AGENT: none.
