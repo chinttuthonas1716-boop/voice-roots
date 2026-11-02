@@ -1,17 +1,17 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Mic, 
-  Square, 
-  Upload, 
-  Trash2, 
-  Edit3, 
-  Check, 
-  AlertCircle, 
-  CheckCircle2, 
-  Languages, 
-  Volume2, 
-  FileAudio, 
-  RefreshCw, 
+import {
+  Mic,
+  Square,
+  Upload,
+  Trash2,
+  Edit3,
+  Check,
+  AlertCircle,
+  CheckCircle2,
+  Languages,
+  Volume2,
+  FileAudio,
+  RefreshCw,
   Info,
   ShieldCheck,
   Cpu,
@@ -35,7 +35,15 @@ import {
   Network,
   BookOpen,
   Headphones,
-  GraduationCap
+  GraduationCap,
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  User,
+  ArrowRight,
+  LogOut,
+  Shield
 } from 'lucide-react';
 import { Pilot } from './components/Pilot';
 import { Home } from './components/Home';
@@ -442,6 +450,8 @@ export function App() {
   const [authLoading, setAuthLoading] = useState(false);
   const [authError, setAuthError] = useState<string | null>(null);
   const [authSuccess, setAuthSuccess] = useState<string | null>(null);
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(true);
 
   const handleAuthLogin = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -1822,7 +1832,7 @@ ${feedbackRecommendation}
           setOralReviewNotice(null);
           fetchSavedTranslations(data.id);
           fetchCorrections(data.id);
-          
+
           // Clear inputs and reset recording state
           setTitle('');
           setDialect('');
@@ -2012,26 +2022,26 @@ ${feedbackRecommendation}
     <div className="container">
       <OfflineManager apiBaseUrl={API_BASE} onSyncCompleted={fetchTranscripts} />
       {/* ─── Top Navigation Bar (Matching Reference Exactly) ─── */}
-      <header style={{ 
-        display: 'flex', 
-        justifyContent: 'space-between', 
-        alignItems: 'center', 
-        padding: '16px 0', 
-        marginBottom: '28px', 
+      <header style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 0',
+        marginBottom: '28px',
         borderBottom: '1px solid rgba(35, 83, 71, 0.45)',
-        flexWrap: 'wrap', 
-        gap: '16px' 
+        flexWrap: 'wrap',
+        gap: '16px'
       }}>
         {/* Left: Voice Roots Logo & Name */}
-        <div 
+        <div
           onClick={() => handleTabChange('home')}
           style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}
           title="Voice Roots Home"
         >
-          <div style={{ 
-            width: '36px', 
-            height: '36px', 
-            borderRadius: '10px', 
+          <div style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '10px',
             background: 'linear-gradient(135deg, #163832 0%, #0B2B26 100%)',
             border: '1px solid #235347',
             display: 'flex',
@@ -2047,13 +2057,13 @@ ${feedbackRecommendation}
         </div>
 
         {/* Center: Navigation Links */}
-        <nav 
-          role="tablist" 
+        <nav
+          role="tablist"
           aria-label="Application Navigation"
-          style={{ 
-            display: 'flex', 
-            alignItems: 'center', 
-            gap: '4px', 
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
             overflowX: 'auto',
             maxWidth: '100%',
             scrollbarWidth: 'none',
@@ -2335,7 +2345,7 @@ ${feedbackRecommendation}
 
         {/* Right: Telemetry, Snapshot, Login, Sign Up buttons */}
         <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-          <div 
+          <div
             title={health ? `FastAPI Online (${health.database})` : (healthError || 'Connecting...')}
             style={{
               width: '10px',
@@ -2481,7 +2491,7 @@ ${feedbackRecommendation}
 
       {/* ─── TAB 0: Welcoming Homepage Landing ─── */}
       {activeNavTab === 'home' && (
-        <Home 
+        <Home
           onNavigate={handleTabChange}
           transcriptCount={transcripts.length}
           languageCount={languages.length}
@@ -2502,7 +2512,7 @@ ${feedbackRecommendation}
                 </h2>
                 <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.8)', lineHeight: '1.6' }}>
                   Voice Roots roots unwritten oral, tribal, and regional tongues into searchable text.
-                  Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker's audio recording is preserved permanently as the immutable master. 
+                  Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker's audio recording is preserved permanently as the immutable master.
                   Automated AI transcription is processed with explicit consent and stored as an annotation layer that never overwrites the master voice.
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap' }}>
@@ -2723,12 +2733,12 @@ ${feedbackRecommendation}
 
             {/* Mode-Specific Audio Input Area */}
             {mode === 'record' ? (
-              <div style={{ 
-                background: 'rgba(0,0,0,0.3)', 
-                border: '1px dashed var(--card-border)', 
-                borderRadius: '12px', 
-                padding: '24px', 
-                textAlign: 'center' 
+              <div style={{
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px dashed var(--card-border)',
+                borderRadius: '12px',
+                padding: '24px',
+                textAlign: 'center'
               }}>
                 <div style={{ marginBottom: '16px' }}>
                   {isRecording ? (
@@ -2774,12 +2784,12 @@ ${feedbackRecommendation}
                 )}
               </div>
             ) : (
-              <div style={{ 
-                background: 'rgba(0,0,0,0.3)', 
-                border: '1px dashed var(--card-border)', 
-                borderRadius: '12px', 
-                padding: '24px', 
-                textAlign: 'center' 
+              <div style={{
+                background: 'rgba(0,0,0,0.3)',
+                border: '1px dashed var(--card-border)',
+                borderRadius: '12px',
+                padding: '24px',
+                textAlign: 'center'
               }}>
                 <Upload size={32} color="#8EB69B" style={{ margin: '0 auto 12px' }} />
                 <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '12px' }}>
@@ -2810,14 +2820,14 @@ ${feedbackRecommendation}
             )}
 
             {/* Affirmative Speaker Consent (Mandatory under Indigenous Ethical Protocols / OCAP) */}
-            <div 
-              style={{ 
-                background: hasConsent ? 'rgba(142, 182, 155, 0.08)' : 'rgba(255, 255, 255, 0.03)', 
-                border: hasConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)', 
-                borderRadius: '12px', 
-                padding: '16px', 
-                display: 'flex', 
-                gap: '12px', 
+            <div
+              style={{
+                background: hasConsent ? 'rgba(142, 182, 155, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                border: hasConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)',
+                borderRadius: '12px',
+                padding: '16px',
+                display: 'flex',
+                gap: '12px',
                 alignItems: 'flex-start',
                 transition: 'all 0.2s ease'
               }}
@@ -2839,8 +2849,8 @@ ${feedbackRecommendation}
                 }}
                 required
               />
-              <label 
-                htmlFor="speaker-consent-checkbox" 
+              <label
+                htmlFor="speaker-consent-checkbox"
                 style={{ fontSize: '13px', lineHeight: '1.5', color: '#DAF1DE', cursor: 'pointer', flex: 1 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
@@ -2856,14 +2866,14 @@ ${feedbackRecommendation}
             </div>
 
             {/* AI Speech Transcription Consent (Distinct Opt-in) */}
-            <div 
-              style={{ 
-                background: wantsTranscriptionConsent ? 'rgba(142, 182, 155, 0.1)' : 'rgba(255, 255, 255, 0.03)', 
-                border: wantsTranscriptionConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)', 
-                borderRadius: '12px', 
-                padding: '14px', 
-                display: 'flex', 
-                gap: '12px', 
+            <div
+              style={{
+                background: wantsTranscriptionConsent ? 'rgba(142, 182, 155, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                border: wantsTranscriptionConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)',
+                borderRadius: '12px',
+                padding: '14px',
+                display: 'flex',
+                gap: '12px',
                 alignItems: 'flex-start',
                 transition: 'all 0.2s ease'
               }}
@@ -2881,8 +2891,8 @@ ${feedbackRecommendation}
                   cursor: 'pointer'
                 }}
               />
-              <label 
-                htmlFor="transcription-consent-checkbox" 
+              <label
+                htmlFor="transcription-consent-checkbox"
                 style={{ fontSize: '13px', lineHeight: '1.5', color: '#DAF1DE', cursor: 'pointer', flex: 1 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
@@ -2905,13 +2915,13 @@ ${feedbackRecommendation}
                   <span style={{ color: '#8EB69B', fontWeight: '600' }}>{uploadProgress}%</span>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '6px', height: '6px', overflow: 'hidden' }}>
-                  <div 
-                    style={{ 
-                      background: 'linear-gradient(90deg, #235347, #8EB69B)', 
-                      height: '100%', 
-                      width: `${uploadProgress}%`, 
-                      transition: 'width 0.15s ease' 
-                    }} 
+                  <div
+                    style={{
+                      background: 'linear-gradient(90deg, #235347, #8EB69B)',
+                      height: '100%',
+                      width: `${uploadProgress}%`,
+                      transition: 'width 0.15s ease'
+                    }}
                   />
                 </div>
               </div>
@@ -2937,8 +2947,8 @@ ${feedbackRecommendation}
               disabled={isSubmitting || !hasConsent || (!recordedBlob && !selectedFile) || !title.trim()}
               style={{ width: '100%' }}
             >
-              {isSubmitting 
-                ? (uploadProgress !== null ? `Uploading Master (${uploadProgress}%)...` : 'Saving Audio Master...') 
+              {isSubmitting
+                ? (uploadProgress !== null ? `Uploading Master (${uploadProgress}%)...` : 'Saving Audio Master...')
                 : 'Save & Ingest Recording'}
             </button>
           </form>
@@ -3023,10 +3033,10 @@ ${feedbackRecommendation}
 
                 {/* Acoustic Language Detection Output */}
                 {detectLanguageResult && detectLanguageResult.id === activeResult.id && (
-                  <div style={{ 
-                    background: 'rgba(139, 92, 246, 0.08)', 
-                    border: '1px solid rgba(139, 92, 246, 0.3)', 
-                    borderRadius: '10px', 
+                  <div style={{
+                    background: 'rgba(139, 92, 246, 0.08)',
+                    border: '1px solid rgba(139, 92, 246, 0.3)',
+                    borderRadius: '10px',
                     padding: '10px 14px',
                     fontSize: '12px',
                     marginTop: '8px'
@@ -3070,15 +3080,15 @@ ${feedbackRecommendation}
               </div>
 
               {/* ─── Export & Copy Action Toolbar ─── */}
-              <div style={{ 
-                display: 'flex', 
-                gap: '8px', 
-                flexWrap: 'wrap', 
-                alignItems: 'center', 
-                background: 'rgba(255,255,255,0.02)', 
-                border: '1px solid var(--card-border)', 
-                borderRadius: '10px', 
-                padding: '8px 12px' 
+              <div style={{
+                display: 'flex',
+                gap: '8px',
+                flexWrap: 'wrap',
+                alignItems: 'center',
+                background: 'rgba(255,255,255,0.02)',
+                border: '1px solid var(--card-border)',
+                borderRadius: '10px',
+                padding: '8px 12px'
               }}>
                 <span style={{ fontSize: '12px', color: '#94A3B8', fontWeight: '600', marginRight: '4px' }}>
                   Export & Share:
@@ -3137,10 +3147,10 @@ ${feedbackRecommendation}
               </div>
 
               {/* ─── AI Speech Recognition Status Card ─── */}
-              <div style={{ 
-                background: 'rgba(255,255,255,0.03)', 
-                border: '1px solid var(--card-border)', 
-                borderRadius: '12px', 
+              <div style={{
+                background: 'rgba(255,255,255,0.03)',
+                border: '1px solid var(--card-border)',
+                borderRadius: '12px',
                 padding: '14px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -3210,10 +3220,10 @@ ${feedbackRecommendation}
 
                 {/* Error Banner & Actionable Retry */}
                 {activeResult.transcription_status === 'failed' && (
-                  <div style={{ 
-                    padding: '10px 12px', 
-                    borderRadius: '8px', 
-                    background: 'rgba(239, 68, 68, 0.12)', 
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.12)',
                     border: '1px solid rgba(239, 68, 68, 0.3)',
                     color: '#FCA5A5',
                     fontSize: '13px'
@@ -3236,10 +3246,10 @@ ${feedbackRecommendation}
 
                 {/* Provider Not Configured Notice */}
                 {activeResult.transcription_status === 'not_configured' && (
-                  <div style={{ 
-                    padding: '10px 12px', 
-                    borderRadius: '8px', 
-                    background: 'rgba(142, 182, 155, 0.1)', 
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    background: 'rgba(142, 182, 155, 0.1)',
                     border: '1px solid #235347',
                     color: '#DAF1DE',
                     fontSize: '13px'
@@ -3295,11 +3305,11 @@ ${feedbackRecommendation}
               </div>
 
               {/* ─── Box 1: Original AI Speech Output (Immutable Annotation) ─── */}
-              <div style={{ 
-                background: 'rgba(20, 184, 166, 0.04)', 
-                border: '1px solid rgba(20, 184, 166, 0.25)', 
-                borderRadius: '12px', 
-                padding: '16px' 
+              <div style={{
+                background: 'rgba(20, 184, 166, 0.04)',
+                border: '1px solid rgba(20, 184, 166, 0.25)',
+                borderRadius: '12px',
+                padding: '16px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <label style={{ fontSize: '13px', fontWeight: '700', color: '#5EEAD4', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3312,12 +3322,12 @@ ${feedbackRecommendation}
                 </div>
 
                 {activeResult.machine_transcript_text ? (
-                  <div style={{ 
-                    background: 'rgba(0,0,0,0.3)', 
-                    borderRadius: '8px', 
-                    padding: '12px', 
-                    fontSize: '14px', 
-                    lineHeight: '1.6', 
+                  <div style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontSize: '14px',
+                    lineHeight: '1.6',
                     color: '#F8FAFC',
                     fontStyle: 'italic',
                     borderLeft: '3px solid #14B8A6'
@@ -3325,11 +3335,11 @@ ${feedbackRecommendation}
                     "{activeResult.machine_transcript_text}"
                   </div>
                 ) : (
-                  <div style={{ 
-                    background: 'rgba(0,0,0,0.2)', 
-                    borderRadius: '8px', 
-                    padding: '12px', 
-                    fontSize: '13px', 
+                  <div style={{
+                    background: 'rgba(0,0,0,0.2)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontSize: '13px',
                     color: '#94A3B8'
                   }}>
                     {activeResult.transcription_status === 'queued' || activeResult.transcription_status === 'processing'
@@ -3343,11 +3353,11 @@ ${feedbackRecommendation}
               </div>
 
               {/* ─── Box 2: Community Corrected Transcript (Editable) ─── */}
-              <div style={{ 
-                background: 'rgba(142, 182, 155, 0.04)', 
-                border: '1px solid #235347', 
-                borderRadius: '12px', 
-                padding: '16px' 
+              <div style={{
+                background: 'rgba(142, 182, 155, 0.04)',
+                border: '1px solid #235347',
+                borderRadius: '12px',
+                padding: '16px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
                   <label style={{ fontSize: '13px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3487,12 +3497,12 @@ ${feedbackRecommendation}
                   {corrections.length > 0 ? (
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', maxHeight: '180px', overflowY: 'auto' }}>
                       {corrections.map((c) => (
-                        <div key={c.id} style={{ 
-                          background: 'rgba(255,255,255,0.02)', 
-                          border: '1px solid rgba(255,255,255,0.06)', 
-                          borderRadius: '8px', 
-                          padding: '8px 10px', 
-                          fontSize: '12px' 
+                        <div key={c.id} style={{
+                          background: 'rgba(255,255,255,0.02)',
+                          border: '1px solid rgba(255,255,255,0.06)',
+                          borderRadius: '8px',
+                          padding: '8px 10px',
+                          fontSize: '12px'
                         }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '4px' }}>
                             <span style={{ fontWeight: '600', color: '#F8FAFC' }}>
@@ -3577,11 +3587,11 @@ ${feedbackRecommendation}
               </div>
 
               {/* ─── Box 3: Universal Translation (Source-Grounded) ─── */}
-              <div style={{ 
-                background: 'rgba(99, 102, 241, 0.04)', 
-                border: '1px solid rgba(99, 102, 241, 0.25)', 
-                borderRadius: '12px', 
-                padding: '16px' 
+              <div style={{
+                background: 'rgba(99, 102, 241, 0.04)',
+                border: '1px solid rgba(99, 102, 241, 0.25)',
+                borderRadius: '12px',
+                padding: '16px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '10px' }}>
                   <label style={{ fontSize: '13px', fontWeight: '700', color: '#A5B4FC', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -3636,12 +3646,12 @@ ${feedbackRecommendation}
 
                 {/* Oral Language Restriction Notice */}
                 {oralReviewNotice && (
-                  <div style={{ 
-                    padding: '12px', 
-                    borderRadius: '8px', 
-                    background: 'rgba(35, 83, 71, 0.35)', 
-                    border: '1px solid rgba(142, 182, 155, 0.35)', 
-                    color: '#DAF1DE', 
+                  <div style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: 'rgba(35, 83, 71, 0.35)',
+                    border: '1px solid rgba(142, 182, 155, 0.35)',
+                    color: '#DAF1DE',
                     fontSize: '12px',
                     lineHeight: '1.5',
                     marginBottom: '10px'
@@ -3659,12 +3669,12 @@ ${feedbackRecommendation}
 
                 {/* Translation Error */}
                 {translationError && (
-                  <div style={{ 
-                    padding: '10px 12px', 
-                    borderRadius: '8px', 
-                    background: 'rgba(239, 68, 68, 0.12)', 
-                    border: '1px solid rgba(239, 68, 68, 0.3)', 
-                    color: '#FCA5A5', 
+                  <div style={{
+                    padding: '10px 12px',
+                    borderRadius: '8px',
+                    background: 'rgba(239, 68, 68, 0.12)',
+                    border: '1px solid rgba(239, 68, 68, 0.3)',
+                    color: '#FCA5A5',
                     fontSize: '12px',
                     marginBottom: '10px'
                   }}>
@@ -3674,10 +3684,10 @@ ${feedbackRecommendation}
 
                 {/* Translation Result Output */}
                 {translationResult && (
-                  <div style={{ 
-                    background: 'rgba(0,0,0,0.3)', 
-                    borderRadius: '8px', 
-                    padding: '12px', 
+                  <div style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '8px',
+                    padding: '12px',
                     borderLeft: '3px solid #6366F1',
                     marginBottom: '14px'
                   }}>
@@ -3805,7 +3815,7 @@ ${feedbackRecommendation}
                   AI-Powered Translation for Oral & Written Tongues
                 </h2>
                 <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', lineHeight: '1.6' }}>
-                  Translate unwritten oral transcriptions and text between indigenous, regional, and national languages. 
+                  Translate unwritten oral transcriptions and text between indigenous, regional, and national languages.
                   Oral languages are protected with elder verification safeguards and strict annotation provenance.
                 </p>
                 <div style={{ display: 'flex', gap: '8px', marginTop: '10px', flexWrap: 'wrap' }}>
@@ -3976,13 +3986,13 @@ ${feedbackRecommendation}
                 </div>
               </div>
 
-              <div style={{ 
-                fontSize: '18px', 
-                color: '#DAF1DE', 
-                fontWeight: '600', 
-                lineHeight: '1.6', 
-                background: 'rgba(5, 31, 32, 0.6)', 
-                padding: '16px 20px', 
+              <div style={{
+                fontSize: '18px',
+                color: '#DAF1DE',
+                fontWeight: '600',
+                lineHeight: '1.6',
+                background: 'rgba(5, 31, 32, 0.6)',
+                padding: '16px 20px',
                 borderRadius: '12px',
                 border: '1px solid #235347'
               }}>
@@ -4070,9 +4080,9 @@ ${feedbackRecommendation}
                 minWidth: '200px'
               }}
             />
-            <button 
-              type="button" 
-              onClick={fetchTranscripts} 
+            <button
+              type="button"
+              onClick={fetchTranscripts}
               className="btn-secondary"
               style={{ fontSize: '13px', padding: '8px 14px' }}
             >
@@ -4083,12 +4093,12 @@ ${feedbackRecommendation}
         </div>
 
         {/* ─── Option 3: Bulk Corpus Export & Archive Classification Filter Toolbar ─── */}
-        <div style={{ 
-          display: 'flex', 
-          justifyContent: 'space-between', 
-          alignItems: 'center', 
-          marginBottom: '18px', 
-          flexWrap: 'wrap', 
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginBottom: '18px',
+          flexWrap: 'wrap',
           gap: '10px',
           paddingBottom: '14px',
           borderBottom: '1px solid rgba(35, 83, 71, 0.6)'
@@ -4238,12 +4248,12 @@ ${feedbackRecommendation}
               return (
                 <>
                   {displayedTranscripts.map((t) => (
-              <div 
-                key={t.id} 
-                style={{ 
-                  background: activeResult?.id === t.id ? 'rgba(142, 182, 155, 0.12)' : '#0B2B26', 
-                  border: activeResult?.id === t.id ? '1px solid #8EB69B' : '1px solid #235347', 
-                  borderRadius: '12px', 
+              <div
+                key={t.id}
+                style={{
+                  background: activeResult?.id === t.id ? 'rgba(142, 182, 155, 0.12)' : '#0B2B26',
+                  border: activeResult?.id === t.id ? '1px solid #8EB69B' : '1px solid #235347',
+                  borderRadius: '12px',
                   padding: '16px',
                   display: 'flex',
                   flexDirection: 'column',
@@ -4265,7 +4275,7 @@ ${feedbackRecommendation}
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
                     {/* Status Badges */}
                     <span className="badge badge-green">{t.status}</span>
-                    
+
                     {t.transcription_status === 'completed' && (
                       <span className="badge badge-green" title={t.transcription_model || 'Completed'}>
                         <CheckCircle2 size={12} />
@@ -4347,10 +4357,10 @@ ${feedbackRecommendation}
                 {/* Separate Machine vs Community Transcripts Display */}
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', fontSize: '13px' }}>
                   {t.machine_transcript_text && (
-                    <div style={{ 
-                      background: 'rgba(20, 184, 166, 0.05)', 
+                    <div style={{
+                      background: 'rgba(20, 184, 166, 0.05)',
                       borderLeft: '3px solid #14B8A6',
-                      borderRadius: '6px', 
+                      borderRadius: '6px',
                       padding: '8px 12px',
                       color: '#E2E8F0',
                       fontSize: '13px'
@@ -4372,19 +4382,19 @@ ${feedbackRecommendation}
                         onChange={(e) => setEditText(e.target.value)}
                       />
                       <div style={{ display: 'flex', gap: '8px' }}>
-                        <button 
-                          type="button" 
-                          onClick={() => handleSaveArchiveEdit(t.id)} 
-                          className="btn-primary" 
+                        <button
+                          type="button"
+                          onClick={() => handleSaveArchiveEdit(t.id)}
+                          className="btn-primary"
                           style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px' }}
                         >
                           <Check size={14} />
                           <span>Save Correction</span>
                         </button>
-                        <button 
-                          type="button" 
-                          onClick={() => setEditingId(null)} 
-                          className="btn-secondary" 
+                        <button
+                          type="button"
+                          onClick={() => setEditingId(null)}
+                          className="btn-secondary"
                           style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px' }}
                         >
                           Cancel
@@ -4392,10 +4402,10 @@ ${feedbackRecommendation}
                       </div>
                     </div>
                   ) : (
-                    <div style={{ 
-                      display: 'flex', 
-                      justifyContent: 'space-between', 
-                      alignItems: 'flex-start', 
+                    <div style={{
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'flex-start',
                       gap: '12px',
                       background: 'rgba(255,255,255,0.02)',
                       borderRadius: '6px',
@@ -5067,10 +5077,10 @@ ${feedbackRecommendation}
           </div>
 
           {/* Telemetry Stats Banner */}
-          <div style={{ 
-            display: 'grid', 
-            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', 
-            gap: '12px', 
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
+            gap: '12px',
             marginBottom: '24px',
             background: '#0B2B26',
             padding: '16px',
@@ -5104,14 +5114,14 @@ ${feedbackRecommendation}
           </div>
 
           {ingestStatus && (
-            <div style={{ 
-              background: 'rgba(142, 182, 155, 0.1)', 
-              border: '1px solid #235347', 
-              borderRadius: '8px', 
-              padding: '10px 14px', 
-              marginBottom: '20px', 
-              fontSize: '13px', 
-              color: '#DAF1DE' 
+            <div style={{
+              background: 'rgba(142, 182, 155, 0.1)',
+              border: '1px solid #235347',
+              borderRadius: '8px',
+              padding: '10px 14px',
+              marginBottom: '20px',
+              fontSize: '13px',
+              color: '#DAF1DE'
             }}>
               {ingestStatus}
             </div>
@@ -5367,7 +5377,7 @@ ${feedbackRecommendation}
           )}
 
           {/* Interactive Search Controls */}
-          <form 
+          <form
             onSubmit={(e) => { e.preventDefault(); handleSearchResources(); }}
             style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '24px' }}
           >
@@ -5386,9 +5396,9 @@ ${feedbackRecommendation}
                 <select
                   className="select-field"
                   value={searchLanguage}
-                  onChange={(e) => { 
-                    setSearchLanguage(e.target.value); 
-                    handleSearchResources(searchQuery, e.target.value, searchDocType); 
+                  onChange={(e) => {
+                    setSearchLanguage(e.target.value);
+                    handleSearchResources(searchQuery, e.target.value, searchDocType);
                   }}
                 >
                   <option value="">All Languages ({languages.length})</option>
@@ -5402,9 +5412,9 @@ ${feedbackRecommendation}
                 <select
                   className="select-field"
                   value={searchDocType}
-                  onChange={(e) => { 
-                    setSearchDocType(e.target.value); 
-                    handleSearchResources(searchQuery, searchLanguage, e.target.value); 
+                  onChange={(e) => {
+                    setSearchDocType(e.target.value);
+                    handleSearchResources(searchQuery, searchLanguage, e.target.value);
                   }}
                 >
                   <option value="">All Document Types</option>
@@ -5468,14 +5478,14 @@ ${feedbackRecommendation}
           </form>
 
           {searchError && (
-            <div style={{ 
-              background: 'rgba(239, 68, 68, 0.1)', 
-              border: '1px solid rgba(239, 68, 68, 0.3)', 
-              borderRadius: '8px', 
-              padding: '12px 16px', 
-              marginBottom: '20px', 
-              color: '#FCA5A5', 
-              fontSize: '13px' 
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.1)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              borderRadius: '8px',
+              padding: '12px 16px',
+              marginBottom: '20px',
+              color: '#FCA5A5',
+              fontSize: '13px'
             }}>
               <AlertCircle size={15} style={{ display: 'inline', marginRight: '6px' }} />
               {searchError}
@@ -5500,7 +5510,7 @@ ${feedbackRecommendation}
           ) : (
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '16px' }}>
               {searchResults.map((rec) => (
-                <div 
+                <div
                   key={rec.document_id}
                   style={{
                     background: 'rgba(255, 255, 255, 0.03)',
@@ -5523,22 +5533,22 @@ ${feedbackRecommendation}
                           {rec.dialect}
                         </span>
                       )}
-                      <span style={{ 
-                        fontSize: '10px', 
-                        padding: '2px 8px', 
-                        borderRadius: '6px', 
-                        background: 'rgba(139, 92, 246, 0.15)', 
-                        color: '#C4B5FD', 
-                        fontWeight: '600' 
+                      <span style={{
+                        fontSize: '10px',
+                        padding: '2px 8px',
+                        borderRadius: '6px',
+                        background: 'rgba(139, 92, 246, 0.15)',
+                        color: '#C4B5FD',
+                        fontWeight: '600'
                       }}>
                         {rec.document_type.replace(/_/g, ' ')}
                       </span>
                     </div>
 
                     {rec.similarity_score !== undefined && (
-                      <span style={{ 
-                        fontSize: '11px', 
-                        fontWeight: '700', 
+                      <span style={{
+                        fontSize: '11px',
+                        fontWeight: '700',
                         color: '#14B8A6',
                         background: 'rgba(20, 184, 166, 0.1)',
                         padding: '2px 8px',
@@ -5550,23 +5560,23 @@ ${feedbackRecommendation}
                   </div>
 
                   {/* Text Content */}
-                  <div style={{ 
-                    background: 'rgba(0,0,0,0.3)', 
-                    borderRadius: '8px', 
-                    padding: '12px', 
-                    fontSize: '13px', 
-                    color: '#E2E8F0', 
-                    lineHeight: '1.6' 
+                  <div style={{
+                    background: 'rgba(0,0,0,0.3)',
+                    borderRadius: '8px',
+                    padding: '12px',
+                    fontSize: '13px',
+                    color: '#E2E8F0',
+                    lineHeight: '1.6'
                   }}>
                     {rec.search_text}
                   </div>
 
                   {/* Metadata & Provenance */}
-                  <div style={{ 
-                    fontSize: '11px', 
-                    color: '#94A3B8', 
-                    display: 'flex', 
-                    flexDirection: 'column', 
+                  <div style={{
+                    fontSize: '11px',
+                    color: '#94A3B8',
+                    display: 'flex',
+                    flexDirection: 'column',
                     gap: '4px',
                     borderTop: '1px solid rgba(255,255,255,0.06)',
                     paddingTop: '8px'
@@ -5574,10 +5584,10 @@ ${feedbackRecommendation}
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px' }}>
                       <span style={{ color: '#64748B' }}>Source:</span>
                       {rec.source_url ? (
-                        <a 
-                          href={rec.source_url} 
-                          target="_blank" 
-                          rel="noopener noreferrer" 
+                        <a
+                          href={rec.source_url}
+                          target="_blank"
+                          rel="noopener noreferrer"
                           style={{ color: '#38BDF8', textAlign: 'right', textDecoration: 'underline' }}
                         >
                           {rec.source_title} ↗
@@ -5980,12 +5990,12 @@ ${feedbackRecommendation}
 
                 {/* ─── Community-Reviewed Performance (Grounded References) ─── */}
                 {evaluationReport.community_reviewed_performance?.total_reviewed_samples > 0 && (
-                  <div style={{ 
-                    marginTop: '12px', 
-                    padding: '12px 14px', 
-                    background: 'rgba(142, 182, 155, 0.08)', 
-                    border: '1px solid #235347', 
-                    borderRadius: '10px' 
+                  <div style={{
+                    marginTop: '12px',
+                    padding: '12px 14px',
+                    background: 'rgba(142, 182, 155, 0.08)',
+                    border: '1px solid #235347',
+                    borderRadius: '10px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
                       <span style={{ fontSize: '12px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
@@ -6002,8 +6012,8 @@ ${feedbackRecommendation}
                         <div key={langName} style={{ background: '#0B2B26', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', border: '1px solid #235347' }}>
                           <div style={{ fontWeight: '700', color: '#DAF1DE', marginBottom: '4px' }}>{langName}</div>
                           <div style={{ color: 'rgba(218, 241, 222, 0.72)', fontSize: '11px' }}>
-                            Model: <strong style={{ color: '#DAF1DE' }}>{data.models_used?.join(', ')}</strong> • 
-                            CER: <strong style={{ color: '#8EB69B' }}>{(data.average_cer * 100).toFixed(1)}%</strong> • 
+                            Model: <strong style={{ color: '#DAF1DE' }}>{data.models_used?.join(', ')}</strong> •
+                            CER: <strong style={{ color: '#8EB69B' }}>{(data.average_cer * 100).toFixed(1)}%</strong> •
                             WER: <strong style={{ color: '#8EB69B' }}>{(data.average_wer * 100).toFixed(1)}%</strong>
                           </div>
                           <p style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.6)', marginTop: '4px', fontStyle: 'italic' }}>
@@ -6120,20 +6130,20 @@ ${feedbackRecommendation}
                           </span>
                         </div>
                         <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', justifyContent: 'flex-end' }}>
-                          <span style={{ 
-                            fontSize: '10px', 
-                            padding: '2px 8px', 
-                            borderRadius: '6px', 
+                          <span style={{
+                            fontSize: '10px',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
                             background: isOral ? 'rgba(142, 182, 155, 0.2)' : 'rgba(20, 184, 166, 0.15)',
                             color: isOral ? '#8EB69B' : '#5EEAD4',
                             fontWeight: '600'
                           }}>
                             {isOral ? 'Indigenous / Oral' : lang.category || 'Standard'}
                           </span>
-                          <span style={{ 
-                            fontSize: '10px', 
-                            padding: '2px 8px', 
-                            borderRadius: '6px', 
+                          <span style={{
+                            fontSize: '10px',
+                            padding: '2px 8px',
+                            borderRadius: '6px',
                             background: 'rgba(255,255,255,0.06)',
                             color: '#94A3B8'
                           }}>
@@ -6143,10 +6153,10 @@ ${feedbackRecommendation}
                       </div>
 
                       {/* Capabilities Matrix */}
-                      <div style={{ 
-                        display: 'grid', 
-                        gridTemplateColumns: '1fr 1fr', 
-                        gap: '8px', 
+                      <div style={{
+                        display: 'grid',
+                        gridTemplateColumns: '1fr 1fr',
+                        gap: '8px',
                         fontSize: '12px',
                         background: 'rgba(0,0,0,0.25)',
                         padding: '10px',
@@ -6154,8 +6164,8 @@ ${feedbackRecommendation}
                       }}>
                         <div>
                           <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>SPEECH RECOGNITION</span>
-                          <span style={{ 
-                            color: lang.speech_recognition === 'available' ? '#34D399' : '#8EB69B', 
+                          <span style={{
+                            color: lang.speech_recognition === 'available' ? '#34D399' : '#8EB69B',
                             fontWeight: '600',
                             display: 'flex',
                             alignItems: 'center',
@@ -6169,7 +6179,7 @@ ${feedbackRecommendation}
 
                         <div>
                           <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>TRANSLATION</span>
-                          <span style={{ 
+                          <span style={{
                             color: lang.translation === 'available' ? '#34D399' : (lang.translation === 'elder_review_required' || lang.translation === 'restricted') ? '#F87171' : '#8EB69B',
                             fontWeight: '600',
                             display: 'flex',
@@ -6200,9 +6210,9 @@ ${feedbackRecommendation}
                       </div>
 
                       {/* Linguistic Constraints & Limitations */}
-                      <div style={{ 
-                        fontSize: '12px', 
-                        color: 'rgba(218, 241, 222, 0.72)', 
+                      <div style={{
+                        fontSize: '12px',
+                        color: 'rgba(218, 241, 222, 0.72)',
                         lineHeight: '1.5',
                         background: 'rgba(255,255,255,0.02)',
                         padding: '10px',
@@ -6273,35 +6283,51 @@ ${feedbackRecommendation}
 
       {/* ─── TAB 5: Login / Sign Up / User Profile ─── */}
       {activeNavTab === 'login' && (
-        <section style={{ maxWidth: '880px', margin: '40px auto 60px', padding: '0 16px' }}>
+        <section style={{ maxWidth: '960px', margin: '36px auto 60px', padding: '0 16px' }}>
           {currentUser ? (
-            <div className="glass-card" style={{
-              background: '#FFFFFF',
-              color: '#0F172A',
-              padding: '36px',
+            /* Authenticated User Profile & Sovereignty Hub */
+            <div style={{
+              background: 'linear-gradient(135deg, rgba(11, 43, 38, 0.9) 0%, rgba(5, 31, 32, 0.95) 100%)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)',
+              color: '#DAF1DE',
+              padding: '36px 32px',
               borderRadius: '24px',
-              border: '1px solid #CBD5E1',
-              boxShadow: '0 20px 50px rgba(5, 31, 32, 0.5)'
+              border: '1px solid rgba(142, 182, 155, 0.25)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(142, 182, 155, 0.15)'
             }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+              {/* Profile Header */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '28px' }}>
+                <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
                   <div style={{
-                    width: '64px',
-                    height: '64px',
+                    width: '68px',
+                    height: '68px',
                     borderRadius: '20px',
-                    background: currentUser.role === 'admin' ? '#FFE4E6' : currentUser.role === 'reviewer' ? '#FEF3C7' : currentUser.role === 'researcher' ? '#DBEAFE' : '#D1FAE5',
-                    color: currentUser.role === 'admin' ? '#E11D48' : currentUser.role === 'reviewer' ? '#D97706' : currentUser.role === 'researcher' ? '#2563EB' : '#059669',
+                    background: currentUser.role === 'admin'
+                      ? 'linear-gradient(135deg, rgba(225, 29, 72, 0.25), rgba(159, 18, 57, 0.45))'
+                      : currentUser.role === 'reviewer'
+                      ? 'linear-gradient(135deg, rgba(217, 119, 6, 0.25), rgba(180, 83, 9, 0.45))'
+                      : currentUser.role === 'researcher'
+                      ? 'linear-gradient(135deg, rgba(37, 99, 235, 0.25), rgba(29, 78, 216, 0.45))'
+                      : 'linear-gradient(135deg, rgba(16, 185, 129, 0.25), rgba(5, 150, 105, 0.45))',
+                    border: `2px solid ${
+                      currentUser.role === 'admin' ? '#E11D48' :
+                      currentUser.role === 'reviewer' ? '#F59E0B' :
+                      currentUser.role === 'researcher' ? '#3B82F6' : '#10B981'
+                    }`,
+                    color: '#FFF',
                     display: 'flex',
                     alignItems: 'center',
                     justifyContent: 'center',
-                    fontSize: '24px',
-                    fontWeight: 800
+                    fontSize: '26px',
+                    fontWeight: 800,
+                    boxShadow: '0 8px 20px rgba(0, 0, 0, 0.4)'
                   }}>
                     {currentUser.full_name?.charAt(0) || currentUser.username.charAt(0).toUpperCase()}
                   </div>
                   <div>
-                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '4px' }}>
-                      <h3 style={{ fontSize: '22px', fontWeight: 800, color: '#0F172A', margin: 0 }}>
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '4px' }}>
+                      <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#DAF1DE', margin: 0 }}>
                         {currentUser.full_name || currentUser.username}
                       </h3>
                       <span style={{
@@ -6309,15 +6335,25 @@ ${feedbackRecommendation}
                         color: '#FFF',
                         fontSize: '11px',
                         fontWeight: 800,
-                        padding: '3px 8px',
+                        padding: '3px 10px',
                         borderRadius: '12px',
-                        textTransform: 'uppercase'
+                        textTransform: 'uppercase',
+                        letterSpacing: '0.05em',
+                        display: 'inline-flex',
+                        alignItems: 'center',
+                        gap: '4px'
                       }}>
+                        {currentUser.role === 'admin' && <Shield size={12} />}
+                        {currentUser.role === 'reviewer' && <Sprout size={12} />}
+                        {currentUser.role === 'researcher' && <GraduationCap size={12} />}
+                        {currentUser.role === 'contributor' && <Mic size={12} />}
                         {currentUser.role}
                       </span>
                     </div>
-                    <p style={{ fontSize: '13px', color: '#64748B', margin: 0 }}>
-                      @{currentUser.username} • {currentUser.email}
+                    <p style={{ fontSize: '13px', color: '#8EB69B', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <span>@{currentUser.username}</span>
+                      <span>•</span>
+                      <span>{currentUser.email}</span>
                     </p>
                   </div>
                 </div>
@@ -6325,437 +6361,800 @@ ${feedbackRecommendation}
                 <button
                   type="button"
                   onClick={handleAuthLogout}
+                  className="btn-danger"
                   style={{
                     padding: '8px 18px',
                     borderRadius: '12px',
-                    background: '#FEE2E2',
-                    border: '1px solid #FCA5A5',
-                    color: '#DC2626',
                     fontWeight: 700,
                     fontSize: '13px',
                     cursor: 'pointer'
                   }}
                 >
-                  Log Out
+                  <LogOut size={14} />
+                  <span>Log Out</span>
                 </button>
               </div>
 
+              {/* Bio / Affiliation */}
               {currentUser.bio && (
-                <div style={{ padding: '14px 18px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0', marginBottom: '24px' }}>
-                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#64748B', textTransform: 'uppercase', display: 'block', marginBottom: '4px' }}>
-                    Profile Biography
+                <div style={{
+                  padding: '14px 18px',
+                  background: 'rgba(5, 31, 32, 0.65)',
+                  borderRadius: '12px',
+                  border: '1px solid rgba(35, 83, 71, 0.8)',
+                  marginBottom: '24px'
+                }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#8EB69B', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>
+                    Profile Affiliation & Bio
                   </span>
-                  <p style={{ fontSize: '13px', color: '#334155', margin: 0 }}>
+                  <p style={{ fontSize: '13px', color: '#DAF1DE', margin: 0, lineHeight: 1.5 }}>
                     {currentUser.bio}
                   </p>
                 </div>
               )}
 
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', marginBottom: '24px' }}>
-                <div style={{ padding: '16px', background: '#F1F5F9', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Active Role</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginTop: '4px', textTransform: 'capitalize' }}>
+              {/* 4 Status Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '28px' }}>
+                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>Active Role</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#DAF1DE', marginTop: '4px', textTransform: 'capitalize' }}>
                     {currentUser.role}
                   </div>
                 </div>
-                <div style={{ padding: '16px', background: '#F1F5F9', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Account Status</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#059669', marginTop: '4px' }}>
+                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>Account Status</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#10B981', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 8px #10B981' }}></span>
                     Active & Verified
                   </div>
                 </div>
-                <div style={{ padding: '16px', background: '#F1F5F9', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '12px', color: '#64748B', fontWeight: 600 }}>Data Sovereignty Tier</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#0F172A', marginTop: '4px' }}>
+                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>Data Governance</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
                     OCAP® Protected
                   </div>
                 </div>
+                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>AI Processing</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
+                    Offline Zero-Cloud
+                  </div>
+                </div>
               </div>
 
-              <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap' }}>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('home')}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    background: '#163832',
-                    color: '#DAF1DE',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Return to Dashboard
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('cultural')}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '10px',
-                    background: '#E2E8F0',
-                    color: '#0F172A',
-                    fontWeight: 700,
-                    fontSize: '13px',
-                    border: 'none',
-                    cursor: 'pointer'
-                  }}
-                >
-                  Explore Cultural Archives
-                </button>
+              {/* Navigation Action Hub */}
+              <div style={{ borderTop: '1px solid rgba(35, 83, 71, 0.7)', paddingTop: '22px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#8EB69B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '12px' }}>
+                  Quick Navigation Hub
+                </span>
+                <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('home')}
+                    className="btn-secondary"
+                    style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
+                  >
+                    <Sparkles size={14} color="#8EB69B" />
+                    <span>Home Dashboard</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('record')}
+                    className="btn-secondary"
+                    style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
+                  >
+                    <Mic size={14} color="#8EB69B" />
+                    <span>Record Audio</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('cultural')}
+                    className="btn-secondary"
+                    style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
+                  >
+                    <Sprout size={14} color="#8EB69B" />
+                    <span>Cultural Archives</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('speech')}
+                    className="btn-secondary"
+                    style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
+                  >
+                    <Network size={14} color="#8EB69B" />
+                    <span>Speech Intelligence</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('learning')}
+                    className="btn-secondary"
+                    style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
+                  >
+                    <BookOpen size={14} color="#8EB69B" />
+                    <span>Language Learning</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleTabChange('research')}
+                    className="btn-secondary"
+                    style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
+                  >
+                    <GraduationCap size={14} color="#8EB69B" />
+                    <span>Research Portal</span>
+                  </button>
+                </div>
               </div>
             </div>
           ) : (
-            <div className="glass-card" style={{ 
-              display: 'grid', 
-              gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', 
-              gap: '0', 
-              overflow: 'hidden', 
-              padding: 0,
+            /* Unauthenticated Login & Sign-Up Container */
+            <div style={{
+              display: 'grid',
+              gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
               borderRadius: '24px',
-              border: '1px solid #235347',
-              boxShadow: '0 20px 50px rgba(5, 31, 32, 0.7)'
+              border: '1px solid rgba(142, 182, 155, 0.25)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(142, 182, 155, 0.15)',
+              overflow: 'hidden',
+              background: 'rgba(11, 43, 38, 0.85)',
+              backdropFilter: 'blur(20px)',
+              WebkitBackdropFilter: 'blur(20px)'
             }}>
               {/* Left Column: Interactive Form */}
-              <div style={{ background: '#FFFFFF', color: '#0F172A', padding: '36px 32px' }}>
-                <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', background: '#F1F5F9', padding: '4px', borderRadius: '12px' }}>
-                  <button
-                    type="button"
-                    onClick={() => { setAuthMode('login'); setAuthError(null); }}
-                    style={{
-                      flex: 1,
-                      padding: '8px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: authMode === 'login' ? '#FFFFFF' : 'transparent',
-                      color: authMode === 'login' ? '#0F172A' : '#64748B',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      boxShadow: authMode === 'login' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none'
-                    }}
-                  >
-                    Login
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => { setAuthMode('signup'); setAuthError(null); }}
-                    style={{
-                      flex: 1,
-                      padding: '8px',
-                      borderRadius: '8px',
-                      border: 'none',
-                      background: authMode === 'signup' ? '#FFFFFF' : 'transparent',
-                      color: authMode === 'signup' ? '#0F172A' : '#64748B',
-                      fontWeight: 700,
-                      fontSize: '13px',
-                      cursor: 'pointer',
-                      boxShadow: authMode === 'signup' ? '0 2px 4px rgba(0,0,0,0.08)' : 'none'
-                    }}
-                  >
-                    Sign Up
-                  </button>
+              <div style={{
+                background: 'rgba(11, 43, 38, 0.9)',
+                color: '#DAF1DE',
+                padding: '36px 32px',
+                display: 'flex',
+                flexDirection: 'column',
+                justifyContent: 'space-between'
+              }}>
+                <div>
+                  {/* Mode Selector Pill */}
+                  <div style={{
+                    display: 'flex',
+                    gap: '6px',
+                    marginBottom: '24px',
+                    background: 'rgba(5, 31, 32, 0.7)',
+                    padding: '4px',
+                    borderRadius: '14px',
+                    border: '1px solid rgba(35, 83, 71, 0.8)'
+                  }}>
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode('login'); setAuthError(null); }}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: authMode === 'login' ? '1px solid #8EB69B' : '1px solid transparent',
+                        background: authMode === 'login' ? 'linear-gradient(135deg, #163832, #235347)' : 'transparent',
+                        color: authMode === 'login' ? '#DAF1DE' : '#8EB69B',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: authMode === 'login' ? '0 4px 12px rgba(5, 31, 32, 0.5)' : 'none'
+                      }}
+                    >
+                      <User size={14} />
+                      <span>Sign In</span>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => { setAuthMode('signup'); setAuthError(null); }}
+                      style={{
+                        flex: 1,
+                        padding: '10px 14px',
+                        borderRadius: '10px',
+                        border: authMode === 'signup' ? '1px solid #8EB69B' : '1px solid transparent',
+                        background: authMode === 'signup' ? 'linear-gradient(135deg, #163832, #235347)' : 'transparent',
+                        color: authMode === 'signup' ? '#DAF1DE' : '#8EB69B',
+                        fontWeight: 700,
+                        fontSize: '13px',
+                        cursor: 'pointer',
+                        display: 'flex',
+                        alignItems: 'center',
+                        justifyContent: 'center',
+                        gap: '6px',
+                        transition: 'all 0.2s ease',
+                        boxShadow: authMode === 'signup' ? '0 4px 12px rgba(5, 31, 32, 0.5)' : 'none'
+                      }}
+                    >
+                      <Sprout size={14} />
+                      <span>Create Account</span>
+                    </button>
+                  </div>
+
+                  {/* Header Titles */}
+                  <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#DAF1DE', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+                    {authMode === 'login' ? 'Welcome Back' : 'Join Voice Roots'}
+                  </h3>
+                  <p style={{ fontSize: '13px', color: '#8EB69B', margin: '0 0 20px 0', lineHeight: 1.5 }}>
+                    {authMode === 'login'
+                      ? 'Sign in to access sovereign audio archives, review transcripts, or conduct dialect research.'
+                      : 'Create your community-governed account to safeguard endangered mother tongues.'}
+                  </p>
+
+                  {/* Quick Evaluation Presets (Login Mode) */}
+                  {authMode === 'login' && (
+                    <div style={{
+                      marginBottom: '20px',
+                      padding: '12px 14px',
+                      background: 'rgba(5, 31, 32, 0.65)',
+                      borderRadius: '14px',
+                      border: '1px solid rgba(35, 83, 71, 0.8)'
+                    }}>
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: '#8EB69B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                          ⚡ Quick Evaluation Presets
+                        </span>
+                        <span style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.6)' }}>
+                          Click to autofill
+                        </span>
+                      </div>
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '6px' }}>
+                        <button
+                          type="button"
+                          onClick={() => { setAuthIdentifier('field.worker@voiceroots.org'); setAuthPassword('preservation2026'); }}
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '6px 8px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(16, 185, 129, 0.3)',
+                            background: 'rgba(16, 185, 129, 0.1)',
+                            color: '#DAF1DE',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <Mic size={12} color="#10B981" />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Field Worker</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAuthIdentifier('elder.reviewer@gondi.org'); setAuthPassword('ElderReviewer2026!'); }}
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '6px 8px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(245, 158, 11, 0.3)',
+                            background: 'rgba(245, 158, 11, 0.1)',
+                            color: '#DAF1DE',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <Sprout size={12} color="#F59E0B" />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Elder Reviewer</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAuthIdentifier('researcher@ciil.res.in'); setAuthPassword('ResearchScholar2026!'); }}
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '6px 8px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(59, 130, 246, 0.3)',
+                            background: 'rgba(59, 130, 246, 0.1)',
+                            color: '#DAF1DE',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <GraduationCap size={12} color="#3B82F6" />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Researcher</span>
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => { setAuthIdentifier('admin@voiceroots.ai'); setAuthPassword('VoiceRootsAdmin2026!'); }}
+                          style={{
+                            fontSize: '11px',
+                            fontWeight: 600,
+                            padding: '6px 8px',
+                            borderRadius: '8px',
+                            border: '1px solid rgba(225, 29, 72, 0.3)',
+                            background: 'rgba(225, 29, 72, 0.1)',
+                            color: '#DAF1DE',
+                            cursor: 'pointer',
+                            display: 'flex',
+                            alignItems: 'center',
+                            gap: '6px',
+                            textAlign: 'left'
+                          }}
+                        >
+                          <Shield size={12} color="#E11D48" />
+                          <span style={{ overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>Administrator</span>
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Feedback Alerts */}
+                  {authError && (
+                    <div style={{
+                      padding: '12px 14px',
+                      background: 'rgba(239, 68, 68, 0.15)',
+                      border: '1px solid rgba(239, 68, 68, 0.4)',
+                      borderRadius: '12px',
+                      color: '#FCA5A5',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '16px'
+                    }}>
+                      <AlertCircle size={16} color="#EF4444" style={{ flexShrink: 0 }} />
+                      <span>{authError}</span>
+                    </div>
+                  )}
+
+                  {authSuccess && (
+                    <div style={{
+                      padding: '12px 14px',
+                      background: 'rgba(16, 185, 129, 0.15)',
+                      border: '1px solid rgba(16, 185, 129, 0.4)',
+                      borderRadius: '12px',
+                      color: '#6EE7B7',
+                      fontSize: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      marginBottom: '16px'
+                    }}>
+                      <CheckCircle2 size={16} color="#10B981" style={{ flexShrink: 0 }} />
+                      <span>{authSuccess}</span>
+                    </div>
+                  )}
+
+                  {/* Mode Forms */}
+                  {authMode === 'login' ? (
+                    /* ─── Sign In Form ─── */
+                    <form onSubmit={handleAuthLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#8EB69B', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Email or Username
+                        </label>
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                          <Mail size={16} color="#8EB69B" style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }} />
+                          <input
+                            type="text"
+                            required
+                            value={authIdentifier}
+                            onChange={(e) => setAuthIdentifier(e.target.value)}
+                            placeholder="user@community.org or username"
+                            className="input-field"
+                            style={{ paddingLeft: '40px', fontSize: '14px', height: '46px' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#8EB69B', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Password
+                        </label>
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                          <Lock size={16} color="#8EB69B" style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }} />
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={authPassword}
+                            onChange={(e) => setAuthPassword(e.target.value)}
+                            placeholder="Enter your password"
+                            className="input-field"
+                            style={{ paddingLeft: '40px', paddingRight: '42px', fontSize: '14px', height: '46px' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            style={{
+                              position: 'absolute',
+                              right: '12px',
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#8EB69B',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            {showPassword ? <EyeOff size={16} /> : <Eye size={16} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px', fontSize: '12px' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#DAF1DE', cursor: 'pointer', userSelect: 'none' }}>
+                          <input
+                            type="checkbox"
+                            checked={rememberMe}
+                            onChange={(e) => setRememberMe(e.target.checked)}
+                            style={{ accentColor: '#8EB69B', width: '15px', height: '15px', borderRadius: '4px' }}
+                          />
+                          <span>Remember session</span>
+                        </label>
+                        <span style={{ color: '#8EB69B', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600 }}>
+                          <Shield size={12} color="#8EB69B" />
+                          OCAP® Secured
+                        </span>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="btn-primary"
+                        style={{
+                          width: '100%',
+                          marginTop: '6px',
+                          height: '48px',
+                          fontSize: '14px',
+                          fontWeight: 800,
+                          letterSpacing: '0.02em',
+                          boxShadow: '0 6px 18px rgba(35, 83, 71, 0.4)'
+                        }}
+                      >
+                        {authLoading ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>Signing In...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Sign In to Account</span>
+                            <ArrowRight size={16} />
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  ) : (
+                    /* ─── Sign Up Form ─── */
+                    <form onSubmit={handleAuthSignup} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Full Name
+                        </label>
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                          <User size={15} color="#8EB69B" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
+                          <input
+                            type="text"
+                            required
+                            value={authFullName}
+                            onChange={(e) => setAuthFullName(e.target.value)}
+                            placeholder="e.g. Elder Ramu Gond or Dr. Sharma"
+                            className="input-field"
+                            style={{ paddingLeft: '36px', fontSize: '13px', height: '42px' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            Username
+                          </label>
+                          <input
+                            type="text"
+                            required
+                            value={authUsername}
+                            onChange={(e) => setAuthUsername(e.target.value)}
+                            placeholder="ramu_gond"
+                            className="input-field"
+                            style={{ fontSize: '13px', height: '42px' }}
+                          />
+                        </div>
+
+                        <div>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                            Email Address
+                          </label>
+                          <input
+                            type="email"
+                            required
+                            value={authEmail}
+                            onChange={(e) => setAuthEmail(e.target.value)}
+                            placeholder="ramu@gondi-council.org"
+                            className="input-field"
+                            style={{ fontSize: '13px', height: '42px' }}
+                          />
+                        </div>
+                      </div>
+
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Password (Min 6 Characters)
+                        </label>
+                        <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
+                          <Lock size={15} color="#8EB69B" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
+                          <input
+                            type={showPassword ? "text" : "password"}
+                            required
+                            value={authPassword}
+                            onChange={(e) => setAuthPassword(e.target.value)}
+                            placeholder="••••••••••••"
+                            className="input-field"
+                            style={{ paddingLeft: '36px', paddingRight: '40px', fontSize: '13px', height: '42px' }}
+                          />
+                          <button
+                            type="button"
+                            onClick={() => setShowPassword(!showPassword)}
+                            aria-label={showPassword ? "Hide password" : "Show password"}
+                            style={{
+                              position: 'absolute',
+                              right: '10px',
+                              background: 'transparent',
+                              border: 'none',
+                              color: '#8EB69B',
+                              cursor: 'pointer',
+                              padding: '4px',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center'
+                            }}
+                          >
+                            {showPassword ? <EyeOff size={15} /> : <Eye size={15} />}
+                          </button>
+                        </div>
+                      </div>
+
+                      {/* Interactive Community Role Selection Cards */}
+                      <div>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          Select Community Role
+                        </label>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                          {/* Contributor Card */}
+                          <div
+                            onClick={() => setAuthRole('contributor')}
+                            style={{
+                              padding: '10px 14px',
+                              borderRadius: '12px',
+                              border: authRole === 'contributor' ? '1.5px solid #10B981' : '1px solid rgba(35, 83, 71, 0.8)',
+                              background: authRole === 'contributor' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(5, 31, 32, 0.6)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              background: authRole === 'contributor' ? '#10B981' : 'rgba(16, 185, 129, 0.2)',
+                              color: authRole === 'contributor' ? '#FFF' : '#10B981',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              <Mic size={16} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>
+                                Contributor / Speaker
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                                Record folklore, songs, and native dialect speech
+                              </div>
+                            </div>
+                            {authRole === 'contributor' && <Check size={16} color="#10B981" />}
+                          </div>
+
+                          {/* Elder Reviewer Card */}
+                          <div
+                            onClick={() => setAuthRole('reviewer')}
+                            style={{
+                              padding: '10px 14px',
+                              borderRadius: '12px',
+                              border: authRole === 'reviewer' ? '1.5px solid #F59E0B' : '1px solid rgba(35, 83, 71, 0.8)',
+                              background: authRole === 'reviewer' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(5, 31, 32, 0.6)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              background: authRole === 'reviewer' ? '#F59E0B' : 'rgba(245, 158, 11, 0.2)',
+                              color: authRole === 'reviewer' ? '#FFF' : '#F59E0B',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              <Sprout size={16} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>
+                                Community Elder / Reviewer
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                                Sovereign oversight, verify accuracy, approve lore
+                              </div>
+                            </div>
+                            {authRole === 'reviewer' && <Check size={16} color="#F59E0B" />}
+                          </div>
+
+                          {/* Academic Researcher Card */}
+                          <div
+                            onClick={() => setAuthRole('researcher')}
+                            style={{
+                              padding: '10px 14px',
+                              borderRadius: '12px',
+                              border: authRole === 'researcher' ? '1.5px solid #3B82F6' : '1px solid rgba(35, 83, 71, 0.8)',
+                              background: authRole === 'researcher' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(5, 31, 32, 0.6)',
+                              cursor: 'pointer',
+                              display: 'flex',
+                              alignItems: 'center',
+                              gap: '12px',
+                              transition: 'all 0.15s ease'
+                            }}
+                          >
+                            <div style={{
+                              width: '32px',
+                              height: '32px',
+                              borderRadius: '8px',
+                              background: authRole === 'researcher' ? '#3B82F6' : 'rgba(59, 130, 246, 0.2)',
+                              color: authRole === 'researcher' ? '#FFF' : '#3B82F6',
+                              display: 'flex',
+                              alignItems: 'center',
+                              justifyContent: 'center',
+                              flexShrink: 0
+                            }}>
+                              <GraduationCap size={16} />
+                            </div>
+                            <div style={{ flex: 1 }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>
+                                Academic Researcher
+                              </div>
+                              <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                                Access verified corpora, phonetics, and linguistics
+                              </div>
+                            </div>
+                            {authRole === 'researcher' && <Check size={16} color="#3B82F6" />}
+                          </div>
+                        </div>
+                      </div>
+
+                      <button
+                        type="submit"
+                        disabled={authLoading}
+                        className="btn-primary"
+                        style={{
+                          width: '100%',
+                          marginTop: '6px',
+                          height: '46px',
+                          fontSize: '14px',
+                          fontWeight: 800,
+                          letterSpacing: '0.02em',
+                          boxShadow: '0 6px 18px rgba(35, 83, 71, 0.4)'
+                        }}
+                      >
+                        {authLoading ? (
+                          <>
+                            <Loader2 size={16} className="animate-spin" />
+                            <span>Creating Account...</span>
+                          </>
+                        ) : (
+                          <>
+                            <span>Complete Community Registration</span>
+                            <ArrowRight size={16} />
+                          </>
+                        )}
+                      </button>
+                    </form>
+                  )}
                 </div>
 
-                <h3 style={{ fontSize: '22px', fontWeight: '800', color: '#0F172A', marginBottom: '4px' }}>
-                  {authMode === 'login' ? 'Welcome Back' : 'Create an Account'}
-                </h3>
-                <p style={{ fontSize: '12px', color: '#64748B', marginBottom: '20px' }}>
-                  {authMode === 'login' 
-                    ? 'Login to preserve, review, or research indigenous oral heritage.' 
-                    : 'Join the community-governed speech preservation initiative.'}
-                </p>
-
-                {/* Quick Presets for Evaluator */}
-                {authMode === 'login' && (
-                  <div style={{ marginBottom: '20px', padding: '12px', background: '#F8FAFC', borderRadius: '12px', border: '1px solid #E2E8F0' }}>
-                    <div style={{ fontSize: '11px', fontWeight: 700, color: '#475569', marginBottom: '8px', textTransform: 'uppercase' }}>
-                      Quick Evaluation Presets:
-                    </div>
-                    <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
-                      <button
-                        type="button"
-                        onClick={() => { setAuthIdentifier('field.worker@voiceroots.org'); setAuthPassword('preservation2026'); }}
-                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
-                      >
-                        Worker (Contributor)
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setAuthIdentifier('elder.reviewer@gondi.org'); setAuthPassword('ElderReviewer2026!'); }}
-                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
-                      >
-                        Elder Reviewer
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setAuthIdentifier('researcher@ciil.res.in'); setAuthPassword('ResearchScholar2026!'); }}
-                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
-                      >
-                        Researcher
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => { setAuthIdentifier('admin@voiceroots.ai'); setAuthPassword('VoiceRootsAdmin2026!'); }}
-                        style={{ fontSize: '11px', padding: '4px 8px', borderRadius: '6px', border: '1px solid #CBD5E1', background: '#FFF', cursor: 'pointer' }}
-                      >
-                        Admin
-                      </button>
-                    </div>
-                  </div>
-                )}
-
-                {authError && (
-                  <div style={{ padding: '10px 14px', background: '#FEE2E2', border: '1px solid #FCA5A5', borderRadius: '8px', color: '#DC2626', fontSize: '12px', marginBottom: '16px' }}>
-                    {authError}
-                  </div>
-                )}
-
-                {authSuccess && (
-                  <div style={{ padding: '10px 14px', background: '#D1FAE5', border: '1px solid #6EE7B7', borderRadius: '8px', color: '#065F46', fontSize: '12px', marginBottom: '16px' }}>
-                    {authSuccess}
-                  </div>
-                )}
-
-                {authMode === 'login' ? (
-                  <form onSubmit={handleAuthLogin} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>
-                        Email or Username
-                      </label>
-                      <input 
-                        type="text" 
-                        required
-                        value={authIdentifier}
-                        onChange={(e) => setAuthIdentifier(e.target.value)}
-                        placeholder="user@community.org" 
-                        style={{
-                          width: '100%',
-                          padding: '10px 12px',
-                          borderRadius: '8px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          color: '#0F172A',
-                          outline: 'none'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#475569', marginBottom: '4px' }}>
-                        Password
-                      </label>
-                      <input 
-                        type="password" 
-                        required
-                        value={authPassword}
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder="••••••••••••" 
-                        style={{
-                          width: '100%',
-                          padding: '10px 12px',
-                          borderRadius: '8px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          color: '#0F172A',
-                          outline: 'none'
-                        }}
-                      />
-                    </div>
-
-                    <button 
-                      type="submit"
-                      disabled={authLoading}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '10px',
-                        background: '#163832',
-                        color: '#DAF1DE',
-                        fontWeight: '700',
-                        fontSize: '13px',
-                        border: 'none',
-                        cursor: authLoading ? 'not-allowed' : 'pointer',
-                        marginTop: '6px',
-                        opacity: authLoading ? 0.7 : 1,
-                        boxShadow: '0 4px 12px rgba(22, 56, 50, 0.3)'
-                      }}
-                    >
-                      {authLoading ? 'Signing In...' : 'Login to Account'}
-                    </button>
-                  </form>
-                ) : (
-                  <form onSubmit={handleAuthSignup} style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
-                        Full Name
-                      </label>
-                      <input 
-                        type="text" 
-                        required
-                        value={authFullName}
-                        onChange={(e) => setAuthFullName(e.target.value)}
-                        placeholder="Elder Ramu Gond" 
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          color: '#0F172A',
-                          outline: 'none'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
-                        Username
-                      </label>
-                      <input 
-                        type="text" 
-                        required
-                        value={authUsername}
-                        onChange={(e) => setAuthUsername(e.target.value)}
-                        placeholder="ramu_gond" 
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          color: '#0F172A',
-                          outline: 'none'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
-                        Email Address
-                      </label>
-                      <input 
-                        type="email" 
-                        required
-                        value={authEmail}
-                        onChange={(e) => setAuthEmail(e.target.value)}
-                        placeholder="ramu@gondi-council.org" 
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          color: '#0F172A',
-                          outline: 'none'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
-                        Password (Min 6 Characters)
-                      </label>
-                      <input 
-                        type="password" 
-                        required
-                        value={authPassword}
-                        onChange={(e) => setAuthPassword(e.target.value)}
-                        placeholder="••••••••••••" 
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          color: '#0F172A',
-                          outline: 'none'
-                        }}
-                      />
-                    </div>
-
-                    <div>
-                      <label style={{ display: 'block', fontSize: '11px', fontWeight: '600', color: '#475569', marginBottom: '3px' }}>
-                        Community Role
-                      </label>
-                      <select
-                        value={authRole}
-                        onChange={(e) => setAuthRole(e.target.value as any)}
-                        style={{
-                          width: '100%',
-                          padding: '8px 10px',
-                          borderRadius: '8px',
-                          border: '1px solid #CBD5E1',
-                          fontSize: '13px',
-                          color: '#0F172A',
-                          outline: 'none',
-                          background: '#FFF'
-                        }}
-                      >
-                        <option value="contributor">Contributor / Native Speaker</option>
-                        <option value="reviewer">Community Elder / Reviewer</option>
-                        <option value="researcher">Academic Researcher (CIIL / University)</option>
-                      </select>
-                    </div>
-
-                    <button 
-                      type="submit"
-                      disabled={authLoading}
-                      style={{
-                        width: '100%',
-                        padding: '12px',
-                        borderRadius: '10px',
-                        background: '#163832',
-                        color: '#DAF1DE',
-                        fontWeight: '700',
-                        fontSize: '13px',
-                        border: 'none',
-                        cursor: authLoading ? 'not-allowed' : 'pointer',
-                        marginTop: '6px',
-                        opacity: authLoading ? 0.7 : 1,
-                        boxShadow: '0 4px 12px rgba(22, 56, 50, 0.3)'
-                      }}
-                    >
-                      {authLoading ? 'Creating Account...' : 'Complete Registration'}
-                    </button>
-                  </form>
-                )}
+                {/* Footer Assurance */}
+                <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(35, 83, 71, 0.6)', textAlign: 'center' }}>
+                  <p style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <ShieldCheck size={14} color="#8EB69B" />
+                    <span>Protected by OCAP® Indigenous Sovereign Data Governance</span>
+                  </p>
+                </div>
               </div>
 
               {/* Right Column: Forest Heritage Hero Brand */}
-              <div style={{ 
-                background: 'linear-gradient(135deg, #0B2B26 0%, #163832 50%, #051F20 100%)',
+              <div style={{
+                background: 'linear-gradient(145deg, rgba(16, 56, 50, 0.85) 0%, rgba(11, 43, 38, 0.95) 50%, rgba(5, 31, 32, 1) 100%)',
                 padding: '40px 32px',
                 display: 'flex',
                 flexDirection: 'column',
                 justifyContent: 'center',
                 alignItems: 'center',
                 textAlign: 'center',
-                position: 'relative'
+                position: 'relative',
+                borderLeft: '1px solid rgba(35, 83, 71, 0.6)'
               }}>
-                <div style={{ 
-                  width: '64px', 
-                  height: '64px', 
-                  borderRadius: '18px', 
-                  background: 'rgba(142, 182, 155, 0.15)', 
-                  border: '1px solid #235347',
+                <div style={{
+                  width: '72px',
+                  height: '72px',
+                  borderRadius: '20px',
+                  background: 'rgba(142, 182, 155, 0.15)',
+                  border: '1px solid #8EB69B',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
-                  marginBottom: '16px'
+                  marginBottom: '18px',
+                  boxShadow: '0 8px 24px rgba(142, 182, 155, 0.2)'
                 }}>
-                  <Sparkles size={32} color="#8EB69B" />
+                  <Sparkles size={36} color="#8EB69B" />
                 </div>
-                <h4 style={{ fontSize: '26px', fontWeight: '800', color: '#DAF1DE', marginBottom: '8px' }}>
+                <h4 style={{ fontSize: '28px', fontWeight: 800, color: '#DAF1DE', marginBottom: '8px', letterSpacing: '-0.02em' }}>
                   Voice <span style={{ color: '#8EB69B' }}>Roots</span>
                 </h4>
-                <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', color: 'rgba(218, 241, 222, 0.75)', fontSize: '13px', marginTop: '14px' }}>
-                  <span>🌱 Sovereign Indigenous Knowledge</span>
-                  <span>🔒 Offline OCAP® Privacy Protection</span>
-                  <span>🎙️ Immutable Lossless Audio Masters</span>
-                  <span>🤝 Elder Human Review Layer</span>
+                <p style={{ fontSize: '13px', color: '#8EB69B', maxWidth: '300px', lineHeight: 1.5, marginBottom: '28px' }}>
+                  Rooting Oral Languages in Text with AI • Sovereign, Offline & Community Governed
+                </p>
+
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%', maxWidth: '320px', textAlign: 'left' }}>
+                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Shield size={16} color="#8EB69B" />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>OCAP® Data Sovereignty</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>100% community ownership & zero telemetry</div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Mic size={16} color="#8EB69B" />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>Immutable Lossless Masters</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>Sacred voice audio is never overwritten</div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Sprout size={16} color="#8EB69B" />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>Elder Review Layer</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>Human cultural verification for sacred lore</div>
+                    </div>
+                  </div>
+
+                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Cpu size={16} color="#8EB69B" />
+                    </div>
+                    <div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>Zero-Cloud Edge AI</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>Runs offline on local workstation • $0.00 bills</div>
+                    </div>
+                  </div>
+                </div>
+
+                <div style={{ marginTop: '24px', padding: '6px 14px', borderRadius: '20px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.3)', display: 'inline-flex', alignItems: 'center', gap: '8px' }}>
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 8px #10B981' }}></span>
+                  <span style={{ fontSize: '11px', fontWeight: 700, color: '#10B981' }}>Offline Engine Ready • 222/222 Tests Verified</span>
                 </div>
               </div>
             </div>
