@@ -681,11 +681,21 @@ class RegisterLanguageRequest(BaseModel):
 SUPPORTED_LANGUAGES = list_languages()
 
 
-@app.get("/")
+@app.api_route("/", methods=["GET", "HEAD"])
+@app.api_route("/app", methods=["GET", "HEAD"])
 def root(request: Request):
-    """Root endpoint welcoming clients and referencing documentation, or serving SPA in browser."""
+    """Root endpoint welcoming clients and serving the unified SPA, or JSON API metadata when requested."""
     accept = request.headers.get("accept", "")
-    if "text/html" in accept and os.path.exists(INDEX_HTML_PATH):
+    if os.path.exists(INDEX_HTML_PATH):
+        if "application/json" in accept and "text/html" not in accept:
+            return {
+                "name": "Voice Roots API",
+                "tagline": "Rooting Oral Languages in Text with AI",
+                "status": "online",
+                "version": "1.0.0",
+                "docs_url": "/docs",
+                "health_check": "/health",
+            }
         return FileResponse(INDEX_HTML_PATH)
     return {
         "name": "Voice Roots API",
