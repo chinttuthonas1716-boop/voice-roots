@@ -57,8 +57,6 @@ scratch/
 
 # Local test databases, backups & coverage
 test_*.db
-*.db-shm
-*.db-wal
 *.sqlite3
 backend/storage/backups/
 backend/backups/
@@ -66,6 +64,9 @@ backups/
 *.db
 *.db-shm
 *.db-wal
+backend/voice_roots.db
+backend/voice_roots.db-shm
+backend/voice_roots.db-wal
 .coverage
 htmlcov/
 coverage/
