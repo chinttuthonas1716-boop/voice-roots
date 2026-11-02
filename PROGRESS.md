@@ -1709,3 +1709,27 @@
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-02] [ANTIGRAVITY] DONE: Milestone 22: Production Security and Infrastructure Hardening.
+  - Completed comprehensive security audit and empirical database recoverability validation in `MILESTONE_22_SECURITY_INFRASTRUCTURE_AUDIT.md`.
+  - Empirically verified SQLite backup restoration in isolated environment (`scratch/isolated_restore_test/restored_test.db`): passed `PRAGMA integrity_check` ('ok'), 0 foreign key violations, and successfully ran `alembic upgrade head` from `c4820d491f21` up to `4c5d6e7f8a9b` (all 49 tables, 661 transcripts, 104 translations, 364 corrections preserved intact).
+  - SEC-01 & SEC-04: Hardened research key registration (`POST /api/v1/research/keys/register`) and admin route verification (`_is_admin_request`) to strictly require valid admin credentials in production mode, blocking default fallback bypasses.
+  - SEC-02: Eliminated unauthenticated client-side role spoofing via `X-User-Role` in production (`_extract_archive_auth_context`), protecting sacred cultural stories and submission moderation queues.
+  - SEC-03: Replaced raw `/storage/audio` `StaticFiles` mount with secured audio streaming endpoint `stream_storage_audio_file`: enforces path traversal checks (`..`), blocks unauthenticated access to withdrawn recordings (`status = 'withdrawn'`) and sacred elder-only ceremonial narratives (`SACRED_ELDER_ONLY`).
+  - SEC-05: Implemented and enforced active sliding-window rate limiting (60 req/min default) across research endpoints (`/api/v1/research/corpus/export`, `/api/v1/research/lexicon/export`), returning HTTP 429 with `Retry-After: 60`, `X-RateLimit-Limit`, and `X-RateLimit-Remaining` headers upon limit exhaustion.
+  - SEC-06: Added comprehensive security headers via `security_and_logging_middleware`: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, CSP (`Content-Security-Policy`), and HSTS (`Strict-Transport-Security`).
+  - SEC-07: Added institutional research key revocation lifecycle via `DELETE /api/v1/research/keys/{key_id}` and `revoke_research_api_key`.
+  - SEC-08: Hardened SQLite concurrency and integrity in `get_db_connection()` and `init_db()` with `PRAGMA journal_mode = WAL;`, `PRAGMA busy_timeout = 5000;`, and `PRAGMA foreign_keys = ON;`.
+  - SEC-09: Hardened container security in `Dockerfile` with non-root system user (`appuser:appgroup`, UID 1000) and `USER appuser`.
+  - Added dedicated test suite `tests/test_milestone22_security_hardening.py` covering all 9 security hardening checkpoints.
+  - Updated `.gitignore` to ignore temporary WAL/SHM artifacts (`*.db-shm`, `*.db-wal`).
+  - Files touched: `backend/main.py`, `backend/research_interoperability_service.py`, `Dockerfile`, `.gitignore`, `backend/voice_roots.db`, `tests/test_milestone22_security_hardening.py`, `MILESTONE_22_SECURITY_INFRASTRUCTURE_AUDIT.md`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Hardening Tests: 9/9 passed in `tests/test_milestone22_security_hardening.py` in 1.38s.
+    2. Complete Pytest Suite: 208/208 passed in 37.22s (100% pass rate).
+    3. Pre-faculty Release Audit: 26/26 checkpoints passed (`python3 scratch/pre_faculty_release_audit.py`).
+    4. Live Feature Verification: 27/27 endpoints verified (`python3 scratch/test_every_feature.py`).
+    5. Code Linter: `python3 -m ruff check` passed with 0 errors, 0 warnings.
+    6. Frontend Build: `npm run build --prefix frontend` compiled in 1.78s with 0 errors.
+    7. Live Server Response: Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `CSP`, `Referrer-Policy`) confirmed active on live Uvicorn responses.
+  - NOT VERIFIED: Public internet TLS certificate provisioning (staging/production reverse-proxy domain setup).
+  - NEEDS FROM OTHER AGENT: none.

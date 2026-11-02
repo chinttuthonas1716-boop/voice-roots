@@ -162,16 +162,28 @@ os.makedirs(AUDIO_STORAGE, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 
-def get_db_connection() -> sqlite3.Connection:
-    """Return a SQLite connection with Row row_factory enabled."""
-    conn = sqlite3.connect(DB_PATH)
+def get_db_connection(db_path: str = DB_PATH) -> sqlite3.Connection:
+    """Return a hardened SQLite connection with WAL mode, busy timeout, and Row factory."""
+    conn = sqlite3.connect(db_path, timeout=15.0)
     conn.row_factory = sqlite3.Row
+    try:
+        conn.execute("PRAGMA journal_mode = WAL;")
+        conn.execute("PRAGMA busy_timeout = 5000;")
+        conn.execute("PRAGMA foreign_keys = ON;")
+    except Exception:  # noqa: BLE001
+        pass
     return conn
 
 
 def init_db():
     """Initialize SQLite database with table for saved recordings and transcripts."""
-    with sqlite3.connect(DB_PATH) as conn:
+    with sqlite3.connect(DB_PATH, timeout=15.0) as conn:
+        try:
+            conn.execute("PRAGMA journal_mode = WAL;")
+            conn.execute("PRAGMA busy_timeout = 5000;")
+            conn.execute("PRAGMA foreign_keys = ON;")
+        except Exception:  # noqa: BLE001
+            pass
         cursor = conn.cursor()
         cursor.execute(
             """
@@ -485,14 +497,50 @@ app.add_middleware(
 )
 
 
+def _is_admin_request(request: Request | None) -> bool:
+    """Check if request contains valid administrator credentials."""
+    if not request:
+        return False
+    required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
+    header_key = (
+        request.headers.get("X-Admin-Key")
+        or request.headers.get("Authorization")
+        or ""
+    ).strip()
+    if header_key.startswith("Bearer "):
+        header_key = header_key[7:].strip()
+    if not header_key:
+        return False
+    if required_key:
+        return header_key == required_key
+    if os.environ.get("VOICE_ROOTS_ENV") == "production":
+        return False
+    return header_key in ("admin", "voice-roots-admin-key", "test-admin-key", "secret")
+
+
 @app.middleware("http")
-async def structured_logging_middleware(request: Request, call_next):
+async def security_and_logging_middleware(request: Request, call_next):
     start_time = time.time()
     method = request.method
     path = request.url.path
 
     response = await call_next(request)
     duration_ms = round((time.time() - start_time) * 1000, 2)
+
+    # Security Headers (SEC-06)
+    response.headers["X-Content-Type-Options"] = "nosniff"
+    response.headers["X-Frame-Options"] = "DENY"
+    response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["Content-Security-Policy"] = (
+        "default-src 'self'; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
+        "style-src 'self' 'unsafe-inline'; "
+        "img-src 'self' data: blob: https:; "
+        "media-src 'self' blob: data:; "
+        "connect-src 'self' http: https:;"
+    )
+    if request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https":
+        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
     # Redact sensitive headers or paths; never log speech audio content
     client_ip = request.client.host if request.client else "127.0.0.1"
@@ -507,9 +555,56 @@ async def structured_logging_middleware(request: Request, call_next):
     return response
 
 
-# Mount static audio storage strictly to allow consented audio streaming
-if os.path.exists(AUDIO_STORAGE):
-    app.mount("/storage/audio", StaticFiles(directory=AUDIO_STORAGE), name="audio_storage")
+@app.get("/storage/audio/{filename}")
+def stream_storage_audio_file(filename: str, request: Request):
+    """Securely stream master audio verifying path integrity, affirmative consent, and OCAP access levels (SEC-03)."""
+    safe_filename = os.path.basename(filename)
+    if safe_filename != filename or ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Invalid audio filename.")
+
+    file_path = os.path.join(AUDIO_STORAGE, safe_filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Audio file not found.")
+
+    # Enforce OCAP boundaries
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                """
+                SELECT id, privacy_level, status, archived_at
+                FROM transcripts
+                WHERE audio_filename = ?
+                """,
+                (safe_filename,),
+            ).fetchone()
+            if row:
+                if row["status"] == "withdrawn" or row["archived_at"] is not None:
+                    raise HTTPException(status_code=404, detail="Audio recording has been withdrawn under speaker consent.")
+                is_admin = _is_admin_request(request)
+                if row["privacy_level"] == "private" and not is_admin:
+                    raise HTTPException(status_code=403, detail="Access denied: Restricted or private cultural audio recording.")
+
+            # Also check cultural stories for sacred elder-only lore
+            story = conn.execute(
+                """
+                SELECT story_id, access_classification
+                FROM cultural_stories
+                WHERE audio_reference = ?
+                """,
+                (safe_filename,),
+            ).fetchone()
+            if story and story["access_classification"] == "SACRED_ELDER_ONLY":
+                is_admin = _is_admin_request(request)
+                if not is_admin:
+                    raise HTTPException(status_code=403, detail="Access denied: Restricted or sacred cultural audio recording.")
+    except HTTPException:
+        raise
+    except Exception as exc:  # noqa: BLE001
+        logger.warning("Error verifying audio permissions for %s: %s", safe_filename, exc)
+
+    return FileResponse(file_path, media_type="audio/wav")
+
 
 # Mount built frontend assets for unified web application serving
 _assets_dir = os.path.join(FRONTEND_DIST, "assets")
@@ -839,25 +934,6 @@ def register_new_language_endpoint(payload: RegisterLanguageRequest):
         return {"status": "success", "language": registered}
     except Exception as exc:  # noqa: BLE001
         raise HTTPException(status_code=400, detail=str(exc))
-
-
-def _is_admin_request(request: Request | None) -> bool:
-    """Check if request contains valid administrator credentials."""
-    if not request:
-        return False
-    required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
-    header_key = (
-        request.headers.get("X-Admin-Key")
-        or request.headers.get("Authorization")
-        or ""
-    ).strip()
-    if header_key.startswith("Bearer "):
-        header_key = header_key[7:].strip()
-    if not header_key:
-        return False
-    if required_key:
-        return header_key == required_key
-    return header_key in ("admin", "voice-roots-admin-key", "test-admin-key", "secret")
 
 
 @app.get("/api/v1/transcriptions")
@@ -4355,13 +4431,18 @@ def _extract_archive_auth_context(
     roles: list[str] = []
     if x_admin_key == ADMIN_API_KEY:
         is_auth = True
-        roles.append("admin")
+        roles.extend(["admin", "elder"])
     if x_user_role:
-        is_auth = True
-        for r in x_user_role.split(","):
-            rc = r.strip().lower()
-            if rc:
-                roles.append(rc)
+        is_prod = os.environ.get("VOICE_ROOTS_ENV") == "production"
+        # SEC-02: In production, unauthenticated client-provided roles are strictly ignored
+        if is_prod and x_admin_key != ADMIN_API_KEY:
+            pass
+        else:
+            is_auth = True
+            for r in x_user_role.split(","):
+                rc = r.strip().lower()
+                if rc and rc not in roles:
+                    roles.append(rc)
     return is_auth, roles, x_user_language
 
 
@@ -5003,7 +5084,14 @@ def register_research_api_key(
     x_user_role: str | None = Header(None, alias="X-User-Role"),
 ):
     """Register and issue a scoped research API token to an accredited institution."""
-    _is_auth, _roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    is_prod = os.environ.get("VOICE_ROOTS_ENV") == "production"
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    if is_prod and (not is_auth or "admin" not in roles):
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator authorization required to register and issue institutional research API keys in production.",
+        )
+
     new_key = research_interoperability_service.create_research_api_key(
         organization_name=req.organization_name,
         contact_email=req.contact_email,
@@ -5024,6 +5112,20 @@ def list_research_keys_endpoint(
     return {"keys": research_interoperability_service.list_research_api_keys(DB_PATH)}
 
 
+@app.delete("/api/v1/research/keys/{key_id}")
+def revoke_research_key_endpoint(
+    key_id: str,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+):
+    """Revoke or deactivate an institutional research API token (Admin only) (SEC-07)."""
+    if x_admin_key != ADMIN_API_KEY:
+        raise HTTPException(status_code=403, detail="Admin authorization required to revoke research keys.")
+    revoked = research_interoperability_service.revoke_research_api_key(key_id, DB_PATH)
+    if not revoked:
+        raise HTTPException(status_code=404, detail=f"Research key '{key_id}' not found.")
+    return {"status": "revoked", "key_id": key_id}
+
+
 @app.get("/api/v1/research/manifest")
 def get_research_manifest_endpoint():
     """Public version manifest describing release versions, languages, and hours."""
@@ -5037,7 +5139,7 @@ def export_research_corpus_endpoint(
     x_research_token: str | None = Header(None, alias="X-Research-Token"),
     authorization: str | None = Header(None, alias="Authorization"),
 ):
-    """Export research corpus records strictly enforcing OCAP research consent."""
+    """Export research corpus records strictly enforcing OCAP research consent and rate limits."""
     token = _extract_research_token(x_research_token, authorization)
     try:
         auth_info = research_interoperability_service.validate_research_token(
@@ -5051,6 +5153,22 @@ def export_research_corpus_endpoint(
             )
         except PermissionError:
             raise HTTPException(status_code=403, detail=str(e))
+
+    # Active sliding-window rate limit (SEC-05)
+    limit = auth_info.get("rate_limit_per_minute", 60)
+    allowed, remaining = research_interoperability_service.check_rate_limit(
+        auth_info["key_id"], limit_per_minute=limit
+    )
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded: maximum {limit} requests per minute allowed.",
+            headers={
+                "Retry-After": "60",
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": "0",
+            },
+        )
 
     res = research_interoperability_service.export_research_corpus(language=language, db_path=DB_PATH)
     research_interoperability_service.log_research_access(
@@ -5070,7 +5188,7 @@ def export_research_lexicon_endpoint(
     x_research_token: str | None = Header(None, alias="X-Research-Token"),
     authorization: str | None = Header(None, alias="Authorization"),
 ):
-    """Export computational lexicon entries with phonetics and script representations."""
+    """Export computational lexicon entries with phonetics, script representations, and rate limits."""
     token = _extract_research_token(x_research_token, authorization)
     try:
         auth_info = research_interoperability_service.validate_research_token(
@@ -5078,6 +5196,22 @@ def export_research_lexicon_endpoint(
         )
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
+
+    # Active sliding-window rate limit (SEC-05)
+    limit = auth_info.get("rate_limit_per_minute", 60)
+    allowed, remaining = research_interoperability_service.check_rate_limit(
+        auth_info["key_id"], limit_per_minute=limit
+    )
+    if not allowed:
+        raise HTTPException(
+            status_code=429,
+            detail=f"Rate limit exceeded: maximum {limit} requests per minute allowed.",
+            headers={
+                "Retry-After": "60",
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": "0",
+            },
+        )
 
     res = research_interoperability_service.export_research_lexicon(language=language, db_path=DB_PATH)
     research_interoperability_service.log_research_access(

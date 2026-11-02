@@ -35,6 +35,11 @@ COPY --from=frontend-builder /app/frontend/dist /app/frontend/dist
 # Create persistent storage directories
 RUN mkdir -p /data/storage/audio /data/chroma_db /data/backups
 
+# Create non-root system user for least-privilege execution (SEC-09)
+RUN groupadd -g 1000 appgroup && \
+    useradd -u 1000 -g appgroup -s /bin/bash -m appuser && \
+    chown -R appuser:appgroup /app /data
+
 # Configure environment defaults
 ENV VOICE_ROOTS_ENV=production \
     VOICE_ROOTS_DB_PATH=/data/voice_roots.db \
@@ -45,6 +50,8 @@ ENV VOICE_ROOTS_ENV=production \
     VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local \
     VOICE_ROOTS_WHISPER_MODEL_SIZE=base \
     PYTHONPATH=/app/backend
+
+USER appuser
 
 EXPOSE 8000
 

@@ -57,11 +57,15 @@ scratch/
 
 # Local test databases, backups & coverage
 test_*.db
+*.db-shm
+*.db-wal
 *.sqlite3
 backend/storage/backups/
 backend/backups/
 backups/
 *.db
+*.db-shm
+*.db-wal
 .coverage
 htmlcov/
 coverage/

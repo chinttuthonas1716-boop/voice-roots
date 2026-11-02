@@ -18,6 +18,8 @@ import json
 import logging
 import secrets
 import sqlite3
+import threading
+import time
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
 from typing import Any
@@ -35,6 +37,45 @@ def _get_connection(db_path: Path | str | None = None) -> sqlite3.Connection:
 def hash_api_key(raw_key: str) -> str:
     """Compute deterministic SHA-256 hash for secure API key lookup."""
     return hashlib.sha256(raw_key.strip().encode("utf-8")).hexdigest()
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# RATE LIMITING & SECURITY THROTTLING
+# ─────────────────────────────────────────────────────────────────────────────
+
+_RATE_LIMIT_WINDOWS: dict[str, list[float]] = {}
+_RATE_LIMIT_LOCK = threading.Lock()
+
+
+def check_rate_limit(key_id: str, limit_per_minute: int = 60) -> tuple[bool, int]:
+    """Sliding-window in-memory rate limiter. Returns (is_allowed, remaining_requests)."""
+    now = time.time()
+    one_minute_ago = now - 60.0
+    with _RATE_LIMIT_LOCK:
+        timestamps = _RATE_LIMIT_WINDOWS.get(key_id, [])
+        valid_timestamps = [t for t in timestamps if t > one_minute_ago]
+        if len(valid_timestamps) >= limit_per_minute:
+            _RATE_LIMIT_WINDOWS[key_id] = valid_timestamps
+            return False, 0
+        valid_timestamps.append(now)
+        _RATE_LIMIT_WINDOWS[key_id] = valid_timestamps
+        remaining = max(0, limit_per_minute - len(valid_timestamps))
+        return True, remaining
+
+
+def reset_rate_limits() -> None:
+    """Clear in-memory rate limiting windows (useful for testing)."""
+    with _RATE_LIMIT_LOCK:
+        _RATE_LIMIT_WINDOWS.clear()
+
+
+def revoke_research_api_key(key_id: str, db_path: Path | str | None = None) -> bool:
+    """Deactivate/revoke an issued research API token."""
+    with _get_connection(db_path) as conn:
+        cursor = conn.cursor()
+        cursor.execute("UPDATE research_api_keys SET is_active = 0 WHERE key_id = ?", (key_id,))
+        conn.commit()
+        return cursor.rowcount > 0
 
 
 # ─────────────────────────────────────────────────────────────────────────────
