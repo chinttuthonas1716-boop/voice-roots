@@ -1693,22 +1693,19 @@
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
 
-- [2026-11-01] [ANTIGRAVITY] DONE: Milestone 20: Institutional Research API & Interoperability.
-  - Implemented token-scoped research credentials, SHA-256 hashed token storage, academic research access audit logs, standardized corpus manifests, and computational lexicon exports.
-  - Alembic migration `backend/alembic/versions/4c5d6e7f8a9b_institutional_research_api_and_interoperability.py` creating `research_api_keys` and `research_access_logs`.
-  - Domain service `backend/research_interoperability_service.py` with granular scope authorization (`read:registry`, `read:vocabulary`, `read:transcripts`, `read:metadata`, `export:corpus`), seeded credentials for CIIL, Osmania University, and TCRTI, and OCAP research privacy filtering.
-  - REST API routes in `backend/main.py`: `/api/v1/research/overview`, `/api/v1/research/keys/register`, `/api/v1/research/keys`, `/api/v1/research/manifest`, `/api/v1/research/corpus/export`, `/api/v1/research/lexicon/export`.
-  - Frontend component `frontend/src/components/ResearchPortal.tsx` with token inspector, key issuance form, corpus release manifest viewer, export payload inspector, and JSON download utility.
-  - Test suite `tests/test_milestone20_research_api.py` (7/7 passed).
-  - Regression testing across all 199 tests in repository (199/199 passed in 30.67s, 100% pass rate).
-  - Pre-faculty release audit (26/26 passed) and live feature verification (27/27 passed).
-  - Files touched: `backend/alembic/versions/4c5d6e7f8a9b_institutional_research_api_and_interoperability.py`, `backend/research_interoperability_service.py`, `backend/main.py`, `backend/voice_roots.db`, `frontend/src/types.ts`, `frontend/src/components/ResearchPortal.tsx`, `frontend/src/App.tsx`, `tests/test_milestone20_research_api.py`, `PROGRESS.md`.
+- [2026-11-02] [ANTIGRAVITY] DONE: Milestone 21: Unified Ecosystem Integration & Single Entrypoint ("Everything in One").
+  - Consolidated the entire platform into a unified root entrypoint: `http://127.0.0.1:8000/` now immediately serves the full single-page application (SPA) with all 5 milestones (M16 Knowledge Graph, M17 Cultural Archives, M18 Speech Intelligence, M19 Language Learning, M20 Research Portal) accessible from a single screen.
+  - Updated `backend/main.py` root routes (`/` and `/app`) with `@app.api_route("/", methods=["GET", "HEAD"])` to serve `frontend/dist/index.html` seamlessly for standard web requests while preserving JSON API negotiation (`Accept: application/json` or `/api/v1`).
+  - Redesigned `frontend/src/components/Home.tsx` into a Unified Command Center showcasing Milestones 16–20 alongside core ingestion and discovery with 1-click launch cards and live metrics.
+  - Rebuilt production frontend bundle with `npm run build --prefix frontend` (1.75s, 0 errors).
+  - Files touched: `backend/main.py`, `frontend/src/components/Home.tsx`, `PROGRESS.md`.
   - VERIFIED:
-    1. Dedicated Milestone 20 Tests: 7/7 passed in `tests/test_milestone20_research_api.py`.
-    2. Full Repository Pytest Suite: 199/199 passed in 30.67s (100% pass rate).
-    3. Pre-Faculty Release Audit: 26/26 passed in `scratch/pre_faculty_release_audit.py`.
-    4. Full Live Feature Verification: 27/27 passed in `scratch/test_every_feature.py`.
-    5. Frontend Production Build: `npm run build --prefix frontend` compiled in 1.92s with zero TypeScript errors.
-    6. Token Scope Enforcement: Verified 403 Forbidden on missing tokens, invalid tokens, or unauthorized scopes.
+    1. Direct browser access: `curl -s http://127.0.0.1:8000/` returns `<!doctype html>` SPA.
+    2. API client access: `curl -s -H "Accept: application/json" http://127.0.0.1:8000/` returns JSON metadata.
+    3. Milestone Overview Endpoints: All 5 endpoints (`/api/v1/knowledge-graph/overview`, `/api/v1/cultural-archives/overview`, `/api/v1/speech/overview`, `/api/v1/learning/overview`, `/api/v1/research/overview`) return HTTP 200 OK.
+    4. Pytest Suite: 47/47 passing for M16–M20 test suite in 1.71s.
+    5. Live Feature Verification: 27/27 passing in `scratch/test_every_feature.py`.
+    6. System Health Check: `curl -s http://127.0.0.1:8000/health` returns `status: healthy`, `database_status: ok`.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
