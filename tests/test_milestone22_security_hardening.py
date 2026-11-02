@@ -11,15 +11,23 @@ Verifies:
 - SQLite WAL mode and concurrency pragmas.
 """
 
+# pyright: reportMissingImports=false
 from __future__ import annotations
 
 import os
 import sqlite3
-import pytest
-from fastapi.testclient import TestClient
+import sys
+from pathlib import Path
 
-import main
-import research_interoperability_service
+# Ensure backend directory is in sys.path for direct imports and IDE analyzers
+BACKEND_DIR = Path(__file__).resolve().parent.parent / "backend"
+if str(BACKEND_DIR) not in sys.path:
+    sys.path.insert(0, str(BACKEND_DIR))
+
+import main  # type: ignore
+import pytest
+import research_interoperability_service  # type: ignore
+from fastapi.testclient import TestClient
 
 client = TestClient(main.app)
 ADMIN_KEY = main.ADMIN_API_KEY
