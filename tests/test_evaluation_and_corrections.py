@@ -93,7 +93,7 @@ def test_community_corrections_lifecycle():
     data = res_transcripts.json()
     transcripts = data.get("transcripts", [])
     assert len(transcripts) > 0
-    t = transcripts[0]
+    t = next((item for item in transcripts if item.get("transcript_text", "").strip()), transcripts[0])
     t_id = t["id"]
     original_text = t["transcript_text"]
 

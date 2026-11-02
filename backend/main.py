@@ -5,8 +5,10 @@ and static streaming of preserved acoustic audio masters.
 """
 
 import hashlib
+import json
 import logging
 import os
+import shutil
 import sqlite3
 import tempfile
 import threading
@@ -15,6 +17,7 @@ import uuid
 from datetime import datetime, timezone
 from typing import Any
 
+import backup_retention_service
 import cultural_archive_service
 import learning_service
 import research_interoperability_service
@@ -134,6 +137,9 @@ BACKUP_DIR = os.environ.get(
 DB_PATH = os.environ.get(
     "VOICE_ROOTS_DB_PATH", os.path.join(BACKEND_DIR, "voice_roots.db")
 )
+CHROMA_DIR = os.environ.get(
+    "VOICE_ROOTS_CHROMA_DIR", os.path.join(BACKEND_DIR, "chroma_db")
+)
 ADMIN_API_KEY = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "voice-roots-admin-key").strip()
 
 FRONTEND_DIST = os.environ.get(
@@ -173,6 +179,85 @@ def get_db_connection(db_path: str = DB_PATH) -> sqlite3.Connection:
     except Exception:  # noqa: BLE001
         pass
     return conn
+
+
+def verify_storage_persistence_and_integrity() -> dict[str, Any]:
+    """Validate storage writability, disk space, and SQLite database integrity (PR-01)."""
+    probe: dict[str, Any] = {
+        "status": "healthy",
+        "timestamp": datetime.now(timezone.utc).isoformat(),
+        "paths": {},
+        "database": {},
+        "disk": {},
+    }
+
+    # Verify key directories
+    for name, path in [
+        ("audio_storage", AUDIO_STORAGE),
+        ("backup_dir", BACKUP_DIR),
+        ("storage_dir", STORAGE_DIR),
+        ("chroma_dir", CHROMA_DIR),
+    ]:
+        exists = os.path.exists(path)
+        writable = os.access(path, os.W_OK) if exists else False
+        count = len(os.listdir(path)) if exists and os.path.isdir(path) else 0
+        probe["paths"][name] = {
+            "path": path,
+            "exists": exists,
+            "writable": writable,
+            "file_count": count,
+        }
+        if not exists or not writable:
+            probe["status"] = "degraded"
+
+    # Verify SQLite database
+    db_exists = os.path.exists(DB_PATH)
+    db_dir = os.path.dirname(DB_PATH) or "."
+    db_writable = os.access(DB_PATH, os.W_OK) if db_exists else os.access(db_dir, os.W_OK)
+    db_size = os.path.getsize(DB_PATH) if db_exists else 0
+    quick_check_status = "unknown"
+    table_count = 0
+
+    if db_exists:
+        try:
+            with sqlite3.connect(DB_PATH, timeout=5.0) as conn:
+                cur = conn.cursor()
+                cur.execute("PRAGMA quick_check")
+                qc = cur.fetchone()
+                quick_check_status = qc[0] if qc else "fail"
+                cur.execute("SELECT count(*) FROM sqlite_master WHERE type='table'")
+                row = cur.fetchone()
+                table_count = row[0] if row else 0
+        except Exception as e:  # noqa: BLE001
+            quick_check_status = f"error: {e}"
+            probe["status"] = "unhealthy"
+
+    probe["database"] = {
+        "path": DB_PATH,
+        "exists": db_exists,
+        "writable": db_writable,
+        "size_bytes": db_size,
+        "integrity": quick_check_status,
+        "table_count": table_count,
+    }
+
+    if quick_check_status != "ok":
+        probe["status"] = "unhealthy"
+
+    # Disk usage
+    try:
+        usage = shutil.disk_usage(db_dir)
+        probe["disk"] = {
+            "total_bytes": usage.total,
+            "used_bytes": usage.used,
+            "free_bytes": usage.free,
+            "free_mb": round(usage.free / (1024 * 1024), 2),
+            "free_percent": round((usage.free / usage.total) * 100.0, 2),
+        }
+    except Exception:  # noqa: BLE001
+        probe["disk"] = {"error": "unavailable"}
+
+    return probe
 
 
 def init_db():
@@ -497,25 +582,58 @@ app.add_middleware(
 )
 
 
+def _extract_admin_identity(request: Request | None = None, header_key: str | None = None) -> tuple[bool, str]:
+    """Verify administrator authorization and identify the specific administrator (PR-03)."""
+    provided_key = (header_key or "").strip()
+    if not provided_key and request:
+        provided_key = (
+            request.headers.get("X-Admin-Key")
+            or request.headers.get("Authorization")
+            or ""
+        ).strip()
+    if provided_key.startswith("Bearer "):
+        provided_key = provided_key[7:].strip()
+
+    if not provided_key:
+        return False, "anonymous"
+
+    required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
+    is_prod = os.environ.get("VOICE_ROOTS_ENV") == "production"
+
+    # 1. Primary admin key
+    if required_key and provided_key == required_key:
+        return True, "primary_admin"
+
+    # 2. Multi-user admin credentials via VOICE_ROOTS_ADMIN_USERS (PR-03)
+    admin_users_raw = os.environ.get("VOICE_ROOTS_ADMIN_USERS", "").strip()
+    if admin_users_raw:
+        try:
+            if admin_users_raw.startswith("{"):
+                user_dict = json.loads(admin_users_raw)
+                for uname, ukey in user_dict.items():
+                    if str(ukey).strip() == provided_key:
+                        return True, str(uname).strip()
+            else:
+                for pair in admin_users_raw.split(","):
+                    if ":" in pair:
+                        uname, ukey = pair.split(":", 1)
+                        if ukey.strip() == provided_key:
+                            return True, uname.strip()
+        except Exception:  # noqa: BLE001
+            pass
+
+    # 3. Development / testing fallbacks
+    if not is_prod:
+        if provided_key in ("admin", "voice-roots-admin-key", "test-admin-key", "secret"):
+            return True, "dev_admin"
+
+    return False, "anonymous"
+
+
 def _is_admin_request(request: Request | None) -> bool:
     """Check if request contains valid administrator credentials."""
-    if not request:
-        return False
-    required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
-    header_key = (
-        request.headers.get("X-Admin-Key")
-        or request.headers.get("Authorization")
-        or ""
-    ).strip()
-    if header_key.startswith("Bearer "):
-        header_key = header_key[7:].strip()
-    if not header_key:
-        return False
-    if required_key:
-        return header_key == required_key
-    if os.environ.get("VOICE_ROOTS_ENV") == "production":
-        return False
-    return header_key in ("admin", "voice-roots-admin-key", "test-admin-key", "secret")
+    is_admin, _ = _extract_admin_identity(request)
+    return is_admin
 
 
 @app.middleware("http")
@@ -2548,11 +2666,24 @@ class ResourceIngestRequest(BaseModel):
 ResourceIngestRequest.model_rebuild()
 
 
-def _verify_admin(admin_key: str | None = None, header_key: str | None = None):
-    required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
+def _verify_admin(admin_key: str | None = None, header_key: str | None = None) -> str:
+    """Verify administrator authorization, returning administrator identity (PR-03)."""
     provided_key = (admin_key or header_key or "").strip()
-    if required_key and provided_key != required_key:
+    required_key = os.environ.get("VOICE_ROOTS_ADMIN_KEY", "").strip()
+    is_prod = os.environ.get("VOICE_ROOTS_ENV") == "production"
+
+    if provided_key:
+        is_admin, admin_user = _extract_admin_identity(None, provided_key)
+        if not is_admin:
+            raise HTTPException(status_code=403, detail="Invalid administrator credentials.")
+        return admin_user
+
+    # No key provided:
+    if is_prod or required_key:
         raise HTTPException(status_code=403, detail="Invalid administrator credentials.")
+
+    # In development/test mode with no admin key configured, permit for legacy tests:
+    return "test_admin"
 
 
 @app.post("/api/v1/resources/ingest")
@@ -3199,8 +3330,8 @@ def audit_dataset_quality():
 def create_database_backup(
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
 ):
-    """Trigger safe atomic SQLite database snapshot."""
-    _verify_admin(None, x_admin_key)
+    """Trigger safe atomic SQLite database snapshot with automatic retention rotation (PR-04)."""
+    admin_user = _verify_admin(None, x_admin_key)
     os.makedirs(BACKUP_DIR, exist_ok=True)
     timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
     backup_file = os.path.join(BACKUP_DIR, f"voice_roots_backup_{timestamp}.db")
@@ -3211,6 +3342,16 @@ def create_database_backup(
         dest_conn.close()
 
     size_bytes = os.path.getsize(backup_file)
+
+    # Automatic rolling retention pruning to prevent disk exhaustion (PR-04)
+    prune_res = backup_retention_service.prune_old_backups(
+        backup_dir=BACKUP_DIR,
+        retain_days=14,
+        max_backups=50,
+        dry_run=False,
+    )
+
+    logger.info("Admin '%s' created database snapshot: %s", admin_user, backup_file)
     return {
         "success": True,
         "backup_filename": os.path.basename(backup_file),
@@ -3218,8 +3359,35 @@ def create_database_backup(
         "backup_bytes": size_bytes,
         "size_bytes": size_bytes,
         "timestamp": timestamp,
+        "created_by": admin_user,
+        "retention_status": prune_res.get("message"),
         "message": "Atomic SQLite database snapshot created successfully.",
     }
+
+
+@app.post("/api/v1/system/backups/prune")
+def prune_backups_endpoint(
+    retain_days: int = 14,
+    max_backups: int = 50,
+    dry_run: bool = False,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+):
+    """Prune historical database snapshots according to tiered retention policy (PR-04)."""
+    admin_user = _verify_admin(None, x_admin_key)
+    res = backup_retention_service.prune_old_backups(
+        backup_dir=BACKUP_DIR,
+        retain_days=retain_days,
+        max_backups=max_backups,
+        dry_run=dry_run,
+    )
+    res["triggered_by"] = admin_user
+    return res
+
+
+@app.get("/api/v1/system/storage-probe")
+def get_system_storage_probe():
+    """Deep persistence, volume health, and disk quota probe for institutional pilots (PR-01)."""
+    return verify_storage_persistence_and_integrity()
 
 
 @app.get("/api/v1/system/telemetry")

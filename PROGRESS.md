@@ -1733,3 +1733,20 @@
     7. Live Server Response: Security headers (`X-Content-Type-Options`, `X-Frame-Options`, `CSP`, `Referrer-Policy`) confirmed active on live Uvicorn responses.
   - NOT VERIFIED: Public internet TLS certificate provisioning (staging/production reverse-proxy domain setup).
   - NEEDS FROM OTHER AGENT: none.
+- [2026-11-02] [ANTIGRAVITY] DONE: Milestone 23: Controlled Institutional Pilot — Technical Remediations.
+  - User approved Stage A (Platform & Security Audit) and Stage B (Pilot Design, Metrics & Governance Plan).
+  - PR-05: Untracked database binary `backend/voice_roots.db` from Git index (`git rm --cached`) and updated `.gitignore` to prevent committing live database changes or participant records.
+  - PR-01: Implemented persistent storage startup probe and volume integrity validation via `verify_storage_persistence_and_integrity()` and route `GET /api/v1/system/storage-probe`. Validates directory writability, SQLite `PRAGMA quick_check;`, table counts, and disk space telemetry.
+  - PR-04: Created `backend/backup_retention_service.py` with tiered rolling retention (7-day full, 30-day daily, 90-day weekly, preserving pre-milestone baselines). Added admin route `POST /api/v1/system/backups/prune` and hooked automatic retention pruning into `POST /api/v1/system/backup` to keep backup volumes bounded.
+  - PR-03: Implemented multi-user administrator identity resolution in `_extract_admin_identity()` supporting `VOICE_ROOTS_ADMIN_USERS` (e.g. `pi_linguist_1:token1,elder_reviewer_1:token2` or JSON) and per-user audit attribution while maintaining unauthenticated rejection in production.
+  - PR-02: Created turnkey Edge Reverse Proxy configurations: `deployment/Caddyfile` (automated Let's Encrypt TLS, HSTS, streaming buffer tuning), `deployment/nginx.conf` (production TLS reverse proxy, rate limiting zones, audio buffers), and `deployment/docker-compose.pilot.yml` (multi-container pilot deployment with non-root UID 1000 and persistent volume).
+  - Added dedicated test suite `tests/test_milestone23_pilot_remediations.py` (7 tests).
+  - Files touched: `backend/main.py`, `backend/backup_retention_service.py`, `deployment/Caddyfile`, `deployment/nginx.conf`, `deployment/docker-compose.pilot.yml`, `tests/test_milestone23_pilot_remediations.py`, `tests/test_evaluation_and_corrections.py`, `.gitignore`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Pilot Remediation Tests: 7/7 passed in `tests/test_milestone23_pilot_remediations.py` in 1.19s.
+    2. Comprehensive Test Suite: 215/215 passed in 29.81s (100% pass rate).
+    3. Pre-faculty Release Audit: 26/26 checkpoints passed (`python3 scratch/pre_faculty_release_audit.py`).
+    4. Live Feature Tests: 27/27 features operational (`python3 scratch/test_every_feature.py`).
+    5. Code Linter: `python3 -m ruff check` passed with 0 errors, 0 warnings across whole repository.
+  - NOT VERIFIED: Remote DNS propagation for `pilot.voiceroots.ai`.
+  - NEEDS FROM OTHER AGENT: none.
