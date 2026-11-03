@@ -14,6 +14,7 @@ import tempfile
 import threading
 import time
 import uuid
+import wave
 from datetime import datetime, timezone
 from typing import Any
 
@@ -1537,7 +1538,6 @@ async def upload_audio(
     calculated_duration = 0.0
     try:
         if unique_filename.endswith(".wav"):
-            import wave
             stored_path = os.path.join(AUDIO_STORAGE, unique_filename)
             with wave.open(stored_path, "rb") as wf:
                 framerate = wf.getframerate()
