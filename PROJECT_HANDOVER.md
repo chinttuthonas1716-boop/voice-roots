@@ -1,10 +1,11 @@
 # Voice Roots — Official Project Handover & Formal Sign-Off Deliverable
+
 ## Complete Architecture Handover, Verified Milestone Lineage, and Operational Ownership Guide
 
 > **Project Name**: Voice Roots: Rooting Oral Languages in Text with AI
 > **Official Release Version**: `v1.0.0-pilot-ready`
 > **Git Release Tag**: [`v1.0.0-pilot-ready`](https://github.com/chinttuthonas1716-boop/voice-roots/releases/tag/v1.0.0-pilot-ready)
-> **Git Commit Baseline**: [`e35ab74`](https://github.com/chinttuthonas1716-boop/voice-roots/commit/e35ab74)
+> **Git Commit Baseline**: [`67b5114`](https://github.com/chinttuthonas1716-boop/voice-roots/commit/67b5114)
 > **Repository**: `https://github.com/chinttuthonas1716-boop/voice-roots`
 > **Handover & Sign-Off Date**: November 4, 2026
 > **Engineering Lead**: ANTIGRAVITY (Google DeepMind Agentic Pair Programmer)
@@ -20,12 +21,12 @@ Voice Roots is an end-to-end, community-governed speech preservation and computa
 
 All **23 Milestones (M1 through M23)** have been implemented, tested, verified, and tagged on the canonical integration branch.
 
-```
+```text
 ╔══════════════════════════════════════════════════════════════════════════════════════════╗
 ║                       OFFICIAL RELEASE & HANDOVER CERTIFICATE                            ║
 ╠══════════════════════════════════════════════════════════════════════════════════════════╣
 ║  Platform Status:     PRODUCTION READY & INSTITUTIONAL PILOT PREPARED                    ║
-║  Release Baseline:    v1.0.0-pilot-ready (Commit e35ab74)                               ║
+║  Release Baseline:    v1.0.0-pilot-ready (Commit 67b5114)                               ║
 ║  Regression Tests:    222 / 222 PASSED (100% Pass Rate across 24 test suites)           ║
 ║  Pre-Faculty Audit:   26 / 26 CHECKPOINTS PASSED                                         ║
 ║  Live Feature Probe:  27 / 27 ENDPOINTS OPERATIONAL                                      ║
@@ -90,21 +91,25 @@ flowchart TD
 Every workflow has been verified with live execution results:
 
 ### A. Full Automated Regression Test Suite
+
 * **Command**: `pytest tests/ -q`
 * **Result**: **222 / 222 Passed** in 70.20s (Exit Code: `0`, 0 Failed, 0 Skipped).
 * **Scope**: 24 dedicated test files verifying AI pipelines, database persistence, RBAC security, language registry, semantic vector search, knowledge graphs, speech intelligence, and pilot remediations.
 
 ### B. Pre-Faculty Release Audit
+
 * **Command**: `python3 scratch/pre_faculty_release_audit.py`
 * **Result**: **26 / 26 Checkpoints Passed (100%)**.
 * **Scope**: Verifies root SPA routing, system readiness, language registry (44+ languages), affirmative consent rejection, audio file disk persistence, local Whisper dispatch, oral language guardrail blocking, ChromaDB vectors, audio streaming byte-ranges, SQLite integrity, security headers, and backup snapshot creation.
 
 ### C. Live Feature-by-Feature Probe
+
 * **Command**: `python3 scratch/test_every_feature.py`
 * **Result**: **27 / 27 Live Features Operational (100%)**.
 * **Scope**: Evaluates all live API routes, unconsented audio rejection, master audio SHA-256 verification, elder correction proposal and approval, acoustic language detection, dynamic language registration, sacred knowledge 403 blocking, partial content streaming (HTTP 206), and speaker consent withdrawal.
 
 ### D. Code Quality & Compilation
+
 * **Backend Linter**: `python3 -m ruff check backend/` → **0 errors, 0 warnings (All checks passed)**.
 * **Frontend Typecheck**: `npm run typecheck --prefix frontend` (`tsc --noEmit`) → **0 errors (Exit code 0)**.
 * **Production Build**: `npm run build --prefix frontend` → **Built in 1.73s (1,578 modules transformed)**.
@@ -160,6 +165,7 @@ The platform is held in an audited readiness posture awaiting real-world human a
 ## 7. Operational Maintenance & Command Quick-Reference
 
 ### Starting the Platform
+
 ```bash
 # Backend ASGI server (serves both API and unified frontend SPA)
 python3 -m uvicorn main:app --app-dir backend --port 8000 --host 0.0.0.0
@@ -169,6 +175,7 @@ cd frontend && npm run dev
 ```
 
 ### Running Verification Tests
+
 ```bash
 # Run all 222 automated regression tests
 pytest tests/ -v
@@ -181,6 +188,7 @@ python3 scratch/test_every_feature.py
 ```
 
 ### Creating an Atomic Database Backup
+
 ```bash
 # Direct admin backup endpoint
 curl -X POST http://127.0.0.1:8000/api/v1/system/backup \
@@ -188,6 +196,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/system/backup \
 ```
 
 ### Database Schema Migrations
+
 ```bash
 cd backend && alembic upgrade head
 ```
@@ -198,6 +207,6 @@ cd backend && alembic upgrade head
 
 * **Delivered By**: ANTIGRAVITY (AI Pair Programmer, Google DeepMind)
 * **Accepted By**: Project Owner & Principal Investigator
-* **Release Baseline**: `v1.0.0-pilot-ready` (Git Commit: `e35ab74`)
+* **Release Baseline**: `v1.0.0-pilot-ready` (Git Commit: `67b5114`)
 * **Release Status**: **VERIFIED, HARDENED, AND OFFICIALLY RELEASED**
 * **Date**: November 4, 2026
