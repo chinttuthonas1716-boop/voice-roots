@@ -4537,14 +4537,32 @@ def api_search_kg(
     )
 
 
+def _check_kg_admin(x_admin_key: str | None = None, authorization: str | None = None) -> bool:
+    """Check if requester is authorized for KG management via admin key or JWT session."""
+    if x_admin_key == ADMIN_API_KEY:
+        return True
+    key = (x_admin_key or authorization or "").strip()
+    if key.startswith("Bearer "):
+        key = key[7:].strip()
+    if key:
+        try:
+            claims = auth_service.decode_access_token(key)
+            if claims and claims.get("role") in ("admin", "researcher", "reviewer"):
+                return True
+        except Exception:
+            pass
+    return False
+
+
 @app.post("/api/v1/knowledge-graph/nodes", status_code=201)
 @app.post("/api/v1/kg/nodes", status_code=201)
 def api_create_kg_node(
     req: KGNodeCreateRequest,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Create a new knowledge graph node. Authorized admins can verify directly; public contributions are proposed."""
-    is_admin = (x_admin_key == ADMIN_API_KEY) if x_admin_key else False
+    is_admin = _check_kg_admin(x_admin_key, authorization)
     status = req.verification_status if (is_admin and req.verification_status) else ("VERIFIED" if is_admin else "PROPOSED")
 
     try:
@@ -4578,9 +4596,10 @@ def api_create_kg_node(
 def api_create_kg_relationship(
     req: KGRelationshipCreateRequest,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Create a semantic link between two knowledge graph nodes."""
-    is_admin = (x_admin_key == ADMIN_API_KEY) if x_admin_key else False
+    is_admin = _check_kg_admin(x_admin_key, authorization)
     status = req.verification_status if (is_admin and req.verification_status) else ("VERIFIED" if is_admin else "PROPOSED")
 
     try:
@@ -4609,9 +4628,10 @@ def api_update_kg_node(
     node_id: str,
     req: KGNodeUpdateRequest,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Update metadata or verification status for a knowledge graph node."""
-    is_admin = (x_admin_key == ADMIN_API_KEY) if x_admin_key else False
+    is_admin = _check_kg_admin(x_admin_key, authorization)
     if req.verification_status and req.verification_status != "PROPOSED" and not is_admin:
         raise HTTPException(status_code=403, detail="Admin authorization required to change verification status.")
 
@@ -4645,9 +4665,11 @@ def api_update_kg_node(
 def api_delete_kg_relationship(
     rel_id: int,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Delete a knowledge graph relationship (admin only)."""
-    if x_admin_key != ADMIN_API_KEY:
+    if not _check_kg_admin(x_admin_key, authorization):
+        raise HTTPException(status_code=403, detail="Admin authorization required.")
         raise HTTPException(status_code=403, detail="Admin authorization required to delete relationships.")
 
     deleted = delete_knowledge_graph_relationship(relationship_id=rel_id, is_admin=True, db_path=DB_PATH)
@@ -4708,14 +4730,20 @@ def _extract_archive_auth_context(
     x_admin_key: str | None = None,
     x_user_role: str | None = None,
     x_user_language: str | None = None,
+    authorization: str | None = None,
 ) -> tuple[bool, list[str], str | None]:
     is_auth = False
     roles: list[str] = []
-    if x_admin_key == ADMIN_API_KEY:
+
+    provided_key = (x_admin_key or "").strip()
+    if not provided_key and authorization:
+        provided_key = authorization.strip()
+
+    if provided_key == ADMIN_API_KEY:
         is_auth = True
         roles.extend(["admin", "elder"])
-    elif x_admin_key:
-        cleaned_key = x_admin_key.strip()
+    elif provided_key:
+        cleaned_key = provided_key
         if cleaned_key.startswith("Bearer "):
             cleaned_key = cleaned_key[7:].strip()
         try:
@@ -4725,14 +4753,14 @@ def _extract_archive_auth_context(
                 user_role = claims.get("role", "contributor")
                 if user_role not in roles:
                     roles.append(user_role)
-                if user_role == "admin" and "elder" not in roles:
+                if user_role in ("admin", "reviewer") and "elder" not in roles:
                     roles.append("elder")
         except Exception:
             pass
     if x_user_role:
         is_prod = os.environ.get("VOICE_ROOTS_ENV") == "production"
         # SEC-02: In production, unauthenticated client-provided roles are strictly ignored
-        if is_prod and x_admin_key != ADMIN_API_KEY:
+        if is_prod and x_admin_key != ADMIN_API_KEY and not is_auth:
             pass
         else:
             is_auth = True
@@ -4740,6 +4768,8 @@ def _extract_archive_auth_context(
                 rc = r.strip().lower()
                 if rc and rc not in roles:
                     roles.append(rc)
+                if rc in ("reviewer", "elder") and "elder" not in roles:
+                    roles.append("elder")
     return is_auth, roles, x_user_language
 
 
@@ -4749,9 +4779,10 @@ def api_cultural_archives_overview(
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Retrieve cultural archive telemetry metrics and categories."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     return cultural_archive_service.get_cultural_archive_overview(
         DB_PATH, is_authenticated=is_auth, user_roles=roles
     )
@@ -4768,9 +4799,10 @@ def api_list_archive_collections(
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """List accessible cultural collections with permission gating."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     return cultural_archive_service.list_archive_collections(
         DB_PATH,
         language=language,
@@ -4790,9 +4822,10 @@ def api_get_archive_collection(
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Get collection details, provenance, and contained stories."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     res = cultural_archive_service.get_archive_collection(
         DB_PATH, collection_id, is_authenticated=is_auth, user_roles=roles
     )
@@ -4807,9 +4840,10 @@ def api_create_archive_collection(
     req: CreateCulturalCollectionRequest,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Create a new cultural archive collection (Elder or Admin authorized)."""
-    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, authorization=authorization)
     if "admin" not in roles and "elder" not in roles:
         raise HTTPException(status_code=403, detail="Elder or Administrator credentials required to create collections.")
 
@@ -4849,10 +4883,11 @@ def api_list_cultural_stories(
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """List and search approved cultural stories with FTS5 search and permission filtering."""
     search_query = q or query
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     return cultural_archive_service.list_cultural_stories(
         DB_PATH,
         collection_id=collection_id,
@@ -4873,9 +4908,10 @@ def api_get_cultural_story(
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Retrieve an individual cultural story with translation and contributor provenance."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     res = cultural_archive_service.get_cultural_story(
         DB_PATH, story_id, is_authenticated=is_auth, user_roles=roles
     )
@@ -4891,9 +4927,10 @@ def api_stream_cultural_story_audio(
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Stream master audio for an authorized cultural story with permission checks."""
-    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language)
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     info = cultural_archive_service.get_story_audio_stream_info(
         DB_PATH,
         story_id,
@@ -5030,9 +5067,10 @@ def api_review_cultural_submission(
     req: ReviewCulturalSubmissionRequest,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Review and approve/reject a community submission (Elder or Admin authorized)."""
-    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, authorization=authorization)
     if "admin" not in roles and "elder" not in roles:
         raise HTTPException(status_code=403, detail="Elder or Administrator credentials required to review submissions.")
 
@@ -5060,9 +5098,10 @@ def api_withdraw_cultural_record(
     req: WithdrawCulturalRecordRequest,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
+    authorization: str | None = Header(None, alias="Authorization"),
 ):
     """Revoke consent and withdraw a submission or story from public access under OCAP principles."""
-    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role)
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, authorization=authorization)
     is_admin = "admin" in roles or "elder" in roles
     try:
         res = cultural_archive_service.withdraw_cultural_record(

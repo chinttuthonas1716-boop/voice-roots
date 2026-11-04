@@ -443,6 +443,14 @@ def get_cultural_story(
                 data["collection_category"] = coll["category"]
                 data["traditional_knowledge_label"] = coll["traditional_knowledge_label"]
 
+        if data.get("transcript_id"):
+            trans = c.execute(
+                "SELECT transcript_text, machine_transcript_text, transliteration_text FROM transcripts WHERE id = ?",
+                (data["transcript_id"],),
+            ).fetchone()
+            if trans:
+                data["raw_transcript_text"] = trans["transcript_text"] or trans["machine_transcript_text"]
+
         return data
     finally:
         conn.close()

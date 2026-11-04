@@ -324,3 +324,42 @@ def test_ocap_withdrawal_enforcement():
         conn.row_factory = sqlite3.Row
         row = conn.execute("SELECT status FROM cultural_submissions WHERE submission_id = ?", (sub_id,)).fetchone()
         assert row["status"] == STATUS_WITHDRAWN
+
+
+def test_jwt_session_elder_and_researcher_authorization():
+    """Verify that JWT bearer tokens with reviewer (elder) and admin roles authorize access to sacred collections."""
+    import auth_service
+
+    # Generate JWT for an elder reviewer
+    elder_token = auth_service.create_access_token(
+        user_id="42",
+        username="elder_gondi",
+        email="elder.reviewer@gondi.org",
+        role="reviewer",
+        full_name="Elder Reviewer",
+    )
+    headers = {"Authorization": f"Bearer {elder_token}"}
+
+    # Verify elder token unlocks sacred collections
+    res = client.get("/api/v1/cultural-archives/collections", headers=headers)
+    assert res.status_code == 200
+    collections = res.json()
+    assert any(c["access_classification"] == ACCESS_SACRED_ELDER_ONLY for c in collections)
+
+    # Verify elder token authorizes review
+    submission = create_cultural_submission(
+        main.DB_PATH,
+        contributor_name="JWT Test Contributor",
+        language="gon",
+        title="JWT Reviewed Story",
+        consent_matrix=ConsentMatrix(),
+    )
+    sub_id = submission["submission_id"]
+
+    review_res = client.patch(
+        f"/api/v1/cultural-archives/submissions/{sub_id}/review",
+        json={"decision": "APPROVED", "reviewer_name": "Elder Reviewer JWT"},
+        headers=headers,
+    )
+    assert review_res.status_code == 200
+    assert review_res.json()["status"] == "APPROVED"

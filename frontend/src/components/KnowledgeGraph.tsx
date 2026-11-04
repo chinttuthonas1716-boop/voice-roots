@@ -22,12 +22,14 @@ import {
   KGOverviewResponse,
   KGSubgraphResponse,
   KGNodeDetailResponse,
-  KGEntityType
+  KGEntityType,
+  AuthUser,
 } from '../types';
 
 interface KnowledgeGraphProps {
   apiUrl: (path: string) => string;
   adminKey?: string;
+  currentUser?: AuthUser | null;
 }
 
 const ENTITY_COLORS: Record<string, { bg: string; border: string; text: string; fill: string }> = {
@@ -43,7 +45,7 @@ const ENTITY_COLORS: Record<string, { bg: string; border: string; text: string; 
   dataset: { bg: 'rgba(45, 212, 191, 0.15)', border: '#2DD4BF', text: '#CCFBF1', fill: '#2DD4BF' },
 };
 
-export function KnowledgeGraph({ apiUrl, adminKey }: KnowledgeGraphProps) {
+export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraphProps) {
   // View mode: 'visual' or 'tree'
   const [viewMode, setViewMode] = useState<'visual' | 'tree'>('visual');
 
@@ -130,7 +132,10 @@ export function KnowledgeGraph({ apiUrl, adminKey }: KnowledgeGraphProps) {
   const fetchNodeDetails = async (nodeId: string) => {
     try {
       const headers: Record<string, string> = {};
-      if (adminKey) headers['X-Admin-Key'] = adminKey;
+      if (adminKey) {
+        headers['X-Admin-Key'] = adminKey;
+        headers['Authorization'] = `Bearer ${adminKey}`;
+      }
       const res = await fetch(apiUrl(`/api/v1/knowledge-graph/nodes/${encodeURIComponent(nodeId)}`), { headers });
       if (res.ok) {
         const data: KGNodeDetailResponse = await res.json();
@@ -301,7 +306,10 @@ export function KnowledgeGraph({ apiUrl, adminKey }: KnowledgeGraphProps) {
       }
 
       const headers: Record<string, string> = { 'Content-Type': 'application/json' };
-      if (adminKey) headers['X-Admin-Key'] = adminKey;
+      if (adminKey) {
+        headers['X-Admin-Key'] = adminKey;
+        headers['Authorization'] = `Bearer ${adminKey}`;
+      }
 
       const res = await fetch(apiUrl('/api/v1/knowledge-graph/nodes'), {
         method: 'POST',
@@ -345,6 +353,7 @@ export function KnowledgeGraph({ apiUrl, adminKey }: KnowledgeGraphProps) {
         headers: {
           'Content-Type': 'application/json',
           'X-Admin-Key': adminKey,
+          'Authorization': `Bearer ${adminKey}`,
         },
         body: JSON.stringify({ verification_status: 'VERIFIED' }),
       });
@@ -400,7 +409,28 @@ export function KnowledgeGraph({ apiUrl, adminKey }: KnowledgeGraphProps) {
             </p>
           </div>
 
-          <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            {currentUser && (
+              <div
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '6px',
+                  background: 'rgba(142, 182, 155, 0.15)',
+                  border: '1px solid #8EB69B',
+                  borderRadius: '8px',
+                  padding: '7px 12px',
+                  fontSize: '12px',
+                  color: '#DAF1DE',
+                  fontWeight: '600'
+                }}
+              >
+                <CheckCircle2 size={14} color="#8EB69B" />
+                <span>
+                  <strong style={{ color: '#8EB69B', textTransform: 'uppercase' }}>{currentUser.role}</strong>: {currentUser.full_name || currentUser.username}
+                </span>
+              </div>
+            )}
             <button
               onClick={() => setIsProposeModalOpen(true)}
               style={{

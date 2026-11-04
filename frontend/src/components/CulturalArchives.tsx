@@ -1,7 +1,8 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import {
   BookOpen,
   Volume2,
+  VolumeX,
   Play,
   Pause,
   Search,
@@ -16,22 +17,32 @@ import {
   Lock,
   Headphones,
   Languages,
+  RotateCcw,
+  RotateCw,
+  Repeat,
+  Radio,
 } from "lucide-react";
 import {
   ArchiveCollection,
   CulturalStory,
   CulturalArchiveOverview,
   CulturalSubmission,
+  AuthUser,
+  BilingualSegment,
 } from "../types";
 
 interface CulturalArchivesProps {
   apiBaseUrl?: string;
   adminApiKey?: string;
+  currentUser?: AuthUser | null;
+  authToken?: string | null;
 }
 
 export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
   apiBaseUrl = "",
   adminApiKey = "",
+  currentUser = null,
+  authToken = null,
 }) => {
   // State
   const [overview, setOverview] = useState<CulturalArchiveOverview | null>(null);
@@ -54,7 +65,24 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
   const [playbackRate, setPlaybackRate] = useState<number>(1.0);
   const [audioCurrentTime, setAudioCurrentTime] = useState<number>(0);
   const [audioDuration, setAudioDuration] = useState<number>(0);
+  const [isMuted, setIsMuted] = useState<boolean>(false);
+  const [volume, setVolume] = useState<number>(1.0);
+  const [isLooping, setIsLooping] = useState<boolean>(false);
+  const [inspectorMode, setInspectorMode] = useState<"bilingual" | "tabs">("bilingual");
   const audioRef = useRef<HTMLAudioElement | null>(null);
+
+  // Sync userRole with authenticated currentUser
+  useEffect(() => {
+    if (currentUser) {
+      if (currentUser.role === "admin" || currentUser.role === "reviewer") {
+        setUserRole("elder");
+      } else if (currentUser.role === "researcher") {
+        setUserRole("researcher");
+      } else {
+        setUserRole("public");
+      }
+    }
+  }, [currentUser]);
 
   // Community Submission Modal State
   const [isSubmitModalOpen, setIsSubmitModalOpen] = useState<boolean>(false);
@@ -88,8 +116,12 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
 
   const getHeaders = () => {
     const headers: Record<string, string> = {};
-    if (adminApiKey) {
+    if (authToken) {
+      headers["Authorization"] = `Bearer ${authToken}`;
+      headers["X-Admin-Key"] = authToken;
+    } else if (adminApiKey) {
       headers["X-Admin-Key"] = adminApiKey;
+      headers["Authorization"] = `Bearer ${adminApiKey}`;
     }
     if (userRole === "elder") {
       headers["X-User-Role"] = "elder";
@@ -129,8 +161,122 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
     setSelectedStory(story);
     setIsPlaying(false);
     setAudioCurrentTime(0);
+    setAudioDuration(story.audio_duration_seconds || 0);
     setStoryInspectorTab("transcript");
   };
+
+  const handleOpenSubmitModal = () => {
+    if (currentUser) {
+      if (!subContributor) setSubContributor(currentUser.full_name || currentUser.username);
+      if (!subEmail) setSubEmail(currentUser.email);
+    }
+    setIsSubmitModalOpen(true);
+  };
+
+  const handleSkipSeconds = (deltaSeconds: number) => {
+    if (!audioRef.current) return;
+    const maxDur = audioDuration || selectedStory?.audio_duration_seconds || 100;
+    const newTime = Math.max(0, Math.min(maxDur, (audioRef.current.currentTime || 0) + deltaSeconds));
+    audioRef.current.currentTime = newTime;
+    setAudioCurrentTime(newTime);
+  };
+
+  const handleSeekToTime = (targetTime: number) => {
+    if (!audioRef.current) return;
+    const maxDur = audioDuration || selectedStory?.audio_duration_seconds || 100;
+    const clampedTime = Math.max(0, Math.min(maxDur, targetTime));
+    audioRef.current.currentTime = clampedTime;
+    setAudioCurrentTime(clampedTime);
+  };
+
+  const handleToggleMute = () => {
+    if (!audioRef.current) return;
+    const nextMuted = !isMuted;
+    audioRef.current.muted = nextMuted;
+    setIsMuted(nextMuted);
+  };
+
+  const handleVolumeChange = (newVol: number) => {
+    setVolume(newVol);
+    setIsMuted(newVol === 0);
+    if (audioRef.current) {
+      audioRef.current.volume = newVol;
+      audioRef.current.muted = newVol === 0;
+    }
+  };
+
+  const handleToggleLoop = () => {
+    const nextLoop = !isLooping;
+    setIsLooping(nextLoop);
+    if (audioRef.current) {
+      audioRef.current.loop = nextLoop;
+    }
+  };
+
+  // Synchronized Bilingual Segments Builder
+  const bilingualSegments: BilingualSegment[] = useMemo(() => {
+    if (!selectedStory) return [];
+    const totalDuration = selectedStory.audio_duration_seconds || audioDuration || 60;
+    const vernSource =
+      selectedStory.transliteration ||
+      selectedStory.raw_transcript_text ||
+      selectedStory.native_title ||
+      selectedStory.description ||
+      "";
+    const transSource = selectedStory.translation_text || selectedStory.description || "";
+
+    // Split text into coherent sentences using punctuation or linebreaks
+    const vernSentences = vernSource
+      .split(/(?<=[.।?!;\n])\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+    const transSentences = transSource
+      .split(/(?<=[.।?!;\n])\s+/)
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
+    const segmentCount = Math.max(vernSentences.length, transSentences.length, 1);
+    const segmentInterval = totalDuration / segmentCount;
+
+    return Array.from({ length: segmentCount }, (_, idx) => {
+      const vern = vernSentences[idx] || (idx === 0 ? vernSource : `Narrative continues (${idx + 1})...`);
+      const trans = transSentences[idx] || (idx === 0 ? transSource : `Translation continues (${idx + 1})...`);
+      return {
+        id: idx,
+        vernacularText: vern,
+        nativeScriptText: idx === 0 && selectedStory.native_title ? selectedStory.native_title : undefined,
+        translatedText: trans,
+        startTime: idx * segmentInterval,
+        endTime: (idx + 1) * segmentInterval,
+      };
+    });
+  }, [selectedStory, audioDuration]);
+
+  // Active sentence segment index
+  const activeSegmentIndex = useMemo(() => {
+    if (!bilingualSegments.length || audioDuration === 0) return -1;
+    return bilingualSegments.findIndex(
+      (seg) => audioCurrentTime >= seg.startTime && audioCurrentTime < seg.endTime
+    );
+  }, [bilingualSegments, audioCurrentTime, audioDuration]);
+
+  // Deterministic Waveform Heights based on Story ID
+  const waveformBars = useMemo(() => {
+    if (!selectedStory) return [];
+    const seed = selectedStory.story_id
+      .split("")
+      .reduce((acc, char) => acc + char.charCodeAt(0), 0);
+    const count = 56;
+    return Array.from({ length: count }, (_, i) => {
+      const rawVal =
+        0.2 +
+        0.8 *
+          Math.abs(
+            Math.sin((seed + i * 5.73) * 1.6) * Math.cos((seed + i * 3.29) * 1.1)
+          );
+      return Math.max(0.18, Math.min(1.0, rawVal));
+    });
+  }, [selectedStory]);
 
   const toggleAudioPlay = () => {
     if (!audioRef.current) return;
@@ -238,12 +384,13 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
   const handleReviewSubmission = async (subId: string, decision: "APPROVED" | "REJECTED") => {
     try {
       const headers = { ...getHeaders(), "Content-Type": "application/json" };
+      const reviewerName = currentUser?.full_name || currentUser?.username || "Community Elder Council";
       const res = await fetch(`${apiBaseUrl}/api/v1/cultural-archives/submissions/${subId}/review`, {
         method: "PATCH",
         headers,
         body: JSON.stringify({
           decision,
-          reviewer_name: "Community Elder Council",
+          reviewer_name: reviewerName,
           review_notes: reviewNotes || (decision === "APPROVED" ? "Verified authentic cultural lore" : "Declined"),
           create_story_on_approval: true,
         }),
@@ -256,6 +403,13 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
     } catch (e) {
       console.error("Review error:", e);
     }
+  };
+
+  const formatTime = (secs: number) => {
+    if (isNaN(secs) || secs < 0) return "00:00";
+    const m = Math.floor(secs / 60);
+    const s = Math.floor(secs % 60);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
   };
 
   return (
@@ -278,6 +432,14 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
 
           {/* Quick Actions & Role Switcher */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
+            {currentUser && (
+              <div className="flex items-center gap-2 bg-emerald-950/70 px-3 py-1.5 rounded-xl border border-emerald-500/60 text-xs text-emerald-200 shadow-sm">
+                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+                <span>
+                  <strong className="uppercase text-emerald-300 font-bold">{currentUser.role}</strong>: {currentUser.full_name || currentUser.username}
+                </span>
+              </div>
+            )}
             <div className="flex items-center gap-2 bg-stone-950/60 p-1.5 rounded-xl border border-amber-700/50 text-xs">
               <span className="text-stone-400 font-medium px-2">Access View:</span>
               <button
@@ -307,7 +469,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
             </div>
 
             <button
-              onClick={() => setIsSubmitModalOpen(true)}
+              onClick={handleOpenSubmitModal}
               className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl shadow-lg transition-all transform active:scale-95 text-sm"
             >
               <PlusCircle className="w-4 h-4" /> Propose Recording
@@ -563,40 +725,104 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
             {selectedStory ? (
               <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-md sticky top-6 space-y-6">
                 {/* Audio Master Player Container */}
-                <div className="bg-stone-900 text-white rounded-xl p-5 space-y-4">
+                <div className="bg-stone-900 text-white rounded-2xl p-5 space-y-4 shadow-xl border border-stone-800">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
-                      <Volume2 className="w-4 h-4" /> Authentic Acoustic Master
+                      <Radio className="w-4 h-4 animate-pulse text-amber-400" /> Authentic Acoustic Master
                     </div>
-                    {/* Speed Controls */}
-                    <div className="flex items-center gap-1 bg-stone-800 p-1 rounded-lg text-xs font-mono">
-                      {[0.75, 1.0, 1.25].map((rate) => (
+                    {/* Loop & Volume Controls */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={handleToggleLoop}
+                        title={isLooping ? "Looping Enabled" : "Loop Audio"}
+                        className={`p-1.5 rounded-lg transition-all ${
+                          isLooping ? "bg-amber-600 text-white" : "text-stone-400 hover:text-white bg-stone-800/80"
+                        }`}
+                      >
+                        <Repeat className="w-3.5 h-3.5" />
+                      </button>
+
+                      <div className="flex items-center gap-1.5 bg-stone-800/80 px-2 py-1 rounded-lg">
                         <button
-                          key={rate}
-                          onClick={() => handleSpeedChange(rate)}
-                          className={`px-2 py-0.5 rounded transition-all ${
-                            playbackRate === rate ? "bg-amber-600 text-white font-bold" : "text-stone-400"
-                          }`}
+                          onClick={handleToggleMute}
+                          className="text-stone-400 hover:text-white transition-colors"
+                          title={isMuted ? "Unmute" : "Mute"}
                         >
-                          {rate}x
+                          {isMuted || volume === 0 ? (
+                            <VolumeX className="w-3.5 h-3.5 text-red-400" />
+                          ) : (
+                            <Volume2 className="w-3.5 h-3.5 text-amber-400" />
+                          )}
                         </button>
-                      ))}
+                        <input
+                          type="range"
+                          min="0"
+                          max="1"
+                          step="0.05"
+                          value={isMuted ? 0 : volume}
+                          onChange={(e) => handleVolumeChange(parseFloat(e.target.value))}
+                          className="w-16 h-1 accent-amber-500 bg-stone-700 rounded-lg cursor-pointer"
+                        />
+                      </div>
                     </div>
                   </div>
 
-                  {/* Play Button & Scrub */}
-                  <div className="flex items-center gap-4">
-                    <button
-                      onClick={toggleAudioPlay}
-                      className="w-12 h-12 rounded-full bg-amber-500 hover:bg-amber-400 text-stone-950 flex items-center justify-center font-bold shadow-lg transition-transform active:scale-95 shrink-0"
+                  {/* Story Title & Dialect */}
+                  <div>
+                    <div className="text-base font-bold truncate text-white">{selectedStory.title}</div>
+                    <div className="text-xs text-amber-300/80 font-medium mt-0.5">
+                      {selectedStory.primary_language.toUpperCase()} • {selectedStory.dialect_variety || "Traditional Dialect"}
+                    </div>
+                  </div>
+
+                  {/* Interactive Multi-Bar Waveform Visualizer */}
+                  <div className="space-y-1.5">
+                    <div
+                      className="h-14 bg-stone-950 rounded-xl p-2 px-3 border border-stone-800 flex items-end justify-between gap-1 cursor-pointer select-none relative overflow-hidden group"
+                      title="Click anywhere on waveform to seek audio"
                     >
-                      {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
-                    </button>
-                    <div className="flex-1 space-y-1">
-                      <div className="text-sm font-semibold truncate text-white">{selectedStory.title}</div>
-                      <div className="text-xs text-stone-400">
-                        {selectedStory.primary_language.toUpperCase()} • {selectedStory.dialect_variety || "Traditional"}
-                      </div>
+                      {waveformBars.map((height, i) => {
+                        const totalDur = audioDuration || selectedStory.audio_duration_seconds || 100;
+                        const barTime = (i / waveformBars.length) * totalDur;
+                        const isPlayed = barTime <= audioCurrentTime;
+                        const isCurrent = Math.abs(barTime - audioCurrentTime) < totalDur / waveformBars.length;
+                        return (
+                          <div
+                            key={i}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleSeekToTime(barTime);
+                            }}
+                            className={`flex-1 rounded-full transition-all duration-75 ${
+                              isCurrent
+                                ? "bg-amber-200 ring-2 ring-amber-400 shadow-[0_0_8px_rgba(251,191,36,0.9)]"
+                                : isPlayed
+                                ? "bg-gradient-to-t from-amber-600 to-amber-400"
+                                : "bg-stone-700/70 group-hover:bg-stone-600"
+                            }`}
+                            style={{
+                              height: `${Math.max(14, Math.round(height * 44))}px`,
+                            }}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* Scrub Slider */}
+                    <input
+                      type="range"
+                      min="0"
+                      max={audioDuration || selectedStory.audio_duration_seconds || 100}
+                      step="0.1"
+                      value={audioCurrentTime}
+                      onChange={(e) => handleSeekToTime(parseFloat(e.target.value))}
+                      className="w-full h-1.5 accent-amber-500 bg-stone-800 rounded-lg cursor-pointer"
+                    />
+
+                    {/* Time Counter */}
+                    <div className="flex justify-between text-[11px] font-mono text-stone-400">
+                      <span>{formatTime(audioCurrentTime)}</span>
+                      <span>{formatTime(audioDuration || selectedStory.audio_duration_seconds || 0)}</span>
                     </div>
                   </div>
 
@@ -607,7 +833,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
                     onTimeUpdate={() => {
                       if (audioRef.current) {
                         setAudioCurrentTime(audioRef.current.currentTime);
-                        setAudioDuration(audioRef.current.duration || 0);
+                        setAudioDuration(audioRef.current.duration || selectedStory.audio_duration_seconds || 0);
                       }
                     }}
                     onEnded={() => setIsPlaying(false)}
@@ -616,124 +842,240 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
                     }}
                   />
 
-                  {/* Seek Progress Bar */}
-                  <div className="space-y-1">
-                    <div className="w-full bg-stone-800 h-1.5 rounded-full overflow-hidden">
-                      <div
-                        className="bg-amber-500 h-full transition-all"
-                        style={{
-                          width: `${audioDuration > 0 ? (audioCurrentTime / audioDuration) * 100 : 0}%`,
-                        }}
-                      />
+                  {/* Main Playback & Skip Controls */}
+                  <div className="flex items-center justify-between pt-1">
+                    {/* Skip -5s, Play/Pause, Skip +5s */}
+                    <div className="flex items-center gap-3">
+                      <button
+                        onClick={() => handleSkipSeconds(-5)}
+                        title="Skip backward 5s"
+                        className="p-2 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-all active:scale-90 flex items-center justify-center text-xs font-mono font-bold"
+                      >
+                        <RotateCcw className="w-4 h-4 mr-0.5" />
+                        <span className="text-[10px]">5s</span>
+                      </button>
+
+                      <button
+                        onClick={toggleAudioPlay}
+                        className="w-12 h-12 rounded-full bg-gradient-to-tr from-amber-600 to-amber-400 hover:from-amber-500 hover:to-amber-300 text-stone-950 flex items-center justify-center font-bold shadow-lg shadow-amber-900/40 transition-transform active:scale-95 shrink-0"
+                      >
+                        {isPlaying ? <Pause className="w-5 h-5" /> : <Play className="w-5 h-5 ml-0.5" />}
+                      </button>
+
+                      <button
+                        onClick={() => handleSkipSeconds(5)}
+                        title="Skip forward 5s"
+                        className="p-2 rounded-full bg-stone-800 hover:bg-stone-700 text-stone-300 hover:text-white transition-all active:scale-90 flex items-center justify-center text-xs font-mono font-bold"
+                      >
+                        <span className="text-[10px]">5s</span>
+                        <RotateCw className="w-4 h-4 ml-0.5" />
+                      </button>
                     </div>
-                    <div className="flex justify-between text-[11px] font-mono text-stone-400">
-                      <span>
-                        {Math.floor(audioCurrentTime / 60)}:
-                        {String(Math.floor(audioCurrentTime % 60)).padStart(2, "0")}
-                      </span>
-                      <span>
-                        {Math.floor(audioDuration / 60)}:
-                        {String(Math.floor(audioDuration % 60)).padStart(2, "0")}
-                      </span>
+
+                    {/* Speed Controls */}
+                    <div className="flex items-center gap-1 bg-stone-800/90 p-1 rounded-xl text-xs font-mono">
+                      {[0.75, 1.0, 1.25, 1.5].map((rate) => (
+                        <button
+                          key={rate}
+                          onClick={() => handleSpeedChange(rate)}
+                          className={`px-2 py-0.5 rounded-lg transition-all ${
+                            playbackRate === rate
+                              ? "bg-amber-600 text-white font-bold shadow-sm"
+                              : "text-stone-400 hover:text-white"
+                          }`}
+                        >
+                          {rate}x
+                        </button>
+                      ))}
                     </div>
                   </div>
                 </div>
 
-                {/* Tab Navigation for Inspector */}
-                <div className="flex border-b border-stone-200">
+                {/* Inspector View Mode Switcher */}
+                <div className="flex bg-stone-100 p-1 rounded-xl border border-stone-200">
                   <button
-                    onClick={() => setStoryInspectorTab("transcript")}
-                    className={`px-3 py-2 text-xs font-bold border-b-2 transition-all ${
-                      storyInspectorTab === "transcript"
-                        ? "border-amber-600 text-amber-900"
-                        : "border-transparent text-stone-500 hover:text-stone-800"
+                    onClick={() => setInspectorMode("bilingual")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      inspectorMode === "bilingual"
+                        ? "bg-white text-amber-900 shadow-sm border border-stone-200"
+                        : "text-stone-600 hover:text-stone-900"
                     }`}
                   >
-                    Transcript & Phonetics
+                    <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                    Synchronized Bilingual ({bilingualSegments.length} Segments)
                   </button>
                   <button
-                    onClick={() => setStoryInspectorTab("translation")}
-                    className={`px-3 py-2 text-xs font-bold border-b-2 transition-all ${
-                      storyInspectorTab === "translation"
-                        ? "border-amber-600 text-amber-900"
-                        : "border-transparent text-stone-500 hover:text-stone-800"
+                    onClick={() => setInspectorMode("tabs")}
+                    className={`flex-1 py-1.5 px-3 rounded-lg text-xs font-bold flex items-center justify-center gap-1.5 transition-all ${
+                      inspectorMode === "tabs"
+                        ? "bg-white text-amber-900 shadow-sm border border-stone-200"
+                        : "text-stone-600 hover:text-stone-900"
                     }`}
                   >
-                    Verified Translation
-                  </button>
-                  <button
-                    onClick={() => setStoryInspectorTab("provenance")}
-                    className={`px-3 py-2 text-xs font-bold border-b-2 transition-all ${
-                      storyInspectorTab === "provenance"
-                        ? "border-amber-600 text-amber-900"
-                        : "border-transparent text-stone-500 hover:text-stone-800"
-                    }`}
-                  >
-                    OCAP Provenance
+                    <BookOpen className="w-3.5 h-3.5 text-amber-600" />
+                    Detailed Tabs & OCAP
                   </button>
                 </div>
 
-                {/* Tab Contents */}
-                {storyInspectorTab === "transcript" && (
-                  <div className="space-y-4">
-                    {selectedStory.native_title && (
-                      <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
-                        <div className="text-xs text-amber-800 font-semibold mb-1">Native Script Orthography</div>
-                        <div className="text-base font-serif text-stone-900 font-bold">{selectedStory.native_title}</div>
-                      </div>
-                    )}
-                    {selectedStory.transliteration && (
-                      <div className="bg-stone-50 p-3 rounded-xl border border-stone-200">
-                        <div className="text-xs text-stone-500 font-semibold mb-1">Phonetic Roman Transliteration</div>
-                        <div className="text-sm font-mono text-stone-800">{selectedStory.transliteration}</div>
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {storyInspectorTab === "translation" && (
+                {/* 1. Synchronized Bilingual Mode */}
+                {inspectorMode === "bilingual" && (
                   <div className="space-y-3">
-                    <div className="bg-stone-50 p-4 rounded-xl border border-stone-200">
-                      <div className="text-xs text-stone-500 font-semibold mb-1.5 flex items-center gap-1.5">
-                        <Languages className="w-3.5 h-3.5 text-amber-700" /> Human-Verified Meaning
-                      </div>
-                      <p className="text-sm text-stone-800 leading-relaxed">
-                        {selectedStory.translation_text || "Translation under community elder review."}
-                      </p>
+                    <div className="flex items-center justify-between text-xs text-stone-500 px-1">
+                      <span>Live Sentence Alignment</span>
+                      <span className="text-[11px] text-amber-800 font-medium">Click any line to jump audio</span>
+                    </div>
+
+                    <div className="space-y-2.5 max-h-[380px] overflow-y-auto pr-1">
+                      {bilingualSegments.map((seg) => {
+                        const isActive = activeSegmentIndex === seg.id;
+                        return (
+                          <div
+                            key={seg.id}
+                            onClick={() => {
+                              handleSeekToTime(seg.startTime);
+                              if (!isPlaying && audioRef.current) {
+                                audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+                              }
+                            }}
+                            className={`p-3.5 rounded-xl border transition-all cursor-pointer ${
+                              isActive
+                                ? "bg-amber-50/90 border-amber-500 shadow-md ring-2 ring-amber-400/30"
+                                : "bg-stone-50/70 border-stone-200 hover:bg-amber-50/40 hover:border-amber-300"
+                            }`}
+                          >
+                            <div className="flex items-center justify-between gap-2 mb-1.5">
+                              <span className="font-mono text-[11px] font-semibold text-stone-500 bg-stone-200/60 px-2 py-0.5 rounded">
+                                {formatTime(seg.startTime)} - {formatTime(seg.endTime)}
+                              </span>
+                              {isActive && (
+                                <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 text-[10px] font-bold uppercase tracking-wider animate-pulse">
+                                  <Radio className="w-3 h-3 text-emerald-600" /> Now Speaking
+                                </span>
+                              )}
+                            </div>
+
+                            {/* Vernacular Speech */}
+                            {seg.nativeScriptText && (
+                              <div className="text-sm font-serif font-bold text-stone-900 mb-1 leading-snug">
+                                {seg.nativeScriptText}
+                              </div>
+                            )}
+                            <div className="text-xs font-mono text-stone-800 leading-relaxed">
+                              {seg.vernacularText}
+                            </div>
+
+                            {/* English / Hindi Translation */}
+                            <div className="mt-2 pt-2 border-t border-stone-200/80 flex items-start gap-1.5 text-xs text-stone-600 leading-relaxed">
+                              <Languages className="w-3.5 h-3.5 text-amber-700 shrink-0 mt-0.5" />
+                              <span className="italic">{seg.translatedText}</span>
+                            </div>
+                          </div>
+                        );
+                      })}
                     </div>
                   </div>
                 )}
 
-                {storyInspectorTab === "provenance" && (
-                  <div className="space-y-3 text-xs text-stone-700">
-                    <div className="grid grid-cols-2 gap-2">
-                      <div className="p-2.5 bg-stone-50 rounded-lg">
-                        <span className="text-stone-400 block font-medium">Contributor</span>
-                        <span className="font-semibold text-stone-900">{selectedStory.contributor_name}</span>
-                      </div>
-                      <div className="p-2.5 bg-stone-50 rounded-lg">
-                        <span className="text-stone-400 block font-medium">Attribution Rule</span>
-                        <span className="font-semibold text-stone-900">{selectedStory.attribution_preference}</span>
-                      </div>
-                      <div className="p-2.5 bg-stone-50 rounded-lg">
-                        <span className="text-stone-400 block font-medium">Recorded Date</span>
-                        <span className="font-semibold text-stone-900">{selectedStory.recording_date || "Historical"}</span>
-                      </div>
-                      <div className="p-2.5 bg-stone-50 rounded-lg">
-                        <span className="text-stone-400 block font-medium">Location</span>
-                        <span className="font-semibold text-stone-900">{selectedStory.location_name || "Preserved"}</span>
-                      </div>
+                {/* 2. Detailed Tabs Mode */}
+                {inspectorMode === "tabs" && (
+                  <div className="space-y-4">
+                    {/* Tab Navigation for Inspector */}
+                    <div className="flex border-b border-stone-200">
+                      <button
+                        onClick={() => setStoryInspectorTab("transcript")}
+                        className={`px-3 py-2 text-xs font-bold border-b-2 transition-all ${
+                          storyInspectorTab === "transcript"
+                            ? "border-amber-600 text-amber-900"
+                            : "border-transparent text-stone-500 hover:text-stone-800"
+                        }`}
+                      >
+                        Transcript & Phonetics
+                      </button>
+                      <button
+                        onClick={() => setStoryInspectorTab("translation")}
+                        className={`px-3 py-2 text-xs font-bold border-b-2 transition-all ${
+                          storyInspectorTab === "translation"
+                            ? "border-amber-600 text-amber-900"
+                            : "border-transparent text-stone-500 hover:text-stone-800"
+                        }`}
+                      >
+                        Verified Translation
+                      </button>
+                      <button
+                        onClick={() => setStoryInspectorTab("provenance")}
+                        className={`px-3 py-2 text-xs font-bold border-b-2 transition-all ${
+                          storyInspectorTab === "provenance"
+                            ? "border-amber-600 text-amber-900"
+                            : "border-transparent text-stone-500 hover:text-stone-800"
+                        }`}
+                      >
+                        OCAP Provenance
+                      </button>
                     </div>
 
-                    <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
-                      <span className="text-amber-900 font-bold block mb-1">Traditional Knowledge Label</span>
-                      <span className="text-stone-800">{selectedStory.traditional_knowledge_label || "TK Notice (Open Community Archive)"}</span>
-                    </div>
+                    {/* Tab Contents */}
+                    {storyInspectorTab === "transcript" && (
+                      <div className="space-y-4">
+                        {selectedStory.native_title && (
+                          <div className="bg-amber-50 p-3 rounded-xl border border-amber-200">
+                            <div className="text-xs text-amber-800 font-semibold mb-1">Native Script Orthography</div>
+                            <div className="text-base font-serif text-stone-900 font-bold">{selectedStory.native_title}</div>
+                          </div>
+                        )}
+                        {selectedStory.transliteration && (
+                          <div className="bg-stone-50 p-3 rounded-xl border border-stone-200">
+                            <div className="text-xs text-stone-500 font-semibold mb-1">Phonetic Roman Transliteration</div>
+                            <div className="text-sm font-mono text-stone-800">{selectedStory.transliteration}</div>
+                          </div>
+                        )}
+                      </div>
+                    )}
 
-                    {selectedStory.reviewed_by && (
-                      <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-900">
-                        <span className="font-bold block">Verified by Elder:</span>
-                        <span>{selectedStory.reviewed_by} ({selectedStory.reviewed_at ? selectedStory.reviewed_at.slice(0, 10) : ""})</span>
+                    {storyInspectorTab === "translation" && (
+                      <div className="space-y-3">
+                        <div className="bg-stone-50 p-4 rounded-xl border border-stone-200">
+                          <div className="text-xs text-stone-500 font-semibold mb-1.5 flex items-center gap-1.5">
+                            <Languages className="w-3.5 h-3.5 text-amber-700" /> Human-Verified Meaning
+                          </div>
+                          <p className="text-sm text-stone-800 leading-relaxed">
+                            {selectedStory.translation_text || "Translation under community elder review."}
+                          </p>
+                        </div>
+                      </div>
+                    )}
+
+                    {storyInspectorTab === "provenance" && (
+                      <div className="space-y-3 text-xs text-stone-700">
+                        <div className="grid grid-cols-2 gap-2">
+                          <div className="p-2.5 bg-stone-50 rounded-lg">
+                            <span className="text-stone-400 block font-medium">Contributor</span>
+                            <span className="font-semibold text-stone-900">{selectedStory.contributor_name}</span>
+                          </div>
+                          <div className="p-2.5 bg-stone-50 rounded-lg">
+                            <span className="text-stone-400 block font-medium">Attribution Rule</span>
+                            <span className="font-semibold text-stone-900">{selectedStory.attribution_preference}</span>
+                          </div>
+                          <div className="p-2.5 bg-stone-50 rounded-lg">
+                            <span className="text-stone-400 block font-medium">Recorded Date</span>
+                            <span className="font-semibold text-stone-900">{selectedStory.recording_date || "Historical"}</span>
+                          </div>
+                          <div className="p-2.5 bg-stone-50 rounded-lg">
+                            <span className="text-stone-400 block font-medium">Location</span>
+                            <span className="font-semibold text-stone-900">{selectedStory.location_name || "Preserved"}</span>
+                          </div>
+                        </div>
+
+                        <div className="p-3 bg-amber-50 rounded-lg border border-amber-200">
+                          <span className="text-amber-900 font-bold block mb-1">Traditional Knowledge Label</span>
+                          <span className="text-stone-800">{selectedStory.traditional_knowledge_label || "TK Notice (Open Community Archive)"}</span>
+                        </div>
+
+                        {selectedStory.reviewed_by && (
+                          <div className="p-3 bg-emerald-50 rounded-lg border border-emerald-200 text-emerald-900">
+                            <span className="font-bold block">Verified by Elder:</span>
+                            <span>{selectedStory.reviewed_by} ({selectedStory.reviewed_at ? selectedStory.reviewed_at.slice(0, 10) : ""})</span>
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>
@@ -757,9 +1099,17 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
                 Authoritative governance panel for reviewing pending community oral contributions, verifying translations, or revoking consent.
               </p>
             </div>
-            <span className="px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-bold">
-              Elder Custodian Mode Active
-            </span>
+            <div className="flex items-center gap-2">
+              {currentUser && (
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-900 rounded-full text-xs font-bold border border-emerald-200 flex items-center gap-1 shadow-sm">
+                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                  Reviewer: {currentUser.full_name || currentUser.username}
+                </span>
+              )}
+              <span className="px-3 py-1 bg-amber-100 text-amber-900 rounded-full text-xs font-bold">
+                Elder Custodian Mode Active
+              </span>
+            </div>
           </div>
 
           <div className="space-y-4">
@@ -899,7 +1249,14 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
                   />
                 </div>
                 <div>
-                  <label className="block text-xs font-bold text-stone-700 mb-1">Contributor Name *</label>
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="text-xs font-bold text-stone-700">Contributor Name *</label>
+                    {currentUser && (
+                      <span className="text-[10px] text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                        Autofilled
+                      </span>
+                    )}
+                  </div>
                   <input
                     type="text"
                     required

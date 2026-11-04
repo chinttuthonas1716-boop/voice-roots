@@ -1801,3 +1801,25 @@
     6. Git Lineage & Remote Sync: Synced and pushed to GitHub `origin` on branches `feature/m23-pilot-remediations`, `integration/milestones-16-23`, and `agent/antigravity` at commit `068e936`.
   - NOT VERIFIED: Real-world external pilot gates G-01 through G-05.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-04] [ANTIGRAVITY] DONE: Unified Session & RBAC Integration with Synchronized Bilingual Audio Waveform Player (Milestones 16 & 17).
+  - Implemented Option 1 (Session & RBAC Integration across Cultural Archives & Knowledge Graph):
+    - Added `currentUser` and `authToken` props to `CulturalArchives` and `KnowledgeGraph` in `frontend/src/App.tsx`.
+    - Updated `_extract_archive_auth_context` and cultural archive endpoints in `backend/main.py`: mapped `reviewer` and `admin` roles to `elder` permissions and added `Authorization: Bearer <token>` support across all cultural archive endpoints (`overview`, `collections`, `stories`, `review`, `withdraw`).
+    - Added `_check_kg_admin` in `backend/main.py` enabling authenticated researchers, reviewers, and admins to propose, verify, update, and manage Knowledge Graph entities using JWT session tokens.
+    - Updated `frontend/src/components/CulturalArchives.tsx`: auto-synced `userRole` with active user session, displayed authenticated custodian badge, auto-populated contributor credentials in story submissions, and recorded authenticated elder names during submission reviews.
+    - Updated `frontend/src/components/KnowledgeGraph.tsx`: added authenticated curator session indicator chip and attached bearer tokens to node fetching, proposing, and verifying.
+  - Implemented Option 2 (Interactive Audio Waveform Visualizer & Synchronized Bilingual Transcript Player):
+    - Built interactive 56-bar animated audio waveform visualizer in `frontend/src/components/CulturalArchives.tsx` with deterministic story-seeded heights, progressive amber-gold gradient coloring, real-time playhead indicator, and direct click-to-seek support.
+    - Added comprehensive playback controls: -5s skip button (`RotateCcw`), +5s skip button (`RotateCw`), speed selector pills (`0.75x`, `1.0x`, `1.25x`, `1.5x`), mute toggle (`Volume2`/`VolumeX`), volume slider, repeat loop toggle (`Repeat`), and range scrub bar.
+    - Added Synchronized Bilingual Narration view mode: automatically splits vernacular narration and human translations into aligned sentence pairs with estimated timestamp windows, active "Now Speaking" live pulsating beacon, and click-to-seek playback on any sentence card.
+    - Added `test_jwt_session_elder_and_researcher_authorization` in `tests/test_milestone17_cultural_archives.py` and `test_kg_jwt_session_admin_authorization` in `tests/test_milestone16_knowledge_graph.py`.
+  - Files touched: `backend/cultural_archive_service.py`, `backend/main.py`, `frontend/src/App.tsx`, `frontend/src/components/CulturalArchives.tsx`, `frontend/src/components/KnowledgeGraph.tsx`, `frontend/src/types.ts`, `tests/test_milestone16_knowledge_graph.py`, `tests/test_milestone17_cultural_archives.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Full Automated Regression Suite: 224/224 passed in 63.99s (100% pass rate).
+    2. Pre-Faculty Release Audit: 26/26 passed (`python3 scratch/pre_faculty_release_audit.py`).
+    3. Live Feature Probe: 27/27 operational (`python3 scratch/test_every_feature.py`).
+    4. Frontend Production Build & Typecheck: `npm run typecheck --prefix frontend` (0 errors) and `npm run build --prefix frontend` (1.80s, 0 errors).
+    5. Python Linter: `python3 -m ruff check backend/` passed with 0 errors.
+  - NOT VERIFIED: Real-world external pilot gates G-01 through G-05 (pending external partner agreements, ethics clearance, and infrastructure provisioning).
+  - NEEDS FROM OTHER AGENT: none.

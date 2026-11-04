@@ -6242,14 +6242,14 @@ ${feedbackRecommendation}
       {/* ─── TAB: Language Knowledge Graph (Milestone 16) ─── */}
       {activeNavTab === 'graph' && (
         <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
-          <KnowledgeGraph apiUrl={apiUrl} />
+          <KnowledgeGraph apiUrl={apiUrl} adminKey={authToken || undefined} currentUser={currentUser} />
         </section>
       )}
 
       {/* ─── TAB: Interactive Cultural & Oral History Archives (Milestone 17) ─── */}
       {activeNavTab === 'cultural' && (
         <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
-          <CulturalArchives apiBaseUrl={API_BASE} />
+          <CulturalArchives apiBaseUrl={API_BASE} authToken={authToken} currentUser={currentUser} />
         </section>
       )}
 

@@ -654,6 +654,7 @@ export interface CulturalStory {
   dialect_variety?: string | null;
   transliteration?: string | null;
   translation_text?: string | null;
+  raw_transcript_text?: string | null;
   audio_reference?: string | null;
   audio_duration_seconds?: number;
   audio_sha256?: string | null;
@@ -670,6 +671,28 @@ export interface CulturalStory {
   collection_title?: string | null;
   collection_category?: string | null;
   traditional_knowledge_label?: string | null;
+}
+
+// User Authentication & Role-Based Access Control
+export interface AuthUser {
+  id: string | number;
+  username: string;
+  email: string;
+  full_name: string;
+  role: 'admin' | 'researcher' | 'reviewer' | 'contributor';
+  is_active: boolean;
+  is_verified: boolean;
+  bio?: string;
+}
+
+// Synchronized Bilingual Audio-Text Segment
+export interface BilingualSegment {
+  id: number;
+  vernacularText: string;
+  nativeScriptText?: string;
+  translatedText: string;
+  startTime: number;
+  endTime: number;
 }
 
 export interface CulturalConsentMatrix {

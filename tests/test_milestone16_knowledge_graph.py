@@ -279,3 +279,26 @@ def test_kg_invalid_entity_type_rejected(client):
         "name": "Invalid Node"
     })
     assert res.status_code == 400
+
+
+def test_kg_jwt_session_admin_authorization(client):
+    """Verify creating a node with JWT session token as admin grants verified status."""
+    import auth_service
+
+    token = auth_service.create_access_token(
+        user_id="99",
+        username="kg_admin",
+        email="admin@voiceroots.ai",
+        role="admin",
+        full_name="KG Administrator",
+    )
+    headers = {"Authorization": f"Bearer {token}"}
+    res = client.post("/api/v1/knowledge-graph/nodes", json={
+        "entity_type": "phrase",
+        "name": "JWT Verified Traditional Greeting",
+        "primary_language": "gon",
+        "verification_status": "VERIFIED",
+    }, headers=headers)
+    assert res.status_code == 201
+    data = res.json()
+    assert data["verification_status"] == "VERIFIED"
