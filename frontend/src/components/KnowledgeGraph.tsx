@@ -26,7 +26,7 @@ import {
   AuthUser,
 } from '../types';
 
-interface KnowledgeGraphProps {
+export interface KnowledgeGraphProps {
   apiUrl: (path: string) => string;
   adminKey?: string;
   currentUser?: AuthUser | null;

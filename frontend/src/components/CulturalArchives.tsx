@@ -31,7 +31,7 @@ import {
   BilingualSegment,
 } from "../types";
 
-interface CulturalArchivesProps {
+export interface CulturalArchivesProps {
   apiBaseUrl?: string;
   adminApiKey?: string;
   currentUser?: AuthUser | null;

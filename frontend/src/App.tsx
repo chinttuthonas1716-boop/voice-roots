@@ -54,6 +54,7 @@ import { CulturalArchives } from './components/CulturalArchives';
 import { SpeechIntelligence } from './components/SpeechIntelligence';
 import { LanguageLearning } from './components/LanguageLearning';
 import { ResearchPortal } from './components/ResearchPortal';
+import { AuthUser } from './types';
 
 interface Language {
   code: string;
@@ -409,17 +410,6 @@ export function App() {
   };
 
   // ─── User Authentication & Session State ───
-  interface AuthUser {
-    id: string;
-    username: string;
-    email: string;
-    full_name: string;
-    role: 'admin' | 'researcher' | 'reviewer' | 'contributor';
-    is_active: boolean;
-    is_verified: boolean;
-    bio?: string;
-  }
-
   const [currentUser, setCurrentUser] = useState<AuthUser | null>(() => {
     try {
       const stored = localStorage.getItem('vr_user');
