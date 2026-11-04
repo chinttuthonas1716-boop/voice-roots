@@ -760,6 +760,40 @@ export interface SpeechAlignment {
   end_time: number;
   confidence: number;
   phonetic_tokens: string;
+  is_uncertain?: boolean;
+  uncertainty_label?: string;
+}
+
+export interface DialectClassification {
+  language: string;
+  language_code: string;
+  detected_dialect: string;
+  confidence: number;
+  phonological_markers: string[];
+  regional_distribution: string;
+  vitality_status: string;
+  analyzed_token_count: number;
+}
+
+export interface SpeakerTurn {
+  speaker_id: string;
+  speaker_label: string;
+  start_time: number;
+  end_time: number;
+  duration: number;
+  token_count: number;
+  text_preview: string;
+  confidence: number;
+}
+
+export interface NoiseReductionResult {
+  status: string;
+  original_file: string;
+  enhanced_file: string;
+  filter_applied: string;
+  snr_improvement_db: number;
+  is_derivative?: boolean;
+  master_preserved?: boolean;
 }
 
 export interface SpeechAcousticMetrics {

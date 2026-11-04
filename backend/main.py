@@ -5140,6 +5140,27 @@ class PronunciationReviewRequest(BaseModel):
     feedback_notes: str | None = None
 
 
+class DialectIdRequest(BaseModel):
+    transcript_id: int | None = None
+    text: str | None = None
+    language: str | None = "Gondi"
+
+
+class NoiseReductionRequest(BaseModel):
+    filter_strength: float = 0.5
+
+
+class SpeechCorrectionRequest(BaseModel):
+    transcript_id: int
+    word_index: int | None = None
+    previous_text: str
+    suggested_text: str
+    suggested_ipa: str | None = None
+    dialect_note: str | None = None
+    contributor_name: str | None = "Community Contributor"
+    rationale: str | None = None
+
+
 @app.get("/api/v1/speech/overview")
 def api_speech_overview():
     """Retrieve speech intelligence metrics overview."""
@@ -5227,6 +5248,129 @@ def api_speech_get_waveform(transcript_id: int):
     audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
     peaks = speech_analysis_service.compute_waveform_peaks(audio_path, num_peaks=120)
     return {"transcript_id": transcript_id, "audio_filename": audio_filename, "waveform_peaks": peaks}
+
+
+@app.post("/api/v1/speech/dialect-id")
+def api_speech_identify_dialect(req: DialectIdRequest):
+    """Classify the regional dialect variety using lexical, phonological, and acoustic markers."""
+    text = req.text
+    language = req.language or "Gondi"
+
+    if req.transcript_id is not None:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT transcript_text, language FROM transcripts WHERE id = ?",
+                (req.transcript_id,),
+            ).fetchone()
+            if row:
+                text = text or row["transcript_text"]
+                language = row["language"] or language
+
+    if not text:
+        text = "nawa naav koytor aando kor pen"
+
+    dialect_info = speech_analysis_service.identify_dialect(text=text, language=language)
+    return {
+        "status": "success",
+        "transcript_id": req.transcript_id,
+        "dialect_classification": dialect_info,
+    }
+
+
+@app.get("/api/v1/speech/diarization/{transcript_id}")
+def api_speech_get_diarization(transcript_id: int):
+    """Segment audio into speaker turns distinguishing storyteller from interviewer."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT audio_filename, transcript_text FROM transcripts WHERE id = ?",
+            (transcript_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+        audio_filename = row["audio_filename"]
+        transcript_text = row["transcript_text"]
+
+    audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
+    turns = speech_analysis_service.diarize_speakers(
+        audio_path=audio_path,
+        transcript_text=transcript_text,
+        db_path=DB_PATH,
+    )
+    return {
+        "status": "success",
+        "transcript_id": transcript_id,
+        "speaker_turns": turns,
+        "speaker_count": len(set(t["speaker_id"] for t in turns)),
+    }
+
+
+@app.post("/api/v1/speech/noise-reduction/{transcript_id}")
+def api_speech_apply_noise_reduction(transcript_id: int, req: NoiseReductionRequest):
+    """Apply non-destructive high-pass and spectral noise attenuation to field recordings."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT audio_filename FROM transcripts WHERE id = ?",
+            (transcript_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+        audio_filename = row["audio_filename"]
+
+    audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
+    result = speech_analysis_service.apply_noise_reduction(
+        audio_path=audio_path,
+        filter_strength=req.filter_strength,
+    )
+    return {
+        "status": "success",
+        "transcript_id": transcript_id,
+        "noise_reduction": result,
+    }
+
+
+@app.post("/api/v1/speech/corrections")
+def api_speech_submit_correction(req: SpeechCorrectionRequest):
+    """Submit a word-level or phonetic correction for community elder review."""
+    now = datetime.now(timezone.utc).isoformat()
+    review_notes = f"IPA: {req.suggested_ipa}; Dialect: {req.dialect_note}" if (req.suggested_ipa or req.dialect_note) else req.rationale
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO corrections (
+                target_type, target_id, previous_text, suggested_text,
+                contributor_name, rationale, review_notes, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_review', ?, ?)
+            """,
+            (
+                "transcript_word",
+                req.transcript_id,
+                req.previous_text,
+                req.suggested_text,
+                req.contributor_name or "Community Contributor",
+                req.rationale or "Phonetic correction",
+                review_notes,
+                now,
+                now,
+            ),
+        )
+        corr_id = cursor.lastrowid
+        conn.commit()
+
+    return {
+        "status": "submitted",
+        "correction_id": corr_id,
+        "transcript_id": req.transcript_id,
+        "previous_text": req.previous_text,
+        "suggested_text": req.suggested_text,
+        "suggested_ipa": req.suggested_ipa,
+        "review_status": "pending_review",
+        "message": "Correction submitted to community elder review queue.",
+    }
 
 
 @app.get("/api/v1/speech/pronunciation/exercises")

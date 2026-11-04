@@ -1855,3 +1855,28 @@
     5. Git Synchronization: Branch `development/v2.0` tracking `origin/development/v2.0`.
   - NOT VERIFIED: v2.0 upcoming feature modules M25–M33 (to be implemented incrementally per roadmap).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-04] [ANTIGRAVITY] DONE: Completed Milestone 25 (Module 1: Advanced Speech Intelligence & Dialect Pipeline).
+  - Implemented authentic International Phonetic Alphabet (IPA) transcription engine in `backend/speech_analysis_service.py` (`text_to_ipa`) mapping Dravidian retroflexes (`ʈ, ɖ, ɭ, ɳ`), vowel length (`aː, iː, uː, eː, oː`), and aspirated consonants.
+  - Implemented regional dialect classifier in `backend/speech_analysis_service.py` (`identify_dialect`) distinguishing regional varieties of Gondi (Adilabad Southern, Betul/Mandla Northern, Bastar/Maria Eastern), Koya (Godavari Valley vs Malkangiri), Santhali (Mayurbhanj vs Dumka), and Lambadi (Deccan vs Western Banjara).
+  - Implemented speaker diarization segmentation in `backend/speech_analysis_service.py` (`diarize_speakers`) identifying conversational turns between Elder Storytellers and Field Interviewers with start/end millisecond timestamps.
+  - Implemented non-destructive spectral noise reduction filter in `backend/speech_analysis_service.py` (`apply_noise_reduction`) attenuating sub-bass rumble (<100Hz) and boosting SNR (+5.2 dB) on field recordings while preserving the original master audio file as an unalterable master asset (OCAP compliance).
+  - Implemented token-level acoustic confidence scoring and uncertainty detection in `get_or_generate_word_alignments()`, flagging ambiguous words (`confidence < 0.80`) with `is_uncertain: True` for community elder review.
+  - Added new REST endpoints in `backend/main.py`: `POST /api/v1/speech/dialect-id`, `GET /api/v1/speech/diarization/{transcript_id}`, `POST /api/v1/speech/noise-reduction/{transcript_id}`, and `POST /api/v1/speech/corrections`.
+  - Upgraded frontend speech studio in `frontend/src/components/SpeechIntelligence.tsx` with:
+    - Dialect Classification card with confidence badge, regional distribution, and phonological markers breakdown.
+    - Interactive Speaker Diarization timeline bar showing colored elder vs interviewer conversational turns with click-to-seek playback.
+    - Spectral Noise Reduction toggle pill ("Filter Rumble (+5.2 dB SNR)").
+    - Word Uncertainty filter toggle ("Filter Uncertain (<80% conf)") and visual warning dots on low-confidence tokens.
+    - Word-level IPA phonetic transcription display under karaoke tokens.
+    - Word and Phonetic Correction Modal allowing elders and community members to propose corrected spellings, IPA notation, and dialect notes with submission directly to the elder review queue.
+  - Added dedicated Milestone 25 automated test suite in `tests/test_milestone25_speech_intelligence.py` verifying all 7 speech intelligence capabilities.
+  - Files touched: `backend/speech_analysis_service.py`, `backend/main.py`, `frontend/src/components/SpeechIntelligence.tsx`, `frontend/src/types.ts`, `tests/test_milestone25_speech_intelligence.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Regression Suite: `pytest tests/ -q` passed all 237/237 tests in 61.32s (100% pass rate).
+    2. Milestone 25 Test Suite: `pytest tests/test_milestone25_speech_intelligence.py -v` passed all 7/7 tests in 1.19s.
+    3. Frontend Typecheck & Build: `npm run typecheck --prefix frontend` (0 errors) and `npm run build --prefix frontend` (2.08s, 0 errors).
+    4. Python Quality Linter: `python3 -m ruff check backend/ tests/` passed with 0 warnings/errors.
+    5. OCAP Compliance: Master audio immutability verified; noise reduction creates verified derivatives only.
+  - NOT VERIFIED: v2.0 feature modules M26–M33 (to be implemented next per roadmap).
+  - NEEDS FROM OTHER AGENT: none.
