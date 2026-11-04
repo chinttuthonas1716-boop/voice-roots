@@ -18,6 +18,7 @@ import wave
 from datetime import datetime, timezone
 from typing import Any
 
+import archive_rag_service
 import auth_service
 import backup_retention_service
 import cultural_archive_service
@@ -549,6 +550,11 @@ try:
         dictionary_service.seed_default_lexicon(_dict_conn)
 except Exception as _e:  # noqa: BLE001
     logger.debug("Dictionary initialization: %s", _e)
+
+try:
+    archive_rag_service.sync_all_archives_to_vector_store(DB_PATH)
+except Exception as _e:  # noqa: BLE001
+    logger.debug("Archive RAG sync initialization: %s", _e)
 
 
 
@@ -5881,6 +5887,72 @@ def api_dictionary_languages():
     return {
         "status": "success",
         "languages": dictionary_service.get_supported_languages(),
+    }
+
+
+# ============================================================================
+# Milestone 27 (Module 3: Grounded AI Assistant & Archive RAG)
+# ============================================================================
+
+class AssistantQueryRequest(BaseModel):
+    query: str
+    target_language: str | None = None
+    filter_language: str | None = None
+    max_citations: int = 5
+
+
+@app.post("/api/v1/assistant/query")
+def api_assistant_query(
+    req: AssistantQueryRequest,
+    authorization: str | None = Header(None),
+):
+    """Execute grounded archive RAG query with source citation pills and epistemic separation."""
+    user_roles: list[str] = []
+    is_auth = False
+
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            is_auth = True
+            role = payload.get("role")
+            if role:
+                user_roles.append(role)
+
+    res = archive_rag_service.generate_grounded_answer(
+        query=req.query,
+        user_roles=user_roles,
+        is_authenticated=is_auth,
+        language_filter=req.filter_language,
+        max_citations=req.max_citations,
+        db_path=DB_PATH,
+    )
+    return res.to_dict()
+
+
+@app.get("/api/v1/assistant/suggestions")
+def api_assistant_suggestions():
+    """Retrieve curated exploratory questions grounded in verified community holdings."""
+    return {
+        "status": "success",
+        "suggestions": archive_rag_service.get_assistant_suggestions(),
+    }
+
+
+@app.get("/api/v1/assistant/rag-stats")
+def api_assistant_rag_stats():
+    """Retrieve telemetry metrics for the local RAG retrieval index."""
+    return archive_rag_service.get_assistant_telemetry(db_path=DB_PATH)
+
+
+@app.post("/api/v1/assistant/sync-index")
+def api_assistant_sync_index():
+    """Trigger offline vector indexing of approved stories, dictionary entries, and transcripts."""
+    counts = archive_rag_service.sync_all_archives_to_vector_store(db_path=DB_PATH)
+    return {
+        "status": "success",
+        "message": "Archive vector indexing complete.",
+        "synced": counts,
     }
 
 

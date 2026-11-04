@@ -980,5 +980,55 @@ export interface DictionaryLanguageMeta {
   regions: string[];
 }
 
+// Milestone 27: Module 3 — Grounded AI Assistant & Archive RAG
+export interface CitationPillData {
+  citation_id: string;
+  source_id: string;
+  source_type: 'cultural_story' | 'dictionary_entry' | 'transcript' | string;
+  title: string;
+  language: string;
+  dialect?: string | null;
+  attribution: string;
+  excerpt: string;
+  audio_url?: string | null;
+  transcript_id?: number | null;
+  access_classification: string;
+}
+
+export interface GroundedAssistantResponse {
+  query: string;
+  answer: string;
+  epistemic_status: 'VERIFIED_ARCHIVE_GROUNDED' | 'PARTIALLY_GROUNDED' | 'UNATTESTED' | string;
+  confidence_score: number;
+  verified_knowledge: string[];
+  ai_hypothesis: string[];
+  citations: CitationPillData[];
+  sources_count: number;
+  latency_ms: number;
+  epistemic_disclaimer: string;
+}
+
+export interface AssistantSuggestion {
+  query: string;
+  language: string;
+  category: string;
+}
+
+export interface AssistantRagStats {
+  status: string;
+  chroma_collection: string;
+  total_vector_records: number;
+  embedding_dimensions: number;
+  embedding_model: string;
+  cloud_spend: string;
+  database_counts: {
+    approved_cultural_stories: number;
+    approved_dictionary_entries: number;
+    approved_transcripts: number;
+  };
+  supported_languages: string[];
+}
+
+
 
 

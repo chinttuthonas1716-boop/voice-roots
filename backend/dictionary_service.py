@@ -25,11 +25,11 @@ from speech_analysis_service import text_to_ipa
 
 logger = logging.getLogger(__name__)
 
-DB_PATH = os.environ.get("VOICE_ROOTS_DB", "voice_roots.db")
-if not os.path.isabs(DB_PATH) and not os.path.exists(DB_PATH):
-    candidate = os.path.join(os.path.dirname(__file__), DB_PATH)
-    if os.path.exists(candidate) or os.path.exists(os.path.dirname(candidate)):
-        DB_PATH = candidate
+BACKEND_DIR = os.path.dirname(os.path.abspath(__file__))
+DB_PATH = os.environ.get(
+    "VOICE_ROOTS_DB_PATH",
+    os.environ.get("VOICE_ROOTS_DB", os.path.join(BACKEND_DIR, "voice_roots.db")),
+)
 
 
 @dataclass

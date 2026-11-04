@@ -47,7 +47,7 @@ import {
 } from 'lucide-react';
 import { Pilot } from './components/Pilot';
 import { Home } from './components/Home';
-import { VoiceAssistant } from './components/VoiceAssistant';
+import { GroundedAssistant } from './modules/ai-assistant';
 import { OfflineManager } from './components/OfflineManager';
 import { KnowledgeGraph } from './components/KnowledgeGraph';
 import { CulturalArchives } from './components/CulturalArchives';
@@ -6249,10 +6249,10 @@ ${feedbackRecommendation}
         </section>
       )}
 
-      {/* ─── TAB: Real-Time Multilingual Voice Assistant ─── */}
+      {/* ─── TAB: Real-Time Multilingual Voice Assistant & Grounded Archive RAG (M27) ─── */}
       {activeNavTab === 'assistant' && (
-        <section style={{ marginBottom: '36px' }}>
-          <VoiceAssistant apiBaseUrl={API_BASE} />
+        <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
+          <GroundedAssistant apiBaseUrl={API_BASE} authToken={authToken} currentUser={currentUser} />
         </section>
       )}
 

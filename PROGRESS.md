@@ -1917,3 +1917,40 @@
     5. OCAP Compliance: Oral master recordings remain immutable; dictionary entries include full speaker/elder provenance trails.
   - NOT VERIFIED: v2.0 upcoming feature modules M27–M33 (to be implemented next per roadmap).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-04] [ANTIGRAVITY] DONE: Completed Milestone 27 (Module 3: Grounded AI Assistant & Archive RAG).
+  - Built local offline retrieval-augmented generation engine in `backend/archive_rag_service.py` running with $0.00 cloud API spend using local ChromaDB and 384-dimensional deterministic multilingual subword/n-gram embeddings.
+  - Implemented `sync_all_archives_to_vector_store()` indexing approved cultural stories, dictionary terms, and transcripts (902 total items) into persistent semantic storage with full metadata tracking.
+  - Implemented `generate_grounded_answer()` providing strict epistemic demarcation:
+    - Separates verified community knowledge (`verified_knowledge`) from AI-synthesized linguistic hypotheses (`ai_hypothesis`).
+    - Emits structured clickable citation pills (`citation_id`, `source_type`, `title`, `language`, `dialect`, `attribution`, `excerpt`, `audio_url`, `access_classification`).
+    - Enforces anti-hallucination threshold: ungrounded or absent queries return `UNATTESTED` with 0 citations and 0.0 confidence.
+  - Enforced strict OCAP sacred lore shielding:
+    - `SACRED_ELDER_ONLY` items are filtered out for public/unauthenticated requests and accessible only when authenticated with `elder` or `admin` role.
+  - Implemented REST endpoints in `backend/main.py`:
+    - `POST /api/v1/assistant/query` (with RBAC Bearer token clearance check)
+    - `GET /api/v1/assistant/suggestions` (curated exploratory questions across Gondi, Koya, Santhali, Lambadi)
+    - `GET /api/v1/assistant/rag-stats` (telemetry: ChromaDB collection, embedding dims, cloud spend, document breakdown)
+    - `POST /api/v1/assistant/sync-index` (on-demand index re-synchronization)
+  - Designed and built responsive frontend `frontend/src/modules/ai-assistant/GroundedAssistant.tsx`:
+    - Bimodal assistant interface: Grounded Archive Q&A Mode + Live Voice Turn Assistant tab toggle
+    - Source citation pill bar and interactive Citation Detail Drawer with audio pronunciation playback and provenance attribution
+    - Dual epistemic breakdown panel: Amber badge for Community-Verified Knowledge vs Violet badge for AI Linguistic Synthesis
+    - Curated suggestion chips for instant exploration of Gondi, Koya, Santhali, and Lambadi heritage
+    - Local RAG telemetry ribbon ($0.00 spend badge, vector record counts, 384-d offline model indicator)
+    - Seamlessly integrated with `VoiceAssistant` WebSocket component for low-latency conversational voice turns
+  - Exported through `frontend/src/modules/ai-assistant/index.ts` and integrated into `frontend/src/App.tsx`.
+  - Added full test suite in `tests/test_milestone27_rag_assistant.py` (6/6 passing in 4.25s).
+  - Cleaned up test database hygiene in `tests/test_milestone26_multilingual_dictionary.py` and enriched dictionary search text with dialect markers in `backend/archive_rag_service.py`.
+  - Files touched: `backend/archive_rag_service.py`, `backend/dictionary_service.py`, `backend/main.py`, `backend/vector_store.py`, `frontend/src/App.tsx`, `frontend/src/modules/ai-assistant/GroundedAssistant.tsx`, `frontend/src/modules/ai-assistant/index.ts`, `frontend/src/types.ts`, `tests/test_milestone26_multilingual_dictionary.py`, `tests/test_milestone27_rag_assistant.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Full Repository Regression Suite: `pytest tests/ -q` passed all 250/250 tests in 68.30s (100% pass rate).
+    2. Milestone 27 Test Suite: `pytest tests/test_milestone27_rag_assistant.py -v` passed all 6/6 tests in 4.25s.
+    3. Milestone 26 Test Suite: `pytest tests/test_milestone26_multilingual_dictionary.py -v` passed all 7/7 tests in 2.20s.
+    4. Vector Resources Test Suite: `pytest tests/test_vector_resources.py -v` passed all 10/10 tests in 2.56s.
+    5. Frontend Typecheck & Build: `npx tsc --noEmit` and `npm run build` completed with 0 errors (715.34 kB production bundle).
+    6. Python Quality Linter: `python3 -m ruff check` verified with 0 errors across all modified and new files.
+    7. Zero Cloud Spend Constraint: $0.00 verified with 100% offline local embeddings and ChromaDB storage.
+    8. OCAP Sacred Lore Shielding: Public users cannot retrieve `SACRED_ELDER_ONLY` resources; verified elders have full authorized access.
+  - NOT VERIFIED: v2.0 upcoming feature modules M28–M33 (to be implemented next per roadmap).
+  - NEEDS FROM OTHER AGENT: none.
