@@ -1823,3 +1823,19 @@
     5. Python Linter: `python3 -m ruff check backend/` passed with 0 errors.
   - NOT VERIFIED: Real-world external pilot gates G-01 through G-05 (pending external partner agreements, ethics clearance, and infrastructure provisioning).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-04] [ANTIGRAVITY] DONE: Resolved Frontend Type Incompatibilities and Exported Props Interfaces.
+  - Resolved TypeScript IDE diagnostics in `frontend/src/App.tsx`:
+    - Imported canonical `AuthUser` from `./types` in `frontend/src/App.tsx`.
+    - Removed duplicate local `interface AuthUser` from `frontend/src/App.tsx` (lines 412–421), ensuring consistent string/number ID compatibility across `App.tsx`, `KnowledgeGraph.tsx`, and `CulturalArchives.tsx`.
+    - Exported `CulturalArchivesProps` in `frontend/src/components/CulturalArchives.tsx`.
+    - Exported `KnowledgeGraphProps` in `frontend/src/components/KnowledgeGraph.tsx`.
+  - Files touched: `frontend/src/App.tsx`, `frontend/src/components/CulturalArchives.tsx`, `frontend/src/components/KnowledgeGraph.tsx`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Frontend Typecheck: `npm run typecheck --prefix frontend` (`tsc --noEmit`) completed with 0 errors.
+    2. Frontend Production Build: `npm run build --prefix frontend` (`vite build`) completed in 1.69s with 0 errors.
+    3. Python Quality Linter: `python3 -m ruff check backend/` completed with 0 warnings/errors.
+    4. Full Regression Test Suite: `pytest tests/ -q` passed all 224/224 tests in 62.42s (100% pass rate).
+    5. Git Synchronization: Tagged `v1.0.1-pilot-ready` and pushed to remote `origin` on branches `feature/m23-pilot-remediations`, `integration/milestones-16-23`, and `agent/antigravity`.
+  - NOT VERIFIED: Real-world external pilot gates G-01 through G-05.
+  - NEEDS FROM OTHER AGENT: none.
