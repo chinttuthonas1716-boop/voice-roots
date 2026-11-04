@@ -24,3 +24,4 @@ export interface DictionarySearchFilter {
   dialect?: string;
   onlyApproved?: boolean;
 }
+
