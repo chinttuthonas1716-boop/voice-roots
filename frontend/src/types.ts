@@ -915,4 +915,70 @@ export interface ResearchCorpusManifest {
   }>;
 }
 
+// Milestone 26: Module 2 — Multilingual Dictionary
+export interface DictionaryEntry {
+  id: number;
+  word: string;
+  language_code: string;
+  dialect?: string | null;
+  native_script?: string | null;
+  script_name?: string | null;
+  ipa?: string | null;
+  part_of_speech: string;
+  meanings: string[];
+  translations: Record<string, string>;
+  alternate_spellings: string[];
+  dialect_variations: Record<string, string>;
+  audio_url?: string | null;
+  audio_sha256?: string | null;
+  etymology?: string | null;
+  cultural_context?: string | null;
+  is_elder_approved: boolean;
+  status: 'approved' | 'pending_review' | 'rejected';
+  approved_by?: string | null;
+  approved_at?: string | null;
+  contributor_name: string;
+  contributor_role: string;
+  provenance?: string | null;
+  created_at: string;
+  updated_at: string;
+  related_words?: Array<{
+    id: number;
+    word: string;
+    native_script?: string;
+    ipa?: string;
+    part_of_speech: string;
+    primary_meaning: string;
+    is_elder_approved: boolean;
+  }>;
+}
+
+export interface DictionaryOverview {
+  total_words: number;
+  approved_words: number;
+  pending_words: number;
+  rejected_words: number;
+  approval_rate_pct: number;
+  words_with_audio: number;
+  audio_coverage_pct: number;
+  dialects_represented: number;
+  by_language: Array<{
+    language_code: string;
+    total: number;
+    approved: number;
+  }>;
+  by_part_of_speech: Record<string, number>;
+}
+
+export interface DictionaryLanguageMeta {
+  code: string;
+  name: string;
+  native_name: string;
+  family: string;
+  primary_scripts: string[];
+  dialects: string[];
+  regions: string[];
+}
+
+
 

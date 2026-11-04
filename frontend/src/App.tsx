@@ -54,6 +54,7 @@ import { CulturalArchives } from './components/CulturalArchives';
 import { SpeechIntelligence } from './components/SpeechIntelligence';
 import { LanguageLearning } from './components/LanguageLearning';
 import { ResearchPortal } from './components/ResearchPortal';
+import { DictionaryBrowser } from './modules/dictionary';
 import { AuthUser } from './types';
 
 interface Language {
@@ -350,8 +351,8 @@ export function App() {
   const [archiveDisplayLimit, setArchiveDisplayLimit] = useState(15);
   const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
 
-  // Active Navigation Tab (Matching Reference: Home, Record, Assistant, Translate, Languages, Graph, Cultural, Speech, Learning, Research, Search, Archive, Community, Login)
-  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'speech' | 'learning' | 'research' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
+  // Active Navigation Tab (Matching Reference: Home, Record, Assistant, Translate, Languages, Graph, Cultural, Speech, Dictionary, Learning, Research, Search, Archive, Community, Login)
+  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'speech' | 'dictionary' | 'learning' | 'research' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
 
   const normalizeTab = (raw: string | null | undefined): NavTab => {
     if (!raw) return 'home';
@@ -364,9 +365,10 @@ export function App() {
     if (t === 'graph' || t === 'knowledge-graph' || t === 'kg') return 'graph';
     if (t === 'cultural' || t === 'cultural-archives' || t === 'oral-archives' || t === 'oral-history') return 'cultural';
     if (t === 'speech' || t === 'pronunciation' || t === 'speech-intelligence' || t === 'phonetics') return 'speech';
+    if (t === 'dictionary' || t === 'lexicon' || t === 'dict' || t === 'words') return 'dictionary';
     if (t === 'learning' || t === 'education' || t === 'practice' || t === 'lessons') return 'learning';
     if (t === 'research' || t === 'research-api' || t === 'interoperability' || t === 'academic') return 'research';
-    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'speech', 'learning', 'research', 'search', 'archive', 'community', 'login'].includes(t)) {
+    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'speech', 'dictionary', 'learning', 'research', 'search', 'archive', 'community', 'login'].includes(t)) {
       return t as NavTab;
     }
     return 'home';
@@ -2217,6 +2219,31 @@ ${feedbackRecommendation}
           >
             <Headphones size={14} />
             Speech & Pronunciation
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'dictionary'}
+            onClick={() => handleTabChange('dictionary')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'dictionary' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'dictionary' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'dictionary' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px'
+            }}
+          >
+            <BookOpen size={14} />
+            Dictionary
           </button>
 
           <button
@@ -6247,6 +6274,13 @@ ${feedbackRecommendation}
       {activeNavTab === 'speech' && (
         <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
           <SpeechIntelligence />
+        </section>
+      )}
+
+      {/* ─── TAB: Multilingual Dictionary (Milestone 26 / Module 2) ─── */}
+      {activeNavTab === 'dictionary' && (
+        <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
+          <DictionaryBrowser apiBaseUrl={API_BASE} authToken={authToken} currentUser={currentUser} />
         </section>
       )}
 

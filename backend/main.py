@@ -21,6 +21,7 @@ from typing import Any
 import auth_service
 import backup_retention_service
 import cultural_archive_service
+import dictionary_service
 import learning_service
 import research_interoperability_service
 import speech_analysis_service
@@ -541,6 +542,13 @@ try:
     research_interoperability_service.seed_default_research_institutions(DB_PATH)
 except Exception as _e:  # noqa: BLE001
     logger.debug("Research Interoperability initialization: %s", _e)
+
+try:
+    with sqlite3.connect(DB_PATH) as _dict_conn:
+        dictionary_service.init_dictionary_tables(_dict_conn)
+        dictionary_service.seed_default_lexicon(_dict_conn)
+except Exception as _e:  # noqa: BLE001
+    logger.debug("Dictionary initialization: %s", _e)
 
 
 
@@ -5702,6 +5710,178 @@ def export_research_lexicon_endpoint(
         db_path=DB_PATH,
     )
     return res
+
+
+# ============================================================================
+# Milestone 26 (Module 2: Multilingual Dictionary Architecture)
+# ============================================================================
+
+class DictionaryProposalRequest(BaseModel):
+    word: str
+    language_code: str
+    dialect: str | None = None
+    native_script: str | None = None
+    script_name: str | None = None
+    ipa: str | None = None
+    part_of_speech: str = "noun"
+    meanings: list[str] = []
+    translations: dict[str, str] = {}
+    alternate_spellings: list[str] = []
+    dialect_variations: dict[str, str] = {}
+    audio_url: str | None = None
+    etymology: str | None = None
+    cultural_context: str | None = None
+    contributor_name: str | None = "Community Contributor"
+    contributor_role: str | None = "speaker"
+    provenance: str | None = None
+
+
+class DictionaryApprovalRequest(BaseModel):
+    approved_by: str = "Community Elder"
+    notes: str | None = None
+
+
+class DictionaryRejectionRequest(BaseModel):
+    reviewed_by: str = "Community Elder"
+    reason: str = "Does not match verified community dialect"
+
+
+@app.get("/api/v1/dictionary/search")
+def api_dictionary_search(
+    q: str | None = Query(None, description="Search term in Latin or native script"),
+    query: str | None = Query(None, description="Alias for q"),
+    language_code: str | None = Query(None, description="Filter by language code (e.g. gon, kff, sat, lmn)"),
+    dialect: str | None = Query(None, description="Filter by regional dialect variety"),
+    category: str | None = Query(None, description="Filter by part of speech or cultural category"),
+    only_approved: bool = Query(False, description="Filter for elder-approved entries only"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+):
+    """Full-text and faceted search across multilingual dictionary entries with FTS5."""
+    search_term = q if q is not None else query
+    return dictionary_service.search_dictionary(
+        query=search_term,
+        language_code=language_code,
+        dialect=dialect,
+        category=category,
+        only_approved=only_approved,
+        limit=limit,
+        offset=offset,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/dictionary/words/{word_id}")
+def api_dictionary_get_word(word_id: int):
+    """Retrieve complete dictionary record with cross-dialect comparisons and related terms."""
+    entry = dictionary_service.get_word_details(word_id=word_id, db_path=DB_PATH)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Dictionary entry not found.")
+    return entry
+
+
+@app.post("/api/v1/dictionary/propose", status_code=201)
+def api_dictionary_propose_word(
+    req: DictionaryProposalRequest,
+    authorization: str | None = Header(None),
+):
+    """Submit a community word proposal with automatic IPA computation and pending elder review."""
+    contributor = {"name": req.contributor_name, "role": req.contributor_role}
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            contributor["name"] = payload.get("username") or contributor["name"]
+            contributor["role"] = payload.get("role") or contributor["role"]
+
+    try:
+        created = dictionary_service.propose_dictionary_entry(
+            entry_data=req.model_dump(),
+            contributor=contributor,
+            db_path=DB_PATH,
+        )
+        return {
+            "status": "success",
+            "message": "Word proposal submitted for community elder review.",
+            "entry": created,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.patch("/api/v1/dictionary/words/{word_id}/approve")
+def api_dictionary_approve_word(
+    word_id: int,
+    req: DictionaryApprovalRequest,
+    authorization: str | None = Header(None),
+):
+    """Community Elder approval gate: approves a dictionary entry for verified indexing."""
+    approved_by = req.approved_by
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            approved_by = payload.get("username") or approved_by
+
+    try:
+        updated = dictionary_service.approve_dictionary_entry(
+            word_id=word_id,
+            approved_by=approved_by,
+            notes=req.notes,
+            db_path=DB_PATH,
+        )
+        return {
+            "status": "success",
+            "message": "Dictionary entry successfully approved by elder authority.",
+            "entry": updated,
+        }
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.patch("/api/v1/dictionary/words/{word_id}/reject")
+def api_dictionary_reject_word(
+    word_id: int,
+    req: DictionaryRejectionRequest,
+    authorization: str | None = Header(None),
+):
+    """Elder rejection: rejects a proposed word with recorded rationale."""
+    reviewed_by = req.reviewed_by
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            reviewed_by = payload.get("username") or reviewed_by
+
+    try:
+        updated = dictionary_service.reject_dictionary_entry(
+            word_id=word_id,
+            reviewed_by=reviewed_by,
+            reason=req.reason,
+            db_path=DB_PATH,
+        )
+        return {
+            "status": "success",
+            "message": "Dictionary entry proposal rejected with recorded justification.",
+            "entry": updated,
+        }
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/dictionary/overview")
+def api_dictionary_overview():
+    """Aggregate statistics on dictionary entries, approval rates, and dialect coverage."""
+    return dictionary_service.get_dictionary_overview(db_path=DB_PATH)
+
+
+@app.get("/api/v1/dictionary/languages")
+def api_dictionary_languages():
+    """Retrieve metadata for supported dictionary languages, scripts, and dialects."""
+    return {
+        "status": "success",
+        "languages": dictionary_service.get_supported_languages(),
+    }
 
 
 @app.get("/{full_path:path}")

@@ -1880,3 +1880,40 @@
     5. OCAP Compliance: Master audio immutability verified; noise reduction creates verified derivatives only.
   - NOT VERIFIED: v2.0 feature modules M26–M33 (to be implemented next per roadmap).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-04] [ANTIGRAVITY] DONE: Completed Milestone 26 (Module 2: Multilingual Dictionary Architecture).
+  - Created Alembic database migration `backend/alembic/versions/5d6e7f8a9b0c_multilingual_dictionary_schema.py` creating `dictionary` relational schema, indexes, and SQLite FTS5 `dictionary_fts` virtual table for fast multilingual full-text indexing.
+  - Implemented `backend/dictionary_service.py` providing relational data operations, FTS5 queries, automatic IPA synthesis via `text_to_ipa()`, seed lexicon management, and elder approval gating.
+  - Seeded baseline lexicon across the 4 primary core tongues:
+    - Gondi (`gon`): persapen, gotti, konda, maram, yer, tadi with Masaram/Telugu scripts, IPA phonetics, cross-dialectal shifts (Adilabad vs Betul vs Bastar), and clan attributions.
+    - Koya (`kff`): koitur, tung, payya, ganga, veypu with Telugu script, IPA phonetics, Godavari Valley vs Malkangiri dialect forms, and elder attributions.
+    - Santhali (`sat`): dhorom, sarjom, manjhi, jaher, baha, dak with Ol Chiki script (`ᱫᱷᱚᱨᱚᱢ`, `ᱥᱟᱨᱡᱚᱢ`, `ᱢᱟᱹᱧᱡᱷᱤ`, `ᱡᱟᱦᱮᱨ`, `ᱵᱟᱦᱟ`, `ᱫᱟᱜ`), IPA phonetics, Mayurbhanj vs Dumka forms, and Sarna faith lore.
+    - Lambadi (`lmn`): tanda, naayak, bhat, kalo, dhol, roti with Devanagari/Telugu scripts, IPA phonetics, Deccan vs Western Banjara shifts, and elder attributions.
+  - Implemented new REST API endpoints in `backend/main.py`:
+    - `GET /api/v1/dictionary/search` (full-text multi-token search, language, dialect, part of speech, and approved-only filters)
+    - `GET /api/v1/dictionary/words/{id}` (complete entry detail with cross-dialect comparisons and related terms)
+    - `POST /api/v1/dictionary/propose` (community proposal endpoint with automatic IPA generation and pending status)
+    - `PATCH /api/v1/dictionary/words/{id}/approve` (elder approval gate validating and stamping approval badge)
+    - `PATCH /api/v1/dictionary/words/{id}/reject` (elder rejection endpoint with recorded rationale)
+    - `GET /api/v1/dictionary/overview` (telemetry: total volume, approval rates, dialect diversity, audio coverage)
+    - `GET /api/v1/dictionary/languages` (metadata for supported tongues, scripts, and regional varieties)
+  - Built interactive, accessible Frontend Dictionary Browser in `frontend/src/modules/dictionary/DictionaryBrowser.tsx` and exported via `frontend/src/modules/dictionary/index.ts`:
+    - Search bar with instant debounced search and clear button
+    - Language selector tabs (All, Gondi, Koya, Santhali, Lambadi)
+    - Dialect dropdown dynamically populated based on chosen language
+    - Part of speech filter and Elder Verified Only toggle
+    - Telemetry ribbon displaying total words, elder verification %, audio snippets %, and dialects cataloged
+    - Word cards with headword, native script badge (Ol Chiki, Telugu, Devanagari), IPA phonetic chip, acoustic audio pronunciation playback, multilingual translations (English, Telugu, Hindi), cross-dialectal comparison pills, and elder approval badge
+    - 1-click elder approval action for authenticated elders and administrators
+    - Word detail modal displaying linguistic etymology roots, cultural/ceremonial context, and related vocabulary links
+    - Community word proposal modal allowing elders and community members to submit new oral terms
+  - Integrated Dictionary tab into primary navigation in `frontend/src/App.tsx` and updated TypeScript definitions in `frontend/src/types.ts`.
+  - Added dedicated test suite in `tests/test_milestone26_multilingual_dictionary.py` with 7/7 tests passing in 1.20s.
+  - VERIFIED:
+    1. Automated Regression Test Suite: `pytest tests/ -q` passed all 244/244 tests in 71.06s (100% pass rate).
+    2. Milestone 26 Test Suite: `pytest tests/test_milestone26_multilingual_dictionary.py -v` passed all 7/7 tests in 1.20s.
+    3. Frontend Typecheck & Build: `npx tsc --noEmit` passed with 0 errors and `npm run build` completed in 1.83s with 0 errors.
+    4. Python Quality Linter: `python3 -m ruff check backend/ tests/` verified with 0 errors on modified files.
+    5. OCAP Compliance: Oral master recordings remain immutable; dictionary entries include full speaker/elder provenance trails.
+  - NOT VERIFIED: v2.0 upcoming feature modules M27–M33 (to be implemented next per roadmap).
+  - NEEDS FROM OTHER AGENT: none.
