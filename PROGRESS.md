@@ -2148,3 +2148,24 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     3. Backend Quality & Regressions: `python3 -m ruff check backend/` passed (0 errors); `pytest tests/test_backend_api.py -v` passed all 17/17 tests.
   - NOT VERIFIED: Live remote invocation of Render API endpoint (to be verified in T1.1).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Phase 1 – Render Blueprint for FastAPI Backend Deployment (Task T1.1).
+  - Configured `render.yaml` with the always-on `starter` plan specification for `voice-roots-api`:
+    - `runtime: python`, `buildCommand: pip install -r requirements.txt`.
+    - `startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT`.
+    - `healthCheckPath: /health`.
+    - Configured envVars: `DATABASE_URL` (non-expiring Postgres), `CORS_ORIGINS` (`https://voice-roots.onrender.com`), `SECRET_KEY` (auto-generated), and R2 bucket variables.
+  - Added root `requirements.txt` referencing `-r backend/requirements-render.txt`.
+  - Updated `backend/main.py` entrypoint:
+    - Added `sys.path` auto-resolution for `backend/` allowing `uvicorn backend.main:app` execution from the repo root without `ModuleNotFoundError`.
+    - Added direct support for the `CORS_ORIGINS` environment variable in `ALLOWED_ORIGINS`.
+    - Confirmed `/health` endpoint is available and operational.
+  - Files touched: `render.yaml`, `requirements.txt`, `backend/main.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Import & Health Probe: `python3 -c "import backend.main"` executed cleanly from repo root; `GET /health` verified returning `status: "healthy"` (HTTP 200).
+    2. CORS Configuration: Verified `CORS_ORIGINS` parsing into `ALLOWED_ORIGINS` with custom domains.
+    3. Python Quality Linter: `python3 -m ruff check backend/` passed with 0 errors.
+    4. Backend Test Suite: `pytest tests/test_backend_api.py -v` passed all 17/17 tests.
+    5. Frontend Build Compatibility: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
+  - NOT VERIFIED: Remote Render cloud build trigger (to be executed upon git push to deployment branch).
+  - NEEDS FROM OTHER AGENT: none.

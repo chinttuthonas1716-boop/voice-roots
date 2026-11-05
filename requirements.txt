@@ -1,0 +1,2 @@
+# Voice Roots Root Requirements for Production Deployments (Render / Docker)
+-r backend/requirements-render.txt

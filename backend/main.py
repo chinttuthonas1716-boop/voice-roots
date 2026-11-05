@@ -8,6 +8,12 @@ import hashlib
 import json
 import logging
 import os
+import sys
+
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _CURRENT_DIR not in sys.path:
+    sys.path.insert(0, _CURRENT_DIR)
+
 import shutil
 import sqlite3
 import tempfile
@@ -587,14 +593,18 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS configuration for local frontend development (Vite + Next.js + Preview)
+# CORS configuration for frontend services (Next.js web + Render + local dev)
+_raw_cors = (
+    os.environ.get("CORS_ORIGINS")
+    or os.environ.get("VOICE_ROOTS_ALLOWED_ORIGINS")
+    or (
+        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,"
+        "http://127.0.0.1:3000,http://localhost:3001,https://voice-roots.onrender.com"
+    )
+)
 ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.environ.get(
-        "VOICE_ROOTS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,"
-        "http://127.0.0.1:3000,http://localhost:3001,https://voice-roots.onrender.com",
-    ).split(",")
+    for origin in _raw_cors.split(",")
     if origin.strip()
 ]
 app.add_middleware(
