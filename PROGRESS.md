@@ -2283,29 +2283,39 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Live inference against remote hosted IndicTrans2 HuggingFace endpoint without endpoint secret.
   - NEEDS FROM OTHER AGENT: none.
 
-- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Consent Withdrawal and OCAP Cascade Purge (Task T2.2).
-  - Server-Side Cascade Purge & Governance Audit Logging:
-    1. Upgraded `POST /api/v1/transcripts/{transcript_id}/withdraw-consent` in `backend/main.py` with complete cascade:
-       - Audio Master Deletion: Deletes WAV master and FLAC master from storage provider (`delete_file(..., consent_withdrawn=True)` respecting write-once policy) and local disk.
-       - Database Cascading Purge: Deletes all child records in `translations`, `corrections`, `speech_alignments`, and `speech_acoustic_metrics` matching `transcript_id`.
-       - Vector Embeddings Purge: Removes document IDs from ChromaDB collections (`archive_vector_collection` and `vector_store.get_resource_collection()`).
-       - Full-Text Search Purge: Deletes row from `transcripts_fts`.
-       - Record Audit State: Updates `transcripts` table setting `archived_at`, `status = 'withdrawn'`, `verification_status = 'withdrawn_or_rejected'`, clearing audio filenames/hashes and replacing transcript text with OCAP withdrawal notice.
-       - Governance Audit Trail: Writes an immutable record to `governance_audit_logs` table (`action_type = "CONSENT_WITHDRAWN"`, `actor_role = "speaker"`, `entity_type = "transcript"`) with purged manifest JSON and timestamp.
-    2. Added `GET /api/v1/passport/{transcript_id}` and `/api/v1/transcripts/{transcript_id}/passport` endpoints returning public Heritage Passport data including a clear withdrawn state (`is_withdrawn=True`, `status="withdrawn"`, `audio_available=False`) so that withdrawn recordings show their audit trail rather than disappearing silently.
-  - Frontend Consent Withdrawal UI & Flow:
-    1. Updated `web/src/lib/storage.ts`: added `isWithdrawn`, `withdrawnAt`, and `status` to `StoredVoiceRecord`. Implemented `withdrawConsent(id)` which purges audio blob from IndexedDB, updates local storage, and syncs withdrawal to the backend API.
-    2. Updated `web/src/app/recordings/[id]/page.tsx`: Added "Delete recording / withdraw consent" button with a confirmation modal informing users about permanent OCAP deletion of audio, transcripts, translations, and embeddings. Added Withdrawn state banner preventing audio playback and directing to the withdrawn passport.
-    3. Updated `web/src/app/passport/[id]/page.tsx`: Implemented Withdrawn State card with `Consent Withdrawn (OCAP)` badge, explanation of indigenous data sovereignty rights, withdrawal timestamp, and disabled play button with notice "Master Audio Permanently Purged".
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Reviewer Queue (Task T2.3).
+  - Backend Reviewer Endpoints & Customary Moderation Pipeline:
+    1. Implemented `GET /api/v1/reviewer/queue` and `POST /api/v1/reviewer/decision` in `backend/main.py` and `backend/command_center_service.py`:
+       - Lists pending review items across transcripts (`verification_status IN ('draft', 'submitted', 'awaiting_review', 'under_review')`), translations (`verified = 0` or `review_status = 'unreviewed_draft'`), and dictionary entries (`status IN ('submitted', 'pending_review', 'draft')` or `is_elder_approved = 0`).
+       - Supported actions: `approve`, `correct`, `reject`.
+       - Core Invariant: "Approval moves DRAFT to PUBLISHED":
+         * Transcripts: updates `verification_status = 'published'`, `status = 'Published'`, `privacy_level = 'public'`, `verified_by = reviewer_name`, `verified_at = now`.
+         * Translations: updates `verified = 1`, `review_status = 'elder_approved'`, `badge_label = 'Elder Approved'`.
+         * Dictionary: updates `status = 'approved'`, `is_elder_approved = 1`, `approved_by = reviewer_name`, `approved_at = now`.
+       - Correction Flow: allows reviewers to refine transcripts, translations, or dictionary meanings; writes revision record to `corrections` table and marks item published/approved.
+       - Rejection Flow: updates status to `withdrawn_or_rejected` / `Rejected`.
+       - Immutable Governance Audit Logging: every decision is recorded in `governance_audit_logs` (`action_type = f"REVIEWER_{action.upper()}"`, `actor_name = reviewer_name`, `actor_role = reviewer_role`, `entity_type = item_type`, `entity_id = item_id`, `details_json = ...`, `timestamp = now`).
+       - Reviewer Role Authorization: enforces affirmative clearance; unauthorized roles (`contributor`, `listener`, `guest`) receive HTTP 403 Forbidden.
+  - Frontend Reviewer Portal UI:
+    1. Created `web/src/app/reviewer/page.tsx`:
+       - Responsive UI with Voice Roots dark theme and amber/emerald accents.
+       - Active Reviewer card displaying accredited persona (defaulting to Elder Soyam Laxman) with persona switcher.
+       - Filter tabs ("All Items", "Transcripts", "Translations", "Dictionary"), keyword search, and language dropdown.
+       - Interactive item cards with audio streaming player for oral recordings, source/target comparison for translations, and phonetic IPA for lexicon headwords.
+       - 3 action controls on each item: Emerald "Approve & Publish", Amber "Correct & Publish" (with inline text and cultural notes editor), and Rose "Reject" (with reason input).
+       - Real-time Governance Audit Trail drawer fetching and displaying latest audit log entries from `/api/v1/governance/audit-logs`.
+    2. Updated `web/src/components/ui/Navbar.tsx` and `web/src/components/navigation/MobileBottomNav.tsx`:
+       - Added prominent "Reviewer queue" navigation link and badge for reviewer and elder roles.
   - Dedicated Test Suite:
-    1. Authored `tests/test_t2_2_consent_withdrawal.py` covering full cascade verification (audio master deleted from disk, translations deleted, stream route returning 404, audit log written, passport returning withdrawn state, uuid lookup, and idempotency).
-  - Files touched: `backend/main.py`, `web/src/lib/storage.ts`, `web/src/app/recordings/[id]/page.tsx`, `web/src/app/passport/[id]/page.tsx`, `tests/test_t2_2_consent_withdrawal.py`, `PROGRESS.md`.
+    1. Authored `tests/test_t2_3_reviewer_queue.py` verifying queue retrieval, filtering, role clearance enforcement, transcript approval (DRAFT to PUBLISHED), corrections recording, rejection, translation approval/correction, dictionary approval/correction, and audit log generation.
+  - Files touched: `backend/main.py`, `backend/command_center_service.py`, `web/src/app/reviewer/page.tsx`, `web/src/components/ui/Navbar.tsx`, `web/src/components/navigation/MobileBottomNav.tsx`, `tests/test_t2_3_reviewer_queue.py`, `tests/test_t2_2_consent_withdrawal.py`, `tests/test_transcription_pipeline.py`, `PROGRESS.md`.
   - VERIFIED:
-    1. Dedicated Test Suite: `pytest tests/test_t2_2_consent_withdrawal.py -v` passed all 4/4 tests in 2.42s.
-    2. Full Regression Suite: `pytest tests/test_milestone4_persistence.py tests/test_backend_api.py tests/test_t1_3_postgres_migration.py tests/test_t1_4_r2_storage.py tests/test_t1_5_flac_evaluation.py tests/test_t1_6_security_basics.py tests/test_t2_1_honest_translation.py tests/test_t2_2_consent_withdrawal.py backend/tests/test_milestone1.py -v` passed all 90/90 tests in 46.85s.
-    3. Python Linter: `python3 -m ruff check backend/main.py tests/test_t2_2_consent_withdrawal.py` passed with 0 errors.
-    4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 19/19 routes with 0 errors.
-  - NOT VERIFIED: Remote S3 bucket physical object verification when running on local mock storage.
+    1. Dedicated Test Suite: `pytest tests/test_t2_3_reviewer_queue.py -v` passed all 7/7 tests in 2.25s.
+    2. Full Affected Regression Suite: `pytest tests/test_t2_3_reviewer_queue.py tests/test_t2_2_consent_withdrawal.py tests/test_t2_1_honest_translation.py tests/test_milestone31_command_center.py tests/test_transcription_pipeline.py -v` passed all 34/34 tests in 20.47s.
+    3. Python Linter: `python3 -m ruff check backend/main.py backend/command_center_service.py tests/test_t2_3_reviewer_queue.py` passed with 0 errors.
+    4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 20/20 routes (including `/reviewer`) with 0 errors.
+  - NOT VERIFIED: Physical hardware field microphone live recordings.
   - NEEDS FROM OTHER AGENT: none.
+
 
 

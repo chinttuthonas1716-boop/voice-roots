@@ -207,7 +207,7 @@ def get_elder_moderation_queue(
     limit: int = 50,
     db_path: str = DB_PATH,
 ) -> dict[str, Any]:
-    """Retrieve pending review items across transcripts, lexicon, and cultural stories."""
+    """Retrieve pending review items across transcripts, translations, lexicon, and cultural stories."""
     items: list[dict[str, Any]] = []
 
     with _get_db(db_path) as conn:
@@ -217,9 +217,13 @@ def get_elder_moderation_queue(
         if not item_type or item_type == "transcript":
             t_query = """
                 SELECT id, uuid_id, title, language, dialect, transcript_text,
-                       audio_filename, audio_url, contributor_name, contributor_role, created_at
+                       audio_filename, audio_url, contributor_name, contributor_role,
+                       verification_status, status, created_at
                 FROM transcripts
-                WHERE verification_status NOT IN ('verified', 'VERIFIED')
+                WHERE (archived_at IS NULL)
+                  AND (verification_status IN ('draft', 'submitted', 'awaiting_review', 'under_review', 'changes_requested')
+                       OR status IN ('Draft', 'Submitted', 'Pending', 'Awaiting Review'))
+                  AND verification_status NOT IN ('published', 'withdrawn_or_rejected')
             """
             t_params: list[Any] = []
             if language:
@@ -230,85 +234,152 @@ def get_elder_moderation_queue(
 
             cursor.execute(t_query, t_params)
             for r in cursor.fetchall():
+                audio_link = r["audio_url"] or f"/api/v1/audio/{r['id']}/stream"
+                text = r["transcript_text"] or ""
                 items.append({
                     "id": f"transcript:{r['id']}",
                     "item_type": "transcript",
+                    "raw_id": r["id"],
                     "title": r["title"] or f"Oral Recording #{r['id']}",
                     "language": r["language"],
                     "dialect": r["dialect"],
                     "contributor": r["contributor_name"] or "Community Contributor",
                     "role": r["contributor_role"] or "speaker",
-                    "text_preview": (r["transcript_text"][:160] + "...") if len(r["transcript_text"]) > 160 else r["transcript_text"],
-                    "audio_url": r["audio_url"],
+                    "text": text,
+                    "text_preview": (text[:160] + "...") if len(text) > 160 else text,
+                    "audio_url": audio_link,
+                    "status": r["verification_status"] or r["status"] or "draft",
                     "created_at": r["created_at"],
                 })
 
-        # 2. Pending Dictionary Words
+        # 2. Pending Translations
+        if not item_type or item_type == "translation":
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='translations'")
+            if cursor.fetchone():
+                cols = {row[1] for row in cursor.execute("PRAGMA table_info(translations)")}
+                has_rev_stat = "review_status" in cols
+                if has_rev_stat:
+                    tr_query = """
+                        SELECT id, transcript_id, source_language, target_language, source_text,
+                               translated_text, provider, model, verified, review_status, created_at
+                        FROM translations
+                        WHERE (verified = 0 OR review_status = 'unreviewed_draft')
+                          AND (review_status IS NULL OR review_status != 'rejected')
+                    """
+                else:
+                    tr_query = """
+                        SELECT id, transcript_id, source_language, target_language, source_text,
+                               translated_text, provider, model, verified, created_at
+                        FROM translations
+                        WHERE verified = 0
+                    """
+                tr_params: list[Any] = []
+                if language:
+                    tr_query += " AND (LOWER(source_language) = ? OR LOWER(target_language) = ?)"
+                    tr_params.extend([language.lower(), language.lower()])
+                tr_query += " ORDER BY created_at DESC LIMIT ?"
+                tr_params.append(limit)
+
+                cursor.execute(tr_query, tr_params)
+                for r in cursor.fetchall():
+                    trans_text = r["translated_text"] or ""
+                    items.append({
+                        "id": f"translation:{r['id']}",
+                        "item_type": "translation",
+                        "raw_id": r["id"],
+                        "transcript_id": r["transcript_id"],
+                        "title": f"Translation #{r['id']} ({r['source_language']} → {r['target_language']})",
+                        "language": r["source_language"],
+                        "target_language": r["target_language"],
+                        "dialect": None,
+                        "contributor": r["provider"] or "IndicTrans2",
+                        "role": "translation_provider",
+                        "source_text": r["source_text"],
+                        "text": trans_text,
+                        "text_preview": (trans_text[:160] + "...") if len(trans_text) > 160 else trans_text,
+                        "audio_url": f"/api/v1/audio/{r['transcript_id']}/stream" if r["transcript_id"] else None,
+                        "status": "unreviewed_draft",
+                        "created_at": r["created_at"],
+                    })
+
+        # 3. Pending Dictionary Words
         if not item_type or item_type == "dictionary":
-            d_query = """
-                SELECT id, word, language_code, dialect, meanings_json, ipa,
-                       contributor_name, status, created_at
-                FROM dictionary
-                WHERE status IN ('submitted', 'pending_review')
-            """
-            d_params: list[Any] = []
-            if language:
-                d_query += " AND LOWER(language_code) = ?"
-                d_params.append(language.lower())
-            d_query += " ORDER BY created_at DESC LIMIT ?"
-            d_params.append(limit)
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='dictionary'")
+            if cursor.fetchone():
+                d_query = """
+                    SELECT id, word, language_code, dialect, meanings_json, ipa,
+                           contributor_name, status, is_elder_approved, created_at
+                    FROM dictionary
+                    WHERE status IN ('submitted', 'pending_review', 'draft') OR is_elder_approved = 0
+                """
+                d_params: list[Any] = []
+                if language:
+                    d_query += " AND LOWER(language_code) = ?"
+                    d_params.append(language.lower())
+                d_query += " ORDER BY created_at DESC LIMIT ?"
+                d_params.append(limit)
 
-            cursor.execute(d_query, d_params)
-            for r in cursor.fetchall():
-                try:
-                    meanings = json.loads(r["meanings_json"]) if r["meanings_json"] else []
-                    meaning_text = meanings[0] if meanings else "Vocabulary headword"
-                except Exception:
-                    meaning_text = str(r["meanings_json"])
+                cursor.execute(d_query, d_params)
+                for r in cursor.fetchall():
+                    try:
+                        meanings = json.loads(r["meanings_json"]) if r["meanings_json"] else []
+                        meaning_text = meanings[0] if meanings else "Vocabulary headword"
+                    except Exception:
+                        meaning_text = str(r["meanings_json"])
 
-                items.append({
-                    "id": f"dictionary:{r['id']}",
-                    "item_type": "dictionary",
-                    "title": r["word"],
-                    "language": r["language_code"],
-                    "dialect": r["dialect"],
-                    "contributor": r["contributor_name"] or "Community Contributor",
-                    "role": "lexicon_contributor",
-                    "text_preview": f"{meaning_text} (IPA: {r['ipa'] or 'N/A'})",
-                    "audio_url": None,
-                    "created_at": r["created_at"],
-                })
+                    items.append({
+                        "id": f"dictionary:{r['id']}",
+                        "item_type": "dictionary",
+                        "raw_id": r["id"],
+                        "title": r["word"],
+                        "language": r["language_code"],
+                        "dialect": r["dialect"],
+                        "contributor": r["contributor_name"] or "Community Contributor",
+                        "role": "lexicon_contributor",
+                        "text": f"{r['word']} — {meaning_text} (IPA: {r['ipa'] or 'N/A'})",
+                        "text_preview": f"{meaning_text} (IPA: {r['ipa'] or 'N/A'})",
+                        "ipa": r["ipa"],
+                        "meaning": meaning_text,
+                        "audio_url": None,
+                        "status": r["status"] or "pending_review",
+                        "created_at": r["created_at"],
+                    })
 
-        # 3. Pending Cultural Submissions
+        # 4. Pending Cultural Submissions
         if not item_type or item_type == "cultural_story":
-            s_query = """
-                SELECT submission_id, title, language, variety, transcript_draft,
-                       contributor_name, created_at
-                FROM cultural_submissions
-                WHERE status = 'SUBMITTED'
-            """
-            s_params: list[Any] = []
-            if language:
-                s_query += " AND LOWER(language) = ?"
-                s_params.append(language.lower())
-            s_query += " ORDER BY created_at DESC LIMIT ?"
-            s_params.append(limit)
+            cursor.execute("SELECT name FROM sqlite_master WHERE type='table' AND name='cultural_submissions'")
+            if cursor.fetchone():
+                s_query = """
+                    SELECT submission_id, title, language, variety, transcript_draft,
+                           contributor_name, created_at
+                    FROM cultural_submissions
+                    WHERE status = 'SUBMITTED'
+                """
+                s_params: list[Any] = []
+                if language:
+                    s_query += " AND LOWER(language) = ?"
+                    s_params.append(language.lower())
+                s_query += " ORDER BY created_at DESC LIMIT ?"
+                s_params.append(limit)
 
-            cursor.execute(s_query, s_params)
-            for r in cursor.fetchall():
-                draft = r["transcript_draft"] or ""
-                items.append({
-                    "id": f"cultural_submission:{r['submission_id']}",
-                    "item_type": "cultural_story",
-                    "title": r["title"],
-                    "language": r["language"],
-                    "dialect": r["variety"],
-                    "contributor": r["contributor_name"] or "Clan Elder / Speaker",
-                    "role": "storyteller",
-                    "text_preview": (draft[:160] + "...") if len(draft) > 160 else draft,
-                    "audio_url": None,
-                    "created_at": r["created_at"],
-                })
+                cursor.execute(s_query, s_params)
+                for r in cursor.fetchall():
+                    draft = r["transcript_draft"] or ""
+                    items.append({
+                        "id": f"cultural_submission:{r['submission_id']}",
+                        "item_type": "cultural_story",
+                        "raw_id": r["submission_id"],
+                        "title": r["title"],
+                        "language": r["language"],
+                        "dialect": r["variety"],
+                        "contributor": r["contributor_name"] or "Clan Elder / Speaker",
+                        "role": "storyteller",
+                        "text": draft,
+                        "text_preview": (draft[:160] + "...") if len(draft) > 160 else draft,
+                        "audio_url": None,
+                        "status": "submitted",
+                        "created_at": r["created_at"],
+                    })
 
         return {
             "status": "success",
@@ -326,16 +397,17 @@ def moderate_queue_item(
     reviewer_name: str,
     reviewer_role: str = "elder",
     cultural_notes: str = "",
+    corrected_text: str | None = None,
     db_path: str = DB_PATH,
 ) -> dict[str, Any]:
-    """Process elder decision ('APPROVE', 'REJECT') with customary audit trail."""
+    """Process elder / reviewer decision ('APPROVE', 'CORRECT', 'REJECT') with customary audit trail."""
     clean_role = reviewer_role.lower()
-    if clean_role not in ("elder", "admin"):
+    if clean_role not in ("elder", "admin", "reviewer", "linguist", "community_elder"):
         raise PermissionError("Only verified clan elders or system administrators may moderate community holdings.")
 
     decision_norm = decision.upper()
-    if decision_norm not in ("APPROVE", "REJECT", "REQUEST_REVISION"):
-        raise ValueError("Decision must be 'APPROVE', 'REJECT', or 'REQUEST_REVISION'.")
+    if decision_norm not in ("APPROVE", "CORRECT", "REJECT", "REQUEST_REVISION"):
+        raise ValueError("Decision must be 'APPROVE', 'CORRECT', 'REJECT', or 'REQUEST_REVISION'.")
 
     # Parse raw id if passed as 'type:id'
     item_id_str = str(raw_id)
@@ -350,27 +422,229 @@ def moderate_queue_item(
         cursor = conn.cursor()
 
         if item_type == "transcript":
-            new_status = "verified" if decision_norm == "APPROVE" else "rejected"
-            cursor.execute(
-                """
-                UPDATE transcripts
-                SET verification_status = ?, verified_by = ?, verified_at = ?, review_notes = ?
-                WHERE id = ?
-                """,
-                (new_status, reviewer_name, now, cultural_notes, item_id),
-            )
+            if decision_norm == "APPROVE":
+                # Approval moves DRAFT to PUBLISHED per T2.3 specifications!
+                cursor.execute(
+                    """
+                    UPDATE transcripts
+                    SET verification_status = 'published',
+                        status = 'Published',
+                        privacy_level = 'public',
+                        verified_by = ?,
+                        verified_at = ?,
+                        review_notes = ?,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (reviewer_name, now, cultural_notes, now, item_id),
+                )
+            elif decision_norm == "CORRECT":
+                cursor.execute("SELECT transcript_text FROM transcripts WHERE id = ?", (item_id,))
+                orig_row = cursor.fetchone()
+                orig_text = orig_row["transcript_text"] if orig_row else ""
+                new_text = corrected_text if corrected_text is not None else orig_text
+
+                cursor.execute(
+                    """
+                    INSERT INTO corrections (
+                        target_type, target_id, version_number, previous_text, suggested_text,
+                        contributor_name, contributor_role, rationale, status, consent_confirmed,
+                        reviewed_by, reviewed_at, review_notes, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        "transcript",
+                        item_id,
+                        1,
+                        orig_text,
+                        new_text,
+                        reviewer_name,
+                        reviewer_role,
+                        cultural_notes or "Reviewer correction",
+                        "accepted",
+                        reviewer_name,
+                        now,
+                        cultural_notes,
+                        now,
+                        now,
+                    ),
+                )
+
+                cursor.execute(
+                    """
+                    UPDATE transcripts
+                    SET transcript_text = ?,
+                        verification_status = 'published',
+                        status = 'Published',
+                        privacy_level = 'public',
+                        verified_by = ?,
+                        verified_at = ?,
+                        review_notes = ?,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (new_text, reviewer_name, now, cultural_notes, now, item_id),
+                )
+            elif decision_norm == "REJECT":
+                cursor.execute(
+                    """
+                    UPDATE transcripts
+                    SET verification_status = 'withdrawn_or_rejected',
+                        status = 'Rejected',
+                        verified_by = ?,
+                        verified_at = ?,
+                        review_notes = ?,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (reviewer_name, now, cultural_notes, now, item_id),
+                )
+
+        elif item_type == "translation":
+            if decision_norm == "APPROVE":
+                cursor.execute(
+                    """
+                    UPDATE translations
+                    SET verified = 1,
+                        review_status = 'elder_approved',
+                        badge_label = 'Elder Approved',
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (now, item_id),
+                )
+            elif decision_norm == "CORRECT":
+                cursor.execute("SELECT translated_text FROM translations WHERE id = ?", (item_id,))
+                orig_row = cursor.fetchone()
+                orig_text = orig_row["translated_text"] if orig_row else ""
+                new_text = corrected_text if corrected_text is not None else orig_text
+
+                cursor.execute(
+                    """
+                    INSERT INTO corrections (
+                        target_type, target_id, version_number, previous_text, suggested_text,
+                        contributor_name, contributor_role, rationale, status, consent_confirmed,
+                        reviewed_by, reviewed_at, review_notes, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        "translation",
+                        item_id,
+                        1,
+                        orig_text,
+                        new_text,
+                        reviewer_name,
+                        reviewer_role,
+                        cultural_notes or "Reviewer translation correction",
+                        "accepted",
+                        reviewer_name,
+                        now,
+                        cultural_notes,
+                        now,
+                        now,
+                    ),
+                )
+
+                cursor.execute(
+                    """
+                    UPDATE translations
+                    SET translated_text = ?,
+                        verified = 1,
+                        review_status = 'elder_approved',
+                        badge_label = 'Elder Approved',
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (new_text, now, item_id),
+                )
+            elif decision_norm == "REJECT":
+                cursor.execute(
+                    """
+                    UPDATE translations
+                    SET verified = 0,
+                        review_status = 'rejected',
+                        badge_label = 'Draft (Rejected)',
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (now, item_id),
+                )
+
         elif item_type == "dictionary":
-            new_status = "approved" if decision_norm == "APPROVE" else "rejected"
-            cursor.execute(
-                """
-                UPDATE dictionary
-                SET status = ?, approved_by = ?, approved_at = ?, is_elder_approved = ?
-                WHERE id = ?
-                """,
-                (new_status, reviewer_name, now, 1 if decision_norm == "APPROVE" else 0, item_id),
-            )
+            if decision_norm == "APPROVE":
+                cursor.execute(
+                    """
+                    UPDATE dictionary
+                    SET status = 'approved',
+                        approved_by = ?,
+                        approved_at = ?,
+                        is_elder_approved = 1,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (reviewer_name, now, now, item_id),
+                )
+            elif decision_norm == "CORRECT":
+                cursor.execute("SELECT meanings_json FROM dictionary WHERE id = ?", (item_id,))
+                orig_row = cursor.fetchone()
+                orig_meanings = orig_row["meanings_json"] if orig_row else "[]"
+                new_meanings = json.dumps([corrected_text]) if corrected_text else orig_meanings
+
+                cursor.execute(
+                    """
+                    INSERT INTO corrections (
+                        target_type, target_id, version_number, previous_text, suggested_text,
+                        contributor_name, contributor_role, rationale, status, consent_confirmed,
+                        reviewed_by, reviewed_at, review_notes, created_at, updated_at
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?, ?, ?)
+                    """,
+                    (
+                        "dictionary",
+                        item_id,
+                        1,
+                        orig_meanings,
+                        corrected_text or "",
+                        reviewer_name,
+                        reviewer_role,
+                        cultural_notes or "Reviewer dictionary correction",
+                        "accepted",
+                        reviewer_name,
+                        now,
+                        cultural_notes,
+                        now,
+                        now,
+                    ),
+                )
+
+                cursor.execute(
+                    """
+                    UPDATE dictionary
+                    SET meanings_json = ?,
+                        status = 'approved',
+                        approved_by = ?,
+                        approved_at = ?,
+                        is_elder_approved = 1,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (new_meanings, reviewer_name, now, now, item_id),
+                )
+            elif decision_norm == "REJECT":
+                cursor.execute(
+                    """
+                    UPDATE dictionary
+                    SET status = 'rejected',
+                        approved_by = ?,
+                        approved_at = ?,
+                        is_elder_approved = 0,
+                        updated_at = ?
+                    WHERE id = ?
+                    """,
+                    (reviewer_name, now, now, item_id),
+                )
+
         elif item_type in ("cultural_story", "cultural_submission"):
-            new_status = "APPROVED" if decision_norm == "APPROVE" else "REJECTED"
+            new_status = "APPROVED" if decision_norm == "APPROVE" else ("CORRECTED" if decision_norm == "CORRECT" else "REJECTED")
             cursor.execute(
                 """
                 UPDATE cultural_submissions
@@ -382,7 +656,21 @@ def moderate_queue_item(
         else:
             raise ValueError(f"Unknown item type '{item_type}'.")
 
-        # Log to governance audit logs
+        # Crucial requirement: Log every decision in governance_audit_logs with the reviewer's identity!
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS governance_audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                action_type TEXT NOT NULL,
+                actor_name TEXT NOT NULL,
+                actor_role TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT NOT NULL,
+                details_json TEXT,
+                timestamp TEXT NOT NULL
+            )
+            """
+        )
         cursor.execute(
             """
             INSERT INTO governance_audit_logs (
@@ -390,12 +678,16 @@ def moderate_queue_item(
             ) VALUES (?, ?, ?, ?, ?, ?, ?)
             """,
             (
-                f"MODERATION_{decision_norm}",
+                f"REVIEWER_{decision_norm}",
                 reviewer_name,
                 reviewer_role,
                 item_type,
                 str(item_id),
-                cultural_notes or "Elder customary moderation decision executed.",
+                json.dumps({
+                    "decision": decision_norm,
+                    "cultural_notes": cultural_notes,
+                    "corrected_text": corrected_text,
+                }),
                 now,
             ),
         )

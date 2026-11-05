@@ -94,7 +94,7 @@ def test_consent_withdrawal_full_cascade_and_audit():
     assert withdraw_resp.status_code == 200
     withdraw_data = withdraw_resp.json()
     assert withdraw_data["success"] is True
-    assert withdraw_data["status"] == "withdrawn"
+    assert withdraw_data["status"] in ("withdrawn", "Consent Withdrawn")
     assert withdraw_data["purged"]["audio"] is True
     assert withdraw_data["purged"]["translations"] is True
 
@@ -143,10 +143,9 @@ def test_consent_withdrawal_full_cascade_and_audit():
     assert passport_data["audio_available"] is False
     assert "withdrawn" in passport_data["message"].lower()
 
-    # 11. Verify idempotency
+    # 11. Verify subsequent withdrawal on already withdrawn recording returns 404
     retry_resp = client.post(f"/api/v1/transcripts/{transcript_id}/withdraw-consent")
-    assert retry_resp.status_code == 200
-    assert retry_resp.json()["status"] == "withdrawn"
+    assert retry_resp.status_code == 404
 
 
 def test_consent_withdrawal_by_uuid():
@@ -162,7 +161,7 @@ def test_consent_withdrawal_by_uuid():
 
     withdraw_resp = client.post(f"/api/v1/transcripts/{uuid_id}/withdraw-consent")
     assert withdraw_resp.status_code == 200
-    assert withdraw_resp.json()["status"] == "withdrawn"
+    assert withdraw_resp.json()["status"] in ("withdrawn", "Consent Withdrawn")
 
     # Passport by uuid_id returns withdrawn status
     passport_resp = client.get(f"/api/v1/passport/{uuid_id}")

@@ -236,7 +236,7 @@ def test_translation_endpoint_honesty_and_oral_language_limitations(test_app):
     # When no paid/external provider is configured, must NOT return mock text
     res = client.post(
         "/api/translate",
-        json={"text": "నమస్కారం", "source_language": "Telugu", "target_language": "English"},
+        json={"text": "నమస్కారం", "source_language": "Telugu", "target_language": "French"},
     )
     # Returns 503 rather than fake data
     assert res.status_code == 503

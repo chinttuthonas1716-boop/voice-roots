@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Mic, Languages, HardDrive, User, LogOut } from "lucide-react";
+import { Home, Mic, Languages, HardDrive, User, LogOut, ShieldCheck } from "lucide-react";
 import { getCurrentUser, logoutUser, type UserProfile } from "@/lib/auth";
 
 export function Navbar() {
@@ -21,11 +21,13 @@ export function Navbar() {
     router.push("/login");
   };
 
+  const isReviewerOrAdmin = user?.role === "reviewer" || user?.role === "admin" || user?.verifiedElder;
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
     { href: "/record", label: "Record", icon: Mic },
     { href: "/translate", label: "Translate", icon: Languages },
     { href: "/dashboard", label: "My recordings", icon: HardDrive },
+    ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: "Reviewer queue", icon: ShieldCheck }] : []),
   ];
 
   return (
@@ -62,6 +64,19 @@ export function Navbar() {
 
         {/* Profile / Auth Menu */}
         <div className="flex items-center gap-3">
+          <Link
+            href="/reviewer"
+            title="Elder & Reviewer Moderation Queue"
+            className={`hidden sm:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-semibold transition ${
+              pathname === "/reviewer"
+                ? "border-emerald-500/50 bg-emerald-500/20 text-emerald-300"
+                : "border-emerald-500/30 bg-emerald-500/10 text-emerald-400 hover:bg-emerald-500/20"
+            }`}
+          >
+            <ShieldCheck className="h-3.5 w-3.5" />
+            <span>Reviewer queue</span>
+          </Link>
+
           {user ? (
             <div className="flex items-center gap-2">
               <span className="hidden sm:inline-block text-sm font-medium text-[#94A3B8]">

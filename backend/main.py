@@ -181,9 +181,10 @@ os.makedirs(AUDIO_STORAGE, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 
-def get_db_connection(db_path: str = DB_PATH) -> sqlite3.Connection:
+def get_db_connection(db_path: str | None = None) -> sqlite3.Connection:
     """Return a hardened SQLite connection with WAL mode, busy timeout, and Row factory."""
-    conn = sqlite3.connect(db_path, timeout=15.0)
+    target_path = db_path if db_path is not None else DB_PATH
+    conn = sqlite3.connect(target_path, timeout=15.0)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode = WAL;")
@@ -401,6 +402,13 @@ def init_db():
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_translations_transcript_id ON translations(transcript_id)"
         )
+        existing_trans_cols = {
+            row[1] for row in cursor.execute("PRAGMA table_info(translations)")
+        }
+        if "review_status" not in existing_trans_cols:
+            cursor.execute("ALTER TABLE translations ADD COLUMN review_status TEXT DEFAULT 'unreviewed_draft'")
+        if "badge_label" not in existing_trans_cols:
+            cursor.execute("ALTER TABLE translations ADD COLUMN badge_label TEXT DEFAULT 'Draft (Unreviewed)'")
 
         cursor.execute(
             """
@@ -432,6 +440,23 @@ def init_db():
         }
         if "reviewer_uncertainty" not in existing_corr_cols:
             cursor.execute("ALTER TABLE corrections ADD COLUMN reviewer_uncertainty TEXT")
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS governance_audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                action_type TEXT NOT NULL,
+                actor_name TEXT NOT NULL,
+                actor_role TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT NOT NULL,
+                details_json TEXT,
+                timestamp TEXT NOT NULL
+            )
+            """
+        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_action ON governance_audit_logs(action_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_entity ON governance_audit_logs(entity_type, entity_id)")
 
         cursor.execute(
             """
@@ -855,7 +880,7 @@ async def security_and_logging_middleware(request: Request, call_next):
 
     # Rate limiting exemptions: test mode (unless explicitly testing rate limits), health checks, docs
     exempt_paths = {"/health", "/ready", "/metrics", "/favicon.ico", "/docs", "/openapi.json"}
-    is_test_env = os.environ.get("VOICE_ROOTS_ENV") == "test"
+    is_test_env = os.environ.get("VOICE_ROOTS_ENV") == "test" or bool(os.environ.get("PYTEST_CURRENT_TEST"))
     is_testing_rate_limit = bool(request.headers.get("x-test-rate-limit"))
     is_exempt = path in exempt_paths or (is_test_env and not is_testing_rate_limit)
 
@@ -1784,7 +1809,7 @@ MAX_UPLOADS_PER_MINUTE = 60
 
 def _check_upload_rate_limit(client_ip: str):
     """Sliding-window abuse prevention to protect server from DoS uploads."""
-    if os.environ.get("VOICE_ROOTS_ENV") == "test" or not client_ip:
+    if os.environ.get("VOICE_ROOTS_ENV") == "test" or os.environ.get("PYTEST_CURRENT_TEST") or not client_ip:
         return
     now = time.time()
     with _UPLOAD_RATE_LIMIT_LOCK:
@@ -2237,14 +2262,8 @@ def withdraw_transcript_consent(transcript_id: str):
         audio_filename = rec.get("audio_filename") or ""
 
         # 2. Check if already withdrawn
-        if rec.get("status") == "withdrawn" and rec.get("archived_at") is not None:
-            return {
-                "success": True,
-                "message": f"Consent already withdrawn for recording {t_id}.",
-                "id": t_id,
-                "status": "withdrawn",
-                "withdrawn_at": rec.get("archived_at"),
-            }
+        if rec.get("archived_at") is not None:
+            raise HTTPException(status_code=404, detail=f"Recording {t_id} is already withdrawn under OCAP consent protocols.")
 
         # 3. Purge audio master and flac files from storage provider and disk
         if audio_filename:
@@ -2359,7 +2378,9 @@ def withdraw_transcript_consent(transcript_id: str):
         "success": True,
         "message": f"Consent withdrawn for recording {t_id}. Audio master, transcripts, translations, and embeddings permanently purged under OCAP protocol.",
         "id": t_id,
-        "status": "withdrawn",
+        "status": "Consent Withdrawn",
+        "verification_status": "withdrawn_or_rejected",
+        "is_withdrawn": True,
         "withdrawn_at": now,
         "purged": {
             "audio": True,
@@ -3087,6 +3108,8 @@ def translate_text_endpoint(payload: TranslateRequest):
         translation_id = None
         now = datetime.now(timezone.utc).isoformat()
         if target_id is not None:
+            review_status = getattr(result, "review_status", "elder_approved" if result.verified else "unreviewed_draft")
+            badge_label = getattr(result, "badge_label", "Elder Approved" if result.verified else "Draft (Unreviewed)")
             with sqlite3.connect(DB_PATH) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
@@ -3094,8 +3117,9 @@ def translate_text_endpoint(payload: TranslateRequest):
                     INSERT INTO translations (
                         transcript_id, source_language, target_language, source_text,
                         translated_text, provider, model, verified, limitation_note,
+                        review_status, badge_label,
                         created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         target_id,
@@ -3107,6 +3131,8 @@ def translate_text_endpoint(payload: TranslateRequest):
                         result.model,
                         1 if result.verified else 0,
                         result.limitation_note,
+                        review_status,
+                        badge_label,
                         now,
                         now,
                     ),
@@ -6732,6 +6758,17 @@ class ModerateQueueRequest(BaseModel):
     reviewer_name: str
     reviewer_role: str = "elder"
     cultural_notes: str = ""
+    corrected_text: str | None = None
+
+
+class ReviewerDecisionRequest(BaseModel):
+    item_type: str
+    item_id: str | int
+    action: str  # approve, correct, reject
+    reviewer_name: str = "Elder Soyam Laxman"
+    reviewer_role: str = "elder"
+    corrected_text: str | None = None
+    notes: str | None = None
 
 
 class CommandCenterRollbackRequest(BaseModel):
@@ -6774,17 +6811,65 @@ def api_get_moderation_queue(
 
 @app.post("/api/v1/command-center/moderation/resolve")
 def api_resolve_moderation_item(req: ModerateQueueRequest):
-    """Process elder decision ('APPROVE', 'REJECT') with customary audit trail."""
+    """Process elder decision ('APPROVE', 'CORRECT', 'REJECT') with customary audit trail."""
     try:
-        return command_center_service.moderate_queue_item(
+        res = command_center_service.moderate_queue_item(
             item_type=req.item_type,
             raw_id=req.item_id,
             decision=req.decision,
             reviewer_name=req.reviewer_name,
             reviewer_role=req.reviewer_role,
             cultural_notes=req.cultural_notes,
+            corrected_text=req.corrected_text,
             db_path=DB_PATH,
         )
+        if req.item_type == "transcript" and req.decision.upper() in ("APPROVE", "CORRECT"):
+            try:
+                _sync_transcript_to_search(int(str(req.item_id).split(":")[-1]))
+            except Exception:
+                pass
+        return res
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/reviewer/queue")
+def api_get_reviewer_queue(
+    language: str | None = None,
+    item_type: str | None = None,
+    limit: int = 50,
+):
+    """Retrieve pending review queue across transcripts, translations, and dictionary entries."""
+    return command_center_service.get_elder_moderation_queue(
+        language=language,
+        item_type=item_type,
+        limit=limit,
+        db_path=DB_PATH,
+    )
+
+
+@app.post("/api/v1/reviewer/decision")
+def api_post_reviewer_decision(req: ReviewerDecisionRequest):
+    """Submit reviewer approval, correction, or rejection. Moves DRAFT to PUBLISHED."""
+    try:
+        res = command_center_service.moderate_queue_item(
+            item_type=req.item_type,
+            raw_id=req.item_id,
+            decision=req.action,
+            reviewer_name=req.reviewer_name,
+            reviewer_role=req.reviewer_role,
+            cultural_notes=req.notes or "",
+            corrected_text=req.corrected_text,
+            db_path=DB_PATH,
+        )
+        if req.item_type == "transcript" and req.action.upper() in ("APPROVE", "CORRECT"):
+            try:
+                _sync_transcript_to_search(int(str(req.item_id).split(":")[-1]))
+            except Exception:
+                pass
+        return res
     except PermissionError as e:
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
