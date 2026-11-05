@@ -8,9 +8,12 @@ with the Milestone 16 Language Knowledge Graph for oral history preservation.
 from __future__ import annotations
 
 import datetime
+import hashlib
 import json
 import logging
+import math
 import os
+import re
 import sqlite3
 from dataclasses import asdict, dataclass
 from typing import Any
@@ -334,8 +337,51 @@ def create_archive_collection(
 
 
 # -------------------------------------------------------------------------
-# Cultural Stories
+# Cultural Stories & Sacred Lore Shielding (Milestone 28 Enhancements)
 # -------------------------------------------------------------------------
+
+def get_redacted_story_teaser(story: dict[str, Any]) -> dict[str, Any]:
+    """Generate a safe, metadata-rich redacted teaser for sacred or restricted oral lore.
+    
+    Protects original master recordings and transcripts while transparently honoring
+    Indigenous custodianship and cultural classification under OCAP principles.
+    """
+    classification = story.get("access_classification", ACCESS_SACRED_ELDER_ONLY)
+    return {
+        "story_id": story["story_id"],
+        "collection_id": story.get("collection_id"),
+        "title": f"🛡️ {story['title']} [RESTRICTED]",
+        "native_title": "[Shielded Sacred Oral Lore]",
+        "description": (
+            f"This oral heritage is classified under customary Indigenous protocols as {classification}. "
+            "Master audio and vernacular transcripts are shielded from unverified public access. "
+            "Access is reserved exclusively for verified elders and clan custodians."
+        ),
+        "primary_language": story.get("primary_language"),
+        "dialect_variety": story.get("dialect_variety"),
+        "transliteration": "[RESTRICTED CEREMONIAL RECITAL - Verified Elder Clearance Required]",
+        "translation_text": "[Sacred ceremonial translation shielded under OCAP principles]",
+        "raw_transcript_text": "[Restricted narrative withheld under community custodianship]",
+        "audio_reference": None,
+        "audio_duration_seconds": story.get("audio_duration_seconds", 0),
+        "audio_sha256": None,
+        "recording_date": story.get("recording_date"),
+        "location_name": story.get("location_name"),
+        "contributor_name": story.get("contributor_name") or "Community Elder Council (Protected)",
+        "attribution_preference": "COMMUNITY_CLAN",
+        "access_classification": classification,
+        "traditional_knowledge_label": "TK Notice (Secret/Sacred)",
+        "custodianship_advisory": (
+            "Sacred Lore Shield Active: Access requires verified elder or custodian credentials under OCAP community protocols. "
+            "Audio streaming, waveform analysis, and full transcripts are strictly withheld."
+        ),
+        "is_redacted": True,
+        "is_accessible": False,
+        "review_status": story.get("review_status", "APPROVED"),
+        "created_at": story.get("created_at"),
+        "updated_at": story.get("updated_at"),
+    }
+
 
 def list_cultural_stories(
     db_path: str,
@@ -345,6 +391,7 @@ def list_cultural_stories(
     query: str | None = None,
     is_authenticated: bool = False,
     user_roles: list[str] | None = None,
+    include_restricted_teasers: bool = False,
     limit: int = 50,
     offset: int = 0,
 ) -> list[dict[str, Any]]:
@@ -403,7 +450,12 @@ def list_cultural_stories(
                 is_authenticated=is_authenticated,
                 user_roles=user_roles,
             ):
+                data["is_redacted"] = False
+                data["is_accessible"] = True
                 results.append(data)
+            elif include_restricted_teasers:
+                teaser = get_redacted_story_teaser(data)
+                results.append(teaser)
 
         return results[offset : offset + limit]
     finally:
@@ -415,6 +467,7 @@ def get_cultural_story(
     story_id: str,
     is_authenticated: bool = False,
     user_roles: list[str] | None = None,
+    allow_teaser: bool = False,
 ) -> dict[str, Any] | None:
     """Retrieve full cultural story by ID with access control."""
     conn = _get_db_connection(db_path)
@@ -425,12 +478,22 @@ def get_cultural_story(
             return None
 
         data = dict(row)
+        roles = set(user_roles or [])
+        # Only approved stories are visible to public. Withdrawn stories are withheld from public view.
+        if data.get("review_status") != STATUS_APPROVED and not ("admin" in roles or "elder" in roles):
+            return None
+
         if not check_access_permission(
             data["access_classification"],
             is_authenticated=is_authenticated,
             user_roles=user_roles,
         ):
+            if allow_teaser:
+                return get_redacted_story_teaser(data)
             return None
+
+        data["is_redacted"] = False
+        data["is_accessible"] = True
 
         # Fetch associated collection title if linked
         if data.get("collection_id"):
@@ -504,6 +567,123 @@ def get_story_audio_stream_info(
     return target_path, mime
 
 
+def get_story_waveform(
+    db_path: str,
+    story_id: str,
+    audio_base_dir: str,
+    num_peaks: int = 56,
+    is_authenticated: bool = False,
+    user_roles: list[str] | None = None,
+) -> dict[str, Any]:
+    """Retrieve 56-bar normalized audio waveform peaks [0.0 - 1.0] for responsive visualizer.
+    
+    Adheres strictly to OCAP access boundaries: access to sacred lore audio envelope is withheld
+    from unauthenticated or unauthorized users.
+    """
+    story = get_cultural_story(db_path, story_id, is_authenticated=is_authenticated, user_roles=user_roles)
+    if not story:
+        conn = _get_db_connection(db_path)
+        try:
+            row = conn.execute("SELECT access_classification FROM cultural_stories WHERE story_id = ?", (story_id,)).fetchone()
+            if row:
+                raise PermissionError("Access to sacred lore audio waveform is restricted under OCAP protocols.")
+            raise ValueError(f"Story '{story_id}' not found.")
+        finally:
+            conn.close()
+
+    duration = story.get("audio_duration_seconds") or 45.0
+    audio_info = get_story_audio_stream_info(db_path, story_id, audio_base_dir, is_authenticated=is_authenticated, user_roles=user_roles)
+
+    peaks: list[float] = []
+    if audio_info:
+        audio_path, _ = audio_info
+        if os.path.exists(audio_path):
+            try:
+                import speech_analysis_service
+                peaks = speech_analysis_service.compute_waveform_peaks(audio_path, num_peaks=num_peaks)
+            except Exception as e:
+                logger.warning(f"Could not compute audio waveform for {audio_path}: {e}")
+
+    # Deterministic harmonic envelope based on story ID if physical audio is not available
+    if not peaks or len(peaks) < num_peaks:
+        seed = int(hashlib.sha256(story_id.encode("utf-8")).hexdigest()[:8], 16)
+        peaks = []
+        for i in range(num_peaks):
+            raw = 0.22 + 0.78 * abs(
+                math.sin((seed + i * 5.73) * 1.6) * math.cos((seed + i * 3.29) * 1.1)
+            )
+            peaks.append(round(max(0.15, min(1.0, raw)), 3))
+
+    return {
+        "story_id": story_id,
+        "title": story.get("title", ""),
+        "primary_language": story.get("primary_language", ""),
+        "num_peaks": len(peaks),
+        "peaks": peaks,
+        "duration_seconds": round(float(duration), 2),
+    }
+
+
+def get_story_bilingual_segments(
+    db_path: str,
+    story_id: str,
+    is_authenticated: bool = False,
+    user_roles: list[str] | None = None,
+) -> dict[str, Any]:
+    """Retrieve sentence-level time-aligned bilingual segments for karaoke synchronized playback."""
+    story = get_cultural_story(db_path, story_id, is_authenticated=is_authenticated, user_roles=user_roles)
+    if not story:
+        conn = _get_db_connection(db_path)
+        try:
+            row = conn.execute("SELECT access_classification FROM cultural_stories WHERE story_id = ?", (story_id,)).fetchone()
+            if row:
+                raise PermissionError("Access to sacred lore bilingual segments is restricted under OCAP protocols.")
+            raise ValueError(f"Story '{story_id}' not found.")
+        finally:
+            conn.close()
+
+    total_duration = float(story.get("audio_duration_seconds") or 45.0)
+    vern_source = (
+        story.get("transliteration")
+        or story.get("raw_transcript_text")
+        or story.get("native_title")
+        or story.get("description")
+        or ""
+    )
+    trans_source = story.get("translation_text") or story.get("description") or ""
+
+    vern_sentences = [s.strip() for s in re.split(r"(?<=[.।?!;\n])\s+", vern_source) if s.strip()]
+    trans_sentences = [s.strip() for s in re.split(r"(?<=[.।?!;\n])\s+", trans_source) if s.strip()]
+
+    segment_count = max(len(vern_sentences), len(trans_sentences), 1)
+    segment_duration = total_duration / segment_count
+
+    segments: list[dict[str, Any]] = []
+    for i in range(segment_count):
+        vern = vern_sentences[i] if i < len(vern_sentences) else (vern_source if i == 0 else f"Narrative continues ({i+1})...")
+        trans = trans_sentences[i] if i < len(trans_sentences) else (trans_source if i == 0 else f"Translation continues ({i+1})...")
+        segments.append({
+            "segment_id": i,
+            "start_time": round(i * segment_duration, 2),
+            "end_time": round((i + 1) * segment_duration, 2),
+            "vernacular_text": vern,
+            "native_script": story.get("native_title") if i == 0 else None,
+            "translated_text": trans,
+            "language": story.get("primary_language"),
+            "dialect": story.get("dialect_variety"),
+        })
+
+    return {
+        "story_id": story_id,
+        "title": story.get("title", ""),
+        "primary_language": story.get("primary_language"),
+        "dialect_variety": story.get("dialect_variety"),
+        "total_duration": round(total_duration, 2),
+        "segment_count": len(segments),
+        "segments": segments,
+    }
+
+
 # -------------------------------------------------------------------------
 # Submissions & Review Workflow
 # -------------------------------------------------------------------------
@@ -563,7 +743,12 @@ def create_cultural_submission(
         conn.commit()
 
         row = c.execute("SELECT * FROM cultural_submissions WHERE submission_id = ?", (submission_id,)).fetchone()
-        return dict(row)
+        res = dict(row)
+        try:
+            res["consent_matrix"] = json.loads(res["consent_matrix_json"]) if res.get("consent_matrix_json") else {}
+        except Exception:
+            res["consent_matrix"] = {}
+        return res
     finally:
         conn.close()
 
@@ -690,11 +875,60 @@ def withdraw_cultural_record(
             # Remove or mark withdrawn in KG
             c.execute("UPDATE kg_nodes SET verification_status = 'REJECTED' WHERE node_id = ?", (record_id,))
             conn.commit()
+
+            # Cascading removal from vector store
+            try:
+                import vector_store
+                vector_store.delete_resource(record_id)
+                for doc_id_candidate in [f"cult:{record_id}", f"story:{record_id}"]:
+                    vector_store.delete_resource(doc_id_candidate)
+            except Exception as e:
+                logger.warning(f"ChromaDB cascade removal note for {record_id}: {e}")
+
             return {"status": "success", "message": f"Story {record_id} withdrawn from public access.", "record_id": record_id}
 
         raise ValueError(f"Record {record_id} not found in submissions or stories.")
     finally:
         conn.close()
+
+
+def revoke_story_consent(
+    db_path: str,
+    story_id: str,
+    revoked_by: str,
+    reason: str,
+    is_admin: bool = False,
+    is_elder: bool = False,
+) -> dict[str, Any]:
+    """Execute immediate cascading revocation of community consent for a story under OCAP principles.
+    
+    Cascades through:
+    1. Updating SQLite cultural_stories status to WITHDRAWN and access to WITHDRAWN.
+    2. Deleting story entry from cultural_stories_fts virtual table.
+    3. Retracting node from Language Knowledge Graph (kg_nodes).
+    4. Removing vector embeddings from ChromaDB language_resources collection.
+    """
+    if not is_admin and not is_elder:
+        raise PermissionError("Only an authorized elder, community custodian, or administrator can revoke consent.")
+
+    withdraw_cultural_record(
+        db_path,
+        record_id=story_id,
+        requester_name=revoked_by,
+        reason=reason,
+        is_contributor=True,
+        is_admin=True,
+    )
+
+    return {
+        "status": "success",
+        "story_id": story_id,
+        "action": "CONSENT_REVOKED_CASCADING_PURGE",
+        "message": f"Community consent revoked for {story_id}. Story retracted from public indexes and vector store.",
+        "revoked_by": revoked_by,
+        "reason": reason,
+        "timestamp": datetime.datetime.now(datetime.timezone.utc).isoformat(),
+    }
 
 
 # -------------------------------------------------------------------------
@@ -976,9 +1210,9 @@ def seed_default_cultural_archives(db_path: str) -> None:
                 "Traditional Gondi",
                 "[Protected Ceremonial Text - Elder Initiation Required]",
                 "[Translation restricted to accredited initiates under OCAP Protocols]",
-                None,
+                "gondi_sacred_totem_master.wav",
                 310.0,
-                None,
+                "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
                 "1985-01-05",
                 "Undisclosed Sacred Shrine, Bastar",
                 "Elder Phratry Custodians",

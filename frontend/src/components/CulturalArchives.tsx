@@ -21,6 +21,7 @@ import {
   RotateCw,
   Repeat,
   Radio,
+  Trash2,
 } from "lucide-react";
 import {
   ArchiveCollection,
@@ -29,6 +30,7 @@ import {
   CulturalSubmission,
   AuthUser,
   BilingualSegment,
+  StoryBilingualSegmentItem,
 } from "../types";
 
 export interface CulturalArchivesProps {
@@ -114,6 +116,14 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
   const [pendingSubmissions, setPendingSubmissions] = useState<CulturalSubmission[]>([]);
   const [reviewNotes, setReviewNotes] = useState<string>("");
 
+  // Milestone 28: Dynamic Waveform, Bilingual Segments & Revocation State
+  const [apiWaveformPeaks, setApiWaveformPeaks] = useState<number[]>([]);
+  const [apiSegments, setApiSegments] = useState<StoryBilingualSegmentItem[]>([]);
+  const [isRevokeModalOpen, setIsRevokeModalOpen] = useState<boolean>(false);
+  const [revokeReason, setRevokeReason] = useState<string>("Clan council privacy withdrawal request");
+  const [revokeRequester, setRevokeRequester] = useState<string>("Adilabad Clan Council of Elders");
+  const [revokeLoading, setRevokeLoading] = useState<boolean>(false);
+
   const getHeaders = () => {
     const headers: Record<string, string> = {};
     if (authToken) {
@@ -139,7 +149,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
       const [ovRes, collRes, storyRes] = await Promise.all([
         fetch(`${apiBaseUrl}/api/v1/cultural-archives/overview`, { headers }),
         fetch(`${apiBaseUrl}/api/v1/cultural-archives/collections`, { headers }),
-        fetch(`${apiBaseUrl}/api/v1/cultural-archives/stories`, { headers }),
+        fetch(`${apiBaseUrl}/api/v1/cultural-archives/stories?include_teasers=true`, { headers }),
       ]);
 
       if (ovRes.ok) setOverview(await ovRes.json());
@@ -163,6 +173,60 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
     setAudioCurrentTime(0);
     setAudioDuration(story.audio_duration_seconds || 0);
     setStoryInspectorTab("transcript");
+    setApiWaveformPeaks([]);
+    setApiSegments([]);
+
+    if (!story.is_redacted) {
+      // Fetch dynamic 56-bar audio waveform envelope
+      fetch(`${apiBaseUrl}/api/v1/cultural-archives/stories/${story.story_id}/waveform`, { headers: getHeaders() })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.peaks?.length) {
+            setApiWaveformPeaks(data.peaks);
+          }
+        })
+        .catch(() => {});
+
+      // Fetch aligned bilingual karaoke segments
+      fetch(`${apiBaseUrl}/api/v1/cultural-archives/stories/${story.story_id}/bilingual-segments`, { headers: getHeaders() })
+        .then((r) => (r.ok ? r.json() : null))
+        .then((data) => {
+          if (data?.segments?.length) {
+            setApiSegments(data.segments);
+          }
+        })
+        .catch(() => {});
+    }
+  };
+
+  const handleRevokeConsent = async () => {
+    if (!selectedStory) return;
+    setRevokeLoading(true);
+    try {
+      const res = await fetch(`${apiBaseUrl}/api/v1/cultural-archives/stories/${selectedStory.story_id}/revoke-consent`, {
+        method: "POST",
+        headers: {
+          ...getHeaders(),
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          revoked_by: revokeRequester,
+          reason: revokeReason,
+        }),
+      });
+      if (res.ok) {
+        setIsRevokeModalOpen(false);
+        setSelectedStory(null);
+        await fetchData();
+      } else {
+        const err = await res.json().catch(() => ({}));
+        alert(`Failed to revoke consent: ${err.detail || "Unauthorized"}`);
+      }
+    } catch (e) {
+      alert(`Error revoking consent: ${e}`);
+    } finally {
+      setRevokeLoading(false);
+    }
   };
 
   const handleOpenSubmitModal = () => {
@@ -216,6 +280,16 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
   // Synchronized Bilingual Segments Builder
   const bilingualSegments: BilingualSegment[] = useMemo(() => {
     if (!selectedStory) return [];
+    if (apiSegments.length > 0) {
+      return apiSegments.map((s) => ({
+        id: s.segment_id,
+        vernacularText: s.vernacular_text,
+        nativeScriptText: s.native_script || undefined,
+        translatedText: s.translated_text,
+        startTime: s.start_time,
+        endTime: s.end_time,
+      }));
+    }
     const totalDuration = selectedStory.audio_duration_seconds || audioDuration || 60;
     const vernSource =
       selectedStory.transliteration ||
@@ -250,7 +324,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
         endTime: (idx + 1) * segmentInterval,
       };
     });
-  }, [selectedStory, audioDuration]);
+  }, [selectedStory, audioDuration, apiSegments]);
 
   // Active sentence segment index
   const activeSegmentIndex = useMemo(() => {
@@ -260,8 +334,11 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
     );
   }, [bilingualSegments, audioCurrentTime, audioDuration]);
 
-  // Deterministic Waveform Heights based on Story ID
+  // Audio Waveform Peaks (Real Backend Peaks or Harmonically Seeded)
   const waveformBars = useMemo(() => {
+    if (apiWaveformPeaks.length > 0) {
+      return apiWaveformPeaks;
+    }
     if (!selectedStory) return [];
     const seed = selectedStory.story_id
       .split("")
@@ -276,7 +353,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
           );
       return Math.max(0.18, Math.min(1.0, rawVal));
     });
-  }, [selectedStory]);
+  }, [selectedStory, apiWaveformPeaks]);
 
   const toggleAudioPlay = () => {
     if (!audioRef.current) return;
@@ -724,8 +801,57 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
           <div className="lg:col-span-5">
             {selectedStory ? (
               <div className="bg-white rounded-2xl border border-stone-200 p-6 shadow-md sticky top-6 space-y-6">
-                {/* Audio Master Player Container */}
-                <div className="bg-stone-900 text-white rounded-2xl p-5 space-y-4 shadow-xl border border-stone-800">
+                {/* Story Inspector Header & Revocation Button */}
+                <div className="flex items-center justify-between gap-3 border-b border-stone-100 pb-3">
+                  <div className="space-y-0.5 min-w-0">
+                    <h3 className="text-xl font-bold text-stone-900 truncate">{selectedStory.title}</h3>
+                    <div className="text-xs text-stone-500 font-medium flex items-center gap-2">
+                      <span>{selectedStory.collection_title || "Oral History Corpus"}</span>
+                      {selectedStory.location_name && <span>• {selectedStory.location_name}</span>}
+                    </div>
+                  </div>
+                  {userRole === "elder" && (
+                    <button
+                      onClick={() => setIsRevokeModalOpen(true)}
+                      className="px-3 py-1.5 bg-red-50 hover:bg-red-100 text-red-700 border border-red-200 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all shrink-0"
+                      title="Revoke Community Consent under OCAP Principles"
+                    >
+                      <Trash2 className="w-3.5 h-3.5 text-red-600" /> Revoke Consent
+                    </button>
+                  )}
+                </div>
+
+                {selectedStory.is_redacted ? (
+                  <div className="bg-gradient-to-br from-amber-950 via-stone-900 to-red-950 text-white rounded-2xl p-6 space-y-4 shadow-xl border border-amber-600/40">
+                    <div className="flex items-center justify-between">
+                      <span className="px-2.5 py-1 bg-red-900/80 text-red-200 border border-red-500/30 rounded-lg text-xs font-bold uppercase tracking-wider flex items-center gap-1.5">
+                        <Lock className="w-3.5 h-3.5 text-red-400" /> Sacred Lore Shield Active
+                      </span>
+                      <span className="text-xs text-amber-300 font-semibold">
+                        {selectedStory.traditional_knowledge_label || "TK Notice (Secret/Sacred)"}
+                      </span>
+                    </div>
+
+                    <div className="space-y-2">
+                      <h4 className="text-lg font-bold text-amber-200">{selectedStory.title}</h4>
+                      <p className="text-xs text-stone-300 leading-relaxed">
+                        {selectedStory.custodianship_advisory || selectedStory.description}
+                      </p>
+                    </div>
+
+                    <div className="p-3.5 bg-black/50 border border-amber-500/20 rounded-xl space-y-2 text-xs text-stone-300">
+                      <div className="flex items-center gap-2 text-amber-300 font-semibold">
+                        <ShieldCheck className="w-4 h-4 text-amber-400" /> OCAP Customary Governance
+                      </div>
+                      <p className="text-[11px] text-stone-400 leading-relaxed">
+                        Original 48kHz audio streams, acoustic waveforms, and liturgical transcripts are strictly withheld from unverified public viewers.
+                        Switch to the <strong>Elder</strong> role above or authenticate with clan custodian credentials to unlock authentic master audio.
+                      </p>
+                    </div>
+                  </div>
+                ) : (
+                  /* Audio Master Player Container */
+                  <div className="bg-stone-900 text-white rounded-2xl p-5 space-y-4 shadow-xl border border-stone-800">
                   <div className="flex items-center justify-between">
                     <div className="text-xs font-semibold text-amber-400 uppercase tracking-wider flex items-center gap-1.5">
                       <Radio className="w-4 h-4 animate-pulse text-amber-400" /> Authentic Acoustic Master
@@ -890,6 +1016,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
                     </div>
                   </div>
                 </div>
+              )}
 
                 {/* Inspector View Mode Switcher */}
                 <div className="flex bg-stone-100 p-1 rounded-xl border border-stone-200">
@@ -1456,6 +1583,79 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* 5. Cascading Consent Revocation Modal (Milestone 28 OCAP Shielding) */}
+      {isRevokeModalOpen && selectedStory && (
+        <div className="fixed inset-0 z-50 bg-stone-950/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white rounded-2xl max-w-lg w-full p-6 shadow-2xl border border-red-200 space-y-4">
+            <div className="flex items-center justify-between border-b pb-3 border-stone-200">
+              <div className="flex items-center gap-2 text-red-700 font-bold text-base">
+                <AlertTriangle className="w-5 h-5 text-red-600" />
+                Revoke Community Consent (OCAP Withdrawal)
+              </div>
+              <button
+                onClick={() => setIsRevokeModalOpen(false)}
+                className="text-stone-400 hover:text-stone-700 text-xl font-bold"
+              >
+                &times;
+              </button>
+            </div>
+
+            <div className="p-3 bg-red-50 border border-red-200 rounded-xl text-xs text-red-800 space-y-1">
+              <p className="font-semibold">Irreversible Cascading Revocation Notice:</p>
+              <p>
+                Under OCAP principles, withdrawing community consent immediately sets story status to WITHDRAWN,
+                purges full-text search indexes, and purges semantic vector embeddings from ChromaDB.
+              </p>
+            </div>
+
+            <div className="space-y-3">
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Target Story</label>
+                <div className="p-2.5 bg-stone-100 rounded-xl text-sm font-semibold text-stone-900">
+                  {selectedStory.title} ({selectedStory.story_id})
+                </div>
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Revoking Authority / Elder Council</label>
+                <input
+                  type="text"
+                  value={revokeRequester}
+                  onChange={(e) => setRevokeRequester(e.target.value)}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+
+              <div>
+                <label className="block text-xs font-bold text-stone-700 mb-1">Reason for Withdrawal</label>
+                <textarea
+                  rows={3}
+                  value={revokeReason}
+                  onChange={(e) => setRevokeReason(e.target.value)}
+                  className="w-full px-3 py-2 border border-stone-300 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-red-500"
+                />
+              </div>
+            </div>
+
+            <div className="flex items-center justify-end gap-3 pt-3 border-t border-stone-200">
+              <button
+                onClick={() => setIsRevokeModalOpen(false)}
+                className="px-4 py-2 bg-stone-100 hover:bg-stone-200 text-stone-700 text-sm font-semibold rounded-xl"
+              >
+                Cancel
+              </button>
+              <button
+                disabled={revokeLoading}
+                onClick={handleRevokeConsent}
+                className="px-4 py-2 bg-red-700 hover:bg-red-800 text-white text-sm font-bold rounded-xl flex items-center gap-1.5 shadow"
+              >
+                {revokeLoading ? "Purging..." : "Confirm Cascading Revocation"}
+              </button>
+            </div>
           </div>
         </div>
       )}

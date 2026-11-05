@@ -4892,6 +4892,7 @@ def api_list_cultural_stories(
     category: str | None = None,
     q: str | None = None,
     query: str | None = None,
+    include_teasers: bool = False,
     limit: int = 50,
     offset: int = 0,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
@@ -4910,6 +4911,7 @@ def api_list_cultural_stories(
         query=search_query,
         is_authenticated=is_auth,
         user_roles=roles,
+        include_restricted_teasers=include_teasers,
         limit=limit,
         offset=offset,
     )
@@ -4919,6 +4921,7 @@ def api_list_cultural_stories(
 @app.get("/api/v1/archives/stories/{story_id}")
 def api_get_cultural_story(
     story_id: str,
+    allow_teaser: bool = False,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
@@ -4927,7 +4930,7 @@ def api_get_cultural_story(
     """Retrieve an individual cultural story with translation and contributor provenance."""
     is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     res = cultural_archive_service.get_cultural_story(
-        DB_PATH, story_id, is_authenticated=is_auth, user_roles=roles
+        DB_PATH, story_id, is_authenticated=is_auth, user_roles=roles, allow_teaser=allow_teaser
     )
     if not res:
         raise HTTPException(status_code=404, detail=f"Story '{story_id}' not found or access restricted.")
@@ -5134,6 +5137,92 @@ def api_withdraw_cultural_record(
     except Exception:
         logger.exception("Error processing withdrawal")
         raise HTTPException(status_code=500, detail="Internal server error processing record withdrawal.")
+
+
+# Milestone 28 (Module 4: Cultural Archives & Sacred Lore Enhancements)
+
+@app.get("/api/v1/cultural-archives/stories/{story_id}/waveform")
+@app.get("/api/v1/archives/stories/{story_id}/waveform")
+def api_get_cultural_story_waveform(
+    story_id: str,
+    num_peaks: int = 56,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Retrieve 56-bar normalized audio waveform peaks for story audio visualizer."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
+    try:
+        return cultural_archive_service.get_story_waveform(
+            DB_PATH,
+            story_id=story_id,
+            audio_base_dir=AUDIO_STORAGE,
+            num_peaks=num_peaks,
+            is_authenticated=is_auth,
+            user_roles=roles,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/cultural-archives/stories/{story_id}/bilingual-segments")
+@app.get("/api/v1/archives/stories/{story_id}/bilingual-segments")
+def api_get_cultural_story_bilingual_segments(
+    story_id: str,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Retrieve sentence-level time-aligned bilingual segments for karaoke synchronized playback."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
+    try:
+        return cultural_archive_service.get_story_bilingual_segments(
+            DB_PATH,
+            story_id=story_id,
+            is_authenticated=is_auth,
+            user_roles=roles,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+class RevokeStoryConsentRequest(BaseModel):
+    revoked_by: str
+    reason: str
+
+
+@app.post("/api/v1/cultural-archives/stories/{story_id}/revoke-consent")
+@app.post("/api/v1/archives/stories/{story_id}/revoke-consent")
+def api_revoke_story_consent(
+    story_id: str,
+    req: RevokeStoryConsentRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Execute immediate cascading revocation of community consent for a story (Elder or Admin authorized)."""
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, authorization=authorization)
+    is_admin = "admin" in roles
+    is_elder = "elder" in roles
+    try:
+        return cultural_archive_service.revoke_story_consent(
+            DB_PATH,
+            story_id=story_id,
+            revoked_by=req.revoked_by,
+            reason=req.reason,
+            is_admin=is_admin,
+            is_elder=is_elder,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 # ─────────────────────────────────────────────────────────────────────────────

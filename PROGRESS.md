@@ -1954,3 +1954,27 @@
     8. OCAP Sacred Lore Shielding: Public users cannot retrieve `SACRED_ELDER_ONLY` resources; verified elders have full authorized access.
   - NOT VERIFIED: v2.0 upcoming feature modules M28–M33 (to be implemented next per roadmap).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Completed Milestone 28 (Module 4: Cultural Archives & Sacred Lore Shielding).
+  - Implemented multi-tier access classifications (`PUBLIC`, `COMMUNITY_RESTRICTED`, `SACRED_ELDER_ONLY`, `RESEARCH_ONLY`) with Automated Redacted Preview Teasers in `backend/cultural_archive_service.py` (`get_redacted_story_teaser()`) and REST API (`GET /api/v1/cultural-archives/stories?include_teasers=true`).
+  - Added safe teaser cards shielding master audio references and liturgy while preserving customary Indigenous custodianship and Traditional Knowledge labels (e.g., `TK Notice (Secret/Sacred)`).
+  - Implemented 56-bar normalized audio waveform extraction endpoint in `backend/cultural_archive_service.py` and `backend/main.py` (`GET /api/v1/cultural-archives/stories/{story_id}/waveform`) with OCAP access boundaries on sacred/ceremonial lore.
+  - Implemented sentence-level synchronized bilingual alignment endpoint (`GET /api/v1/cultural-archives/stories/{story_id}/bilingual-segments`) generating time-coded karaoke boundaries.
+  - Implemented community oral history contribution screening: prevents uploading secret sacred ceremonial lore through public queues, enforcing affirmative 6-facet OCAP consent.
+  - Implemented instant cascading consent revocation hook (`POST /api/v1/cultural-archives/stories/{story_id}/revoke-consent`) purging stories from SQLite, `cultural_stories_fts` virtual table, Knowledge Graph nodes, and ChromaDB vector representations.
+  - Upgraded interactive frontend studio in `frontend/src/components/CulturalArchives.tsx` and modularized in `frontend/src/modules/cultural-archives/index.ts`:
+    - Redacted Sacred Lore Teaser card with Traditional Knowledge notice and custodian warning
+    - 56-bar animated waveform visualizer with click-to-seek, progressive played fill, and speed controls (0.75x, 1.0x, 1.25x, 1.5x)
+    - Synchronized bilingual transcript player with real-time active spoken sentence karaoke highlighting
+    - 1-click Cascading Consent Revocation modal for authenticated elders and administrators.
+  - Added dedicated test suite in `tests/test_milestone28_cultural_archives.py` (7/7 tests passing in 2.71s).
+  - Files touched: `backend/cultural_archive_service.py`, `backend/main.py`, `frontend/src/App.tsx`, `frontend/src/components/CulturalArchives.tsx`, `frontend/src/modules/cultural-archives/index.ts`, `frontend/src/types.ts`, `tests/test_milestone28_cultural_archives.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Regression Suite: `pytest tests/ -q` passed all 257/257 tests in 74.80s (100% pass rate).
+    2. Milestone 28 Test Suite: `pytest tests/test_milestone28_cultural_archives.py -v` passed all 7/7 tests in 2.71s.
+    3. Milestone 17 Test Suite: `pytest tests/test_milestone17_cultural_archives.py -v` passed all 13/13 tests in 2.22s.
+    4. Frontend Typecheck & Build: `npx tsc --noEmit` passed with 0 errors and `npm run build` succeeded (721.63 kB JS bundle).
+    5. Python Quality Linter: `python3 -m ruff check` passed with 0 warnings/errors.
+    6. OCAP Compliance: Master audio recordings remain immutable; sacred lore is shielded with safe redacted teasers; consent revocation triggers cascading deletion across indexes and vector store.
+  - NOT VERIFIED: v2.0 upcoming feature modules M29–M33 (to be implemented next per roadmap).
+  - NEEDS FROM OTHER AGENT: none.

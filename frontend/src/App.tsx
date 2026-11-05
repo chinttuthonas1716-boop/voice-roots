@@ -50,7 +50,7 @@ import { Home } from './components/Home';
 import { GroundedAssistant } from './modules/ai-assistant';
 import { OfflineManager } from './components/OfflineManager';
 import { KnowledgeGraph } from './components/KnowledgeGraph';
-import { CulturalArchives } from './components/CulturalArchives';
+import { CulturalArchives } from './modules/cultural-archives';
 import { SpeechIntelligence } from './components/SpeechIntelligence';
 import { LanguageLearning } from './components/LanguageLearning';
 import { ResearchPortal } from './components/ResearchPortal';

@@ -671,6 +671,9 @@ export interface CulturalStory {
   collection_title?: string | null;
   collection_category?: string | null;
   traditional_knowledge_label?: string | null;
+  is_redacted?: boolean;
+  is_accessible?: boolean;
+  custodianship_advisory?: string | null;
 }
 
 // User Authentication & Role-Based Access Control
@@ -1027,6 +1030,37 @@ export interface AssistantRagStats {
     approved_transcripts: number;
   };
   supported_languages: string[];
+}
+
+// Milestone 28: Module 4 — Cultural Archives & Sacred Lore Shielding
+export interface StoryWaveformEnvelope {
+  story_id: string;
+  title: string;
+  primary_language: string;
+  num_peaks: number;
+  peaks: number[];
+  duration_seconds: number;
+}
+
+export interface StoryBilingualSegmentItem {
+  segment_id: number;
+  start_time: number;
+  end_time: number;
+  vernacular_text: string;
+  native_script?: string | null;
+  translated_text: string;
+  language?: string | null;
+  dialect?: string | null;
+}
+
+export interface StoryBilingualSegmentsResponse {
+  story_id: string;
+  title: string;
+  primary_language: string;
+  dialect_variety?: string | null;
+  total_duration: number;
+  segment_count: number;
+  segments: StoryBilingualSegmentItem[];
 }
 
 
