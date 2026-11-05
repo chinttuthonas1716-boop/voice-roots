@@ -119,7 +119,7 @@ def test_workflow_step_b_transcription_and_language_detection():
 
 def test_workflow_step_c_translation_with_elder_review_guardrails():
     """Verify Step C: Translation routing, oral language protection, and SQLite persistence."""
-    # 1. Oral language (Gondi) without elder review must return HTTP 503 with restriction notice
+    # 1. Oral language (Gondi) without elder review must return HTTP 422 with restriction notice
     gondi_res = client.post(
         "/api/v1/translate",
         json={
@@ -128,7 +128,7 @@ def test_workflow_step_c_translation_with_elder_review_guardrails():
             "target_language": "en",
         },
     )
-    assert gondi_res.status_code == 503
+    assert gondi_res.status_code == 422
     assert "elder" in gondi_res.json()["detail"].lower()
 
     # 2. Supported pair / Identity passthrough translates and stores in translations table

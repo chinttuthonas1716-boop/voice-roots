@@ -55,9 +55,9 @@ def test_oral_language_elder_review_guardrail():
             "target_language": "en",
         },
     )
-    # Must either reject unreviewed oral translation with HTTP 503 / 400 or flag elder approval required
-    assert resp.status_code in [200, 503]
-    if resp.status_code == 503:
+    # Must either reject unreviewed oral translation with HTTP 422 / 503 or flag elder approval required
+    assert resp.status_code in [200, 422, 503]
+    if resp.status_code in [422, 503]:
         detail = resp.json().get("detail", "")
         assert "elder" in detail.lower() or "review" in detail.lower() or "oral" in detail.lower()
     else:

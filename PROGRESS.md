@@ -2258,3 +2258,28 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
   - NOT VERIFIED: High-concurrency distributed DDoS simulation against live Render domain.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Honest Translation Policy (Task T2.1).
+  - IndicTrans2 & Dictionary Phrasebook Architecture:
+    1. Added `IndicTrans2TranslationAdapter` in `backend/translation_service.py` covering all 22 Eighth Schedule languages + English. Returns `review_status="unreviewed_draft"`, `badge_label="Draft (Unreviewed)"`, and `is_elder_approved=False`.
+    2. Added `DictionaryPhrasebookAdapter` in `backend/translation_service.py` providing verified community phrasebook entries for oral heritage tongues (Gondi, Koya, Lambadi). Verified phrasebook matches return `review_status="elder_approved"`, `badge_label="Elder Approved"`, and `is_elder_approved=True`.
+    3. Changed oral language restriction status from HTTP 503 to HTTP 422 Unprocessable Entity in `backend/main.py` (`OralLanguageElderReviewRequiredError`), accurately reflecting semantic indigenous data governance protocols where machine hallucination on oral tongues is prohibited without elder approval.
+    4. Updated Next.js API route `web/src/app/api/translate/route.ts` with identical oral language phrasebook routing, HTTP 422 elder review gates, and review status metadata.
+  - Frontend Review Status Badges & Warnings:
+    1. Updated `web/src/app/translate/page.tsx` with dynamic badge rendering:
+       - Emerald badge with checkmark (`✓ Elder Approved`) for community-verified phrasebook translations.
+       - Amber badge (`Draft (Unreviewed)`) with cautionary warning: "Machine translation via IndicTrans2. Unreviewed draft — requires elder review."
+       - Rose shield alert banner for HTTP 422 responses informing users that oral language translations require community elder verification under Indigenous Data Sovereignty protocols.
+  - Test Suite Updates & Regression:
+    1. Updated `tests/test_e2e_workflow.py` and `tests/test_milestone24_v2_foundation.py` assertions to align with HTTP 422 status code for unreviewed oral utterances.
+    2. Created dedicated test suite `tests/test_t2_1_honest_translation.py` covering IndicTrans2 language coverage, unreviewed draft status, Gondi/Koya/Lambadi phrasebook matches, and HTTP 422 restriction behavior.
+  - Files touched: `backend/translation_service.py`, `backend/main.py`, `web/src/app/api/translate/route.ts`, `web/src/app/translate/page.tsx`, `tests/test_e2e_workflow.py`, `tests/test_milestone24_v2_foundation.py`, `tests/test_t2_1_honest_translation.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_1_honest_translation.py -v` passed all 7/7 tests in 0.82s.
+    2. Affected Test Suites: `pytest tests/test_t2_1_honest_translation.py tests/test_e2e_workflow.py tests/test_milestone24_v2_foundation.py -v` passed all 19/19 tests in 3.65s.
+    3. Full Regression Suite: `pytest tests/test_milestone4_persistence.py tests/test_backend_api.py tests/test_t1_3_postgres_migration.py tests/test_t1_4_r2_storage.py tests/test_t1_5_flac_evaluation.py tests/test_t1_6_security_basics.py tests/test_t2_1_honest_translation.py backend/tests/test_milestone1.py -v` passed all 86/86 tests in 46.32s.
+    4. Python Linter: `python3 -m ruff check backend/main.py backend/translation_service.py tests/test_t2_1_honest_translation.py` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 19/19 routes with 0 errors.
+  - NOT VERIFIED: Live inference against remote hosted IndicTrans2 HuggingFace endpoint without endpoint secret.
+  - NEEDS FROM OTHER AGENT: none.
+

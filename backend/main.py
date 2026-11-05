@@ -2943,12 +2943,15 @@ def translate_text_endpoint(payload: TranslateRequest):
             "model": result.model,
             "verified": result.verified,
             "pair_status": result.pair_status,
+            "review_status": getattr(result, "review_status", "elder_approved" if result.verified else "unreviewed_draft"),
+            "badge_label": getattr(result, "badge_label", "Elder Approved" if result.verified else "Draft (Unreviewed)"),
+            "is_elder_approved": bool(getattr(result, "review_status", "") == "elder_approved" or result.verified),
             "limitation_note": result.limitation_note,
             "created_at": now if translation_id else None,
         }
     except OralLanguageElderReviewRequiredError as o_err:
         raise HTTPException(
-            status_code=503,
+            status_code=422,
             detail=(
                 f"Translation restricted: {o_err!s} "
                 f"Oral languages require community elder verification."

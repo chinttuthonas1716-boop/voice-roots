@@ -1,7 +1,7 @@
 "use client";
 
 import { useState } from "react";
-import { Volume2, Copy, Check, ArrowRightLeft } from "lucide-react";
+import { Volume2, Copy, Check, ArrowRightLeft, ShieldAlert } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 
 interface LanguageOption {
@@ -32,6 +32,9 @@ export default function TranslatePage() {
   const [targetLang, setTargetLang] = useState("en");
   const [inputText, setInputText] = useState("");
   const [translatedText, setTranslatedText] = useState("");
+  const [reviewStatus, setReviewStatus] = useState<string | null>(null);
+  const [badgeLabel, setBadgeLabel] = useState<string | null>(null);
+  const [limitationNote, setLimitationNote] = useState<string | null>(null);
   const [isTranslating, setIsTranslating] = useState(false);
   const [copied, setCopied] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -42,11 +45,17 @@ export default function TranslatePage() {
     setTargetLang(prevSource);
     setInputText(translatedText);
     setTranslatedText(inputText);
+    setReviewStatus(null);
+    setBadgeLabel(null);
+    setLimitationNote(null);
   };
 
   const handleTranslate = async () => {
     if (!inputText.trim()) {
       setTranslatedText("");
+      setReviewStatus(null);
+      setBadgeLabel(null);
+      setLimitationNote(null);
       return;
     }
 
@@ -64,12 +73,28 @@ export default function TranslatePage() {
         }),
       });
 
+      if (resp.status === 422) {
+        const errData = await resp.json().catch(() => ({}));
+        setTranslatedText("");
+        setReviewStatus("elder_review_required");
+        setBadgeLabel("Elder Review Required");
+        setLimitationNote(null);
+        setError(
+          errData.error ||
+          "Oral language translation restricted: unwritten oral languages require community elder verification under Indigenous Data Sovereignty protocols."
+        );
+        return;
+      }
+
       if (!resp.ok) {
         throw new Error(`Translation request failed (${resp.status})`);
       }
 
       const data = await resp.json();
       setTranslatedText(data.translation || "Translation unavailable.");
+      setReviewStatus(data.reviewStatus || "unreviewed_draft");
+      setBadgeLabel(data.badgeLabel || "Draft (Unreviewed)");
+      setLimitationNote(data.limitationNote || null);
     } catch {
       setError("Unable to translate right now. Please try again.");
     } finally {
@@ -105,13 +130,17 @@ export default function TranslatePage() {
             Language Translator
           </h1>
           <p className="text-sm text-[#94A3B8]">
-            Translate spoken phrases across 13 Indian and tribal tongues.
+            Honest machine translation & verified oral phrasebooks across 13 Indian and tribal tongues.
           </p>
         </div>
 
         {error && (
-          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-3 text-sm text-rose-300 text-center">
-            {error}
+          <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-sm text-rose-300 text-left flex items-start gap-3">
+            <ShieldAlert className="h-5 w-5 text-rose-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <p className="font-semibold text-rose-200">Elder Review Required</p>
+              <p className="text-xs text-rose-300/90 leading-relaxed">{error}</p>
+            </div>
           </div>
         )}
 
@@ -187,9 +216,26 @@ export default function TranslatePage() {
           </button>
 
           <div>
-            <label htmlFor="result-text" className="block text-xs font-medium text-[#94A3B8] mb-1">
-              Translation
-            </label>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="result-text" className="block text-xs font-medium text-[#94A3B8]">
+                Translation
+              </label>
+              {badgeLabel && (
+                <span
+                  className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
+                    reviewStatus === "elder_approved"
+                      ? "bg-emerald-500/20 text-emerald-300 border border-emerald-500/30"
+                      : reviewStatus === "elder_review_required"
+                      ? "bg-rose-500/20 text-rose-300 border border-rose-500/30"
+                      : "bg-amber-500/20 text-amber-300 border border-amber-500/30"
+                  }`}
+                >
+                  {reviewStatus === "elder_approved" && <Check className="h-3 w-3 text-emerald-400" />}
+                  {badgeLabel}
+                </span>
+              )}
+            </div>
+
             <div
               id="result-text"
               className="min-h-[100px] rounded-xl border border-white/15 bg-black/40 p-4 text-base text-[#F8FAFC] leading-relaxed"
@@ -200,6 +246,13 @@ export default function TranslatePage() {
                 <p className="text-[#94A3B8] italic">Translation will appear here.</p>
               )}
             </div>
+
+            {limitationNote && reviewStatus === "unreviewed_draft" && (
+              <p className="text-xs text-amber-300/80 mt-1.5 flex items-center gap-1.5">
+                <span>⚠️</span>
+                <span>{limitationNote}</span>
+              </p>
+            )}
           </div>
 
           <div className="flex gap-3 pt-1">
