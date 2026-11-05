@@ -22,6 +22,7 @@ export interface StoredVoiceRecord {
   originalTranscript: string;
   translations?: Partial<Record<"en" | "te" | "hi" | "ta" | "kn" | "ml", string>>;
   isUserUploaded?: boolean;
+  promptId?: string;
   accessLevel?: "public" | "community" | "private" | "restricted";
   aiPermissions?: {
     transcription: boolean;

@@ -2317,5 +2317,38 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Physical hardware field microphone live recordings.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Prompted Recording Mode (Task T2.4).
+  - Backend Prompt Service & Schema:
+    1. Implemented `backend/prompt_service.py` with `prompts` table initialization and seed dataset:
+       - 50+ prompts each for Gondi (30 Swadesh core words + 20 sentences), Koya (30 Swadesh core words + 20 sentences), Santhali (30 Swadesh core words + 20 sentences), and Lambadi (20 prompts).
+       - Every seed item explicitly marked with `is_placeholder = 1` and `provenance = 'swadesh_seed_placeholder'`.
+       - Includes IPA phonetic targets, English meanings, Telugu glosses, and categories (`swadesh_word` or `short_sentence`).
+    2. Implemented `GET /api/v1/prompts` and `GET /api/v1/prompts/{prompt_id}` in `backend/main.py` with multi-criteria filtering by language, category, difficulty level, and limit.
+    3. Added `prompt_id` column and index on `transcripts` table in `backend/main.py`.
+    4. Updated `POST /api/v1/transcripts/upload` to accept `prompt_id: str | None = Form(None)` and persist it with the uploaded audio record.
+  - Frontend Prompted Recording Experience:
+    1. Updated `web/src/lib/storage.ts` to include `promptId?: string` on `StoredVoiceRecord`.
+    2. Added `PromptedRecordingView.tsx` component:
+       - Single-card focused prompt view showing language, category badge, target word/phrase in native script, phonetic IPA guide, English meaning, and Telugu gloss.
+       - Audio recording, audio waveform/timer, preview playback, and direct submission tagged with `prompt_id`.
+       - Automatic progress counter and advancement to the next prompt upon saving.
+       - Offline fallback resilience saving to IndexedDB when server is unreachable.
+    3. Updated `web/src/app/record/page.tsx`:
+       - Added top mode switcher tabs: "🎙️ Freeform Record", "📋 Prompted Mode", "📁 Upload File".
+       - Seamless toggle and `?mode=prompted` query param handling wrapped in `<Suspense>`.
+    4. Added `"typecheck": "tsc --noEmit"` to `web/package.json`.
+  - Dedicated Test Suite:
+    1. Authored `tests/test_t2_4_prompted_recording.py` verifying seed prompt counts (>= 50 for Gondi, Koya, Santhali), placeholder status flags, language and category filters, single prompt lookup, and upload tagging with `prompt_id`.
+  - Files touched: `backend/prompt_service.py`, `backend/main.py`, `web/src/lib/storage.ts`, `web/src/components/audio/PromptedRecordingView.tsx`, `web/src/app/record/page.tsx`, `web/package.json`, `tests/test_t2_4_prompted_recording.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_4_prompted_recording.py -v` passed all 4/4 tests in 2.68s.
+    2. Full Phase 2 Test Suites: `pytest tests/test_t2_4_prompted_recording.py tests/test_t2_3_reviewer_queue.py tests/test_t2_2_consent_withdrawal.py tests/test_t2_1_honest_translation.py -v` passed all 22/22 tests in 2.99s.
+    3. Python Linter: `python3 -m ruff check backend/` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 20/20 routes (including `/record`) with 0 errors.
+  - NOT VERIFIED: Physical microphone hardware input on real Android device.
+  - NEEDS FROM OTHER AGENT: none.
+
+
 
 

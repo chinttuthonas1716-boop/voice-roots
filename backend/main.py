@@ -33,6 +33,7 @@ import dictionary_service
 import language_explorer_service
 import learning_service
 import learning_studio_service
+import prompt_service
 import research_interoperability_service
 import speech_analysis_service
 from dataset_service import (
@@ -363,6 +364,7 @@ def init_db():
             "verified_by": "TEXT",
             "verified_at": "TEXT",
             "review_notes": "TEXT",
+            "prompt_id": "TEXT",
         }
         for column, sql_type in additions.items():
             if column not in existing_columns:
@@ -379,6 +381,13 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_flac_sha256 ON transcripts(flac_sha256)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_privacy ON transcripts(privacy_level)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_verification ON transcripts(verification_status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_prompt_id ON transcripts(prompt_id)")
+
+        try:
+            prompt_service.init_prompt_tables(conn)
+            prompt_service.seed_prompts_if_empty(DB_PATH)
+        except Exception as p_err:
+            logger.warning("Prompt tables initialization error: %s", p_err)
 
         cursor.execute(
             """
@@ -1852,6 +1861,7 @@ async def upload_audio(
     is_anonymous: bool = Form(False),
     contextual_notes: str | None = Form(None),
     client_uuid: str | None = Form(None),
+    prompt_id: str | None = Form(None),
 ):
     """Store a consented audio master and optionally queue consented transcription."""
     client_ip = request.client.host if request.client else ""
@@ -1955,8 +1965,8 @@ async def upload_audio(
                     storage_backend,
                     verification_status, consent_private_storage, consent_community_access,
                     consent_public_publication, consent_ai_training, is_anonymous,
-                    contextual_notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    contextual_notes, prompt_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     unique_uuid,
@@ -1993,6 +2003,7 @@ async def upload_audio(
                     c_ai,
                     anon_flag,
                     contextual_notes,
+                    prompt_id,
                 ),
             )
             conn.commit()
@@ -2032,6 +2043,7 @@ async def upload_audio(
         "created_at": now,
         "audio_sha256": audio_sha256,
         "flac_sha256": flac_sha256,
+        "prompt_id": prompt_id,
         "is_flac_verified": bool(flac_sha256),
         "file_size_bytes": file_size,
         "consent_at": now,
@@ -6833,6 +6845,32 @@ def api_resolve_moderation_item(req: ModerateQueueRequest):
         raise HTTPException(status_code=403, detail=str(e))
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/prompts")
+def api_list_prompts(
+    language: str | None = None,
+    category: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    """Retrieve database-persisted prompt lists (Swadesh core vocabulary & sentences)."""
+    return prompt_service.list_prompts(
+        language=language,
+        category=category,
+        limit=limit,
+        offset=offset,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/prompts/{prompt_id}")
+def api_get_prompt_by_id(prompt_id: str):
+    """Retrieve details for a single prompt by its unique prompt_id."""
+    prompt = prompt_service.get_prompt_by_id(prompt_id=prompt_id, db_path=DB_PATH)
+    if not prompt:
+        raise HTTPException(status_code=404, detail=f"Prompt '{prompt_id}' not found.")
+    return prompt
 
 
 @app.get("/api/v1/reviewer/queue")
