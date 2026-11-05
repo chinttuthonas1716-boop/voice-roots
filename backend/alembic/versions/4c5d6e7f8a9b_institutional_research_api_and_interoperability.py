@@ -20,8 +20,12 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create Institutional Research API credentials and access logs."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
+    try:
+        inspector = sa.inspect(bind)
+        existing_tables = set(inspector.get_table_names())
+    except Exception:
+        inspector = None
+        existing_tables = set()
 
     if "research_api_keys" not in existing_tables:
         op.create_table(
@@ -57,8 +61,12 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Drop Institutional Research API tables."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
+    try:
+        inspector = sa.inspect(bind)
+        existing_tables = set(inspector.get_table_names())
+    except Exception:
+        inspector = None
+        existing_tables = set()
 
     if "research_access_logs" in existing_tables:
         op.drop_table("research_access_logs")

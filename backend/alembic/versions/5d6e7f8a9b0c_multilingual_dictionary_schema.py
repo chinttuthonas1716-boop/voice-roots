@@ -20,8 +20,12 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create Multilingual Dictionary tables, FTS5 virtual index, and triggers."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
+    try:
+        inspector = sa.inspect(bind)
+        existing_tables = set(inspector.get_table_names())
+    except Exception:
+        inspector = None
+        existing_tables = set()
 
     if "dictionary" not in existing_tables:
         op.create_table(

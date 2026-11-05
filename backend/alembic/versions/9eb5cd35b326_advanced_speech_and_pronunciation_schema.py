@@ -20,8 +20,12 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create Advanced Speech Intelligence and Pronunciation tables and indexes."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
+    try:
+        inspector = sa.inspect(bind)
+        existing_tables = set(inspector.get_table_names())
+    except Exception:
+        inspector = None
+        existing_tables = set()
 
     if "speech_alignments" not in existing_tables:
         op.create_table(
@@ -108,8 +112,12 @@ def upgrade() -> None:
 def downgrade() -> None:
     """Drop Advanced Speech Intelligence and Pronunciation tables."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
+    try:
+        inspector = sa.inspect(bind)
+        existing_tables = set(inspector.get_table_names())
+    except Exception:
+        inspector = None
+        existing_tables = set()
 
     if "pronunciation_attempts" in existing_tables:
         op.drop_table("pronunciation_attempts")

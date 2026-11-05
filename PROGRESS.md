@@ -2169,3 +2169,20 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     5. Frontend Build Compatibility: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
   - NOT VERIFIED: Remote Render cloud build trigger (to be executed upon git push to deployment branch).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Phase 1 – Move to PostgreSQL (Task T1.3).
+  - Authored foundational Alembic migration `backend/alembic/versions/4385e5315767_initial_schema.py` ensuring complete database neutrality across both SQLite and PostgreSQL.
+  - Made all Alembic migrations safe for both SQLite and PostgreSQL by guarding dialect-specific statements (e.g. SQLite FTS5 `CREATE VIRTUAL TABLE`) and handling offline inspection mode gracefully.
+  - Added one-off migration script `scripts/migrate_sqlite_to_postgres.py` supporting dry-run inspection, table topology ordering, batch migration, PostgreSQL identity sequence resetting, and verification table logging across all 37 database tables (4,924 rows).
+  - Enhanced `backend/main.py` `init_db()`, `/health`, and `/ready` endpoints to automatically recognize `DATABASE_URL`, execute Alembic migrations on startup when PostgreSQL is configured, and probe DB connectivity.
+  - Added dedicated test suite `tests/test_t1_3_postgres_migration.py` covering URL normalization, table discovery, dry-run inspection, clean SQLite migrations, offline PostgreSQL DDL generation, and PostgreSQL health check branches.
+  - Files touched: `backend/alembic/versions/*`, `backend/main.py`, `scripts/migrate_sqlite_to_postgres.py`, `tests/test_t1_3_postgres_migration.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Postgres Test Suite: `pytest tests/test_t1_3_postgres_migration.py -v` passed all 8/8 tests in 3.82s.
+    2. Persistence & Regression Suite: `pytest tests/test_milestone4_persistence.py tests/test_backend_api.py tests/test_milestone24_v2_foundation.py tests/test_t1_3_postgres_migration.py -v` passed all 38/38 tests.
+    3. Static PostgreSQL DDL Generation: `DATABASE_URL=postgresql://... python3 -m alembic -c backend/alembic.ini upgrade head --sql` generated 761 lines of valid PostgreSQL DDL with zero errors.
+    4. Migration Dry-Run: `python3 scripts/migrate_sqlite_to_postgres.py --dry-run` successfully discovered and verified all 37 tables and 4,924 records.
+    5. Python Linter: `python3 -m ruff check backend/ scripts/migrate_sqlite_to_postgres.py tests/test_t1_3_postgres_migration.py` passed with 0 errors.
+    6. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
+  - NOT VERIFIED: Live migration against production Render PostgreSQL instance (requires provisioned credentials in Render dashboard).
+  - NEEDS FROM OTHER AGENT: none.

@@ -274,7 +274,25 @@ def verify_storage_persistence_and_integrity() -> dict[str, Any]:
 
 
 def init_db():
-    """Initialize SQLite database with table for saved recordings and transcripts."""
+    """Initialize database: runs Alembic migrations on PostgreSQL if DATABASE_URL is set, or local SQLite setup."""
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url and (db_url.startswith("postgres://") or db_url.startswith("postgresql://")):
+        logger.info("Initializing PostgreSQL database with Alembic migrations...")
+        try:
+            from alembic import command
+            from alembic.config import Config
+
+            alembic_cfg_path = os.path.join(os.path.dirname(__file__), "alembic.ini")
+            if os.path.exists(alembic_cfg_path):
+                alembic_cfg = Config(alembic_cfg_path)
+                norm_url = db_url.replace("postgres://", "postgresql://", 1) if db_url.startswith("postgres://") else db_url
+                alembic_cfg.set_main_option("sqlalchemy.url", norm_url)
+                command.upgrade(alembic_cfg, "head")
+                logger.info("Alembic migrations applied successfully to PostgreSQL.")
+        except Exception as e:
+            logger.warning(f"PostgreSQL Alembic migration deferred or failed: {e}")
+        return
+
     with sqlite3.connect(DB_PATH, timeout=15.0) as conn:
         try:
             conn.execute("PRAGMA journal_mode = WAL;")
@@ -987,19 +1005,35 @@ def health_check():
     """Health check endpoint confirming API availability and database connectivity."""
     db_status = "ok"
     status = "healthy"
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute("SELECT 1").fetchone()
-    except Exception:  # noqa: BLE001
-        # Keep internal paths and exception details out of the public health response.
-        db_status = "error"
-        status = "degraded"
+    db_type = "sqlite"
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url and (database_url.startswith("postgres://") or database_url.startswith("postgresql://")):
+        db_type = "postgresql"
+        try:
+            import psycopg2
+            norm_url = database_url.replace("postgres://", "postgresql://", 1) if database_url.startswith("postgres://") else database_url
+            conn = psycopg2.connect(norm_url, connect_timeout=5)
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+            conn.close()
+        except Exception:
+            db_status = "error"
+            status = "degraded"
+    else:
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                conn.execute("SELECT 1").fetchone()
+        except Exception:  # noqa: BLE001
+            # Keep internal paths and exception details out of the public health response.
+            db_status = "error"
+            status = "degraded"
 
     return {
         "status": status,
         "app": "Voice Roots",
         "version": "1.0.0",
-        "database": "sqlite",
+        "database": db_type,
         "database_status": db_status,
         "storage_status": "ok" if os.path.exists(STORAGE_DIR) else "not_configured",
     }
@@ -1020,13 +1054,26 @@ def readiness_check():
         "vector_store": "ok",
     }
     is_ready = True
+    database_url = os.environ.get("DATABASE_URL")
 
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute("SELECT 1 FROM transcripts LIMIT 1")
-    except Exception:  # noqa: BLE001
-        checks["database"] = "unready"
-        is_ready = False
+    if database_url and (database_url.startswith("postgres://") or database_url.startswith("postgresql://")):
+        try:
+            import psycopg2
+            norm_url = database_url.replace("postgres://", "postgresql://", 1) if database_url.startswith("postgres://") else database_url
+            conn = psycopg2.connect(norm_url, connect_timeout=5)
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM transcripts LIMIT 1")
+            conn.close()
+        except Exception:
+            checks["database"] = "unready"
+            is_ready = False
+    else:
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                conn.execute("SELECT 1 FROM transcripts LIMIT 1")
+        except Exception:  # noqa: BLE001
+            checks["database"] = "unready"
+            is_ready = False
 
     if not os.path.exists(AUDIO_STORAGE) or not os.access(AUDIO_STORAGE, os.W_OK):
         checks["storage"] = "unready"

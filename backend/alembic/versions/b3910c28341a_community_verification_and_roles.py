@@ -20,8 +20,14 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Safely apply community verification, multi-tier consent, and reviewer role columns."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_columns = {col["name"] for col in inspector.get_columns("transcripts")}
+    try:
+        inspector = sa.inspect(bind)
+        existing_columns = {col["name"] for col in inspector.get_columns("transcripts")}
+        existing_indexes = {idx["name"] for idx in inspector.get_indexes("transcripts")}
+    except Exception:
+        inspector = None
+        existing_columns = set()
+        existing_indexes = set()
 
     columns_to_add = [
         ("verification_status", sa.String(50), "submitted"),
@@ -56,7 +62,6 @@ def upgrade() -> None:
             )
 
     # Index on verification_status for review queue queries
-    existing_indexes = {idx["name"] for idx in inspector.get_indexes("transcripts")}
     if "idx_transcripts_verification_status" not in existing_indexes:
         op.create_index(
             "idx_transcripts_verification_status",

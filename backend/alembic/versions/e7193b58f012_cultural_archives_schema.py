@@ -20,8 +20,12 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create Interactive Cultural and Oral History Archives tables and indexes."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
+    try:
+        inspector = sa.inspect(bind)
+        existing_tables = set(inspector.get_table_names())
+    except Exception:
+        inspector = None
+        existing_tables = set()
 
     if "archive_collections" not in existing_tables:
         op.create_table(
@@ -103,27 +107,29 @@ def upgrade() -> None:
         op.create_index("idx_cultural_sub_status", "cultural_submissions", ["status"])
         op.create_index("idx_cultural_sub_lang", "cultural_submissions", ["language"])
 
-    # FTS5 Virtual Table for Unicode search across cultural stories
+    # FTS5 Virtual Table for Unicode search across cultural stories (SQLite only)
     conn = op.get_bind()
-    conn.execute(sa.text("""
-        CREATE VIRTUAL TABLE IF NOT EXISTS cultural_stories_fts USING fts5(
-            story_id UNINDEXED,
-            title,
-            native_title,
-            description,
-            transliteration,
-            translation_text,
-            primary_language,
-            location_name,
-            tokenize='unicode61 remove_diacritics 0'
-        );
-    """))
+    if conn.dialect.name == "sqlite":
+        conn.execute(sa.text("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS cultural_stories_fts USING fts5(
+                story_id UNINDEXED,
+                title,
+                native_title,
+                description,
+                transliteration,
+                translation_text,
+                primary_language,
+                location_name,
+                tokenize='unicode61 remove_diacritics 0'
+            );
+        """))
 
 
 def downgrade() -> None:
     """Drop Cultural Archives tables, indexes, and full-text search."""
     conn = op.get_bind()
-    conn.execute(sa.text("DROP TABLE IF EXISTS cultural_stories_fts;"))
+    if conn.dialect.name == "sqlite":
+        conn.execute(sa.text("DROP TABLE IF EXISTS cultural_stories_fts;"))
     op.drop_table("cultural_submissions")
     op.drop_table("cultural_stories")
     op.drop_table("archive_collections")

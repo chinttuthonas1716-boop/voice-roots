@@ -12,7 +12,7 @@ from alembic import op
 
 # revision identifiers, used by Alembic.
 revision: str = '8a13948f3a26'
-down_revision: str | Sequence[str] | None = None
+down_revision: str | Sequence[str] | None = '4385e5315767'
 branch_labels: str | Sequence[str] | None = None
 depends_on: str | Sequence[str] | None = None
 
@@ -20,8 +20,14 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Safely apply oral language metadata columns and performance indexes."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_columns = {col["name"] for col in inspector.get_columns("transcripts")}
+    try:
+        inspector = sa.inspect(bind)
+        existing_columns = {col["name"] for col in inspector.get_columns("transcripts")}
+        existing_indexes = {idx["name"] for idx in inspector.get_indexes("transcripts")}
+    except Exception:
+        inspector = None
+        existing_columns = set()
+        existing_indexes = set()
 
     columns_to_add = [
         ("contributor_name", sa.String(200), "Community Contributor"),
@@ -47,7 +53,6 @@ def upgrade() -> None:
             )
 
     # Performance and query optimization indexes
-    existing_indexes = {idx["name"] for idx in inspector.get_indexes("transcripts")}
     indexes_to_create = [
         ("idx_transcripts_archived", ["archived_at"]),
         ("idx_transcripts_language", ["language"]),
