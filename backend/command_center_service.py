@@ -18,6 +18,7 @@ import json
 import logging
 import os
 import sqlite3
+import uuid
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
@@ -487,8 +488,14 @@ def create_atomic_backup_snapshot(
     os.makedirs(backup_dir, exist_ok=True)
     now_dt = datetime.now(timezone.utc)
     timestamp_str = now_dt.strftime("%Y%m%d_%H%M%S")
-    backup_filename = f"voice_roots_backup_{timestamp_str}.db"
+    unique_suffix = f"{now_dt.microsecond:06d}_{uuid.uuid4().hex[:4]}"
+    backup_filename = f"voice_roots_backup_{timestamp_str}_{unique_suffix}.db"
     backup_path = os.path.join(backup_dir, backup_filename)
+    if os.path.exists(backup_path):
+        try:
+            os.remove(backup_path)
+        except OSError:
+            pass
 
     # Atomic SQLite snapshot
     with _get_db(db_path) as conn:
