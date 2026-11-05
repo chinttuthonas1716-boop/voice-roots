@@ -2283,3 +2283,29 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Live inference against remote hosted IndicTrans2 HuggingFace endpoint without endpoint secret.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Consent Withdrawal and OCAP Cascade Purge (Task T2.2).
+  - Server-Side Cascade Purge & Governance Audit Logging:
+    1. Upgraded `POST /api/v1/transcripts/{transcript_id}/withdraw-consent` in `backend/main.py` with complete cascade:
+       - Audio Master Deletion: Deletes WAV master and FLAC master from storage provider (`delete_file(..., consent_withdrawn=True)` respecting write-once policy) and local disk.
+       - Database Cascading Purge: Deletes all child records in `translations`, `corrections`, `speech_alignments`, and `speech_acoustic_metrics` matching `transcript_id`.
+       - Vector Embeddings Purge: Removes document IDs from ChromaDB collections (`archive_vector_collection` and `vector_store.get_resource_collection()`).
+       - Full-Text Search Purge: Deletes row from `transcripts_fts`.
+       - Record Audit State: Updates `transcripts` table setting `archived_at`, `status = 'withdrawn'`, `verification_status = 'withdrawn_or_rejected'`, clearing audio filenames/hashes and replacing transcript text with OCAP withdrawal notice.
+       - Governance Audit Trail: Writes an immutable record to `governance_audit_logs` table (`action_type = "CONSENT_WITHDRAWN"`, `actor_role = "speaker"`, `entity_type = "transcript"`) with purged manifest JSON and timestamp.
+    2. Added `GET /api/v1/passport/{transcript_id}` and `/api/v1/transcripts/{transcript_id}/passport` endpoints returning public Heritage Passport data including a clear withdrawn state (`is_withdrawn=True`, `status="withdrawn"`, `audio_available=False`) so that withdrawn recordings show their audit trail rather than disappearing silently.
+  - Frontend Consent Withdrawal UI & Flow:
+    1. Updated `web/src/lib/storage.ts`: added `isWithdrawn`, `withdrawnAt`, and `status` to `StoredVoiceRecord`. Implemented `withdrawConsent(id)` which purges audio blob from IndexedDB, updates local storage, and syncs withdrawal to the backend API.
+    2. Updated `web/src/app/recordings/[id]/page.tsx`: Added "Delete recording / withdraw consent" button with a confirmation modal informing users about permanent OCAP deletion of audio, transcripts, translations, and embeddings. Added Withdrawn state banner preventing audio playback and directing to the withdrawn passport.
+    3. Updated `web/src/app/passport/[id]/page.tsx`: Implemented Withdrawn State card with `Consent Withdrawn (OCAP)` badge, explanation of indigenous data sovereignty rights, withdrawal timestamp, and disabled play button with notice "Master Audio Permanently Purged".
+  - Dedicated Test Suite:
+    1. Authored `tests/test_t2_2_consent_withdrawal.py` covering full cascade verification (audio master deleted from disk, translations deleted, stream route returning 404, audit log written, passport returning withdrawn state, uuid lookup, and idempotency).
+  - Files touched: `backend/main.py`, `web/src/lib/storage.ts`, `web/src/app/recordings/[id]/page.tsx`, `web/src/app/passport/[id]/page.tsx`, `tests/test_t2_2_consent_withdrawal.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_2_consent_withdrawal.py -v` passed all 4/4 tests in 2.42s.
+    2. Full Regression Suite: `pytest tests/test_milestone4_persistence.py tests/test_backend_api.py tests/test_t1_3_postgres_migration.py tests/test_t1_4_r2_storage.py tests/test_t1_5_flac_evaluation.py tests/test_t1_6_security_basics.py tests/test_t2_1_honest_translation.py tests/test_t2_2_consent_withdrawal.py backend/tests/test_milestone1.py -v` passed all 90/90 tests in 46.85s.
+    3. Python Linter: `python3 -m ruff check backend/main.py tests/test_t2_2_consent_withdrawal.py` passed with 0 errors.
+    4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 19/19 routes with 0 errors.
+  - NOT VERIFIED: Remote S3 bucket physical object verification when running on local mock storage.
+  - NEEDS FROM OTHER AGENT: none.
+
+

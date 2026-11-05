@@ -33,6 +33,9 @@ export interface StoredVoiceRecord {
   integrityChecksum?: string;
   userId?: string;
   userEmail?: string;
+  isWithdrawn?: boolean;
+  withdrawnAt?: string;
+  status?: string;
 }
 
 const STORAGE_KEY = "voice_roots_user_recordings";
@@ -217,6 +220,52 @@ export async function deleteUserRecording(id: string): Promise<StoredVoiceRecord
   }
   await deleteAudio(id);
   return getUserRecordings();
+}
+
+/**
+ * Permanently withdraws speaker consent under OCAP sovereignty principles:
+ * - Deletes the audio master blob from local IndexedDB
+ * - Purges transcript, audio references, and translations
+ * - Updates the record to 'withdrawn' status (preserving passport audit continuity)
+ * - Cascades deletion to the backend server API
+ */
+export async function withdrawConsent(id: string): Promise<StoredVoiceRecord | null> {
+  const raw = localStorage.getItem(STORAGE_KEY);
+  const existing: StoredVoiceRecord[] = raw ? JSON.parse(raw) : [];
+  let updatedRecord: StoredVoiceRecord | null = null;
+
+  const updatedList = existing.map((record) => {
+    if (record.id.toLowerCase() === id.toLowerCase()) {
+      updatedRecord = {
+        ...record,
+        isWithdrawn: true,
+        status: "withdrawn",
+        withdrawnAt: new Date().toISOString(),
+        audioUrl: "",
+        audioFileName: "",
+        originalTranscript: "[Consent Withdrawn - Master Audio and Annotations Purged under OCAP Protocol]",
+        translations: {},
+      };
+      return updatedRecord;
+    }
+    return record;
+  });
+
+  if (updatedRecord) {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(updatedList));
+  }
+
+  // Purge audio master from browser IndexedDB
+  await deleteAudio(id);
+
+  // Cascade to backend server API
+  try {
+    await fetch(`/api/v1/transcripts/${id}/withdraw-consent`, { method: "POST" });
+  } catch (e) {
+    console.warn("Backend consent withdrawal sync error:", e);
+  }
+
+  return updatedRecord;
 }
 
 export function getStorageStats() {

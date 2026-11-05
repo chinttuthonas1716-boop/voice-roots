@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
@@ -14,6 +14,8 @@ import {
   Volume2,
   VolumeX,
   ShieldCheck,
+  ShieldAlert,
+  Trash2,
   Users,
   Sparkles,
   Bot,
@@ -27,7 +29,7 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
-import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
+import { getUserRecordings, withdrawConsent, type StoredVoiceRecord } from "@/lib/storage";
 import { getCurrentUser, canAccessRecording } from "@/lib/auth";
 import { EnhancedAudioPlayer } from "@/components/audio/EnhancedAudioPlayer";
 import { PreservationTimeline } from "@/components/heritage/PreservationTimeline";
@@ -57,6 +59,23 @@ export default function RecordingDetailPage() {
   const [translateError, setTranslateError] = useState<string | null>(null);
   const [accessAllowed, setAccessAllowed] = useState(true);
   const [accessReason, setAccessReason] = useState<string>("");
+  const router = useRouter();
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const handleWithdrawConsent = async () => {
+    if (!record) return;
+    setIsWithdrawing(true);
+    try {
+      await withdrawConsent(record.id);
+      router.push(`/passport/${record.id}`);
+    } catch (err) {
+      console.error("Error withdrawing consent:", err);
+    } finally {
+      setIsWithdrawing(false);
+      setShowWithdrawModal(false);
+    }
+  };
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
 
@@ -204,6 +223,31 @@ export default function RecordingDetailPage() {
               Explore Archive
             </Link>
           </section>
+        ) : (record.isWithdrawn || record.status === "withdrawn" || record.status === "Consent Withdrawn") ? (
+          <section className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-8 sm:p-12 text-center space-y-4 backdrop-blur-2xl">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40">
+              <ShieldAlert className="h-7 w-7" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">Recording Purged Under Consent Withdrawal</h1>
+            <p className="text-sm text-rose-200 max-w-lg mx-auto leading-relaxed">
+              The speaker has exercised their inalienable right to withdraw consent under OCAP sovereignty protocols.
+              The original audio master, transcripts, translations, and search vector embeddings have been permanently purged.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 pt-3">
+              <Link
+                href={`/passport/${record.id}`}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-xs font-bold text-black hover:bg-amber-400 transition"
+              >
+                View Withdrawn Passport Dossier
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 text-xs font-semibold text-white hover:bg-white/10 transition"
+              >
+                Return to Recordings
+              </Link>
+            </div>
+          </section>
         ) : !accessAllowed ? (
           <section className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-8 sm:p-12 text-center space-y-4 backdrop-blur-2xl">
             <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40">
@@ -278,14 +322,26 @@ export default function RecordingDetailPage() {
                   This recording possesses a verified digital heritage passport ({record.id.toUpperCase()}) with consent controls, scannable QR token, and audit history.
                 </p>
               </div>
-              <Link
-                href={`/passport/${record.id}`}
-                className="shrink-0 inline-flex min-h-11 items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/15 px-5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/25 hover:border-amber-400 shadow-glow"
-              >
-                <QrCode className="h-4 w-4" />
-                <span>📜 View Heritage Passport</span>
-                <ArrowRight className="h-4 w-4" />
-              </Link>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Link
+                  href={`/passport/${record.id}`}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/15 px-5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/25 hover:border-amber-400 shadow-glow"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span>📜 View Heritage Passport</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 hover:border-rose-500/50"
+                  aria-label="Delete recording and withdraw consent"
+                >
+                  <Trash2 className="h-4 w-4 text-rose-400" />
+                  <span>Withdraw Consent</span>
+                </button>
+              </div>
             </div>
 
             {/* 2. Centerpiece Audio Player */}
@@ -523,6 +579,43 @@ export default function RecordingDetailPage() {
           </>
         )}
       </main>
+
+      {/* Consent Withdrawal Confirmation Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="glass-card max-w-md w-full p-6 space-y-4 border border-rose-500/40 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400">
+              <ShieldAlert className="h-6 w-6 shrink-0" />
+              <h3 className="text-lg font-bold text-white">Withdraw Consent & Delete Recording?</h3>
+            </div>
+            <p className="text-xs text-secondary-text leading-relaxed">
+              Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker holds perpetual authority over their voice.
+              Withdrawing consent will <strong className="text-white">permanently delete the master audio, transcript, translations, and search vector embeddings</strong> from both your device and all servers.
+            </p>
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-300">
+              ⚠️ This action cannot be undone. The digital passport will reflect a withdrawn state for audit transparency.
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowWithdrawModal(false)}
+                disabled={isWithdrawing}
+                className="btn-glass text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleWithdrawConsent}
+                disabled={isWithdrawing}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition disabled:opacity-50"
+              >
+                {isWithdrawing ? "Purging data..." : "Yes, Withdraw Consent & Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AIAssistant />
     </div>

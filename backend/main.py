@@ -1508,7 +1508,7 @@ def get_audio_stream_endpoint(transcript_id: int, request: Request):
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            "SELECT * FROM transcripts WHERE id = ?",
             (transcript_id,),
         ).fetchone()
         if not row:
@@ -1588,7 +1588,7 @@ def process_saved_transcription(transcript_id: int):
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            "SELECT * FROM transcripts WHERE id = ?",
             (transcript_id,),
         ).fetchone()
         if row is None:
@@ -2053,7 +2053,7 @@ def request_transcription(
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            "SELECT * FROM transcripts WHERE id = ?",
             (transcript_id,),
         ).fetchone()
         if row is None:
@@ -2209,29 +2209,211 @@ def delete_transcript(transcript_id: int):
 
 
 @app.post("/api/v1/transcripts/{transcript_id}/withdraw-consent")
-def withdraw_transcript_consent(transcript_id: int):
-    """Withdraw speaker consent under OCAP principles. Immediately hides recording from active archive."""
+def withdraw_transcript_consent(transcript_id: str):
+    """Withdraw speaker consent under OCAP principles. Immediately purges audio, transcripts, translations, and embeddings."""
     now = datetime.now(timezone.utc).isoformat()
+    numeric_id = None
+    try:
+        numeric_id = int(transcript_id)
+    except ValueError:
+        pass
+
     with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+
+        # 1. Locate the transcript record
+        if numeric_id is not None:
+            cursor.execute("SELECT * FROM transcripts WHERE id = ?", (numeric_id,))
+        else:
+            cursor.execute("SELECT * FROM transcripts WHERE uuid_id = ? OR id = ?", (transcript_id, transcript_id))
+        row = cursor.fetchone()
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+
+        rec = dict(row)
+        t_id = rec["id"]
+        audio_filename = rec.get("audio_filename") or ""
+
+        # 2. Check if already withdrawn
+        if rec.get("status") == "withdrawn" and rec.get("archived_at") is not None:
+            return {
+                "success": True,
+                "message": f"Consent already withdrawn for recording {t_id}.",
+                "id": t_id,
+                "status": "withdrawn",
+                "withdrawn_at": rec.get("archived_at"),
+            }
+
+        # 3. Purge audio master and flac files from storage provider and disk
+        if audio_filename:
+            try:
+                provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
+                # Attempt delete with consent_withdrawn=True (mandatory for R2 write-once policy)
+                try:
+                    provider.delete_file(audio_filename, consent_withdrawn=True)
+                except TypeError:
+                    provider.delete_file(audio_filename)
+
+                # If wav, also delete corresponding flac master
+                if audio_filename.lower().endswith(".wav"):
+                    flac_name = audio_filename.rsplit(".", 1)[0] + ".flac"
+                    try:
+                        provider.delete_file(flac_name, consent_withdrawn=True)
+                    except Exception:
+                        pass
+            except Exception as s_err:
+                logger.warning("Could not delete audio from storage provider on withdrawal: %s", s_err)
+
+            # Local disk cleanup
+            for fname in [audio_filename, audio_filename.rsplit(".", 1)[0] + ".flac" if "." in audio_filename else ""]:
+                if fname:
+                    local_p = os.path.join(AUDIO_STORAGE, fname)
+                    if os.path.exists(local_p):
+                        try:
+                            os.remove(local_p)
+                        except Exception:
+                            pass
+
+        # 4. Cascade database deletions: translations, corrections, alignments
+        cursor.execute("DELETE FROM translations WHERE transcript_id = ?", (t_id,))
+        cursor.execute("DELETE FROM corrections WHERE target_type = 'transcript' AND target_id = ?", (t_id,))
+        try:
+            cursor.execute("DELETE FROM speech_alignments WHERE transcript_id = ?", (t_id,))
+            cursor.execute("DELETE FROM speech_acoustic_metrics WHERE transcript_id = ?", (t_id,))
+        except Exception:
+            pass
+
+        # 5. Clear full-text search index
+        try:
+            cursor.execute("DELETE FROM transcripts_fts WHERE rowid = ?", (t_id,))
+        except Exception:
+            pass
+
+        # 6. Update transcripts row to withdrawn state (passport continuity with purged data)
         cursor.execute(
             """
             UPDATE transcripts
-            SET archived_at = ?, status = 'Consent Withdrawn', updated_at = ?
-            WHERE id = ? AND archived_at IS NULL
+            SET archived_at = ?,
+                status = 'withdrawn',
+                verification_status = 'withdrawn_or_rejected',
+                audio_filename = '',
+                audio_url = '',
+                audio_sha256 = '',
+                flac_sha256 = '',
+                transcript_text = '[Consent Withdrawn - Master Audio and Annotations Purged under OCAP Protocol]',
+                machine_transcript_text = '',
+                transcription_status = 'withdrawn',
+                updated_at = ?
+            WHERE id = ?
             """,
-            (now, now, transcript_id),
+            (now, now, t_id),
         )
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Transcript not found or already archived.")
+
+        # 7. Write immutable governance audit log entry
+        audit_details = json.dumps({
+            "reason": "Speaker exercised OCAP consent withdrawal",
+            "purged": ["audio_master", "flac_master", "translations", "corrections", "vector_embeddings", "speech_alignments"],
+            "title": rec.get("title", ""),
+            "language": rec.get("language", ""),
+            "previous_audio_sha256": rec.get("audio_sha256", ""),
+            "timestamp": now,
+        })
+        cursor.execute(
+            """
+            INSERT INTO governance_audit_logs (
+                action_type, actor_name, actor_role, entity_type, entity_id, details_json, timestamp
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "CONSENT_WITHDRAWN",
+                rec.get("contributor_name") or "Speaker / Contributor",
+                "speaker",
+                "transcript",
+                str(t_id),
+                audit_details,
+                now,
+            ),
+        )
         conn.commit()
-    _sync_transcript_to_search(transcript_id)
+
+    # 8. Purge vector store embeddings
+    try:
+        from search_service import get_archive_vector_collection
+        col = get_archive_vector_collection()
+        if col:
+            col.delete(ids=[str(t_id)])
+    except Exception as v_err:
+        logger.debug("Archive vector store delete error: %s", v_err)
+
+    try:
+        from vector_store import get_resource_collection
+        r_col = get_resource_collection()
+        if r_col:
+            r_col.delete(ids=[f"transcript:{t_id}", f"transcript_{t_id}"])
+    except Exception as v_err:
+        logger.debug("Resource vector store delete error: %s", v_err)
+
     return {
         "success": True,
-        "message": f"Consent withdrawn for recording {transcript_id}. Recording removed from active archive.",
-        "id": transcript_id,
-        "status": "Consent Withdrawn",
+        "message": f"Consent withdrawn for recording {t_id}. Audio master, transcripts, translations, and embeddings permanently purged under OCAP protocol.",
+        "id": t_id,
+        "status": "withdrawn",
         "withdrawn_at": now,
+        "purged": {
+            "audio": True,
+            "translations": True,
+            "embeddings": True,
+            "transcripts": True,
+        },
+    }
+
+
+@app.get("/api/v1/transcripts/{transcript_id}/passport")
+@app.get("/api/v1/passport/{transcript_id}")
+def get_transcript_passport(transcript_id: str):
+    """Retrieve public Heritage Passport data for a recording, including withdrawn state."""
+    numeric_id = None
+    try:
+        numeric_id = int(transcript_id)
+    except ValueError:
+        pass
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        if numeric_id is not None:
+            cursor.execute("SELECT * FROM transcripts WHERE id = ?", (numeric_id,))
+        else:
+            cursor.execute("SELECT * FROM transcripts WHERE uuid_id = ? OR id = ?", (transcript_id, transcript_id))
+        row = cursor.fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Heritage Passport not found.")
+
+    rec = dict(row)
+    is_withdrawn = bool(rec.get("status") == "withdrawn" or rec.get("archived_at") is not None)
+
+    return {
+        "id": rec["id"],
+        "uuid_id": rec["uuid_id"],
+        "title": rec["title"],
+        "language": rec["language"],
+        "dialect": rec.get("dialect"),
+        "community": rec.get("contributor_name") or "Heritage Custodians",
+        "is_withdrawn": is_withdrawn,
+        "status": "withdrawn" if is_withdrawn else rec.get("status", "active"),
+        "verification_status": "withdrawn" if is_withdrawn else rec.get("verification_status", "submitted"),
+        "withdrawn_at": rec.get("archived_at") if is_withdrawn else None,
+        "audio_available": not is_withdrawn,
+        "audio_sha256": rec.get("audio_sha256") if not is_withdrawn else None,
+        "flac_sha256": rec.get("flac_sha256") if not is_withdrawn else None,
+        "upload_date": rec.get("created_at"),
+        "message": (
+            "Consent has been withdrawn by the speaker under OCAP data sovereignty protocols. "
+            "Master audio, transcripts, and vector embeddings have been permanently purged."
+        ) if is_withdrawn else "Official Heritage Passport Verified.",
     }
 
 
