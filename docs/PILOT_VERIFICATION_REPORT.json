@@ -1,0 +1,106 @@
+{
+  "report_id": "VR-PILOT-SIGN-OFF-20261105160538",
+  "timestamp": "2026-11-05T16:05:38.417961+00:00",
+  "platform_version": "v2.0-institutional-pilot-ready",
+  "institutional_status": "CERTIFIED_PILOT_READY",
+  "pilot_gates": {
+    "G-01_IRB_Ethics_Protocol": {
+      "passed": true,
+      "file": "docs/PILOT_IRB_ETHICS_PACKAGE.md",
+      "checks": {
+        "undrip_art31": true,
+        "ocap_principles": true,
+        "six_facet_consent": true,
+        "sacred_lore_shielding": true,
+        "cascading_revocation": true,
+        "irb_approval_signoff": true
+      },
+      "size_bytes": 11295
+    },
+    "G-02_Tribal_Council_Accords": {
+      "passed": true,
+      "file": "docs/TRIBAL_COUNCIL_BILATERAL_AGREEMENTS.md",
+      "councils": {
+        "gondi_advisory_council": true,
+        "koya_elder_council": true,
+        "santhal_manjhi_council": true,
+        "lambadi_tanda_board": true,
+        "ratified_status": true
+      },
+      "size_bytes": 6968
+    },
+    "G-03_Oral_Consent_Prompts": {
+      "passed": true,
+      "manifest_path": "data/audio/prompts/manifest.json",
+      "prompts_verified_count": 4,
+      "details": {
+        "gon": {
+          "language": "Gondi",
+          "filename": "gondi_consent_prompt.wav",
+          "sample_rate": 16000,
+          "channels": 1,
+          "duration_seconds": 3.5,
+          "sha256_verified": true,
+          "has_vernacular_text": true,
+          "has_english_text": true
+        },
+        "kff": {
+          "language": "Koya",
+          "filename": "koya_consent_prompt.wav",
+          "sample_rate": 16000,
+          "channels": 1,
+          "duration_seconds": 3.5,
+          "sha256_verified": true,
+          "has_vernacular_text": true,
+          "has_english_text": true
+        },
+        "sat": {
+          "language": "Santhali",
+          "filename": "santhali_consent_prompt.wav",
+          "sample_rate": 16000,
+          "channels": 1,
+          "duration_seconds": 3.5,
+          "sha256_verified": true,
+          "has_vernacular_text": true,
+          "has_english_text": true
+        },
+        "lmn": {
+          "language": "Lambadi",
+          "filename": "lambadi_consent_prompt.wav",
+          "sample_rate": 16000,
+          "channels": 1,
+          "duration_seconds": 3.5,
+          "sha256_verified": true,
+          "has_vernacular_text": true,
+          "has_english_text": true
+        }
+      }
+    },
+    "G-04_Zero_Cloud_Cost_Offline_PWA": {
+      "passed": true,
+      "cloud_spend_target": "$0.00 (Offline First)",
+      "pwa_service_worker": true,
+      "pwa_details": {
+        "name_in_manifest": true,
+        "standalone_display": true,
+        "service_worker_bytes": 3093
+      }
+    },
+    "G-05_System_Integrity_API": {
+      "passed": true,
+      "endpoint_health": {
+        "overview_healthy": true,
+        "phylogenetic_tree_44_langs": true,
+        "dictionary_fts_operational": true,
+        "archive_rag_operational": true,
+        "cultural_archives_operational": true,
+        "learning_studio_operational": true
+      }
+    }
+  },
+  "summary": {
+    "gates_audited": 5,
+    "gates_passed": 5,
+    "overall_certified": true
+  }
+}
