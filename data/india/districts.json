@@ -1,0 +1,320 @@
+[
+  {
+    "id": "dist_ts_adilabad",
+    "stateId": "TS",
+    "name": "Adilabad",
+    "officialCode": "501"
+  },
+  {
+    "id": "dist_ts_asifabad",
+    "stateId": "TS",
+    "name": "Kumuram Bheem Asifabad",
+    "officialCode": "502"
+  },
+  {
+    "id": "dist_ts_bhadradri",
+    "stateId": "TS",
+    "name": "Bhadradri Kothagudem",
+    "officialCode": "503"
+  },
+  {
+    "id": "dist_ts_hyderabad",
+    "stateId": "TS",
+    "name": "Hyderabad",
+    "officialCode": "504"
+  },
+  {
+    "id": "dist_ts_jayashankar",
+    "stateId": "TS",
+    "name": "Jayashankar Bhupalpally",
+    "officialCode": "505"
+  },
+  {
+    "id": "dist_ts_mahabubnagar",
+    "stateId": "TS",
+    "name": "Mahabubnagar",
+    "officialCode": "506"
+  },
+  {
+    "id": "dist_ts_mancherial",
+    "stateId": "TS",
+    "name": "Mancherial",
+    "officialCode": "507"
+  },
+  {
+    "id": "dist_ts_mulugu",
+    "stateId": "TS",
+    "name": "Mulugu",
+    "officialCode": "508"
+  },
+  {
+    "id": "dist_ts_nizamabad",
+    "stateId": "TS",
+    "name": "Nizamabad",
+    "officialCode": "509"
+  },
+  {
+    "id": "dist_ts_warangal",
+    "stateId": "TS",
+    "name": "Warangal",
+    "officialCode": "510"
+  },
+  {
+    "id": "dist_ap_guntur",
+    "stateId": "AP",
+    "name": "Guntur",
+    "officialCode": "511"
+  },
+  {
+    "id": "dist_ap_alluri",
+    "stateId": "AP",
+    "name": "Alluri Sitharama Raju",
+    "officialCode": "512"
+  },
+  {
+    "id": "dist_ap_east_godavari",
+    "stateId": "AP",
+    "name": "East Godavari",
+    "officialCode": "513"
+  },
+  {
+    "id": "dist_ap_west_godavari",
+    "stateId": "AP",
+    "name": "West Godavari",
+    "officialCode": "514"
+  },
+  {
+    "id": "dist_ap_krishna",
+    "stateId": "AP",
+    "name": "Krishna",
+    "officialCode": "515"
+  },
+  {
+    "id": "dist_ap_kurnool",
+    "stateId": "AP",
+    "name": "Kurnool",
+    "officialCode": "516"
+  },
+  {
+    "id": "dist_ap_srikakulam",
+    "stateId": "AP",
+    "name": "Srikakulam",
+    "officialCode": "517"
+  },
+  {
+    "id": "dist_ap_visakhapatnam",
+    "stateId": "AP",
+    "name": "Visakhapatnam",
+    "officialCode": "518"
+  },
+  {
+    "id": "dist_ap_chittoor",
+    "stateId": "AP",
+    "name": "Chittoor",
+    "officialCode": "519"
+  },
+  {
+    "id": "dist_ap_prakasam",
+    "stateId": "AP",
+    "name": "Prakasam",
+    "officialCode": "520"
+  },
+  {
+    "id": "dist_ka_dakshina_kannada",
+    "stateId": "KA",
+    "name": "Dakshina Kannada",
+    "officialCode": "555"
+  },
+  {
+    "id": "dist_ka_udupi",
+    "stateId": "KA",
+    "name": "Udupi",
+    "officialCode": "556"
+  },
+  {
+    "id": "dist_ka_kodagu",
+    "stateId": "KA",
+    "name": "Kodagu",
+    "officialCode": "557"
+  },
+  {
+    "id": "dist_ka_mysuru",
+    "stateId": "KA",
+    "name": "Mysuru",
+    "officialCode": "558"
+  },
+  {
+    "id": "dist_ka_shivamogga",
+    "stateId": "KA",
+    "name": "Shivamogga",
+    "officialCode": "559"
+  },
+  {
+    "id": "dist_ka_chamarajanagar",
+    "stateId": "KA",
+    "name": "Chamarajanagar",
+    "officialCode": "560"
+  },
+  {
+    "id": "dist_mh_gadchiroli",
+    "stateId": "MH",
+    "name": "Gadchiroli",
+    "officialCode": "469"
+  },
+  {
+    "id": "dist_mh_chandrapur",
+    "stateId": "MH",
+    "name": "Chandrapur",
+    "officialCode": "470"
+  },
+  {
+    "id": "dist_mh_nanded",
+    "stateId": "MH",
+    "name": "Nanded",
+    "officialCode": "471"
+  },
+  {
+    "id": "dist_mh_palghar",
+    "stateId": "MH",
+    "name": "Palghar",
+    "officialCode": "472"
+  },
+  {
+    "id": "dist_mh_pune",
+    "stateId": "MH",
+    "name": "Pune",
+    "officialCode": "473"
+  },
+  {
+    "id": "dist_od_koraput",
+    "stateId": "OD",
+    "name": "Koraput",
+    "officialCode": "380"
+  },
+  {
+    "id": "dist_od_malkangiri",
+    "stateId": "OD",
+    "name": "Malkangiri",
+    "officialCode": "381"
+  },
+  {
+    "id": "dist_od_mayurbhanj",
+    "stateId": "OD",
+    "name": "Mayurbhanj",
+    "officialCode": "382"
+  },
+  {
+    "id": "dist_od_rayagada",
+    "stateId": "OD",
+    "name": "Rayagada",
+    "officialCode": "383"
+  },
+  {
+    "id": "dist_od_sundergarh",
+    "stateId": "OD",
+    "name": "Sundergarh",
+    "officialCode": "384"
+  },
+  {
+    "id": "dist_cg_bastar",
+    "stateId": "CG",
+    "name": "Bastar",
+    "officialCode": "390"
+  },
+  {
+    "id": "dist_cg_dantewada",
+    "stateId": "CG",
+    "name": "Dantewada",
+    "officialCode": "391"
+  },
+  {
+    "id": "dist_cg_sukma",
+    "stateId": "CG",
+    "name": "Sukma",
+    "officialCode": "392"
+  },
+  {
+    "id": "dist_cg_kanker",
+    "stateId": "CG",
+    "name": "Kanker",
+    "officialCode": "393"
+  },
+  {
+    "id": "dist_jh_ranchi",
+    "stateId": "JH",
+    "name": "Ranchi",
+    "officialCode": "345"
+  },
+  {
+    "id": "dist_jh_east_singhbhum",
+    "stateId": "JH",
+    "name": "East Singhbhum",
+    "officialCode": "346"
+  },
+  {
+    "id": "dist_jh_dumka",
+    "stateId": "JH",
+    "name": "Dumka",
+    "officialCode": "347"
+  },
+  {
+    "id": "dist_tn_nilgiris",
+    "stateId": "TN",
+    "name": "Nilgiris",
+    "officialCode": "601"
+  },
+  {
+    "id": "dist_tn_thanjavur",
+    "stateId": "TN",
+    "name": "Thanjavur",
+    "officialCode": "602"
+  },
+  {
+    "id": "dist_tn_madurai",
+    "stateId": "TN",
+    "name": "Madurai",
+    "officialCode": "603"
+  },
+  {
+    "id": "dist_kl_wayanad",
+    "stateId": "KL",
+    "name": "Wayanad",
+    "officialCode": "588"
+  },
+  {
+    "id": "dist_kl_palakkad",
+    "stateId": "KL",
+    "name": "Palakkad",
+    "officialCode": "589"
+  },
+  {
+    "id": "dist_kl_kasaragod",
+    "stateId": "KL",
+    "name": "Kasaragod",
+    "officialCode": "590"
+  },
+  {
+    "id": "dist_as_karbi_anglong",
+    "stateId": "AS",
+    "name": "Karbi Anglong",
+    "officialCode": "290"
+  },
+  {
+    "id": "dist_as_kokrajhar",
+    "stateId": "AS",
+    "name": "Kokrajhar",
+    "officialCode": "291"
+  },
+  {
+    "id": "dist_ml_east_khasi_hills",
+    "stateId": "ML",
+    "name": "East Khasi Hills",
+    "officialCode": "270"
+  },
+  {
+    "id": "dist_ml_west_garo_hills",
+    "stateId": "ML",
+    "name": "West Garo Hills",
+    "officialCode": "271"
+  }
+]

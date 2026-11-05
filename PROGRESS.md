@@ -2116,3 +2116,21 @@ All 10 stages of the Voice Roots v2.0 Roadmap are implemented, verified, tested 
 - Milestone 32: End-to-End System Integration & Penetration Audit (3/3 tests passed)
 - Milestone 33: Institutional Pilot Launch Gate Preparation (6/6 tests passed)
 Platform is 100% certified pilot-ready. Zero cloud API spend target maintained ($0.00). Original audio recordings preserved as immutable master assets. OCAP principles strictly enforced.
+
+---
+
+## Capstone Production Launch Handoff Ledger (Phases 0–5)
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Phase 0 – Scope Freeze & Roadmap Alignment (Tasks T0.1 & T0.2).
+  - T0.1 Scope Freeze: Kept Flutter (`flutter_app/`) and Expo (`mobile/`) strictly frozen. Explicitly marked all v2.0 feature modules (language explorer, dialect maps, spaced repetition, pronunciation scoring, model-rollback dashboard, speaker diarization) as post-launch deferred scope.
+  - T0.2 Roadmap Alignment: Updated `docs/V2.0_ROADMAP.md` as the canonical post-launch roadmap document:
+    - Replaced React 18 / Vite frontend descriptions and architecture diagrams with the Next.js 14 App Router application (`web/`).
+    - Updated cloud spend rule: offline/local mode stays fully supported with $0.00 required external spend; hosted production mode may use designated hosted inference endpoints (e.g. IndicTrans2, hosted ASR).
+    - Restored missing `web/src/lib/` (auth, storage, passport, offline sync, geo-data) and `data/india/` (Census 2011 datasets) to resolve Next.js compilation dependencies.
+  - Files touched: `docs/V2.0_ROADMAP.md`, `web/src/lib/*`, `data/india/*`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Python Regression & Quality: `python3 -m pytest tests/test_milestone24_v2_foundation.py -v` passed all 6/6 tests; `python3 -m ruff check backend/` passed with 0 warnings/errors.
+    2. Next.js 14 Production Build: `npm run build --prefix web` compiled successfully with 0 errors, generating all 19/19 routes (static and dynamic) in 87.3 kB shared bundle.
+    3. Frozen Scopes: Confirmed zero changes to `flutter_app/` or `mobile/`.
+  - NOT VERIFIED: Phase 1 production infrastructure deployment (T1.1 Render web service, T1.2 API proxy, T1.3 PostgreSQL migration, T1.4 Cloudflare R2 object storage, T1.6 security headers & rate limits).
+  - NEEDS FROM OTHER AGENT: none.

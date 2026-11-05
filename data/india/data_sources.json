@@ -1,0 +1,46 @@
+[
+  {
+    "id": "src_census_2011_c16",
+    "organization": "Office of the Registrar General & Census Commissioner, India",
+    "ministry": "Ministry of Home Affairs",
+    "datasetName": "Census of India 2011: Table C-16 Population by Mother Tongue",
+    "datasetVersion": "2011 Final",
+    "sourceUrl": "https://censusindia.gov.in/census.website/data/census-tables",
+    "sourceYear": 2011,
+    "license": "Government Open Data License - India (GODL)",
+    "notes": "Baseline official language and mother-tongue census statistics down to subdistrict/town level."
+  },
+  {
+    "id": "src_census_atlas",
+    "organization": "Office of the Registrar General & Census Commissioner, India",
+    "ministry": "Ministry of Home Affairs",
+    "datasetName": "Language Atlas of India 2011",
+    "datasetVersion": "2011",
+    "sourceUrl": "https://censusindia.gov.in/nada/index.php/catalog/42561",
+    "sourceYear": 2011,
+    "license": "Government Open Data License - India (GODL)",
+    "notes": "Linguistic geographic boundary and mother-tongue distribution mapping across India."
+  },
+  {
+    "id": "src_mopr_lgd",
+    "organization": "Ministry of Panchayati Raj, Government of India",
+    "ministry": "Ministry of Panchayati Raj",
+    "datasetName": "Local Government Directory (LGD)",
+    "datasetVersion": "2026 Active",
+    "sourceUrl": "https://lgdirectory.gov.in/",
+    "sourceYear": 2026,
+    "license": "Government Open Data License - India (GODL)",
+    "notes": "Standard national administrative code directory for States, Districts, Sub-districts, and Villages."
+  },
+  {
+    "id": "src_voice_roots_community",
+    "organization": "Voice Roots Community Custodian Council",
+    "ministry": "Autonomous Ethical Archival Consortium",
+    "datasetName": "Voice Roots Oral Field Registry",
+    "datasetVersion": "2.4",
+    "sourceUrl": "https://voiceroots.org/provenance",
+    "sourceYear": 2026,
+    "license": "Creative Commons Attribution-NonCommercial-ShareAlike 4.0 / OCAP",
+    "notes": "Community-submitted and elder-verified oral heritage recordings and village-level language attestations."
+  }
+]
