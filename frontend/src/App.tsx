@@ -56,6 +56,7 @@ import { SpeechIntelligence } from './components/SpeechIntelligence';
 import { LanguageLearning } from './components/LanguageLearning';
 import { LearningStudio } from './modules/learning-studio';
 import { ResearchPortal } from './components/ResearchPortal';
+import { CommandCenter } from './modules/command-center';
 import { DictionaryBrowser } from './modules/dictionary';
 import { AuthUser } from './types';
 
@@ -354,11 +355,12 @@ export function App() {
   const [archiveSearchQuery, setArchiveSearchQuery] = useState('');
 
   // Active Navigation Tab (Matching Reference: Home, Record, Assistant, Translate, Languages, Graph, Cultural, Speech, Dictionary, Learning, Research, Search, Archive, Community, Login)
-  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'speech' | 'dictionary' | 'learning' | 'research' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot';
+  type NavTab = 'home' | 'record' | 'assistant' | 'translate' | 'languages' | 'graph' | 'cultural' | 'speech' | 'dictionary' | 'learning' | 'research' | 'search' | 'archive' | 'community' | 'login' | 'studio' | 'resources' | 'registry' | 'pilot' | 'command';
 
   const normalizeTab = (raw: string | null | undefined): NavTab => {
     if (!raw) return 'home';
     const t = raw.toLowerCase().replace(/^#/, '');
+    if (t === 'command' || t === 'command-center' || t === 'governance' || t === 'admin') return 'command';
     if (t === 'studio') return 'record';
     if (t === 'resources') return 'search';
     if (t === 'registry') return 'languages';
@@ -370,7 +372,7 @@ export function App() {
     if (t === 'dictionary' || t === 'lexicon' || t === 'dict' || t === 'words') return 'dictionary';
     if (t === 'learning' || t === 'education' || t === 'practice' || t === 'lessons') return 'learning';
     if (t === 'research' || t === 'research-api' || t === 'interoperability' || t === 'academic') return 'research';
-    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'speech', 'dictionary', 'learning', 'research', 'search', 'archive', 'community', 'login'].includes(t)) {
+    if (['home', 'record', 'assistant', 'translate', 'languages', 'graph', 'cultural', 'speech', 'dictionary', 'learning', 'research', 'search', 'archive', 'community', 'login', 'command'].includes(t)) {
       return t as NavTab;
     }
     return 'home';
@@ -2359,6 +2361,27 @@ ${feedbackRecommendation}
             }}
           >
             Community
+          </button>
+
+          <button
+            type="button"
+            role="tab"
+            aria-selected={activeNavTab === 'command'}
+            onClick={() => handleTabChange('command')}
+            style={{
+              background: 'transparent',
+              border: 'none',
+              padding: '8px 14px',
+              borderRadius: '20px',
+              color: activeNavTab === 'command' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              fontWeight: activeNavTab === 'command' ? '700' : '500',
+              fontSize: '14px',
+              cursor: 'pointer',
+              borderBottom: activeNavTab === 'command' ? '2px solid #8EB69B' : '2px solid transparent',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            Command Center
           </button>
         </nav>
 
@@ -6350,6 +6373,17 @@ ${feedbackRecommendation}
       {(activeNavTab === 'community' || activeNavTab === 'pilot') && (
         <section style={{ marginBottom: '36px' }}>
           <Pilot />
+        </section>
+      )}
+
+      {/* ─── TAB: Institutional Command Center & Governance Hub (Milestone 31) ─── */}
+      {activeNavTab === 'command' && (
+        <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
+          <CommandCenter
+            apiBaseUrl={API_BASE}
+            currentUserRole={currentUser?.role || 'elder'}
+            currentUserName={currentUser?.full_name || currentUser?.username || 'Elder Administrator'}
+          />
         </section>
       )}
 

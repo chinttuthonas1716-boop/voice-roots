@@ -21,6 +21,7 @@ from typing import Any
 import archive_rag_service
 import auth_service
 import backup_retention_service
+import command_center_service
 import cultural_archive_service
 import dictionary_service
 import language_explorer_service
@@ -6206,6 +6207,121 @@ def api_sync_offline_learning(req: OfflineSyncRequest):
 def api_get_learner_analytics(learner_id: str):
     """Retrieve comprehensive learning analytics, retention rates, and Leitner box metrics."""
     return learning_studio_service.get_learner_analytics(learner_id=learner_id, db_path=DB_PATH)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Milestone 31 (Module 7: Institutional Command Center Routes)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ModerateQueueRequest(BaseModel):
+    item_type: str
+    item_id: str
+    decision: str
+    reviewer_name: str
+    reviewer_role: str = "elder"
+    cultural_notes: str = ""
+
+
+class ModelRollbackRequest(BaseModel):
+    target_model_id: str
+    switched_by: str
+    reason: str
+
+
+class BackupCreateRequest(BaseModel):
+    reason: str = "Admin Snapshot"
+    triggered_by: str = "admin"
+
+
+@app.get("/api/v1/command-center/overview")
+def api_get_command_center_overview():
+    """Retrieve top-level health, inventory, and governance metrics across Voice Roots."""
+    return command_center_service.get_command_center_overview(db_path=DB_PATH)
+
+
+@app.get("/api/v1/command-center/telemetry")
+def api_get_preservation_telemetry():
+    """Calculate granular preservation metrics across dialects and phonetic coverage."""
+    return command_center_service.get_preservation_telemetry(db_path=DB_PATH)
+
+
+@app.get("/api/v1/command-center/moderation-queue")
+def api_get_moderation_queue(
+    language: str | None = None,
+    item_type: str | None = None,
+    limit: int = 50,
+):
+    """Retrieve pending review items across transcripts, lexicon, and cultural stories."""
+    return command_center_service.get_elder_moderation_queue(
+        language=language,
+        item_type=item_type,
+        limit=limit,
+        db_path=DB_PATH,
+    )
+
+
+@app.post("/api/v1/command-center/moderation/resolve")
+def api_resolve_moderation_item(req: ModerateQueueRequest):
+    """Process elder decision ('APPROVE', 'REJECT') with customary audit trail."""
+    try:
+        return command_center_service.moderate_queue_item(
+            item_type=req.item_type,
+            raw_id=req.item_id,
+            decision=req.decision,
+            reviewer_name=req.reviewer_name,
+            reviewer_role=req.reviewer_role,
+            cultural_notes=req.cultural_notes,
+            db_path=DB_PATH,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/command-center/models")
+def api_get_model_evaluation_dashboard():
+    """Retrieve WER/CER performance matrices and active deployment status."""
+    return command_center_service.get_model_evaluation_dashboard(db_path=DB_PATH)
+
+
+@app.post("/api/v1/command-center/models/rollback")
+def api_execute_model_rollback(req: ModelRollbackRequest):
+    """Revert active production speech model to a previous verified candidate."""
+    try:
+        return command_center_service.execute_model_rollback(
+            target_model_id=req.target_model_id,
+            switched_by=req.switched_by,
+            reason=req.reason,
+            db_path=DB_PATH,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/command-center/backups/create")
+def api_create_atomic_backup(req: BackupCreateRequest):
+    """Create an atomic snapshot of SQLite database using VACUUM INTO."""
+    try:
+        return command_center_service.create_atomic_backup_snapshot(
+            reason=req.reason,
+            triggered_by=req.triggered_by,
+            db_path=DB_PATH,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/command-center/backups")
+def api_list_system_backups():
+    """List all available snapshots with integrity status and storage footprint."""
+    return command_center_service.list_system_backups_console()
+
+
+@app.get("/api/v1/command-center/audit-stream")
+def api_get_security_audit_stream(limit: int = 100):
+    """Retrieve security events, authentication logs, and OCAP moderation audits."""
+    return command_center_service.get_security_audit_stream(limit=limit, db_path=DB_PATH)
 
 
 @app.get("/{full_path:path}")
