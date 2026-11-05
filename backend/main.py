@@ -25,6 +25,7 @@ import cultural_archive_service
 import dictionary_service
 import language_explorer_service
 import learning_service
+import learning_studio_service
 import research_interoperability_service
 import speech_analysis_service
 from dataset_service import (
@@ -6072,6 +6073,139 @@ def api_get_morphological_graph():
 def api_get_vitality_indicators():
     """Retrieve objective community-grounded vitality metrics and census baselines for oral minority languages."""
     return language_explorer_service.get_objective_vitality_indicators(db_path=DB_PATH)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Milestone 30 (Module 6: Advanced Learning Studio Upgrades)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SrsReviewRequest(BaseModel):
+    card_id: str
+    learner_id: str
+    grade: int
+
+
+class FormantEvalRequest(BaseModel):
+    phoneme_or_word: str
+    student_f0: float
+    student_f1: float
+    student_f2: float
+    language: str = "Gondi"
+
+
+class SentenceDrillSubmitRequest(BaseModel):
+    learner_id: str
+    drill_id: str
+    assembled_tokens: list[str]
+
+
+class ListeningQuizSubmitRequest(BaseModel):
+    learner_id: str
+    quiz_id: str
+    selected_option_id: str
+
+
+class OfflineSyncRequest(BaseModel):
+    learner_id: str
+    events: list[dict[str, Any]]
+
+
+@app.get("/api/v1/learning/srs/queue")
+def api_get_srs_queue(
+    learner_id: str = "learner_anonymous",
+    language: str | None = None,
+    include_future: bool = False,
+):
+    """Retrieve cards due for review using SuperMemo SM-2 & Leitner Box intervals."""
+    return learning_studio_service.get_srs_review_queue(
+        learner_id=learner_id,
+        language=language,
+        include_future=include_future,
+        db_path=DB_PATH,
+    )
+
+
+@app.post("/api/v1/learning/srs/review")
+def api_submit_srs_review(req: SrsReviewRequest):
+    """Record flashcard recall grade (0-5) and compute next review interval."""
+    try:
+        return learning_studio_service.submit_srs_review(
+            learner_id=req.learner_id,
+            card_id=req.card_id,
+            grade=req.grade,
+            db_path=DB_PATH,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/learning/formants/evaluate")
+def api_evaluate_formants(req: FormantEvalRequest):
+    """Compare student acoustic parameters with native elder benchmarks."""
+    return learning_studio_service.evaluate_pronunciation_formants(
+        phoneme_or_word=req.phoneme_or_word,
+        student_f0=req.student_f0,
+        student_f1=req.student_f1,
+        student_f2=req.student_f2,
+        language=req.language,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/learning/drills")
+def api_list_sentence_drills(language: str | None = None):
+    """Retrieve sentence construction drills with syntax models and scrambled tokens."""
+    return learning_studio_service.list_sentence_drills(language=language, db_path=DB_PATH)
+
+
+@app.post("/api/v1/learning/drills/submit")
+def api_submit_sentence_drill(req: SentenceDrillSubmitRequest):
+    """Validate student's assembled word sequence against indigenous SOV syntax."""
+    try:
+        return learning_studio_service.submit_sentence_drill_attempt(
+            learner_id=req.learner_id,
+            drill_id=req.drill_id,
+            assembled_tokens=req.assembled_tokens,
+            db_path=DB_PATH,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/learning/quizzes")
+def api_list_listening_quizzes(language: str | None = None):
+    """Retrieve audio-first listening comprehension quizzes."""
+    return learning_studio_service.list_listening_quizzes(language=language, db_path=DB_PATH)
+
+
+@app.post("/api/v1/learning/quizzes/submit")
+def api_submit_listening_quiz(req: ListeningQuizSubmitRequest):
+    """Submit attempt for an audio-first comprehension exercise."""
+    try:
+        return learning_studio_service.submit_listening_quiz_attempt(
+            learner_id=req.learner_id,
+            quiz_id=req.quiz_id,
+            selected_option_id=req.selected_option_id,
+            db_path=DB_PATH,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/learning/offline-sync")
+def api_sync_offline_learning(req: OfflineSyncRequest):
+    """Batch-synchronize offline learner actions (SRS reviews, drills, quizzes)."""
+    return learning_studio_service.sync_offline_learning_events(
+        learner_id=req.learner_id,
+        events=req.events,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/learning/analytics/{learner_id}")
+def api_get_learner_analytics(learner_id: str):
+    """Retrieve comprehensive learning analytics, retention rates, and Leitner box metrics."""
+    return learning_studio_service.get_learner_analytics(learner_id=learner_id, db_path=DB_PATH)
 
 
 @app.get("/{full_path:path}")

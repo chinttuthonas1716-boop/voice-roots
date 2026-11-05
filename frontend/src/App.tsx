@@ -54,6 +54,7 @@ import { LanguageExplorer } from './modules/language-explorer';
 import { CulturalArchives } from './modules/cultural-archives';
 import { SpeechIntelligence } from './components/SpeechIntelligence';
 import { LanguageLearning } from './components/LanguageLearning';
+import { LearningStudio } from './modules/learning-studio';
 import { ResearchPortal } from './components/ResearchPortal';
 import { DictionaryBrowser } from './modules/dictionary';
 import { AuthUser } from './types';
@@ -6308,10 +6309,33 @@ ${feedbackRecommendation}
         </section>
       )}
 
-      {/* ─── TAB: Language Learning & Interactive Practice (Milestone 19) ─── */}
+      {/* ─── TAB: Language Learning & Advanced Learning Studio (Milestone 19 & Milestone 30) ─── */}
       {activeNavTab === 'learning' && (
         <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
-          <LanguageLearning />
+          <div style={{ marginBottom: '28px' }}>
+            <LearningStudio apiBaseUrl={API_BASE} learnerId={currentUser?.username || 'active_clan_learner'} />
+          </div>
+          <div style={{ marginTop: '28px' }}>
+            <div
+              style={{
+                backgroundColor: '#163832',
+                borderRadius: '12px 12px 0 0',
+                padding: '14px 20px',
+                borderBottom: '1px solid rgba(142, 182, 155, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#DAF1DE' }}>
+                Curated Community Educational Collections & Vocabulary Modules
+              </span>
+              <span style={{ fontSize: '0.78rem', color: '#8EB69B' }}>
+                Milestone 19 • Pedagogical Collections
+              </span>
+            </div>
+            <LanguageLearning />
+          </div>
         </section>
       )}
 

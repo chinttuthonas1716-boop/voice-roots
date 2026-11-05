@@ -2002,3 +2002,31 @@
     5. OCAP Compliance: Oral language vitality metrics grounded in community holdings and Census data; zero speculative extinction tagging.
   - NOT VERIFIED: upcoming roadmap stages M30–M33 (to be implemented next).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Completed Milestone 30 (Module 6: Advanced Learning Studio Upgrades).
+  - Implemented Spaced Repetition System (SRS) using SuperMemo SM-2 & Leitner Box intervals in `backend/learning_studio_service.py` (`get_srs_review_queue()`, `submit_srs_review()`). Supports 6 recall grades (0: blackout to 5: flawless), ease factor updating ($\ge 1.3$), interval calculation, and 5-stage Leitner box progression.
+  - Implemented formant-based pronunciation evaluator in `backend/learning_studio_service.py` (`evaluate_pronunciation_formants()`) comparing student pitch ($F_0$), vowel aperture ($F_1$), and frontness ($F_2$) against elder reference benchmarks for Gondi, Koya, and Santhali, generating acoustic match scores and targeted articulatory advice.
+  - Implemented Dravidian/Munda sentence construction drills (`list_sentence_drills()`, `submit_sentence_drill_attempt()`) testing authentic indigenous SOV syntax patterns with token reordering and clan context explanations.
+  - Implemented audio-first listening comprehension quizzes (`list_listening_quizzes()`, `submit_listening_quiz_attempt()`) testing oral comprehension directly from master audio without dominant script barriers.
+  - Implemented batch offline synchronization (`sync_offline_learning_events()`) and comprehensive learner analytics (`get_learner_analytics()`) computing retention rates %, Leitner box distributions, and oral proficiency tiers.
+  - Exposed 7 new REST API endpoints in `backend/main.py`:
+    - `GET /api/v1/learning/srs/queue`
+    - `POST /api/v1/learning/srs/review`
+    - `POST /api/v1/learning/formants/evaluate`
+    - `GET /api/v1/learning/drills`
+    - `POST /api/v1/learning/drills/submit`
+    - `GET /api/v1/learning/quizzes`
+    - `POST /api/v1/learning/quizzes/submit`
+    - `POST /api/v1/learning/offline-sync`
+    - `GET /api/v1/learning/analytics/{learner_id}`
+  - Created interactive frontend module in `frontend/src/modules/learning-studio/` (`LearningStudio.tsx`, `index.ts`) with 5 studio modes (SRS Flashcards with flip & 0-5 rating, Formant Lab with interactive sliders & gauge, Listening Quizzes, Sentence Drills with token bank, and Analytics & 1-click Offline Sync) wired into `frontend/src/App.tsx`.
+  - Authored automated test suite in `tests/test_milestone30_learning_studio.py` (7/7 tests passing in 2.63s).
+  - Files touched: `backend/learning_studio_service.py`, `backend/main.py`, `frontend/src/App.tsx`, `frontend/src/modules/learning-studio/LearningStudio.tsx`, `frontend/src/modules/learning-studio/index.ts`, `tests/test_milestone30_learning_studio.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Regression Suite: `pytest tests/ -q` passed all 270/270 tests in 69.50s (100% pass rate).
+    2. Milestone 30 Test Suite: `pytest tests/test_milestone30_learning_studio.py -v` passed all 7/7 tests in 2.63s.
+    3. Frontend Typecheck & Build: `npx tsc --noEmit` passed with 0 errors and `npm run build` succeeded cleanly (783.35 kB JS bundle).
+    4. Python Quality Linter: `python3 -m ruff check` passed with 0 warnings/errors.
+    5. OCAP Compliance: Educational modules respect educational consent boundaries; zero cloud spend.
+  - NOT VERIFIED: upcoming roadmap stages M31–M33 (to be implemented next).
+  - NEEDS FROM OTHER AGENT: none.
