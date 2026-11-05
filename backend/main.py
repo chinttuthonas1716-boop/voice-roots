@@ -330,6 +330,7 @@ def init_db():
         }
         additions = {
             "audio_sha256": "TEXT",
+            "flac_sha256": "TEXT",
             "file_size_bytes": "INTEGER",
             "consent_at": "TEXT",
             "consent_version": "TEXT",
@@ -374,6 +375,7 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_created ON transcripts(created_at)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_status ON transcripts(status)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_sha256 ON transcripts(audio_sha256)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_flac_sha256 ON transcripts(flac_sha256)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_privacy ON transcripts(privacy_level)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_verification ON transcripts(verification_status)")
 
@@ -939,6 +941,8 @@ class TranscriptResponse(BaseModel):
     created_at: str
     updated_at: str
     audio_sha256: str | None = None
+    flac_sha256: str | None = None
+    is_flac_verified: bool = False
     file_size_bytes: int | None = None
     consent_at: str | None = None
     consent_version: str | None = None
@@ -1076,16 +1080,8 @@ SUPPORTED_LANGUAGES = list_languages()
 def root(request: Request):
     """Root endpoint welcoming clients and serving the unified SPA, or JSON API metadata when requested."""
     accept = request.headers.get("accept", "")
-    if os.path.exists(INDEX_HTML_PATH):
-        if "application/json" in accept and "text/html" not in accept:
-            return {
-                "name": "Voice Roots API",
-                "tagline": "Rooting Oral Languages in Text with AI",
-                "status": "online",
-                "version": "1.0.0",
-                "docs_url": "/docs",
-                "health_check": "/health",
-            }
+    is_browser_html_request = "text/html" in accept and "application/json" not in accept
+    if os.path.exists(INDEX_HTML_PATH) and is_browser_html_request:
         return FileResponse(INDEX_HTML_PATH)
     return {
         "name": "Voice Roots API",
@@ -1437,6 +1433,8 @@ def get_audio_stream_endpoint(transcript_id: int, request: Request):
             "storage_backend": effective_backend,
             "privacy_level": record.get("privacy_level", "public"),
             "audio_sha256": record.get("audio_sha256"),
+            "flac_sha256": record.get("flac_sha256"),
+            "is_flac_verified": bool(record.get("flac_sha256")),
             "license": record.get("license", "CC BY-NC 4.0"),
             "contributor_name": record.get("contributor_name", "Community Contributor"),
             "expires_in_seconds": 3600 if effective_backend in ("r2", "s3") else None,
@@ -1501,12 +1499,13 @@ def process_saved_transcription(transcript_id: int):
         ).fetchone()
         if row is None:
             return
-        audio_path = os.path.join(AUDIO_STORAGE, row["audio_filename"])
+        row_dict = dict(row)
+        audio_path = os.path.join(AUDIO_STORAGE, row_dict["audio_filename"])
 
     _set_transcription_state(transcript_id, state="processing")
     try:
         provider = create_transcription_provider()
-        recording_language = row.get("language", None)
+        recording_language = row_dict.get("language")
         if recording_language and str(recording_language).strip().lower() in {"auto", "auto-detect", "detect", ""}:
             recording_language = None
         try:
@@ -1562,8 +1561,8 @@ def _audio_format(prefix: bytes) -> str | None:
     return None
 
 
-async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str]:
-    """Stream a bounded upload to a temporary file and atomically preserve it."""
+async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str, str | None]:
+    """Stream a bounded upload to a temporary file, evaluate FLAC losslessness, and preserve it."""
     os.makedirs(AUDIO_STORAGE, exist_ok=True)
     fd, temp_path = tempfile.mkstemp(prefix=".upload-", dir=AUDIO_STORAGE)
     digest = hashlib.sha256()
@@ -1630,24 +1629,53 @@ async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str]:
             with get_db_connection() as conn:
                 cur = conn.cursor()
                 cur.execute(
-                    "SELECT audio_filename, file_size_bytes, audio_sha256, storage_backend FROM transcripts WHERE audio_sha256 = ? AND archived_at IS NULL LIMIT 1",
-                    (sha256_hash,),
+                    "SELECT audio_filename, file_size_bytes, audio_sha256, flac_sha256, storage_backend FROM transcripts WHERE (audio_sha256 = ? OR flac_sha256 = ?) AND archived_at IS NULL LIMIT 1",
+                    (sha256_hash, sha256_hash),
                 )
                 existing = cur.fetchone()
                 if existing:
                     logger.info("SHA-256 dedupe: audio master %s already exists as %s. Reusing master.", sha256_hash, existing["audio_filename"])
                     if os.path.exists(temp_path):
                         os.remove(temp_path)
-                    return existing["audio_filename"], existing["file_size_bytes"] or size, sha256_hash
+                    return existing["audio_filename"], existing["file_size_bytes"] or size, existing["audio_sha256"] or sha256_hash, existing["flac_sha256"]
         except Exception as _dedupe_err:
             logger.debug("Deduplication check bypassed: %s", _dedupe_err)
+
+        # T1.5: Convert uploads to FLAC on ingest and prove losslessness by comparing decoded samples
+        flac_sha256: str | None = None
+        flac_master_path: str | None = None
+        try:
+            if detected_format in ("wav", "flac"):
+                from backend.flac_service import convert_to_flac_and_verify
+                flac_res = convert_to_flac_and_verify(temp_path, allow_non_lossless_fallback=False)
+                if flac_res.is_lossless:
+                    flac_sha256 = flac_res.flac_sha256
+                    flac_master_path = flac_res.flac_path
+                    logger.info(
+                        "FLAC conversion & lossless verification passed: %s -> %s (saved %.1f%%)",
+                        sha256_hash[:12],
+                        flac_sha256[:12],
+                        flac_res.space_saved_percentage,
+                    )
+        except Exception as _flac_err:
+            logger.debug("FLAC conversion/verification bypassed or skipped: %s", _flac_err)
 
         filename = f"{uuid.uuid4()}.{detected_format}"
         provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
         stored_filename, stored_size, sha256_hash = provider.store_file(
             temp_path, filename, content_type=declared_type
         )
-        return stored_filename, stored_size, sha256_hash
+        if flac_master_path and os.path.exists(flac_master_path):
+            try:
+                flac_filename = f"{os.path.splitext(filename)[0]}.flac"
+                provider.store_file(flac_master_path, flac_filename, content_type="audio/flac")
+            except Exception as _flac_store_err:
+                logger.debug("FLAC secondary storage bypass: %s", _flac_store_err)
+            finally:
+                if os.path.exists(flac_master_path):
+                    os.remove(flac_master_path)
+
+        return stored_filename, stored_size, sha256_hash, flac_sha256
     except Exception:
         if os.path.exists(temp_path):
             os.remove(temp_path)
@@ -1735,7 +1763,7 @@ async def upload_audio(
             if existing:
                 return dict(existing)
 
-    unique_filename, file_size, audio_sha256 = await _store_audio_upload(upload_file)
+    unique_filename, file_size, audio_sha256, flac_sha256 = await _store_audio_upload(upload_file)
 
     audio_url = f"/storage/audio/{unique_filename}"
     unique_uuid = client_uuid or str(uuid.uuid4())
@@ -1751,14 +1779,19 @@ async def upload_audio(
 
     calculated_duration = 0.0
     try:
-        if unique_filename.endswith(".wav"):
-            stored_path = os.path.join(AUDIO_STORAGE, unique_filename)
-            with wave.open(stored_path, "rb") as wf:
-                framerate = wf.getframerate()
-                if framerate > 0:
-                    calculated_duration = round(wf.getnframes() / float(framerate), 2)
-    except (wave.Error, OSError) as _exc:
-        logger.debug("Failed reading wave duration for %s: %s", unique_filename, _exc)
+        stored_path = os.path.join(AUDIO_STORAGE, unique_filename)
+        if os.path.exists(stored_path):
+            try:
+                import soundfile as sf
+                calculated_duration = round(float(sf.info(stored_path).duration), 2)
+            except Exception:
+                if unique_filename.endswith(".wav"):
+                    with wave.open(stored_path, "rb") as wf:
+                        framerate = wf.getframerate()
+                        if framerate > 0:
+                            calculated_duration = round(wf.getnframes() / float(framerate), 2)
+    except Exception as _exc:
+        logger.debug("Failed reading audio duration for %s: %s", unique_filename, _exc)
 
     storage_backend = create_storage_provider(storage_dir=AUDIO_STORAGE).name
 
@@ -1795,7 +1828,7 @@ async def upload_audio(
                 INSERT INTO transcripts (
                     uuid_id, title, audio_filename, audio_url, language,
                     dialect, transcript_text, status, duration_seconds,
-                    created_at, updated_at, audio_sha256, file_size_bytes,
+                    created_at, updated_at, audio_sha256, flac_sha256, file_size_bytes,
                     consent_at, consent_version, transcription_status,
                     transcription_consent_at, transcription_consent_version,
                     contributor_name, contributor_role, provenance_notes,
@@ -1804,7 +1837,7 @@ async def upload_audio(
                     verification_status, consent_private_storage, consent_community_access,
                     consent_public_publication, consent_ai_training, is_anonymous,
                     contextual_notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     unique_uuid,
@@ -1819,6 +1852,7 @@ async def upload_audio(
                     now,
                     now,
                     audio_sha256,
+                    flac_sha256,
                     file_size,
                     now,
                     CONSENT_VERSION,
@@ -1878,6 +1912,8 @@ async def upload_audio(
         "transcribed_at": None,
         "created_at": now,
         "audio_sha256": audio_sha256,
+        "flac_sha256": flac_sha256,
+        "is_flac_verified": bool(flac_sha256),
         "file_size_bytes": file_size,
         "consent_at": now,
         "consent_version": CONSENT_VERSION,

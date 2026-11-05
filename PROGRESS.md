@@ -2207,3 +2207,29 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
   - NOT VERIFIED: Live network upload to real Cloudflare R2 bucket (requires active R2 credentials in Render environment).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Phase 1 – FLAC Masters Evaluation and Adoption (Task T1.5).
+  - Implemented `backend/flac_service.py`:
+    1. Bit-Exact Lossless Verification: `convert_to_flac_and_verify()` and `compare_audio_samples()` decode both original WAV and FLAC streams into integer PCM arrays and verify frame-by-frame sample identity (`np.array_equal` is True and maximum absolute sample error is 0).
+    2. Multi-Format & Multi-Bitdepth Support: Tested 16-bit 16kHz mono (Whisper standard), 16-bit 44.1kHz stereo (field stereo), 24-bit 48kHz mono, and 24-bit 48kHz stereo (studio archive) configurations.
+    3. Tamper & Corruption Detection: Proved that a single sample deviation (+1) or frame truncation instantly triggers `FlacVerificationError` and fails verification.
+    4. Storage Reduction Metrics: FLAC demonstrated an average of 84.07% storage and egress reduction compared to raw uncompressed PCM.
+  - Implemented Dual-Hash Provenance & Database Integration:
+    1. Added `flac_sha256` column and index `idx_transcripts_flac_sha256` to `transcripts` table in `init_db()` and in Alembic migration `6e7f8a9b0c1d_add_flac_sha256_to_transcripts.py`.
+    2. Updated `_store_audio_upload` and `upload_audio` in `backend/main.py` to convert uploads to FLAC on ingest, verify bit-exact sample losslessness, and store both `audio_sha256` (original master) and `flac_sha256` (FLAC master) in the database and API responses.
+    3. Ingest deduplication checks both `audio_sha256` and `flac_sha256`.
+  - Added CLI Evaluation Tool & Report:
+    1. `scripts/evaluate_flac_masters.py` runs the evaluation suite and generates `docs/FLAC_EVALUATION_REPORT.md` documenting formal adoption certification.
+  - Added Dedicated Test Suite: `tests/test_t1_5_flac_evaluation.py` (8/8 tests passed).
+  - Fixed Pre-existing Root Endpoint & Transcription Worker Issues:
+    1. Resolved JSON decoding in `root()` for API clients requesting `/` without explicit `Accept: application/json`.
+    2. Converted `sqlite3.Row` to dictionary before accessing `.get()` in `process_saved_transcription`.
+  - Files touched: `backend/flac_service.py`, `scripts/evaluate_flac_masters.py`, `docs/FLAC_EVALUATION_REPORT.md`, `backend/alembic/versions/6e7f8a9b0c1d_add_flac_sha256_to_transcripts.py`, `backend/main.py`, `tests/test_t1_5_flac_evaluation.py`, `tests/test_t1_3_postgres_migration.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated FLAC Test Suite: `pytest tests/test_t1_5_flac_evaluation.py -v` passed all 8/8 tests in 2.53s.
+    2. Full Regression Suite: `pytest tests/test_milestone4_persistence.py tests/test_backend_api.py tests/test_milestone24_v2_foundation.py tests/test_t1_3_postgres_migration.py tests/test_t1_4_r2_storage.py tests/test_t1_5_flac_evaluation.py backend/tests/test_milestone1.py -v` passed all 77/77 tests in 46.59s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t1_5_flac_evaluation.py scripts/evaluate_flac_masters.py` passed with 0 errors.
+    4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
+    5. FLAC Evaluation CLI: `python3 scripts/evaluate_flac_masters.py` passed all test cases and wrote `docs/FLAC_EVALUATION_REPORT.md`.
+  - NOT VERIFIED: Real hardware audio interface capturing 24-bit 96kHz field audio.
+  - NEEDS FROM OTHER AGENT: none.

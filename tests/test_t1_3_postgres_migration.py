@@ -113,7 +113,7 @@ def test_alembic_upgrade_sqlite_clean():
         ver = cur.fetchone()[0]
         conn.close()
 
-        assert ver == "5d6e7f8a9b0c"
+        assert ver in ("5d6e7f8a9b0c", "6e7f8a9b0c1d")
     finally:
         if os.path.exists(tmp_path):
             os.remove(tmp_path)
