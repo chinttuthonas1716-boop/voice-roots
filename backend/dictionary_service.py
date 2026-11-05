@@ -1011,6 +1011,7 @@ def search_dictionary(
     language_code: str | None = None,
     dialect: str | None = None,
     category: str | None = None,
+    status: str | None = None,
     only_approved: bool = False,
     limit: int = 50,
     offset: int = 0,
@@ -1029,10 +1030,27 @@ def search_dictionary(
         where_clauses: list[str] = []
         params: list[Any] = []
 
-        # Filter by language
+        # Filter by language with aliases
         if language_code and language_code.strip() and language_code.lower() != "all":
-            where_clauses.append("d.language_code = ?")
-            params.append(language_code.strip().lower())
+            clean_lang = language_code.strip().lower()
+            if clean_lang in ("koy", "koya", "kff"):
+                lang_codes = ("kff", "koy")
+            elif clean_lang in ("lam", "lambadi", "lmn"):
+                lang_codes = ("lmn", "lam")
+            elif clean_lang in ("gon", "gondi"):
+                lang_codes = ("gon", "gondi")
+            elif clean_lang in ("sat", "santhali", "santali"):
+                lang_codes = ("sat", "santali")
+            else:
+                lang_codes = (clean_lang,)
+
+            if len(lang_codes) == 1:
+                where_clauses.append("d.language_code = ?")
+                params.append(lang_codes[0])
+            else:
+                placeholders = ",".join("?" for _ in lang_codes)
+                where_clauses.append(f"d.language_code IN ({placeholders})")
+                params.extend(lang_codes)
 
         # Filter by dialect
         if dialect and dialect.strip() and dialect.lower() != "all":
@@ -1044,8 +1062,17 @@ def search_dictionary(
             where_clauses.append("d.part_of_speech = ?")
             params.append(category.strip().lower())
 
-        # Filter by elder approval
-        if only_approved:
+        # Filter by status / elder approval
+        if status and status.strip() and status.lower() != "all":
+            clean_status = status.strip().lower()
+            if clean_status == "approved":
+                where_clauses.append("d.is_elder_approved = 1 AND d.status = 'approved'")
+            elif clean_status in ("proposed", "pending", "pending_review", "draft"):
+                where_clauses.append("(d.is_elder_approved = 0 OR d.status != 'approved')")
+            else:
+                where_clauses.append("d.status = ?")
+                params.append(clean_status)
+        elif only_approved:
             where_clauses.append("d.is_elder_approved = 1 AND d.status = 'approved'")
 
         # Query search matching

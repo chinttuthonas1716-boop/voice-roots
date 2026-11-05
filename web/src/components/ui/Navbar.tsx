@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Mic, Languages, HardDrive, User, LogOut, ShieldCheck } from "lucide-react";
+import { Home, Mic, Languages, HardDrive, User, LogOut, ShieldCheck, BookOpen } from "lucide-react";
 import { getCurrentUser, logoutUser, type UserProfile } from "@/lib/auth";
 
 export function Navbar() {
@@ -26,6 +26,7 @@ export function Navbar() {
     { href: "/", label: "Home", icon: Home },
     { href: "/record", label: "Record", icon: Mic },
     { href: "/translate", label: "Translate", icon: Languages },
+    { href: "/dictionary", label: "Dictionary", icon: BookOpen },
     { href: "/dashboard", label: "My recordings", icon: HardDrive },
     ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: "Reviewer queue", icon: ShieldCheck }] : []),
   ];

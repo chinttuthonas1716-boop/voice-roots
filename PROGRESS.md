@@ -2349,6 +2349,41 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Physical microphone hardware input on real Android device.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Dictionary and Phrasebook Browser (Task T2.6).
+  - Backend Dictionary API & Audio Streaming:
+    1. Updated `backend/dictionary_service.py` `search_dictionary`:
+       - Added multi-dialect and language alias normalization: maps `koy`/`koya` -> `kff`/`koy`, `lam`/`lambadi` -> `lmn`/`lam`, `gon`/`gondi` -> `gon`, `sat`/`santhali` -> `sat`.
+       - Added `status` parameter supporting filtering by `approved` (`is_elder_approved = 1 AND status = 'approved'`), `proposed`/`pending_review`/`draft` (`is_elder_approved = 0 OR status != 'approved'`), or `all`.
+    2. Implemented audio sample streaming endpoints in `backend/main.py`:
+       - `GET /api/v1/audio/samples/{filename}`: serves audio from storage/audio or generates a valid clean synthetic PCM WAV snippet to avoid broken players during pilot/demo mode.
+       - `GET /api/v1/dictionary/words/{word_id}/audio`: streams authentic audio snippet for headwords or fallback sample audio.
+    3. Updated `GET /api/v1/dictionary/search` in `backend/main.py` to forward `status` parameter.
+  - Frontend Dictionary Browser Experience:
+    1. Created `web/src/app/dictionary/page.tsx`:
+       - Complete dictionary and phrasebook browser interface with Liquid Glass dark design and amber/emerald accents.
+       - Live telemetry metrics: Total words, elder approved count, audio coverage, and dialect diversity.
+       - Real-time multi-token full-text search by Latin headword, native script (Masaram/Telugu, Ol Chiki, Devanagari), or English/Telugu translations.
+       - Language tabs for All Tongues, Gondi, Koya, Santhali, and Lambadi.
+       - Secondary filters: Approved vs Proposed/Draft toggle, Part of Speech dropdown, Dialect filter.
+       - Card UI displaying headwords in primary Latin and prominent native script, IPA phonetic targets (`[/peːɾsaːpeːn/]`), "✓ Elder Approved" (emerald) vs "Proposed / Community Draft" (amber) badges, one-click authentic audio pronunciation button with playing animation, English/Telugu/Hindi translation tags, expandable cultural wisdom & etymology notes, and elder provenance attribution banners.
+    2. Updated `web/src/components/ui/Navbar.tsx`:
+       - Added "Dictionary" navigation link with `BookOpen` icon.
+    3. Updated `web/src/app/explore/page.tsx`:
+       - Added prominent link banner to explore the Multilingual Dictionary & Phrasebook.
+  - Dedicated Test Suite:
+    1. Authored `tests/test_t2_6_dictionary_browser.py`:
+       - 7/7 tests verifying 4 core language coverage, telemetry metrics, FTS5 and LIKE search, language alias normalization, approved vs proposed status filtering, word details with provenance, and WAV audio snippet streaming with binary header validation.
+  - Files touched: `backend/dictionary_service.py`, `backend/main.py`, `web/src/app/dictionary/page.tsx`, `web/src/components/ui/Navbar.tsx`, `web/src/app/explore/page.tsx`, `tests/test_t2_6_dictionary_browser.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_6_dictionary_browser.py -v` passed all 7/7 tests in 2.59s.
+    2. Full Phase 2 Test Suites: `pytest tests/test_t2_6_dictionary_browser.py tests/test_t2_4_prompted_recording.py tests/test_t2_3_reviewer_queue.py tests/test_t2_2_consent_withdrawal.py tests/test_t2_1_honest_translation.py -v` passed all 29/29 tests in 6.25s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t2_6_dictionary_browser.py` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 21/21 routes (including `/dictionary`) with 0 errors.
+  - NOT VERIFIED: Remote S3 audio streaming without live bucket credentials.
+  - NEEDS FROM OTHER AGENT: none.
+
+
 
 
 

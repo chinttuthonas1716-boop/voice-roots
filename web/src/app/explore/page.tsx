@@ -48,6 +48,16 @@ export default function ExplorePage() {
           <p className="max-w-2xl text-sm leading-relaxed text-secondary-text sm:text-base">
             Discover spoken heritages by indigenous language, dialect family, or geographic cultural landscape across South Asia.
           </p>
+          <div className="pt-2">
+            <Link
+              href="/dictionary"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-amber-500/15 border border-amber-500/30 text-amber-300 text-xs sm:text-sm font-semibold hover:bg-amber-500/25 transition"
+            >
+              <BookOpen className="h-4 w-4" />
+              <span>Explore Multilingual Dictionary & Phrasebook</span>
+              <ArrowRight className="h-3.5 w-3.5" />
+            </Link>
+          </div>
         </header>
 
         {/* Language Filter Bar */}
