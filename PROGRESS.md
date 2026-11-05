@@ -1978,3 +1978,27 @@
     6. OCAP Compliance: Master audio recordings remain immutable; sacred lore is shielded with safe redacted teasers; consent revocation triggers cascading deletion across indexes and vector store.
   - NOT VERIFIED: v2.0 upcoming feature modules M29–M33 (to be implemented next per roadmap).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Completed Milestone 29 (Module 5: Interactive Language Explorer & Dialect Cartography).
+  - Implemented phylogenetic family tree engine in `backend/language_explorer_service.py` (`get_phylogenetic_tree()`) covering all 44 registered languages across 5 macro-families (Dravidian, Austroasiatic Munda, Indo-Aryan Diaspora, Global Indigenous, and Major World Languages).
+  - Structured detailed Central Dravidian (Gondi varieties: Adilabad Raj Gondi, Betul/Mandla Northern Gondi, Bastar Maria, Godavari Valley Gondi) and South-Central Dravidian (Koya varieties: Godavari Valley Koya, Malkangiri Koya, Koya Dora; Telugu) subfamilies.
+  - Implemented geo-spatial dialect cartography engine in `backend/language_explorer_service.py` (`get_dialect_cartography()`) mapping GPS coordinates, territories, 2011 Census speaking populations, cultural anchors, writing systems, phonological markers, and authentic oral sample phrases for Gondi, Koya, Santhali, and Lambadi.
+  - Implemented morphological cognate graph service (`get_morphological_graph()`) connecting Proto-Dravidian, Proto-Austroasiatic, and Indo-Aryan proto-roots (`*mar-am`, `*nīr- / *yer`, `*kun- / *konda`, `*pēr- / *vel-`, `*sarjom`, `*tāndā`) to living vocabulary across Gondi, Koya, Telugu, Tamil, Santhali, Lambadi, and Hindi via Cytoscape-formatted graph nodes and typed edges (`ETYMOLOGICAL_ROOT`, `COGNATE_OF`, `REGIONAL_LOAN_TRANSITION`, `SEMANTIC_ECOLOGICAL_PARALLEL`).
+  - Implemented objective community-grounded vitality matrix (`get_objective_vitality_indicators()`) computing real-time preservation metrics (recorded stories, indexed transcripts, archived audio hours, approved dictionary counts, audio pronunciation coverage %) joined with 2011 Census demographics.
+  - Enforced strict Anti-Extinction Community Sovereignty principle rejecting speculative external "endangerment" classifications and asserting OCAP digital custody.
+  - Exposed 4 new REST API endpoints in `backend/main.py`:
+    - `GET /api/v1/explorer/phylogenetic-tree`
+    - `GET /api/v1/explorer/dialect-cartography`
+    - `GET /api/v1/explorer/morphological-graph`
+    - `GET /api/v1/explorer/vitality-indicators`
+  - Created interactive frontend module in `frontend/src/modules/language-explorer/` (`LanguageExplorer.tsx`, `index.ts`) with 4 exploration modes (Phylogenetic Trees, Dialect Cartography, Morphological Cognates, and Vitality Matrix) wired into `frontend/src/App.tsx`.
+  - Authored automated test suite in `tests/test_milestone29_language_explorer.py` (6/6 tests passing in 2.35s).
+  - Files touched: `backend/language_explorer_service.py`, `backend/main.py`, `frontend/src/App.tsx`, `frontend/src/modules/language-explorer/LanguageExplorer.tsx`, `frontend/src/modules/language-explorer/index.ts`, `tests/test_milestone29_language_explorer.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Regression Suite: `pytest tests/ -q` passed all 263/263 tests in 68.47s (100% pass rate).
+    2. Milestone 29 Test Suite: `pytest tests/test_milestone29_language_explorer.py -v` passed all 6/6 tests in 2.35s.
+    3. Frontend Typecheck & Build: `npx tsc --noEmit` passed with 0 errors and `npm run build` succeeded cleanly (748.61 kB JS bundle).
+    4. Python Quality Linter: `python3 -m ruff check` passed with 0 warnings/errors.
+    5. OCAP Compliance: Oral language vitality metrics grounded in community holdings and Census data; zero speculative extinction tagging.
+  - NOT VERIFIED: upcoming roadmap stages M30–M33 (to be implemented next).
+  - NEEDS FROM OTHER AGENT: none.

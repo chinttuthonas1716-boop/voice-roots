@@ -23,6 +23,7 @@ import auth_service
 import backup_retention_service
 import cultural_archive_service
 import dictionary_service
+import language_explorer_service
 import learning_service
 import research_interoperability_service
 import speech_analysis_service
@@ -6043,6 +6044,34 @@ def api_assistant_sync_index():
         "message": "Archive vector indexing complete.",
         "synced": counts,
     }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Milestone 29 (Module 5: Interactive Language Explorer Routes)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/v1/explorer/phylogenetic-tree")
+def api_get_phylogenetic_tree():
+    """Retrieve full hierarchical phylogenetic trees connecting all 44 registered languages."""
+    return language_explorer_service.get_phylogenetic_tree(db_path=DB_PATH)
+
+
+@app.get("/api/v1/explorer/dialect-cartography")
+def api_get_dialect_cartography():
+    """Retrieve geo-spatial distribution, speaking populations, and dialect markers for primary oral tongues."""
+    return language_explorer_service.get_dialect_cartography()
+
+
+@app.get("/api/v1/explorer/morphological-graph")
+def api_get_morphological_graph():
+    """Retrieve cytoscape-formatted graph of Proto-Dravidian, Austroasiatic, and Indo-Aryan roots and cognates."""
+    return language_explorer_service.get_morphological_graph()
+
+
+@app.get("/api/v1/explorer/vitality-indicators")
+def api_get_vitality_indicators():
+    """Retrieve objective community-grounded vitality metrics and census baselines for oral minority languages."""
+    return language_explorer_service.get_objective_vitality_indicators(db_path=DB_PATH)
 
 
 @app.get("/{full_path:path}")

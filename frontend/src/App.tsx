@@ -50,6 +50,7 @@ import { Home } from './components/Home';
 import { GroundedAssistant } from './modules/ai-assistant';
 import { OfflineManager } from './components/OfflineManager';
 import { KnowledgeGraph } from './components/KnowledgeGraph';
+import { LanguageExplorer } from './modules/language-explorer';
 import { CulturalArchives } from './modules/cultural-archives';
 import { SpeechIntelligence } from './components/SpeechIntelligence';
 import { LanguageLearning } from './components/LanguageLearning';
@@ -6256,10 +6257,33 @@ ${feedbackRecommendation}
         </section>
       )}
 
-      {/* ─── TAB: Language Knowledge Graph (Milestone 16) ─── */}
+      {/* ─── TAB: Language Knowledge Graph & Interactive Explorer (M16 & M29) ─── */}
       {activeNavTab === 'graph' && (
         <section style={{ maxWidth: '1280px', margin: '0 auto', width: '100%', marginBottom: '36px' }}>
-          <KnowledgeGraph apiUrl={apiUrl} adminKey={authToken || undefined} currentUser={currentUser} />
+          <div style={{ marginBottom: '28px' }}>
+            <LanguageExplorer apiBaseUrl={API_BASE} authToken={authToken} />
+          </div>
+          <div style={{ marginTop: '28px' }}>
+            <div
+              style={{
+                backgroundColor: '#163832',
+                borderRadius: '12px 12px 0 0',
+                padding: '14px 20px',
+                borderBottom: '1px solid rgba(142, 182, 155, 0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+              }}
+            >
+              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#DAF1DE' }}>
+                Interactive Knowledge Graph Network & Entity Topology
+              </span>
+              <span style={{ fontSize: '0.78rem', color: '#8EB69B' }}>
+                Milestone 16 • Cytoscape Graph Engine
+              </span>
+            </div>
+            <KnowledgeGraph apiUrl={apiUrl} adminKey={authToken || undefined} currentUser={currentUser} />
+          </div>
         </section>
       )}
 
