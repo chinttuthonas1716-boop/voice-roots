@@ -2233,3 +2233,28 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     5. FLAC Evaluation CLI: `python3 scripts/evaluate_flac_masters.py` passed all test cases and wrote `docs/FLAC_EVALUATION_REPORT.md`.
   - NOT VERIFIED: Real hardware audio interface capturing 24-bit 96kHz field audio.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Phase 1 – Config and Security Basics (Task T1.6).
+  - Production Security Headers:
+    1. Added `Permissions-Policy: camera=(), microphone=(self), geolocation=()`.
+    2. Added `Cross-Origin-Opener-Policy: same-origin`.
+    3. Added `X-XSS-Protection: 0`.
+    4. Enforced `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, and `Content-Security-Policy`.
+    5. Enforced `Strict-Transport-Security: max-age=31536000; includeSubDomains` on HTTPS and reverse-proxied (`x-forwarded-proto: https`) connections.
+  - Thread-Safe Sliding-Window Rate Limiting:
+    1. Implemented `ApiRateLimiter` class in `backend/main.py` with sliding-window quota tracking per client IP address.
+    2. Tiered quotas: 120 req/min for general API, 30 req/min for authentication (`/api/v1/auth/*`), and 40 req/min for audio uploads (`/api/v1/transcripts/upload`, `/api/upload`).
+    3. Rejection behavior: returns HTTP 429 Too Many Requests with JSON error payload, `Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining: 0`, and `X-RateLimit-Reset` epoch headers.
+    4. Exemption rules: health check (`/health`, `/ready`), metrics (`/metrics`), docs (`/docs`), and test suite execution are exempt.
+  - Configuration & Secret Hygiene:
+    1. Updated root `.env.example` with all production environment settings: Render PostgreSQL (`DATABASE_URL`), Cloudflare R2 (`STORAGE_BACKEND`, `R2_ENDPOINT_URL`, `R2_ACCESS_KEY_ID`, `R2_SECRET_ACCESS_KEY`, `R2_BUCKET`), CORS (`CORS_ORIGINS`), Rate Limits (`API_RATE_LIMIT_PER_MINUTE`, `AUTH_RATE_LIMIT_PER_MINUTE`), and Next.js proxy (`API_BASE_URL`).
+    2. Confirmed zero committed secrets or live `.env` files in git tracking.
+  - Added Dedicated Test Suite: `tests/test_t1_6_security_basics.py` (8/8 tests passed).
+  - Files touched: `backend/main.py`, `.env.example`, `tests/test_t1_6_security_basics.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Security & Config Test Suite: `pytest tests/test_t1_6_security_basics.py -v` passed all 8/8 tests in 2.74s.
+    2. Full Regression Suite: `pytest tests/test_milestone4_persistence.py tests/test_backend_api.py tests/test_milestone24_v2_foundation.py tests/test_t1_3_postgres_migration.py tests/test_t1_4_r2_storage.py tests/test_t1_5_flac_evaluation.py tests/test_t1_6_security_basics.py backend/tests/test_milestone1.py -v` passed all 85/85 tests in 45.82s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t1_6_security_basics.py` passed with 0 errors.
+    4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
+  - NOT VERIFIED: High-concurrency distributed DDoS simulation against live Render domain.
+  - NEEDS FROM OTHER AGENT: none.

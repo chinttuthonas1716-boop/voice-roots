@@ -57,7 +57,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from governance_service import (
     accredit_expert_reviewer,
@@ -807,32 +807,126 @@ def _enforce_access_tier(record: dict[str, Any], request: Request | None) -> Non
             )
 
 
+class ApiRateLimiter:
+    """Thread-safe sliding-window in-memory rate limiter with tiered quotas (T1.6)."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._records: dict[str, list[float]] = {}
+
+    def check(
+        self, key: str, max_requests: int, window_seconds: float = 60.0
+    ) -> tuple[bool, int, int]:
+        """Check if request is permitted under sliding window quota.
+
+        Returns:
+            (allowed: bool, remaining_requests: int, retry_after_seconds: int)
+        """
+        now = time.time()
+        with self._lock:
+            timestamps = self._records.setdefault(key, [])
+            valid_timestamps = [ts for ts in timestamps if now - ts < window_seconds]
+            self._records[key] = valid_timestamps
+
+            if len(valid_timestamps) >= max_requests:
+                oldest = valid_timestamps[0]
+                retry_after = max(1, int(window_seconds - (now - oldest)))
+                return False, 0, retry_after
+
+            valid_timestamps.append(now)
+            remaining = max_requests - len(valid_timestamps)
+            return True, remaining, 0
+
+    def clear(self) -> None:
+        with self._lock:
+            self._records.clear()
+
+
+_GLOBAL_RATE_LIMITER = ApiRateLimiter()
+
+
 @app.middleware("http")
 async def security_and_logging_middleware(request: Request, call_next):
     start_time = time.time()
     method = request.method
     path = request.url.path
 
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    # Rate limiting exemptions: test mode (unless explicitly testing rate limits), health checks, docs
+    exempt_paths = {"/health", "/ready", "/metrics", "/favicon.ico", "/docs", "/openapi.json"}
+    is_test_env = os.environ.get("VOICE_ROOTS_ENV") == "test"
+    is_testing_rate_limit = bool(request.headers.get("x-test-rate-limit"))
+    is_exempt = path in exempt_paths or (is_test_env and not is_testing_rate_limit)
+
+    limit = 120
+    remaining = 120
+
+    if not is_exempt:
+        if path.startswith(("/api/v1/auth", "/api/auth")):
+            limit = int(os.environ.get("AUTH_RATE_LIMIT_PER_MINUTE", "30"))
+            bucket = f"auth:{client_ip}"
+        elif path.startswith(("/api/v1/transcripts/upload", "/api/upload")):
+            limit = int(os.environ.get("UPLOAD_RATE_LIMIT_PER_MINUTE", "40"))
+            bucket = f"upload:{client_ip}"
+        else:
+            limit = int(os.environ.get("API_RATE_LIMIT_PER_MINUTE", "120"))
+            bucket = f"api:{client_ip}"
+
+        allowed, remaining, retry_after = _GLOBAL_RATE_LIMITER.check(
+            bucket, limit, window_seconds=60.0
+        )
+        if not allowed:
+            logger.warning(
+                "Rate limit exceeded for %s on %s %s (limit: %d/min)",
+                client_ip,
+                method,
+                path,
+                limit,
+            )
+            headers = {
+                "Retry-After": str(retry_after),
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(int(time.time() + retry_after)),
+            }
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Too Many Requests",
+                    "detail": f"Rate limit exceeded: maximum {limit} requests per minute allowed.",
+                    "retry_after": retry_after,
+                },
+                headers=headers,
+            )
+
     response = await call_next(request)
     duration_ms = round((time.time() - start_time) * 1000, 2)
 
-    # Security Headers (SEC-06)
+    # Security Headers (SEC-06 & T1.6)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "0"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=()"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https:; "
-        "media-src 'self' blob: data:; "
+        "media-src 'self' blob: data: https:; "
         "connect-src 'self' http: https:;"
     )
     if request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
-    # Redact sensitive headers or paths; never log speech audio content
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    # Rate limiting telemetry headers
+    if not is_exempt:
+        response.headers["X-RateLimit-Limit"] = str(limit)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(int(time.time() + 60))
+
     logger.info(
         "HTTP %s %s -> status=%d duration_ms=%.2f client=%s",
         method,
