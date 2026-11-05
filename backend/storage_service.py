@@ -222,7 +222,7 @@ class S3StorageProvider(BaseStorageProvider):
             logger.error("Failed to generate presigned S3 URL for %s: %s", filename, exc)
             return f"/storage/audio/{filename}"
 
-    def delete_file(self, filename: str) -> bool:
+    def delete_file(self, filename: str, consent_withdrawn: bool = True) -> bool:
         try:
             self._client.delete_object(Bucket=self.bucket, Key=filename)
             return True
@@ -238,24 +238,136 @@ class S3StorageProvider(BaseStorageProvider):
             return False
 
 
+class R2StorageProvider(S3StorageProvider):
+    """Cloudflare R2 private object storage adapter (S3-compatible, zero egress).
+
+    Guarantees:
+    - Master audio objects are write-once (no overwrite).
+    - Preserves SHA-256 deduplication metadata on all objects.
+    - Serves audio exclusively via short-lived signed URLs (presigned s3v4).
+    - Protected against deletion except via explicit consent-withdrawal workflow.
+    """
+
+    name = "r2"
+
+    def __init__(
+        self,
+        bucket: str,
+        aws_access_key_id: str | None = None,
+        aws_secret_access_key: str | None = None,
+        region_name: str = "auto",
+        endpoint_url: str | None = None,
+        client: Any = None,
+    ):
+        super().__init__(
+            bucket=bucket,
+            aws_access_key_id=aws_access_key_id,
+            aws_secret_access_key=aws_secret_access_key,
+            region_name=region_name or "auto",
+            endpoint_url=endpoint_url,
+            client=client,
+        )
+
+    def store_file(
+        self,
+        temp_file_path: str,
+        filename: str,
+        content_type: str | None = None,
+    ) -> tuple[str, int, str]:
+        """Store master audio into Cloudflare R2 with write-once enforcement."""
+        if not os.path.isfile(temp_file_path):
+            raise StorageError(f"Source file not found: {temp_file_path}")
+
+        file_size = os.path.getsize(temp_file_path)
+        if file_size > MAX_AUDIO_SIZE_BYTES:
+            raise StorageError(f"Audio file exceeds maximum size of {MAX_AUDIO_SIZE_BYTES} bytes.")
+
+        digest = hashlib.sha256()
+        with open(temp_file_path, "rb") as f:
+            while chunk := f.read(65536):
+                digest.update(chunk)
+        sha256_hash = digest.hexdigest()
+
+        # Write-once protection: if master object exists in R2, prevent overwrite
+        if self.file_exists(filename):
+            logger.info(
+                "Write-once guard: master '%s' already exists in R2 bucket '%s'. Preserving existing master.",
+                filename,
+                self.bucket,
+            )
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+            return filename, file_size, sha256_hash
+
+        extra_args: dict[str, Any] = {
+            "Metadata": {
+                "sha256": sha256_hash,
+                "service": "voice-roots",
+                "storage_class": "r2-standard",
+            }
+        }
+        if content_type:
+            extra_args["ContentType"] = content_type
+
+        try:
+            self._client.upload_file(
+                Filename=temp_file_path,
+                Bucket=self.bucket,
+                Key=filename,
+                ExtraArgs=extra_args,
+            )
+            if os.path.exists(temp_file_path):
+                os.remove(temp_file_path)
+        except Exception as exc:
+            raise StorageError(f"Failed to upload audio to Cloudflare R2 bucket '{self.bucket}': {exc}") from exc
+
+        return filename, file_size, sha256_hash
+
+    def delete_file(self, filename: str, consent_withdrawn: bool = False) -> bool:
+        """Delete audio master from R2 only if authorized via affirmative consent withdrawal."""
+        if not consent_withdrawn:
+            logger.warning(
+                "Master write-once policy: rejected deletion of '%s'. Deletion requires consent_withdrawn=True.",
+                filename,
+            )
+            return False
+        return super().delete_file(filename, consent_withdrawn=True)
+
+
 def create_storage_provider(
     environ: dict[str, str] | None = None,
     storage_dir: str | None = None,
 ) -> BaseStorageProvider:
-    """Factory creating the configured storage provider without exposing credentials."""
+    """Factory creating the configured storage provider (R2, S3, or Local)."""
     env = os.environ if environ is None else environ
-    backend = env.get("VOICE_ROOTS_STORAGE_BACKEND", "local").strip().lower()
+    backend = env.get("VOICE_ROOTS_STORAGE_BACKEND", "").strip().lower()
 
-    if backend == "s3":
-        bucket = env.get("S3_BUCKET", "voice-roots-audio").strip()
+    # Cloudflare R2 is preferred for production
+    r2_bucket = env.get("R2_BUCKET", "").strip()
+    r2_endpoint = env.get("R2_ENDPOINT_URL", "").strip()
+    if backend in ("r2", "cloudflare_r2") or (r2_bucket and r2_endpoint):
+        r2_key = env.get("R2_ACCESS_KEY_ID", "").strip() or None
+        r2_secret = env.get("R2_SECRET_ACCESS_KEY", "").strip() or None
+        logger.info("Initializing R2StorageProvider (bucket: %s, endpoint: %s)", r2_bucket, r2_endpoint)
+        return R2StorageProvider(
+            bucket=r2_bucket or "voice-roots-audio",
+            endpoint_url=r2_endpoint or None,
+            aws_access_key_id=r2_key,
+            aws_secret_access_key=r2_secret,
+            region_name="auto",
+        )
+
+    # Standard S3 fallback
+    s3_bucket = env.get("S3_BUCKET", "").strip()
+    if backend == "s3" or s3_bucket:
         aws_key = env.get("AWS_ACCESS_KEY_ID", "").strip() or None
         aws_secret = env.get("AWS_SECRET_ACCESS_KEY", "").strip() or None
         region = env.get("AWS_REGION", "ap-south-1").strip()
         endpoint = env.get("S3_ENDPOINT_URL", "").strip() or None
 
-        logger.info("Initializing S3StorageProvider (bucket: %s, region: %s)", bucket, region)
+        logger.info("Initializing S3StorageProvider (bucket: %s, region: %s)", s3_bucket, region)
         return S3StorageProvider(
-            bucket=bucket,
+            bucket=s3_bucket or "voice-roots-audio",
             aws_access_key_id=aws_key,
             aws_secret_access_key=aws_secret,
             region_name=region,

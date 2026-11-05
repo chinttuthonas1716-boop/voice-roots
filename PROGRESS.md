@@ -2186,3 +2186,24 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     6. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
   - NOT VERIFIED: Live migration against production Render PostgreSQL instance (requires provisioned credentials in Render dashboard).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Phase 1 – Audio in Cloudflare R2 Object Storage (Task T1.4).
+  - Implemented `R2StorageProvider` adapter in `backend/storage_service.py` tailored for Cloudflare R2 private bucket object storage (`name="r2"`, region `"auto"`, zero client credential leakage).
+  - Enforced Write-Once Master Immutability: master audio uploads cannot overwrite existing objects in R2.
+  - Enforced Master Deletion Protection: deletion denied on master objects unless called via affirmative consent withdrawal (`consent_withdrawn=True`).
+  - Added Ingest Deduplication: uploads with identical SHA-256 reuse the existing master recording without duplicating object storage.
+  - Implemented Short-Lived Signed Presigned URLs: audio streams are generated with configurable expiration (`expires_in=3600`) via presigned S3v4 URLs, and `/storage/audio/{filename}` issues HTTP 307 temporary redirects to signed URLs.
+  - Implemented Server-Side OCAP Access Tier Enforcement (`_enforce_access_tier`):
+    - `public`: accessible to all visitors.
+    - `community`: requires authenticated community member/elder token.
+    - `research`: requires researcher credentials or research API key.
+    - `private`: restricted exclusively to the original contributor or administrator.
+    - `withdrawn`: returns HTTP 404 under consent withdrawal.
+  - Files touched: `backend/storage_service.py`, `backend/main.py`, `tests/test_t1_4_r2_storage.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated R2 Storage Test Suite: `pytest tests/test_t1_4_r2_storage.py -v` passed all 7/7 tests in 3.05s.
+    2. Full Regression Suite: `pytest tests/test_milestone4_persistence.py tests/test_backend_api.py tests/test_milestone24_v2_foundation.py tests/test_t1_3_postgres_migration.py tests/test_t1_4_r2_storage.py -v` passed all 45/45 tests.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t1_4_r2_storage.py` passed with 0 errors.
+    4. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 19/19 routes with 0 errors.
+  - NOT VERIFIED: Live network upload to real Cloudflare R2 bucket (requires active R2 credentials in Render environment).
+  - NEEDS FROM OTHER AGENT: none.

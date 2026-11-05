@@ -700,6 +700,111 @@ def _is_admin_request(request: Request | None) -> bool:
     return is_admin
 
 
+def _extract_user_identity(request: Request | None) -> dict[str, Any]:
+    """Extract authenticated user info: (is_authenticated, user_id, role, username)."""
+    if not request:
+        return {"authenticated": False, "user_id": None, "role": "anonymous", "username": "anonymous"}
+
+    # 1. Admin authentication check
+    is_admin, admin_user = _extract_admin_identity(request)
+    if is_admin:
+        return {"authenticated": True, "user_id": "admin", "role": "admin", "username": admin_user}
+
+    # 2. JWT bearer token check
+    auth_header = (request.headers.get("Authorization") or "").strip()
+    token = None
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+    elif "X-Session-Token" in request.headers:
+        token = request.headers.get("X-Session-Token", "").strip()
+
+    if token:
+        try:
+            claims = auth_service.decode_access_token(token)
+            if claims:
+                return {
+                    "authenticated": True,
+                    "user_id": claims.get("sub") or claims.get("user_id"),
+                    "role": claims.get("role", "contributor"),
+                    "username": claims.get("username", "user"),
+                }
+        except Exception:
+            pass
+
+    # 3. Research token check
+    research_key = request.headers.get("X-Research-Key", "").strip()
+    if research_key:
+        try:
+            from research_interoperability_service import validate_research_token
+            res = validate_research_token(research_key, DB_PATH)
+            if res.get("valid"):
+                return {
+                    "authenticated": True,
+                    "user_id": res.get("key_id"),
+                    "role": "researcher",
+                    "username": res.get("institution", "researcher"),
+                }
+        except Exception:
+            pass
+
+    return {"authenticated": False, "user_id": None, "role": "anonymous", "username": "anonymous"}
+
+
+def _enforce_access_tier(record: dict[str, Any], request: Request | None) -> None:
+    """Enforce OCAP server-side access tiers on transcripts and audio masters (SEC-03)."""
+    if record.get("status") == "withdrawn" or record.get("archived_at") is not None:
+        raise HTTPException(
+            status_code=404,
+            detail="Audio recording has been withdrawn under speaker consent.",
+        )
+
+    tier = (record.get("privacy_level") or "public").strip().lower()
+    if tier == "public":
+        return
+
+    user = _extract_user_identity(request)
+
+    # Admin always has override access for governance and compliance
+    if user["role"] == "admin":
+        return
+
+    if tier == "community":
+        if not user["authenticated"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Community access tier requires an authenticated community member or elder.",
+            )
+        return
+
+    if tier == "research":
+        if user["role"] not in ("researcher", "admin"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Research tier requires verified researcher credentials or authorization.",
+            )
+        return
+
+    if tier == "private":
+        # Only admin or the verified contributor/owner
+        is_owner = False
+        if user["authenticated"]:
+            # Check owner id match if contributor_id is present
+            if record.get("contributor_id") and user.get("user_id"):
+                if record.get("contributor_id") == user.get("user_id"):
+                    is_owner = True
+            # Check owner username match if contributor_name is a specific registered user
+            c_name = record.get("contributor_name")
+            if c_name and c_name not in ("Community Contributor", "Anonymous Contributor"):
+                if c_name == user.get("username"):
+                    is_owner = True
+
+        if not is_owner:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: this recording is private under user controls.",
+            )
+
+
 @app.middleware("http")
 async def security_and_logging_middleware(request: Request, call_next):
     start_time = time.time()
@@ -744,9 +849,7 @@ def stream_storage_audio_file(filename: str, request: Request):
     if safe_filename != filename or ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid audio filename.")
 
-    file_path = os.path.join(AUDIO_STORAGE, safe_filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Audio file not found.")
+    provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
 
     # Enforce OCAP boundaries
     try:
@@ -754,18 +857,14 @@ def stream_storage_audio_file(filename: str, request: Request):
             conn.row_factory = sqlite3.Row
             row = conn.execute(
                 """
-                SELECT id, privacy_level, status, archived_at
+                SELECT id, privacy_level, status, archived_at, contributor_name
                 FROM transcripts
                 WHERE audio_filename = ?
                 """,
                 (safe_filename,),
             ).fetchone()
             if row:
-                if row["status"] == "withdrawn" or row["archived_at"] is not None:
-                    raise HTTPException(status_code=404, detail="Audio recording has been withdrawn under speaker consent.")
-                is_admin = _is_admin_request(request)
-                if row["privacy_level"] == "private" and not is_admin:
-                    raise HTTPException(status_code=403, detail="Access denied: Restricted or private cultural audio recording.")
+                _enforce_access_tier(dict(row), request)
 
             # Also check cultural stories for sacred elder-only lore
             story = conn.execute(
@@ -777,13 +876,27 @@ def stream_storage_audio_file(filename: str, request: Request):
                 (safe_filename,),
             ).fetchone()
             if story and story["access_classification"] == "SACRED_ELDER_ONLY":
-                is_admin = _is_admin_request(request)
-                if not is_admin:
-                    raise HTTPException(status_code=403, detail="Access denied: Restricted or sacred cultural audio recording.")
+                user = _extract_user_identity(request)
+                if user["role"] not in ("admin", "reviewer"):
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Access denied: Restricted or sacred cultural audio recording.",
+                    )
     except HTTPException:
         raise
     except Exception as exc:  # noqa: BLE001
         logger.warning("Error verifying audio permissions for %s: %s", safe_filename, exc)
+
+    # Cloudflare R2 / S3 Presigned Streaming
+    if provider.name in ("r2", "s3"):
+        signed_url = provider.get_stream_url(safe_filename, expires_in=3600)
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=signed_url, status_code=307)
+
+    # Local Filesystem Streaming
+    file_path = os.path.join(AUDIO_STORAGE, safe_filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Audio file not found.")
 
     return FileResponse(file_path, media_type="audio/wav")
 
@@ -1295,18 +1408,13 @@ def get_transcript(transcript_id: int, request: Request):
         raise HTTPException(status_code=404, detail="Transcript not found")
 
     record = dict(row)
-    if record.get("privacy_level") == "private" and not _is_admin_request(request):
-        raise HTTPException(
-            status_code=403,
-            detail="Access denied: this recording is private under user controls.",
-        )
-
+    _enforce_access_tier(record, request)
     return record
 
 
 @app.get("/api/v1/audio/{transcript_id}/stream")
 def get_audio_stream_endpoint(transcript_id: int, request: Request):
-    """Provide secure, authorized audio stream URL (local path or presigned S3 URL)."""
+    """Provide secure, authorized audio stream URL (local path or presigned S3/R2 URL)."""
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
@@ -1317,21 +1425,21 @@ def get_audio_stream_endpoint(transcript_id: int, request: Request):
             raise HTTPException(status_code=404, detail="Recording not found")
 
         record = dict(row)
-        if record.get("privacy_level") == "private" and not _is_admin_request(request):
-            raise HTTPException(status_code=403, detail="Access denied: private recording.")
+        _enforce_access_tier(record, request)
 
         provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
         stream_url = provider.get_stream_url(record["audio_filename"], expires_in=3600)
+        effective_backend = provider.name if provider.name in ("r2", "s3") else (record.get("storage_backend") or provider.name)
         return {
             "transcript_id": transcript_id,
             "filename": record["audio_filename"],
             "stream_url": stream_url,
-            "storage_backend": record.get("storage_backend") or provider.name,
+            "storage_backend": effective_backend,
             "privacy_level": record.get("privacy_level", "public"),
             "audio_sha256": record.get("audio_sha256"),
             "license": record.get("license", "CC BY-NC 4.0"),
             "contributor_name": record.get("contributor_name", "Community Contributor"),
-            "expires_in_seconds": 3600 if provider.name == "s3" else None,
+            "expires_in_seconds": 3600 if effective_backend in ("r2", "s3") else None,
         }
 
 
@@ -1510,6 +1618,30 @@ async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str]:
                 detail="The file extension does not match the audio content.",
             )
 
+        # Compute SHA-256 digest on temporary file before storing
+        digest = hashlib.sha256()
+        with open(temp_path, "rb") as f:
+            while chunk := f.read(65536):
+                digest.update(chunk)
+        sha256_hash = digest.hexdigest()
+
+        # Ingest Deduplication: reuse master if identical audio already exists in database
+        try:
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT audio_filename, file_size_bytes, audio_sha256, storage_backend FROM transcripts WHERE audio_sha256 = ? AND archived_at IS NULL LIMIT 1",
+                    (sha256_hash,),
+                )
+                existing = cur.fetchone()
+                if existing:
+                    logger.info("SHA-256 dedupe: audio master %s already exists as %s. Reusing master.", sha256_hash, existing["audio_filename"])
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                    return existing["audio_filename"], existing["file_size_bytes"] or size, sha256_hash
+        except Exception as _dedupe_err:
+            logger.debug("Deduplication check bypassed: %s", _dedupe_err)
+
         filename = f"{uuid.uuid4()}.{detected_format}"
         provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
         stored_filename, stored_size, sha256_hash = provider.store_file(
@@ -1628,7 +1760,7 @@ async def upload_audio(
     except (wave.Error, OSError) as _exc:
         logger.debug("Failed reading wave duration for %s: %s", unique_filename, _exc)
 
-    storage_backend = os.environ.get("VOICE_ROOTS_STORAGE_BACKEND", "local")
+    storage_backend = create_storage_provider(storage_dir=AUDIO_STORAGE).name
 
     effective_contributor = "Anonymous Contributor" if is_anonymous else (contributor_name or "Community Contributor")
     has_explicit_multitier = any([
