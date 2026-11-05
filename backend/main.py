@@ -594,12 +594,14 @@ app = FastAPI(
 )
 
 # CORS configuration for frontend services (Next.js web + Render + local dev)
+# Browser calls go through the Next.js /api/v1 rewrite, so CORS mainly matters
+# if anything calls the API origin directly (mobile app, scripts, other sites).
 _raw_cors = (
-    os.environ.get("CORS_ORIGINS")
-    or os.environ.get("VOICE_ROOTS_ALLOWED_ORIGINS")
+    os.getenv("CORS_ORIGINS")
+    or os.getenv("VOICE_ROOTS_ALLOWED_ORIGINS")
     or (
-        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,"
-        "http://127.0.0.1:3000,http://localhost:3001,https://voice-roots.onrender.com"
+        "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,"
+        "http://127.0.0.1:5173,http://localhost:3001,https://voice-roots.onrender.com"
     )
 )
 ALLOWED_ORIGINS = [
@@ -607,9 +609,11 @@ ALLOWED_ORIGINS = [
     for origin in _raw_cors.split(",")
     if origin.strip()
 ]
+origins = ALLOWED_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -999,6 +1003,10 @@ def health_check():
         "database_status": db_status,
         "storage_status": "ok" if os.path.exists(STORAGE_DIR) else "not_configured",
     }
+
+
+# Render's health check alias
+health = health_check
 
 
 @app.get("/ready")
