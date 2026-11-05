@@ -6222,7 +6222,7 @@ class ModerateQueueRequest(BaseModel):
     cultural_notes: str = ""
 
 
-class ModelRollbackRequest(BaseModel):
+class CommandCenterRollbackRequest(BaseModel):
     target_model_id: str
     switched_by: str
     reason: str
@@ -6286,7 +6286,7 @@ def api_get_model_evaluation_dashboard():
 
 
 @app.post("/api/v1/command-center/models/rollback")
-def api_execute_model_rollback(req: ModelRollbackRequest):
+def api_execute_model_rollback(req: CommandCenterRollbackRequest):
     """Revert active production speech model to a previous verified candidate."""
     try:
         return command_center_service.execute_model_rollback(
