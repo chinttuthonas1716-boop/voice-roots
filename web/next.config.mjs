@@ -1,3 +1,15 @@
+// T1.2 - replace the hardcoded localhost:8000 rewrite.
+// Adapt to next.config.mjs / .ts if that is what the repo uses.
+// NOTE: rewrites() is evaluated at build time, so API_BASE_URL must exist
+// as a build-time env var on the frontend service.
+const API_BASE_URL = process.env.API_BASE_URL;
+
+if (process.env.NODE_ENV === "production" && !API_BASE_URL) {
+  throw new Error(
+    "API_BASE_URL must be set for production builds, e.g. https://voice-roots-api.onrender.com"
+  );
+}
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
@@ -50,11 +62,10 @@ const nextConfig = {
     ];
   },
   async rewrites() {
-    const backend = process.env.BACKEND_URL || "http://localhost:8000";
     return [
       {
         source: "/api/v1/:path*",
-        destination: `${backend}/api/v1/:path*`,
+        destination: `${API_BASE_URL || "http://localhost:8000"}/api/v1/:path*`,
       },
     ];
   },

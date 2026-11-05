@@ -2132,5 +2132,19 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     1. Python Regression & Quality: `python3 -m pytest tests/test_milestone24_v2_foundation.py -v` passed all 6/6 tests; `python3 -m ruff check backend/` passed with 0 warnings/errors.
     2. Next.js 14 Production Build: `npm run build --prefix web` compiled successfully with 0 errors, generating all 19/19 routes (static and dynamic) in 87.3 kB shared bundle.
     3. Frozen Scopes: Confirmed zero changes to `flutter_app/` or `mobile/`.
-  - NOT VERIFIED: Phase 1 production infrastructure deployment (T1.1 Render web service, T1.2 API proxy, T1.3 PostgreSQL migration, T1.4 Cloudflare R2 object storage, T1.6 security headers & rate limits).
+  - NOT VERIFIED: Phase 1 production infrastructure deployment (T1.1 Render web service, T1.3 PostgreSQL migration, T1.4 Cloudflare R2 object storage, T1.6 security headers & rate limits).
+  - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-05] [ANTIGRAVITY] DONE: Phase 1 – Fix API Proxy for Next.js 14 App Router (Task T1.2).
+  - In `web/next.config.mjs`, replaced the hardcoded `localhost:8000` rewrite target with build-time evaluated `API_BASE_URL`.
+  - Added fail-fast build-time validation: if `process.env.NODE_ENV === "production"` and `API_BASE_URL` is unset, throws a descriptive error instructing the developer/CI to set `API_BASE_URL`.
+  - Maintained dev fallback to `http://localhost:8000` when running locally in development.
+  - Preserved all existing security headers (`X-Frame-Options`, `X-Content-Type-Options`, `Permissions-Policy`, `Referrer-Policy`) and immutable audio caching directives.
+  - Updated `.env.example` and created `web/.env.example` documenting `API_BASE_URL` for production frontend deployments.
+  - Files touched: `web/next.config.mjs`, `.env.example`, `web/.env.example`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Fast-Fail Build Check: `npm run build --prefix web` with missing `API_BASE_URL` in production fails immediately with `Error: API_BASE_URL must be set for production builds, e.g. https://voice-roots-api.onrender.com`.
+    2. Successful Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiles 19/19 routes with 0 errors.
+    3. Backend Quality & Regressions: `python3 -m ruff check backend/` passed (0 errors); `pytest tests/test_backend_api.py -v` passed all 17/17 tests.
+  - NOT VERIFIED: Live remote invocation of Render API endpoint (to be verified in T1.1).
   - NEEDS FROM OTHER AGENT: none.
