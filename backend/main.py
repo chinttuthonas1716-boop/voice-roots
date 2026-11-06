@@ -31,6 +31,7 @@ import auth_service
 import backup_retention_service
 import command_center_service
 import cultural_archive_service
+import data_export_service
 import dictionary_service
 import language_explorer_service
 import learning_service
@@ -3050,6 +3051,46 @@ def export_archive_corpus(
         content=output.getvalue(),
         media_type="text/csv; charset=utf-8",
         headers={"Content-Disposition": f"attachment; filename=voice_roots_corpus_{int(time.time())}.csv"}
+    )
+
+
+@app.get("/api/v1/export/public-audio")
+@app.post("/api/v1/export/public-audio")
+def export_public_audio_corpus(
+    request: Request,
+    dry_run: bool = Query(False),
+    format: str = Query("jsonl", pattern="^(jsonl|csv)$"),
+    language: str | None = None,
+):
+    """Admin-only export of consented, public-tier data as audio plus manifest (T2.9)."""
+    if not _is_admin_request(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator authorization required for restricted data export.",
+        )
+
+    if dry_run:
+        return data_export_service.get_export_dry_run(
+            db_path=DB_PATH,
+            audio_storage_dir=AUDIO_STORAGE,
+            language=language,
+        )
+
+    zip_bytes, zip_filename, summary = data_export_service.build_export_zip(
+        db_path=DB_PATH,
+        audio_storage_dir=AUDIO_STORAGE,
+        manifest_format=format,
+        language=language,
+    )
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{zip_filename}"',
+            "X-Export-Records": str(summary["total_records"]),
+            "X-Export-Audio-Files": str(summary["audio_files_exported"]),
+        },
     )
 
 

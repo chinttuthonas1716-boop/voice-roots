@@ -2483,6 +2483,32 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Background sync across native iOS Safari background suspension (Web Standards limitation on iOS Safari).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Restricted Data Export (Task T2.9).
+  - Restricted Data Export & OCAP Public Corpus Packaging:
+    1. Created `backend/data_export_service.py`:
+       - `get_consented_public_records()`: Queries strictly non-withdrawn (`archived_at IS NULL`), affirmatively consented, public-tier (`privacy_level = 'public'`) voice recordings with optional language filtering.
+       - Generates full OCAP manifest dictionaries containing `id`, `uuid_id`, `title`, `language`, `dialect`, `duration_seconds`, `audio_filename`, `audio_sha256`, `flac_sha256`, `audio_exists_on_disk`, `file_size_bytes`, `contributor`, `contributor_role`, `consent_confirmed`, `consent_at`, `license` (CC BY-NC 4.0 / OCAP Community License), `transcript_text`, and the mandatory `immutable_master_notice`.
+       - `get_export_dry_run()`: Pre-flight inventory auditing returning total consented records, found/missing audio files count, total audio master volume bytes, language distribution map, and sample manifest rows without compiling or downloading large ZIP archives.
+       - `build_export_zip()`: In-memory streaming ZIP packager containing `OCAP_GOVERNANCE.txt` (data sovereignty, ethical reuse, and attribution charter), `manifest.jsonl`, `manifest.csv` (UTF-8 BOM), and deduplicated audio master files in `audio/<filename>`.
+    2. Implemented endpoints in `backend/main.py`:
+       - `GET /api/v1/export/public-audio` and `POST /api/v1/export/public-audio`: Enforces administrator authorization via `_is_admin_request()` (rejecting unauthorized callers with HTTP 403). Supports `dry_run=true` parameter and language filtering. Streams downloadable ZIP on `dry_run=false` with `X-Export-Records` and `X-Export-Audio-Files` response headers.
+    3. Frontend Reviewer/Admin Integration:
+       - Updated `web/src/app/reviewer/page.tsx` with a "Restricted Data Export (T2.9)" trigger button in the active reviewer persona card.
+       - Built the interactive export audit modal with real-time dry-run metrics (consented records count, audio masters found, total uncompressed audio volume, spoken tongues count, language breakdown pills, manifest preview table, and OCAP ethical guidelines notice).
+       - Added direct "Download Public Corpus (.ZIP)" action via authenticated blob stream with automatic filename generation.
+  - Dedicated Test Suite:
+    1. Authored `tests/test_t2_9_restricted_data_export.py`:
+       - 4/4 tests verifying administrator authorization enforcement (rejecting unauthorized and invalid keys with HTTP 403), dry-run pre-flight metadata calculation and notice verification, strict exclusion of withdrawn and private-tier recordings, and complete ZIP package integrity (manifest.jsonl, manifest.csv, OCAP_GOVERNANCE.txt, audio files).
+  - Files touched: `backend/data_export_service.py`, `backend/main.py`, `web/src/app/reviewer/page.tsx`, `tests/test_t2_9_restricted_data_export.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_9_restricted_data_export.py -v` passed all 4/4 tests in 3.69s with 0 warnings.
+    2. Full Phase 2 Test Suites: `pytest tests/test_t2_*.py -v` passed all 44/44 tests in 4.38s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t2_9_restricted_data_export.py` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 22/22 routes (including `/reviewer`) with 0 errors.
+  - NOT VERIFIED: Multi-gigabyte bulk batch exports over slow cellular uplinks (stream compression is buffered in-memory).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 
