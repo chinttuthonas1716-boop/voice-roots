@@ -6476,6 +6476,99 @@ def get_dictionary_word_audio(word_id: int):
     return get_sample_audio_file(f"dict_word_{word_id}.wav")
 
 
+@app.get("/api/v1/consent/audio/{lang}")
+def get_consent_audio_prompt(lang: str):
+    """Serve spoken audio consent prompts with placeholder provenance disclosures."""
+    clean_lang = lang.lower().strip()
+    safe_name = f"consent_{clean_lang}.wav"
+
+    candidate_paths = [
+        os.path.join(AUDIO_STORAGE, safe_name),
+        os.path.join(BACKEND_DIR, "storage", "audio", safe_name),
+        os.path.join(BACKEND_DIR, "static", "audio", safe_name),
+    ]
+    for path in candidate_paths:
+        if os.path.exists(path) and os.path.isfile(path):
+            return FileResponse(
+                path,
+                media_type="audio/wav",
+                headers={
+                    "X-Consent-Language": clean_lang,
+                    "X-Consent-Status": "needs-community-recording",
+                    "X-Consent-Placeholder": "true",
+                },
+            )
+
+    # Synthesize clean valid PCM WAV tone/snippet as placeholder
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(16000)
+        samples = bytearray()
+        freq = 330 if clean_lang == "te" else 440 if clean_lang == "hi" else 520
+        for i in range(16000):
+            val = int(2200 * math.sin(2 * math.pi * freq * i / 16000)) if i < 12000 else 0
+            samples.extend(val.to_bytes(2, byteorder="little", signed=True))
+        wav_file.writeframes(samples)
+    buffer.seek(0)
+    return Response(
+        content=buffer.read(),
+        media_type="audio/wav",
+        headers={
+            "X-Consent-Language": clean_lang,
+            "X-Consent-Status": "needs-community-recording",
+            "X-Consent-Placeholder": "true",
+            "Content-Disposition": f'inline; filename="{safe_name}"',
+        },
+    )
+
+
+@app.get("/api/v1/consent/prompts")
+def get_consent_prompts_metadata():
+    """Retrieve multilingual consent text and audio prompt status across languages."""
+    return {
+        "disclaimer": "Placeholder audio prompts require verification and authentic recording by tribal elders.",
+        "prompts": {
+            "en": {
+                "language": "English",
+                "text": "I confirm that this voice is recorded with the speaker's voluntary permission under indigenous and community ethics.",
+                "audio_url": "/api/v1/consent/audio/en",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "te": {
+                "language": "Telugu",
+                "text": "దేశీయ మరియు సమాజ నియమావళి ప్రకారం మాట్లాడేవారి స్వచ్ఛంద అనుమతితో ఈ స్వరం రికార్డ్ చేయబడిందని నేను ధృవీకరిస్తున్నాను.",
+                "audio_url": "/api/v1/consent/audio/te",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "hi": {
+                "language": "Hindi",
+                "text": "मैं पुष्टि करता/करती हूँ कि यह आवाज वक्ता की स्वैच्छिक सहमति और सामुदायिक नैतिकता के तहत रिकॉर्ड की गई है।",
+                "audio_url": "/api/v1/consent/audio/hi",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "gon": {
+                "language": "Gondi",
+                "text": "పెర్సాపేన్ సాక్షిగా, ఈ స్వరం మా స్వచ్ఛంద సమ్మతితో రికార్డ్ చేయబడింది.",
+                "audio_url": "/api/v1/consent/audio/gon",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "kff": {
+                "language": "Koya",
+                "text": "కోయ్తూర్ పెద్దల సమక్షంలో, ఈ స్వరం మా స్వచ్ఛంద అనుమతితో భద్రపరచబడింది.",
+                "audio_url": "/api/v1/consent/audio/kff",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+        },
+    }
+
+
 @app.post("/api/v1/dictionary/propose", status_code=201)
 def api_dictionary_propose_word(
     req: DictionaryProposalRequest,

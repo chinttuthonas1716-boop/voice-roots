@@ -34,5 +34,20 @@
   "language.detectedPrompt": "We detected your preferred language.",
   "language.keepEnglish": "Keep English",
   "language.useDetected": "Use Detected Language",
-  "language.chooseAnother": "Choose another language"
+  "language.chooseAnother": "Choose another language",
+  "nav.record": "Record",
+  "nav.dictionary": "Dictionary",
+  "nav.dashboard": "My recordings",
+  "nav.reviewer": "Reviewer queue",
+  "action.record": "Record Voice",
+  "action.upload": "Upload File",
+  "action.translate": "Translate",
+  "action.save": "Save Story",
+  "consent.step": "Step 1: Speaker consent",
+  "consent.desc": "We honor speaker rights. Please confirm permission before recording or uploading.",
+  "consent.statement": "I confirm that this voice is recorded with the speaker's voluntary permission under indigenous and community ethics.",
+  "consent.audioTitle": "Audio Consent in Native Tongue",
+  "consent.listenBtn": "Listen to Spoken Consent",
+  "consent.playing": "Playing Spoken Consent...",
+  "consent.placeholderDisclaimer": "Demo placeholder audio — needs community recording by native elders"
 }

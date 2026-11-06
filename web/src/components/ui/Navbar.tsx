@@ -3,13 +3,15 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { Home, Mic, Languages, HardDrive, User, LogOut, ShieldCheck, BookOpen } from "lucide-react";
+import { Home, Mic, Languages, HardDrive, User, LogOut, ShieldCheck, BookOpen, Globe } from "lucide-react";
 import { getCurrentUser, logoutUser, type UserProfile } from "@/lib/auth";
+import { useAppLanguage, type SupportedLanguageCode } from "@/lib/languageContext";
 
 export function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const [user, setUser] = useState<UserProfile | null>(null);
+  const { appLanguage, setAppLanguage, t } = useAppLanguage();
 
   useEffect(() => {
     setUser(getCurrentUser());
@@ -23,12 +25,12 @@ export function Navbar() {
 
   const isReviewerOrAdmin = user?.role === "reviewer" || user?.role === "admin" || user?.verifiedElder;
   const navLinks = [
-    { href: "/", label: "Home", icon: Home },
-    { href: "/record", label: "Record", icon: Mic },
-    { href: "/translate", label: "Translate", icon: Languages },
-    { href: "/dictionary", label: "Dictionary", icon: BookOpen },
-    { href: "/dashboard", label: "My recordings", icon: HardDrive },
-    ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: "Reviewer queue", icon: ShieldCheck }] : []),
+    { href: "/", label: t("nav.home"), icon: Home },
+    { href: "/record", label: t("nav.record"), icon: Mic },
+    { href: "/translate", label: t("action.translate"), icon: Languages },
+    { href: "/dictionary", label: t("nav.dictionary"), icon: BookOpen },
+    { href: "/dashboard", label: t("nav.dashboard"), icon: HardDrive },
+    ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: t("nav.reviewer"), icon: ShieldCheck }] : []),
   ];
 
   return (
@@ -63,8 +65,39 @@ export function Navbar() {
           })}
         </nav>
 
-        {/* Profile / Auth Menu */}
-        <div className="flex items-center gap-3">
+        {/* Language Switcher & Profile / Auth Menu */}
+        <div className="flex items-center gap-2 sm:gap-3">
+          {/* Language Switcher Toggle (English / తెలుగు / हिन्दी) */}
+          <div className="flex items-center rounded-xl border border-white/15 bg-white/5 p-0.5 text-xs">
+            <button
+              type="button"
+              onClick={() => setAppLanguage("en")}
+              className={`px-2 py-1 rounded-lg font-semibold transition ${
+                appLanguage === "en" ? "bg-amber-500 text-black shadow-sm" : "text-[#94A3B8] hover:text-white"
+              }`}
+            >
+              EN
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppLanguage("te")}
+              className={`px-2 py-1 rounded-lg font-semibold transition ${
+                appLanguage === "te" ? "bg-amber-500 text-black shadow-sm" : "text-[#94A3B8] hover:text-white"
+              }`}
+            >
+              తెలుగు
+            </button>
+            <button
+              type="button"
+              onClick={() => setAppLanguage("hi")}
+              className={`px-2 py-1 rounded-lg font-semibold transition ${
+                appLanguage === "hi" ? "bg-amber-500 text-black shadow-sm" : "text-[#94A3B8] hover:text-white"
+              }`}
+            >
+              हिन्दी
+            </button>
+          </div>
+
           <Link
             href="/reviewer"
             title="Elder & Reviewer Moderation Queue"

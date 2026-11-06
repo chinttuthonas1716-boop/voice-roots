@@ -2383,6 +2383,35 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Remote S3 audio streaming without live bucket credentials.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Multilingual Interface and Consent Prompts (Task T2.5).
+  - Multilingual Translation Dictionaries & UI:
+    1. Expanded `en.json`, `te.json`, and `hi.json` with translations for navigation, core actions, and consent statements.
+    2. Updated `web/src/components/ui/Navbar.tsx` with a live Language Switcher toggle (English / తెలుగు / हिन्दी) powered by `LanguageProvider` (`useAppLanguage()`), updating application labels in real time.
+    3. Integrated `useAppLanguage()` into `SimpleVoiceWorkflow.tsx` Step 1 (Speaker consent), localizing consent instructions and permission statements.
+  - Spoken Audio Consent Prompts:
+    1. Added `GET /api/v1/consent/audio/{lang}` in `backend/main.py`:
+       - Streams spoken audio consent prompt WAV files.
+       - Synthesizes valid PCM WAV audio snippets when recordings are pending.
+       - Sends mandatory header disclosures: `X-Consent-Status: needs-community-recording` and `X-Consent-Placeholder: true`.
+    2. Added `GET /api/v1/consent/prompts` in `backend/main.py` serving metadata, disclaimer, audio URLs, and localized text across English, Telugu, Hindi, Gondi, and Koya.
+    3. Added interactive Spoken Audio Consent Player in `web/src/components/audio/SimpleVoiceWorkflow.tsx`:
+       - Language switcher pills (తెలుగు / हिन्दी / English / Gondi / Koya).
+       - One-click audio playback with play/pause state indicator.
+       - Explicit cautionary disclaimer banner: `⚠️ Placeholder audio prompt — needs community recording by native elders`.
+  - Dedicated Test Suite:
+    1. Authored `tests/test_t2_5_multilingual_ui.py`:
+       - 3/3 tests verifying valid WAV headers on audio consent endpoints, disclosure headers, metadata endpoint structure, and full key parity across English, Telugu, and Hindi translation dictionaries.
+  - Files touched: `backend/main.py`, `web/src/components/ui/Navbar.tsx`, `web/src/components/audio/SimpleVoiceWorkflow.tsx`, `web/src/i18n/en.json`, `web/src/i18n/te.json`, `web/src/i18n/hi.json`, `tests/test_t2_5_multilingual_ui.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_5_multilingual_ui.py -v` passed all 3/3 tests in 2.69s.
+    2. Full Phase 2 Test Suites: `pytest tests/test_t2_5_multilingual_ui.py tests/test_t2_6_dictionary_browser.py tests/test_t2_4_prompted_recording.py tests/test_t2_3_reviewer_queue.py tests/test_t2_2_consent_withdrawal.py tests/test_t2_1_honest_translation.py -v` passed all 32/32 tests in 3.22s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t2_5_multilingual_ui.py` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 21/21 routes with 0 errors.
+  - NOT VERIFIED: Native speaker live studio vocal recordings for consent prompts.
+  - NEEDS FROM OTHER AGENT: none.
+
+
 
 
 
