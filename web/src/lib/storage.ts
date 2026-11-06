@@ -151,6 +151,14 @@ export async function saveUserRecording(
     await deleteAudio(record.id);
     throw new Error("Could not save recording details in this browser.");
   }
+
+  try {
+    const { enqueueOfflineRecording } = await import("./offlineQueue");
+    await enqueueOfflineRecording(record, audio);
+  } catch (err) {
+    // Non-blocking offline queue enqueue
+  }
+
   return getUserRecordings();
 }
 

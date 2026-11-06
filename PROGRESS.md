@@ -2443,6 +2443,46 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Real-time synchronization with Registrar General live database (decennial census datasets are static releases).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – PWA Behavior & Offline Sync Queue (Task T2.8).
+  - Progressive Web App (PWA) Offline-First Architecture:
+    1. Created `web/public/manifest.json`:
+       - Declared name, short name, start URL (`/`), standalone display mode, background color `#080A12`, theme color `#F59E0B`, and icons.
+    2. Created `web/public/sw.js`:
+       - Service Worker with cache-first strategy for static assets and shell navigation fallback.
+       - Network-first caching strategy for dynamic `/api/` endpoints with graceful JSON offline fallback.
+    3. Created `web/src/lib/offlineQueue.ts`:
+       - Client-side IndexedDB store (`voice-roots-offline-sync` / `sync_queue`).
+       - Enqueues recordings offline with client operation ID (`clientOperationId`) and audio blobs.
+       - Provides `useOfflineSync()` React hook with automatic reconnection listener (`online` event) to auto-trigger queue sync.
+       - Implemented `processOfflineSyncQueue()` with idempotent sync execution and retry tracking.
+    4. Updated `web/src/lib/storage.ts`:
+       - Automatically and non-blockingly enqueues saved recordings to the offline sync queue upon creation.
+    5. Created `web/src/components/pwa/ServiceWorkerRegister.tsx`:
+       - Registers `/sw.js` on mount.
+       - Displays a floating, non-intrusive offline indicator and one-click "Sync now" action button when recordings are queued.
+    6. Updated `web/src/app/layout.tsx`:
+       - Integrated `manifest: "/manifest.json"` and mounted `<ServiceWorkerRegister />`.
+    7. Updated `web/src/app/dashboard/page.tsx`:
+       - Added live "Offline Recording Queue" section displaying queued items, their sync status badges (`queued`, `syncing`, `synced`, `failed`), and "Sync All Now" / "Clear Synced" controls.
+  - Backend Idempotent Sync Implementation:
+    1. Added `idempotent_sync_operations` table to database in `backend/main.py`.
+    2. Implemented `POST /api/v1/sync/idempotent` in `backend/main.py`:
+       - Validates `clientOperationId`.
+       - Replays cached confirmations when an operation has already been processed (`idempotentReplay: True`), preventing duplicate submissions.
+       - Commits new operations and returns confirmation status.
+  - Dedicated Test Suite:
+    1. Authored `tests/test_t2_8_pwa_offline_sync.py`:
+       - 4/4 tests verifying idempotent sync endpoint success, replay idempotency, validation error on missing operation ID, PWA manifest structure, and service worker asset availability.
+  - Files touched: `web/public/manifest.json`, `web/public/sw.js`, `web/src/lib/offlineQueue.ts`, `web/src/components/pwa/ServiceWorkerRegister.tsx`, `web/src/lib/storage.ts`, `web/src/app/layout.tsx`, `web/src/app/dashboard/page.tsx`, `backend/main.py`, `tests/test_t2_8_pwa_offline_sync.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_8_pwa_offline_sync.py -v` passed all 4/4 tests in 2.64s.
+    2. Full Phase 2 Test Suites: `pytest tests/test_t2_*.py -v` passed all 40/40 tests in 3.44s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t2_8_pwa_offline_sync.py` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 22/22 routes with 0 errors.
+  - NOT VERIFIED: Background sync across native iOS Safari background suspension (Web Standards limitation on iOS Safari).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 

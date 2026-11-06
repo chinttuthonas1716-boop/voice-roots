@@ -1,0 +1,26 @@
+{
+  "name": "Voice Roots — Oral Heritage Platform",
+  "short_name": "Voice Roots",
+  "description": "Rooting oral languages in text with community-first AI, offline recording, and elder provenance.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#080A12",
+  "theme_color": "#F59E0B",
+  "orientation": "portrait",
+  "scope": "/",
+  "categories": ["education", "heritage", "culture"],
+  "icons": [
+    {
+      "src": "/voice_roots_public_qr.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/voice_roots_website_qr.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ]
+}

@@ -3,11 +3,14 @@ import "./globals.css";
 import { LanguageProvider } from "@/lib/languageContext";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
 import { PageTransition } from "@/components/transitions/PageTransition";
+import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 
 export const metadata: Metadata = {
   title: "Voice Roots — Oral Heritage Platform",
   description:
     "Preserve original oral recordings with source transcripts, reviewed translations, and cultural context.",
+  manifest: "/manifest.json",
+  themeColor: "#F59E0B",
 };
 
 export default function RootLayout({
@@ -29,6 +32,7 @@ export default function RootLayout({
               {children}
             </PageTransition>
             <MobileBottomNav />
+            <ServiceWorkerRegister />
           </div>
         </LanguageProvider>
       </body>
