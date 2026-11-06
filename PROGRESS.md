@@ -2411,6 +2411,39 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Native speaker live studio vocal recordings for consent prompts.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-06] [ANTIGRAVITY] DONE: Phase 2 – Public Stats Page (Task T2.7).
+  - Backend Public Stats & Census Demographic Integration:
+    1. Created `backend/stats_service.py`:
+       - Loads official Census of India 2011 demographic data from `data/census/` (`census_c16_languages_121.json`, `census_c16_mother_tongues.json`, `census_observations.json`).
+       - Calculates live platform recording statistics per language (active recordings, audio duration in hours and seconds, unique speakers/elders, and documented vocabulary words).
+       - Aligns live recorded data side-by-side with official Census 2011 figures (population totals, rural/urban split, rural percentage, constitutional classification, census table codes).
+       - Provides comprehensive source citations and methodological notes explaining the census 10,000-speaker cutoff and oral language under-representation.
+    2. Implemented endpoints in `backend/main.py`:
+       - `GET /api/v1/stats/public`: returns platform summary, language-by-language comparative benchmarks, and citations.
+       - `GET /api/v1/stats/census`: returns raw census demographic dataset telemetry.
+    3. Populated `data/census/` with official Census 2011 mother tongue datasets.
+  - Frontend Public Stats Interface:
+    1. Created `web/src/app/stats/page.tsx`:
+       - Liquid Glass dark theme with amber, emerald, cyan, and purple accent metrics.
+       - Executive overview cards: Total Preserved Audio Hours, Verified Recordings, Spoken Tongues Documented, and Benchmark Data Source.
+       - Language-by-language comparative audit cards displaying Voice Roots digital volume vs official 2011 Census demographics.
+       - Methodological notes section clarifying oral language preservation needs under OCAP principles.
+       - Official Citations & Sources section citing Office of the Registrar General & Census Commissioner Table C-16.
+    2. Updated `web/src/app/explore/page.tsx` with a direct link button to `/stats`.
+  - Dedicated Test Suite:
+    1. Authored `tests/test_t2_7_public_stats.py`:
+       - 4/4 tests verifying public stats structure, Census 2011 demographic benchmarks across core languages (Gondi, Koya, Santhali, Lambadi, Telugu), official source citations, and raw census data resolution from `data/census/`.
+  - Files touched: `backend/stats_service.py`, `backend/main.py`, `data/census/`, `web/src/app/stats/page.tsx`, `web/src/app/explore/page.tsx`, `tests/test_t2_7_public_stats.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t2_7_public_stats.py -v` passed all 4/4 tests in 2.94s.
+    2. Full Phase 2 Test Suites: `pytest tests/test_t2_7_public_stats.py tests/test_t2_5_multilingual_ui.py tests/test_t2_6_dictionary_browser.py tests/test_t2_4_prompted_recording.py tests/test_t2_3_reviewer_queue.py tests/test_t2_2_consent_withdrawal.py tests/test_t2_1_honest_translation.py -v` passed all 36/36 tests in 3.30s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t2_7_public_stats.py` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 22/22 routes (including `/stats`) with 0 errors.
+  - NOT VERIFIED: Real-time synchronization with Registrar General live database (decennial census datasets are static releases).
+  - NEEDS FROM OTHER AGENT: none.
+
+
 
 
 

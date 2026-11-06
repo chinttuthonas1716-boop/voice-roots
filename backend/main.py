@@ -38,6 +38,7 @@ import learning_studio_service
 import prompt_service
 import research_interoperability_service
 import speech_analysis_service
+import stats_service
 from dataset_service import (
     generate_research_export,
     get_dataset_details,
@@ -2649,6 +2650,18 @@ def get_discovery_stats():
 def run_discovery_benchmark_evaluation():
     """Run benchmark evaluation suite measuring cross-lingual search precision, MRR, and latency."""
     return evaluate_multilingual_discovery()
+
+
+@app.get("/api/v1/stats/public")
+def get_public_statistics_endpoint():
+    """Public statistics reporting recorded hours, speakers, and audio masters alongside Census 2011 benchmarks."""
+    return stats_service.get_public_stats(db_path=DB_PATH)
+
+
+@app.get("/api/v1/stats/census")
+def get_census_metadata_endpoint():
+    """Retrieve raw Census of India 2011 demographic data from data/census/."""
+    return stats_service.load_census_raw_data()
 
 
 # ==============================================================================
