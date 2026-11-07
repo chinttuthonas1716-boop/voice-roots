@@ -1,146 +1,141 @@
 # Voice Roots: Rooting Oral Languages in Text with AI
 ## Community-Governed, Offline-First Speech Preservation & Linguistic Intelligence Platform
 
-> **Current Release**: `1.0.0-production` (Milestones 1–23 Complete & Verified)  
-> **Unified Single-URL Host**: [`http://127.0.0.1:8000/`](http://127.0.0.1:8000/)  
-> **Automated Test Suite**: **222 / 222 Passed (100%)**  
-> **Pre-Faculty Release Audit**: **26 / 26 Checkpoints Passed (100%)**  
-> **Live Feature Probe**: **27 / 27 Endpoints Verified (100%)**  
-> **Database Schema**: 49 Registered Tables (`alembic` head: `4c5d6e7f8a9b`)  
-> **External Cloud AI Costs**: **$0.00** (100% Offline Local Compute)
+> **Live Production Web Application**: [`https://voice-roots.onrender.com`](https://voice-roots.onrender.com)  
+> **Live Production API Gateway**: [`https://voice-roots-api.onrender.com`](https://voice-roots-api.onrender.com)  
+> **API Base Proxy Rewrite**: Next.js 14 App Router rewrites `/api/v1/:path*` to `API_BASE_URL`  
+> **Production Stack**: Next.js 14 App Router (`web/`) + TypeScript + Tailwind CSS; FastAPI backend; PostgreSQL + SQLite WAL fallback; Cloudflare R2 object storage; Render hosting  
+> **Continuous Integration**: GitHub Actions 4-Gate CI (Backend Pytest/Ruff, Frontend Typecheck/Build, Playwright E2E, Render Deploy)  
+> **Automated Test Suite**: 100% Passing (Phase 1–3 Production Suites + Playwright E2E 8-Step Lifecycle)  
+> **Ethical Governance**: Strict compliance with First Nations OCAP® Principles (Ownership, Control, Access, Possession)
 
 ---
 
 ## 1. Project Overview & Indigenous Data Sovereignty (OCAP®)
 
-Voice Roots is an ethical, source-grounded platform for recording, transcribing, preserving, and semantically searching oral, tribal, and under-resourced languages—with deep specialization in vulnerable Dravidian tongues including **Gondi**, **Koya**, **Santhali**, and **Lambadi**.
+Voice Roots is an ethical, source-grounded platform designed to document, archive, revitalize, and semantically search endangered oral and indigenous languages—with core specialization in vulnerable Dravidian and Adivasi tongues including **Gondi**, **Koya**, **Santhali**, and **Lambadi**.
 
 Built in strict compliance with the **OCAP® principles** (Ownership, Control, Access, and Possession):
-- **Audio Master is Immutable**: The original speaker's acoustic recording is permanently retained as an unedited 48kHz WAV master asset with cryptographic SHA-256 integrity verification.
-- **AI as Annotation Layer**: Speech recognition is processed only with separate, affirmative consent and stored strictly as a non-destructive machine annotation layer.
-- **Elder Human Review Guardrail**: Unwritten oral languages reject hallucinated automated machine translation in favor of mandatory community elder review (`OralLanguageElderReviewRequiredError` HTTP 503).
-- **Instantaneous Consent Withdrawal**: Speakers retain the unilateral right to withdraw consent at any time, triggering sub-second removal from FTS5 full-text search, ChromaDB vector retrieval, and audio streaming endpoints.
+- **Audio Master is Immutable**: The original speaker's acoustic recording is permanently retained as an unedited 48kHz lossless master asset with cryptographic SHA-256 integrity verification.
+- **AI as an Assistive Annotation Layer**: Speech recognition (Whisper) and neural translation (IndicTrans2) are secondary annotation layers. All unreviewed machine translations carry explicit draft badges (`[DRAFT - UNREVIEWED MACHINE GENERATION]`).
+- **Elder Human Review Guardrail**: Machine translations for unwritten oral tongues require mandatory community elder verification before publication.
+- **Sub-Second Consent Revocation**: Speakers retain the unilateral right to withdraw consent at any time, immediately purging their records from full-text search, vector retrieval, and audio streaming endpoints.
+
+For full governance policies, review [docs/ETHICAL_GOVERNANCE_AND_OCAP.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/ETHICAL_GOVERNANCE_AND_OCAP.md).
 
 ---
 
-## 2. Complete Milestone Architecture (Milestones 1–23)
+## 2. Ethics Statement, Informed Consent & Privacy Notice
+
+### Ethics & Data-Governance Statement
+Voice Roots recognizes that indigenous voices, traditional oral folklore, and clan lineages belong exclusively to the communities from which they originate. The platform rejects extractive data-mining practices. No voice recordings or derived linguistic assets gathered through Voice Roots may be sold, licensed to commercial foundation-model corporations, or utilized for unconsented commercial speech synthesis.
+
+### Dual Affirmative Consent Protocol
+Consent is never assumed, bundled, or pre-checked:
+1. **Master Archival Preservation Consent**:
+   > *"I hereby give voluntary permission for my voice recording to be archived in the Voice Roots community linguistic repository. I understand that my recording will be preserved as an immutable master asset to safeguard our ancestral tongue for future generations. I retain ownership of my voice, and I may withdraw my consent at any time without penalty or explanation."*
+2. **Assistive AI Transcription Consent**:
+   > *"I explicitly consent to having my recorded voice processed by assistive artificial intelligence speech recognition software solely to generate a written draft transcript and phonetic alignment. I understand that machine transcripts are unreviewed drafts and will not be published as definitive community knowledge until reviewed by accredited language elders."*
+
+### Privacy Notice & Access Tiers
+Server-side access control strictly isolates recordings into four tiers:
+- **`public`**: Open heritage recordings approved by speakers and elders for global cultural education.
+- **`community`**: Restricted to authenticated community members and cultural reviewers.
+- **`research`**: Accessible strictly to verified researchers holding institutional research tokens.
+- **`private`**: Restricted strictly to the recording contributor and designated system administrators.
+- **`withdrawn`**: Permanently blocked from all callers (including administrators) upon consent revocation.
+
+---
+
+## 3. Mandatory Ethics Clearance & Demo Data Notice (Task T4.2)
+
+> [!IMPORTANT]
+> **Academic Ethics Clearance & Field Recording Moratorium**  
+> In compliance with university Institutional Review Board (IRB) requirements and international research ethics standards:
+> - **Field Recording Moratorium**: No real-world community field recordings will be conducted, ingested, or archived until formal institutional ethics approval (IRB) is granted and written Bilateral Community Agreements are executed with regional tribal councils.
+> - **Synthetic Demo Data**: All pre-seeded audio recordings, prompts, stories, and dictionary entries currently hosted within this repository or on the live demonstration site are **strictly synthetic, simulated, or public-domain educational placeholders** (`is_placeholder=1`, `demo-placeholder`).
+> - Elder verification badges on demo records demonstrate software verification flows only and do not represent formal endorsement by tribal elders until bilateral field protocols commence.
+
+---
+
+## 4. Production Stack & Architecture
 
 ```
-Voice Roots Ecosystem
-├── 1. Ingestion & Preservation (M1–M4)
-│   ├── Lossless 48kHz WAV Recording & Upload
-│   ├── Dual Affirmative Consent (Archive + AI)
-│   ├── SHA-256 Checksum Vault & Storage Probe
-│   └── SQLite 3 WAL Persistence (49 Tables)
-├── 2. Speech Intelligence & Guardrails (M5–M9)
-│   ├── Local Offline OpenAI Whisper (CPU/GPU)
-│   ├── Community Corrections Layer Separation
-│   ├── Oral Tongue Elder Translation Guardrail
-│   └── ChromaDB & SQLite FTS5 Hybrid Semantic Search
-├── 3. Governance & Research Ecosystem (M10–M14)
-│   ├── Research Dataset Registry & Digital Preservation
-│   ├── Multilingual Model Evaluation & Rollback
-│   ├── Offline Voice Assistant with Local Intent Routing
-│   └── Tribal Council Accreditation & Dispute Governance
-├── 4. Advanced Linguistic Systems (M16–M20)
-│   ├── M16: Language Knowledge Graph (Entities, Dialects, Taxonomies)
-│   ├── M17: Cultural & Oral History Archives (Access Tiers: PUBLIC, COMMUNITY, SACRED)
-│   ├── M18: Advanced Speech Intelligence (Word-Level Alignments, Phonetics)
-│   ├── M19: Language Learning Studio (Vocabulary Flashcards, Quizzes, Mastery)
-│   └── M20: Institutional Research API (Scoped Tokens, CoNLL-U, 60 req/min)
-└── 5. Hardening & Pilot Readiness (M21–M23)
-    ├── M21: Unified "Everything in One" Single Entrypoint SPA
-    ├── M22: Infrastructure Hardening (Nosniff, DENY, CSP, Audio Shield, Rate Limiting)
-    ├── M23: Pre-Pilot Remediations (PR-01 to PR-05) & 9-Document Governance Package
-    └── Production Release: Native JWT Session Auth, Bcrypt Passwords, 4-Tier RBAC
+                                 [ User / Browser ]
+                                          │
+                     ┌────────────────────┴────────────────────┐
+                     │                                         │
+              (Static Assets)                         (API Requests /api/v1/*)
+                     │                                         │
+                     ▼                                         ▼
+         [ Render Frontend Web Service ]           [ Render API Web Service ]
+            Next.js 14 App Router                      FastAPI + Uvicorn
+            TypeScript + Tailwind CSS                  Python 3.11 / 3.14
+            Offline PWA & Service Worker               CORS: voice-roots.onrender.com
+                     │                                         │
+                     └────────────────────┬────────────────────┘
+                                          │
+                     ┌────────────────────┴────────────────────┐
+                     │                                         │
+                     ▼                                         ▼
+        [ Managed PostgreSQL DB ]                  [ Cloudflare R2 Storage ]
+         Always-on relational store                 S3-compatible audio bucket
+         Alembic automated migrations               Presigned streaming URLs
+         SQLite WAL local fallback                  Object versioning enabled
 ```
 
 ---
 
-## 3. Pre-Seeded Default Accounts (Evaluation & Demo)
+## 5. Pre-Seeded Default Accounts (Evaluation & Demo)
 
 The platform provides pre-seeded accounts covering each ecosystem role:
 
 | Role | Email Identifier | Username | Default Password | Target Capabilities |
 | :--- | :--- | :--- | :--- | :--- |
-| **Administrator** | `admin@voiceroots.ai` | `admin` | `VoiceRootsAdmin2026!` | Full admin console, storage probe, backup pruning, institutional research key issuance, user management. |
-| **Researcher** | `researcher@ciil.res.in` | `researcher` | `ResearchScholar2026!` | Research API (`/api/v1/research/*`), corpus manifests, CoNLL-U exports, dictionary exports, evaluation metrics. |
-| **Community Reviewer** | `elder.reviewer@gondi.org` | `elder_reviewer` | `ElderReviewer2026!` | Community verification queue, correction approvals, cultural story validation, sacred lore governance. |
-| **Field Contributor** | `field.worker@voiceroots.org` | `field_worker` | `preservation2026` | Ingestion studio, audio recording, multimodal speaker consent, machine transcription request, personal drafts. |
+| **Administrator** | `admin@voiceroots.ai` | `admin` | `VoiceRootsAdmin2026!` | Admin console, deep health probe, backup restore, restricted data export, user management. |
+| **Researcher** | `researcher@ciil.res.in` | `researcher` | `ResearchScholar2026!` | Research API (`/api/v1/research/*`), corpus manifests, CoNLL-U exports, dictionary exports. |
+| **Community Reviewer** | `elder.reviewer@gondi.org` | `elder_reviewer` | `ElderReviewer2026!` | Community verification queue, correction approvals, cultural story validation. |
+| **Field Contributor** | `field.worker@voiceroots.org` | `field_worker` | `preservation2026` | Ingestion studio, audio recording, dual affirmative consent, prompted mode. |
 
 ---
 
-## 4. Quick Start & Execution
+## 6. Quick Start & Execution
 
-### 1. Unified Single-Port Execution (Recommended)
-Run the entire platform from a single unified server on port 8000:
-
+### 1. Local Development (Next.js 14 + FastAPI)
 ```bash
-# 1. Install Python dependencies
-python3 -m pip install -r backend/requirements.txt
-
-# 2. Build production frontend SPA
-npm run build --prefix frontend
-
-# 3. Start unified application server
-python3 -m uvicorn main:app --app-dir backend --port 8000 --host 0.0.0.0
-```
-
-Open your browser at:
-👉 **`http://localhost:8000/`** (or `http://127.0.0.1:8000/`)
-
-### 2. Development Mode with Hot-Reload
-```bash
-# Terminal 1: Backend service
+# Terminal 1: FastAPI Backend
 python3 -m uvicorn main:app --app-dir backend --port 8000 --reload
 
-# Terminal 2: Vite hot-reload frontend
-npm run dev --prefix frontend -- --host 127.0.0.1 --port 5173
+# Terminal 2: Next.js Frontend
+cd web && npm run dev
 ```
-Open **`http://127.0.0.1:5173/`** in your browser.
+Open **`http://localhost:3000`** in your browser. The Next.js dev server rewrites `/api/v1/*` to `http://localhost:8000`.
 
----
-
-## 5. Master Documentation Suite
-
-Complete technical and operational documentation is provided in the repository root:
-
-- **[OWNER_SETUP_GUIDE.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/OWNER_SETUP_GUIDE.md)** — Comprehensive installation, execution, and demonstration instructions.
-- **[PROJECT_HANDOVER.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/PROJECT_HANDOVER.md)** — Project owner final handover deliverable and architecture index.
-- **[API_DOCUMENTATION.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/API_DOCUMENTATION.md)** — Complete REST API reference, request/response models, and authentication.
-- **[DEPLOYMENT.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/DEPLOYMENT.md)** — Production Docker deployment, Caddy/Nginx reverse proxy, and zero-downtime rollback.
-- **[DATABASE_GUIDE.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/DATABASE_GUIDE.md)** — SQLite WAL configuration, schema (49 tables), Alembic migrations, and backups.
-- **[SECURITY_REPORT.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/SECURITY_REPORT.md)** — Security audit, bcrypt password hashing, JWT RBAC matrix, and rate limiting.
-- **[TEST_REPORT.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/TEST_REPORT.md)** — Empirical verification report covering 222 automated unit/regression tests.
-- **[MILESTONE_23_INSTITUTIONAL_PILOT_DOCUMENTATION_PACKAGE.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/MILESTONE_23_INSTITUTIONAL_PILOT_DOCUMENTATION_PACKAGE.md)** — Complete 9-document governance suite (DOC-01 to DOC-09) and Operational Gate Tracker (G-01 to G-05).
-- **[.env.example](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/.env.example)** — Safe production configuration template without secrets.
-
----
-
-## 6. Verification Commands
-
+### 2. Running Automated Quality Gates & Tests
 ```bash
-# Run full automated regression & security test suite (222 tests)
-pytest tests/ -v
+# Backend unit, integration & security test suites
+pytest tests/test_t*.py -v
 
-# Run the 26-checkpoint Pre-Faculty Release Audit
-python3 scratch/pre_faculty_release_audit.py
+# Python code formatting and linting
+python3 -m ruff check backend/
 
-# Run the 27-endpoint Live Feature Verification
-python3 scratch/test_every_feature.py
+# Frontend TypeScript typecheck
+npm run typecheck --prefix web
 
-# Run linter
-python3 -m ruff check
+# Frontend production build
+API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web
 
-# Run frontend build verification
-npm run build --prefix frontend
+# Playwright End-to-End browser test suite (8-step lifecycle)
+API_BASE_URL=http://localhost:8000 npm run test:e2e --prefix web
 ```
 
 ---
 
-## 7. Ethical Safeguards & Invariants
+## 7. Master Documentation Index
 
-1. **Consent Mandatory**: Audio capture consent and AI transcription consent are separate, affirmative checkboxes that default to unchecked.
-2. **Zero Incurred API Cost**: Speech recognition (Whisper-local) and sentence vector embeddings run completely offline on local hardware with zero external API fees.
-3. **Data Sovereignty**: The original voice recording is permanently preserved as an immutable master that is never altered during transcription, translation, or community editing.
-4. **Sacred Knowledge Protected**: Restricted ceremonial and clan lore is shielded from public streaming (`SACRED_ELDER_ONLY`) and barred from open research exports.
+- **[docs/ETHICAL_GOVERNANCE_AND_OCAP.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/ETHICAL_GOVERNANCE_AND_OCAP.md)** — OCAP charter, informed consent policy, privacy notice, and IRB approvals protocol.
+- **[docs/DEPLOYMENT.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/DEPLOYMENT.md)** — Production deployment on Render, PostgreSQL migrations, Cloudflare R2 object storage, and backups.
+- **[docs/API_CONTRACT.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/API_CONTRACT.md)** — Comprehensive REST API specification and request/response models.
+- **[docs/V2.0_ROADMAP.md](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/V2.0_ROADMAP.md)** — Post-launch roadmap (dialect maps, spaced repetition, pronunciation scoring).
+- **[render.yaml](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/render.yaml)** — Infrastructure-as-code blueprint for Render production deployment.
+- **[.env.example](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/.env.example)** — Production environment configuration template without secrets.

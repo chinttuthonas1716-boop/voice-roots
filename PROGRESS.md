@@ -2644,6 +2644,33 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Third-party automated penetration testing (e.g. OWASP ZAP automated scan against external public IP).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-07] [ANTIGRAVITY] DONE: Phase 4 – Documentation, Ethical Governance & Approvals Protocol (Tasks T4.1 & T4.2).
+  - Ethical Governance & OCAP Documentation (T4.1):
+    1. Created `docs/ETHICAL_GOVERNANCE_AND_OCAP.md`:
+       - Definitive ethical charter defining the 4 pillars of Indigenous Data Sovereignty (Ownership, Control, Access, Possession) and mapping each to concrete software architectural enforcement mechanisms.
+       - Dual affirmative consent policy and verbatim statements in English and regional languages (Stage 1: Master Preservation; Stage 2: Assistive AI Transcription).
+       - Sub-second consent revocation procedure with cascade purge guarantees (FTS5 text excision, ChromaDB vector deletion, streaming cutoff, and audit trail generation).
+       - Comprehensive privacy notice covering biometric vocal isolation, PII sanitization, anonymous contributions (`is_anonymous=true`), and defense-in-depth security headers.
+    2. Overhauled `README.md`:
+       - Updated production stack description: Next.js 14 App Router (`web/`), FastAPI backend, PostgreSQL database, Cloudflare R2 object storage, Render hosting.
+       - Linked live domains: `https://voice-roots.onrender.com` and `https://voice-roots-api.onrender.com`.
+       - Documented automated CI/CD pipeline, OCAP principles, verbatim consent text, and developer quick start.
+    3. Overhauled `docs/DEPLOYMENT.md`:
+       - Fully aligned with Render Blueprint (`render.yaml`), PostgreSQL with Alembic migrations, Cloudflare R2 object storage with bucket versioning, offline fallback mode, automated rolling backups, and disaster recovery runbooks.
+    4. Overhauled `docs/API_CONTRACT.md`:
+       - Documented all endpoints introduced across Phases 1–3: deep observability (`/health/deep`), signed streaming URLs (`/storage/audio/{filename}`, `/api/v1/storage/signed-url/{filename}`), consent revocation cascade, reviewer queue moderation, prompted recording studio, multilingual dictionary, public stats, PWA offline sync, restricted data export, and system backups.
+  - Ethical Clearances & Demo Data Integrity (T4.2):
+    1. Instituted formal academic Institutional Review Board (IRB) and Bilateral Community Agreement protocol: mandatory moratorium prohibiting live field recording of real community speakers until institutional ethical clearance and written tribal council agreements are executed.
+    2. Explicitly classified all pre-seeded audio, prompts, cultural stories, and dictionary entries in the repository as synthetic/simulated educational demo placeholders (`is_placeholder=1`, `demo-placeholder`).
+  - Files touched: `docs/ETHICAL_GOVERNANCE_AND_OCAP.md`, `README.md`, `docs/DEPLOYMENT.md`, `docs/API_CONTRACT.md`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Full Test Suite: `pytest tests/test_t*.py -v` passed all 67/67 tests in 6.16s.
+    2. Python Linter: `python3 -m ruff check backend/` passed with 0 errors.
+    3. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    4. Next.js Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` passed with 0 errors (all 22 routes generated cleanly).
+  - NOT VERIFIED: Real-world community recordings in regional tribal villages (pending formal IRB approval).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 
