@@ -39,6 +39,7 @@ import learning_studio_service
 import monitoring_service
 import prompt_service
 import research_interoperability_service
+import security_service
 import speech_analysis_service
 import stats_service
 from dataset_service import (
@@ -1033,6 +1034,20 @@ def stream_storage_audio_file(filename: str, request: Request):
 
     provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
 
+    # Check for cryptographic signed URL signature (T3.5)
+    has_valid_signature = False
+    sig = request.query_params.get("sig")
+    expires = request.query_params.get("expires")
+    if sig and expires:
+        is_valid, reason = security_service.verify_signed_audio_token(
+            filename=safe_filename,
+            expires=expires,
+            sig=sig,
+        )
+        if not is_valid:
+            raise HTTPException(status_code=403, detail=f"Signed URL validation failed: {reason}")
+        has_valid_signature = True
+
     # Enforce OCAP boundaries
     try:
         with sqlite3.connect(DB_PATH) as conn:
@@ -1046,7 +1061,15 @@ def stream_storage_audio_file(filename: str, request: Request):
                 (safe_filename,),
             ).fetchone()
             if row:
-                _enforce_access_tier(dict(row), request)
+                row_dict = dict(row)
+                # Consent withdrawal check is immutable: even signed URLs cannot stream withdrawn audio
+                if row_dict.get("status") == "withdrawn" or row_dict.get("archived_at") is not None:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="Audio recording has been withdrawn under speaker consent.",
+                    )
+                if not has_valid_signature:
+                    _enforce_access_tier(row_dict, request)
 
             # Also check cultural stories for sacred elder-only lore
             story = conn.execute(
@@ -1081,6 +1104,38 @@ def stream_storage_audio_file(filename: str, request: Request):
         raise HTTPException(status_code=404, detail="Audio file not found.")
 
     return FileResponse(file_path, media_type="audio/wav")
+
+
+@app.get("/api/v1/storage/signed-url/{filename}")
+def get_signed_audio_stream_url(
+    filename: str,
+    request: Request,
+    expires_in: int = Query(3600, ge=60, le=86400),
+):
+    """Generate a cryptographic signed URL for streaming audio, verifying access tiers (T3.5)."""
+    safe_filename = os.path.basename(filename)
+    if safe_filename != filename or ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Invalid audio filename.")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT id, privacy_level, status, archived_at, contributor_name FROM transcripts WHERE audio_filename = ?",
+            (safe_filename,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Recording metadata not found.")
+        _enforce_access_tier(dict(row), request)
+
+    signed_url = security_service.generate_signed_audio_url(
+        filename=safe_filename,
+        expires_in=expires_in,
+    )
+    return {
+        "filename": safe_filename,
+        "expires_in": expires_in,
+        "signed_url": signed_url,
+    }
 
 
 # Mount built frontend assets for unified web application serving

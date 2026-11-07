@@ -2620,6 +2620,30 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Live APM ingestion in external Sentry cloud dashboard (requires user's private Sentry organization DSN).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-07] [ANTIGRAVITY] DONE: Phase 3 – Comprehensive Security Pass (Task T3.5).
+  - Security, Access-Tier Enforcement & Cryptographic Signed URLs:
+    1. Built `backend/security_service.py`:
+       - `generate_signed_audio_url()`: Generates HMAC-SHA256 authenticated streaming URLs with explicit epoch expiration timestamps.
+       - `verify_signed_audio_token()`: Validates token expiration and executes constant-time HMAC signature verification (`hmac.compare_digest`) protecting against timing attacks.
+       - `check_access_tier_permission()`: Centralized rule validator for OCAP access tiers (`public`, `community`, `research`, `private`) and irrevocable consent withdrawal.
+    2. Integrated Signed URL Validation & Issuance in FastAPI (`backend/main.py`):
+       - Updated `stream_storage_audio_file`: Verifies `expires` and `sig` query parameters. Valid tokens grant isolated playback for private recordings without leaking permanent credentials; tampered or expired tokens trigger HTTP 403. Withdrawn recordings remain permanently inaccessible (HTTP 404/403) regardless of signatures or roles.
+       - Added `GET /api/v1/storage/signed-url/{filename}`: Authorizes signed streaming token issuance for authenticated owners and elders.
+    3. Defense-in-Depth Verification:
+       - OCAP access tiers strictly verified: public anonymous streaming, community member isolation, research token isolation, and private contributor ownership.
+       - RBAC boundaries verified: non-admin callers blocked from administrative recovery and bulk export endpoints.
+       - Rate limiting verified: rapid bursts under `x-test-rate-limit` trigger HTTP 429 Too Many Requests with telemetry headers (`Retry-After`, `X-RateLimit-Limit`, `X-RateLimit-Remaining: 0`, `X-RateLimit-Reset`).
+       - Defense headers verified: `X-Content-Type-Options: nosniff`, `X-Frame-Options: DENY`, `Referrer-Policy: strict-origin-when-cross-origin`, CSP, Permissions-Policy.
+  - Files touched: `backend/security_service.py`, `backend/main.py`, `tests/test_t3_5_security_pass.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t3_5_security_pass.py -v` passed all 11/11 tests in 2.74s.
+    2. Full Phase 2 & Phase 3 Test Suites: `pytest tests/test_t2_*.py tests/test_t3_*.py -v` passed all 67/67 tests in 6.16s.
+    3. Python Linter: `python3 -m ruff check backend/ tests/test_t3_5_security_pass.py` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` passed with 0 errors.
+  - NOT VERIFIED: Third-party automated penetration testing (e.g. OWASP ZAP automated scan against external public IP).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 
