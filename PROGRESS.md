@@ -2565,6 +2565,39 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Live execution on GitHub Actions runners (workflow triggers upon remote push to GitHub).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-07] [ANTIGRAVITY] DONE: Phase 3 – Automated Backups, R2 Object Versioning & Real Restore Verification (Task T3.3).
+  - Automated Database Backups & Rolling Retention:
+    1. Extended `backend/backup_retention_service.py`:
+       - `create_atomic_backup()`: Creates point-in-time SQLite backups using SQLite's native atomic `.backup()` API, automatically rotating snapshots according to tiered retention policies (all within 7 days, 1/day for days 8–30, 1/week for days 31–90).
+       - `verify_database_integrity()`: Validates SQLite file health, executes `PRAGMA integrity_check`, and counts valid tables and records.
+       - `restore_database_snapshot()`: Safely restores a snapshot onto the target database with pre-flight verification, an automatic safety copy (`pre_restore_safety_<timestamp>.db`), atomic copy, and post-restore rollback guardrails if integrity checks fail.
+    2. Implemented CLI Tooling:
+       - `scripts/backup_database.py`: Standalone CLI supporting automated atomic backups for SQLite and PostgreSQL (`pg_dump -Fc`).
+       - `scripts/restore_database.py`: CLI supporting `--dry-run` inspection and live database restore with safety snapshotting.
+    3. Added Admin API Restore Endpoint:
+       - `POST /api/v1/system/restore`: Admin-only endpoint taking `backup_filename` and optional `dry_run` flag.
+  - Cloudflare R2 Audio Masters Backup & Versioning:
+    1. Created `scripts/backup_r2_storage.py`:
+       - Configures and verifies Cloudflare R2 object versioning (`PutBucketVersioning`) to preserve all historical audio master uploads against accidental deletion or corruption.
+       - Automates bulk audio master downloading and synchronization to offline/local storage volumes (`storage/r2_backups/<timestamp>/`), calculating SHA-256 integrity digests for all downloaded objects and generating `r2_backup_manifest.json`.
+  - Real Restore Test Result:
+    - Executed real test in `tests/test_t3_3_backup_and_restore.py`:
+      - Baseline state: 1 golden verified record (`uuid_id: "golden_uuid_001"`).
+      - Atomic backup created: `baseline_backup.db`.
+      - Active database mutated: ephemeral canary record inserted (`uuid_id: "canary_uuid_999"`), bringing active count to 2 records.
+      - Dry-run validation executed: confirmed snapshot integrity and reported 1 backup record vs 2 target records.
+      - Full restore executed: active database atomically restored from `baseline_backup.db`.
+      - Verification result: Exactly 1 record in active database (`golden_uuid_001`), ephemeral canary record completely purged, `PRAGMA integrity_check` returned `ok`, safety backup created.
+  - Files touched: `backend/backup_retention_service.py`, `backend/main.py`, `scripts/backup_database.py`, `scripts/restore_database.py`, `scripts/backup_r2_storage.py`, `tests/test_t3_3_backup_and_restore.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t3_3_backup_and_restore.py -v` passed all 3/3 tests in 2.75s.
+    2. Full Phase 2 & Phase 3 Test Suites: `pytest tests/test_t2_*.py tests/test_t3_3_backup_and_restore.py -v` passed all 47/47 tests in 4.70s.
+    3. Python Linter: `python3 -m ruff check backend/ scripts/backup_database.py scripts/restore_database.py scripts/backup_r2_storage.py tests/test_t3_3_backup_and_restore.py` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Real Restore Execution: Validated complete recovery with canary record rollback.
+  - NOT VERIFIED: Multi-terabyte cold archive transfers across Amazon Glacier / AWS S3 deep archive.
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 

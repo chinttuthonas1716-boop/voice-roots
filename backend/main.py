@@ -4134,6 +4134,41 @@ def prune_backups_endpoint(
     return res
 
 
+class RestoreSnapshotRequest(BaseModel):
+    backup_filename: str
+    dry_run: bool = False
+
+
+@app.post("/api/v1/system/restore")
+def restore_database_endpoint(
+    req: RestoreSnapshotRequest,
+    request: Request,
+):
+    """Admin-only point-in-time database restore with automatic safety snapshot (T3.3)."""
+    if not _is_admin_request(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator authorization required for database restore.",
+        )
+    safe_fn = os.path.basename(req.backup_filename)
+    backup_file = os.path.join(BACKUP_DIR, safe_fn)
+
+    if not os.path.isfile(backup_file):
+        raise HTTPException(status_code=404, detail=f"Backup snapshot '{safe_fn}' not found in backup store.")
+
+    try:
+        res = backup_retention_service.restore_database_snapshot(
+            backup_path=backup_file,
+            target_db_path=DB_PATH,
+            dry_run=req.dry_run,
+        )
+        logger.info("Admin executed database restore: %s (dry_run=%s)", safe_fn, req.dry_run)
+        return res
+    except Exception as exc:
+        logger.error("Database restore failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Restore operation failed: {exc}")
+
+
 @app.get("/api/v1/system/storage-probe")
 def get_system_storage_probe():
     """Deep persistence, volume health, and disk quota probe for institutional pilots (PR-01)."""
