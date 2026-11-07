@@ -2598,6 +2598,28 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Multi-terabyte cold archive transfers across Amazon Glacier / AWS S3 deep archive.
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-07] [ANTIGRAVITY] DONE: Phase 3 – Monitoring, Structured Logging & Error Tracking (Task T3.4).
+  - Observability & Monitoring Subsystem:
+    1. Built `backend/monitoring_service.py`:
+       - `JSONLogFormatter`: Custom logging formatter that serializes log records to structured JSON, embedding timestamps, log level, logger name, correlation/request IDs, HTTP methods, paths, status codes, latencies, and stack traces.
+       - `configure_structured_logging()`: Enables and attaches JSON log formatters to root and framework loggers when `STRUCTURED_LOGGING=true`.
+       - `init_error_tracking()`: Initializes Sentry SDK with FastAPI and SQLAlchemy integrations, custom traces sample rates, and OCAP compliance (`send_default_pii=False`). Operates in safe no-op fallback mode when SENTRY_DSN or packages are absent.
+       - `get_deep_health_probe()`: Comprehensive readiness probe validating DB connectivity and query latency, SQLite/Postgres integrity, audio storage writability and file counts, disk capacity, process memory RSS, and observability configuration.
+    2. Integrated FastAPI Observability (`backend/main.py`):
+       - Correlation ID tracing: Automatically generates or propagates incoming `X-Request-ID` / `x-correlation-id` headers through request state and response headers.
+       - Deep health endpoints: Mounted `/health/deep`, `/api/health/deep`, and `/api/v1/health/deep` (returning HTTP 503 if any critical subsystem reports unhealthy).
+       - Added `sentry-sdk>=2.0.0` to `backend/requirements-render.txt`.
+    3. Frontend Client Monitoring (`web/src/lib/monitoring.ts`):
+       - Built `generateRequestId()`, `attachTracingHeaders()`, and `reportClientError()` with safe browser console and optional Sentry error dispatching.
+  - Files touched: `backend/monitoring_service.py`, `backend/main.py`, `backend/requirements-render.txt`, `web/src/lib/monitoring.ts`, `tests/test_t3_4_monitoring_and_logging.py`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Test Suite: `pytest tests/test_t3_4_monitoring_and_logging.py -v` passed all 9/9 tests in 2.92s.
+    2. Python Linter: `python3 -m ruff check backend/ tests/test_t3_4_monitoring_and_logging.py` passed with 0 errors.
+    3. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    4. Next.js Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 22 static and dynamic routes cleanly with 0 errors.
+  - NOT VERIFIED: Live APM ingestion in external Sentry cloud dashboard (requires user's private Sentry organization DSN).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 

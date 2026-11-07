@@ -36,6 +36,7 @@ import dictionary_service
 import language_explorer_service
 import learning_service
 import learning_studio_service
+import monitoring_service
 import prompt_service
 import research_interoperability_service
 import speech_analysis_service
@@ -664,6 +665,10 @@ app = FastAPI(
     version="1.0.0",
 )
 
+# Initialize observability, structured logging, and error tracking (T3.4)
+monitoring_service.configure_structured_logging()
+monitoring_service.init_error_tracking()
+
 # CORS configuration for frontend services (Next.js web + Render + local dev)
 # Browser calls go through the Next.js /api/v1 rewrite, so CORS mainly matters
 # if anything calls the API origin directly (mobile app, scripts, other sites).
@@ -904,8 +909,26 @@ async def security_and_logging_middleware(request: Request, call_next):
 
     client_ip = request.client.host if request.client else "127.0.0.1"
 
+    # Distributed tracing / Correlation ID (T3.4)
+    request_id = (
+        request.headers.get("x-request-id")
+        or request.headers.get("x-correlation-id")
+        or f"req_{uuid.uuid4().hex[:12]}"
+    )
+    request.state.request_id = request_id
+
     # Rate limiting exemptions: test mode (unless explicitly testing rate limits), health checks, docs
-    exempt_paths = {"/health", "/ready", "/metrics", "/favicon.ico", "/docs", "/openapi.json"}
+    exempt_paths = {
+        "/health",
+        "/health/deep",
+        "/api/health/deep",
+        "/api/v1/health/deep",
+        "/ready",
+        "/metrics",
+        "/favicon.ico",
+        "/docs",
+        "/openapi.json",
+    }
     is_test_env = os.environ.get("VOICE_ROOTS_ENV") == "test" or bool(os.environ.get("PYTEST_CURRENT_TEST"))
     is_testing_rate_limit = bool(request.headers.get("x-test-rate-limit"))
     is_exempt = path in exempt_paths or (is_test_env and not is_testing_rate_limit)
@@ -972,6 +995,9 @@ async def security_and_logging_middleware(request: Request, call_next):
     if request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
+    # Correlation ID propagation (T3.4)
+    response.headers["X-Request-ID"] = request_id
+
     # Rate limiting telemetry headers
     if not is_exempt:
         response.headers["X-RateLimit-Limit"] = str(limit)
@@ -979,12 +1005,21 @@ async def security_and_logging_middleware(request: Request, call_next):
         response.headers["X-RateLimit-Reset"] = str(int(time.time() + 60))
 
     logger.info(
-        "HTTP %s %s -> status=%d duration_ms=%.2f client=%s",
+        "HTTP %s %s -> status=%d duration_ms=%.2f client=%s [req_id=%s]",
         method,
         path,
         response.status_code,
         duration_ms,
         client_ip,
+        request_id,
+        extra={
+            "request_id": request_id,
+            "method": method,
+            "path": path,
+            "status_code": response.status_code,
+            "duration_ms": duration_ms,
+            "client_ip": client_ip,
+        },
     )
     return response
 
@@ -1352,6 +1387,21 @@ def readiness_check():
         "version": "1.0.0",
         "checks": checks,
     }
+
+
+@app.get("/health/deep")
+@app.get("/api/health/deep")
+@app.get("/api/v1/health/deep")
+def deep_health_check(response: Response):
+    """Deep system health and observability probe assessing database, storage, and host metrics (T3.4)."""
+    probe = monitoring_service.get_deep_health_probe(
+        db_path=DB_PATH,
+        storage_dir=STORAGE_DIR,
+        audio_storage=AUDIO_STORAGE,
+    )
+    if probe.get("status") == "unhealthy":
+        response.status_code = 503
+    return probe
 
 
 @app.get("/languages")
