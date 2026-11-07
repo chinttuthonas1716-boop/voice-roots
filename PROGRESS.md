@@ -2671,6 +2671,32 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Real-world community recordings in regional tribal villages (pending formal IRB approval).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-07] [ANTIGRAVITY] DONE: Phase 5 – Soft Launch Preparation, Pilot Cohort Protocol & Final Verification Gate Sign-Off.
+  - Soft Launch Deployment & Operational Readiness:
+    1. Created `docs/SOFT_LAUNCH_GUIDE.md`:
+       - Structured evaluation protocol for invite-only cohort (academic supervisor/faculty, accredited community reviewers, certified field contributors, linguistic researchers).
+       - Complete end-to-end evaluation journeys: prompted recording with dual affirmative consent; reviewer queue moderation and customary elder governance; speaker unilateral consent withdrawal with sub-second cascade purge; disaster recovery and database snapshot restore verification.
+       - Incident response runbook with P0/P1/P2 triage protocols and zero-downtime rollback procedures.
+       - Formally cataloged deferred v2.0 roadmap items (dialect maps, word-level CTC alignment, spaced-repetition flashcards, pronunciation scoring, multi-speaker diarization).
+    2. Comprehensive Verification Gate Sign-Off (Definition of Done):
+       - Full Automated Test Suite: 108/108 tests passing in 31.12s (`pytest tests/test_t*.py -v`).
+       - Playwright End-to-End Suite: 8/8 full lifecycle user journeys passing in 7.6s (`npm run test:e2e --prefix web`).
+       - Python Linter: Clean across all backend modules and test suites (`python3 -m ruff check backend/`).
+       - TypeScript Strict Typecheck: 0 compilation errors across all 22 Next.js App Router routes (`npm run typecheck --prefix web`).
+       - Next.js Production Build: Compiled cleanly with zero errors (`API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web`).
+       - Database & Backup Recovery: Verified atomic snapshot restore cycle with canary record rollback (`scripts/restore_database.py`).
+       - Indigenous Data Sovereignty: OCAP ethical charter, informed consent policy, and IRB moratorium on live field recording in place (`docs/ETHICAL_GOVERNANCE_AND_OCAP.md`).
+  - Files touched: `docs/SOFT_LAUNCH_GUIDE.md`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Automated Test Suites: `pytest tests/test_t*.py -v` passed all 108/108 tests in 31.12s.
+    2. Playwright E2E Suite: `npm run test:e2e --prefix web` passed all 8/8 user lifecycle journeys in 7.6s.
+    3. Python Linter: `python3 -m ruff check backend/` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` passed with 0 errors.
+    6. Backup Restore Verification: Verified atomic recovery and rollback.
+  - NOT VERIFIED: Live network reachability to external public IP from local sandbox (external network egress boundary).
+  - NEEDS FROM OTHER AGENT: none. Launch milestone completed.
+
 
 
 
