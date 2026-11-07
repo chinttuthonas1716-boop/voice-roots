@@ -71,6 +71,10 @@ backend/voice_roots.db-wal
 .coverage
 htmlcov/
 coverage/
+test-results/
+playwright-report/
+web/test-results/
+web/playwright-report/
 
 # Local Model weights & caches
 models/

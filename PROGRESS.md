@@ -2509,6 +2509,32 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Multi-gigabyte bulk batch exports over slow cellular uplinks (stream compression is buffered in-memory).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-07] [ANTIGRAVITY] DONE: Phase 3 – End-to-End Tests with Playwright (Task T3.1).
+  - Playwright End-to-End Browser Automation:
+    1. Configured `@playwright/test` for the Next.js 14 App Router application (`web/playwright.config.ts`):
+       - Configured headless Chromium project targeting `localhost:3000`.
+       - Automated WebServer management executing production `npm run start` with injected `API_BASE_URL` routing.
+       - Added `"test:e2e": "playwright test"` script to `web/package.json`.
+    2. Implemented Comprehensive E2E Test Suite (`web/e2e/voice_roots_workflow.spec.ts`):
+       - Test 1: Landing page branding, navigation links, and viewport responsiveness.
+       - Test 2: Contributor sign up, profile role attribution, credential validation, and affirmative OCAP consent checkbox.
+       - Test 3: Guided voice preservation studio, mode tabs (Freeform, Prompted, Upload), Step 1 informed consent statement enforcement, and progression to Step 2.
+       - Test 4: Translation interface, language pair selector, IndicTrans2 draft badges, and honest translation policy disclaimers.
+       - Test 5: Multilingual dictionary and phrasebook browser, live search filter across Latin and native scripts, and elder provenance disclosures.
+       - Test 6: Public statistics dashboard and Census 2011 demographic benchmarks across core spoken languages.
+       - Test 7: Cultural Voice Passport rendering, master audio immutability seal, dual SHA-256 hashes, and OCAP access tier badge.
+       - Test 8: Community Reviewer Queue, customary elder governance, accredited reviewer persona switcher, and restricted data export modal.
+    3. Updated `.gitignore` to exclude Playwright temporary directories (`test-results/`, `playwright-report/`).
+  - Files touched: `web/playwright.config.ts`, `web/package.json`, `web/package-lock.json`, `web/e2e/voice_roots_workflow.spec.ts`, `.gitignore`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Dedicated Playwright E2E Suite: `API_BASE_URL=http://localhost:8000 npm run test:e2e --prefix web` passed all 8/8 end-to-end browser tests in 6.3s.
+    2. Full Phase 2 Pytest Suites: `pytest tests/test_t2_*.py -v` passed all 44/44 unit and integration tests in 4.34s.
+    3. Python Linter: `python3 -m ruff check backend/` passed with 0 errors.
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Next.js 14 Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled all 22/22 routes with 0 errors.
+  - NOT VERIFIED: Multi-browser WebKit/Safari and Firefox automated execution in local environment (Chromium installed and verified).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 
