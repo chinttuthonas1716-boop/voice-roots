@@ -2535,6 +2535,36 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Multi-browser WebKit/Safari and Firefox automated execution in local environment (Chromium installed and verified).
   - NEEDS FROM OTHER AGENT: none.
 
+- [2026-11-07] [ANTIGRAVITY] DONE: Phase 3 – CI/CD Pipeline with GitHub Actions (Task T3.2).
+  - Continuous Integration & Deployment Pipeline (`.github/workflows/ci.yml`):
+    1. Pipeline Triggers:
+       - Automated triggers on pull requests targeting `main`, `agent/antigravity`, `agent/codex`.
+       - Automated triggers on push to `main` and feature branches (`task/**`).
+       - Concurrency management with `cancel-in-progress: true` to optimize CI compute runners.
+    2. Backend Quality Gate (`backend-quality`):
+       - Ubuntu 2024 runner with Python 3.11, pip caching, and FFmpeg system audio binary.
+       - Runs Ruff linter on `backend/` enforcing zero code style or import warnings.
+       - Runs Pytest unit and integration suites (`pytest -v tests/test_t*.py`).
+    3. Frontend Quality Gate (`frontend-quality`):
+       - Node.js 20 with npm dependency caching for `web/`.
+       - Runs TypeScript typecheck (`tsc --noEmit`).
+       - Runs Next.js 14 App Router production build with `API_BASE_URL` validation.
+    4. End-to-End User Journey Gate (`e2e-tests`):
+       - Spawns background FastAPI test server on port 8000 with health ping validation.
+       - Installs Playwright Chromium with system dependencies.
+       - Executes all 8 Playwright browser tests covering sign up, informed consent, voice recording, translation, dictionary, public stats, voice passport, and reviewer queue.
+       - Uploads Playwright HTML report artifacts on failure.
+    5. Production Deployment Gate (`deploy`):
+       - Runs on merge to `main` after all three quality gates pass.
+       - Dispatches Render backend and frontend deployment webhooks (`RENDER_BACKEND_DEPLOY_HOOK`, `RENDER_FRONTEND_DEPLOY_HOOK`).
+       - Verifies live domain status and `/health` response.
+  - Files touched: `.github/workflows/ci.yml`, `PROGRESS.md`.
+  - VERIFIED:
+    1. YAML Workflow Validation: Validated with Python PyYAML parser with 0 syntax errors.
+    2. Local Component Pipeline Runs: `python3 -m ruff check backend/`, `pytest tests/test_t*.py`, `npm run typecheck --prefix web`, Next.js build, and Playwright E2E suite all executed and passed with 0 errors.
+  - NOT VERIFIED: Live execution on GitHub Actions runners (workflow triggers upon remote push to GitHub).
+  - NEEDS FROM OTHER AGENT: none.
+
 
 
 
