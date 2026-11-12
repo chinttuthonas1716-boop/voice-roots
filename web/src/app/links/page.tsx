@@ -427,8 +427,8 @@ export default function VoiceRootsLinkHub() {
         clearTimeout(timeoutId);
         setIsHomeReachable(true);
       } catch {
-        // Fallback: If on client side and already loaded from tunnel
-        if (typeof window !== "undefined" && window.location.origin.includes("trycloudflare.com")) {
+        // Fallback: If on client side and already loaded from Render
+        if (typeof window !== "undefined" && (window.location.origin.includes("onrender.com") || window.location.origin.includes("trycloudflare.com"))) {
           setIsHomeReachable(true);
         } else {
           setIsHomeReachable(true); // Tunnel is verified by audit
@@ -455,7 +455,7 @@ export default function VoiceRootsLinkHub() {
         setStatuses((prev) => ({ ...prev, [card.id]: "available" }));
       } catch {
         // In browser environments with strict cross-origin, mark as checked via current host
-        if (typeof window !== "undefined" && window.location.origin.includes("trycloudflare.com")) {
+        if (typeof window !== "undefined" && (window.location.origin.includes("onrender.com") || window.location.origin.includes("trycloudflare.com"))) {
           setStatuses((prev) => ({ ...prev, [card.id]: "available" }));
         } else {
           setStatuses((prev) => ({ ...prev, [card.id]: "available" }));

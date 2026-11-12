@@ -26,7 +26,7 @@ export const DEFAULT_CLOUD_CONFIG: CloudStorageConfig = {
   region: "ap-south-1",
   encryption: "AES-256-GCM",
   endpoint: "/api/storage",
-  publicCdnBase: "https://farming-proposition-love-showcase.trycloudflare.com/audio",
+  publicCdnBase: "https://voice-roots.onrender.com/storage/audio",
   sovereigntyPolicy: "strict_indigenous_ocap",
 };
 

@@ -105,6 +105,99 @@ export default function AboutPage() {
           </div>
         </section>
 
+        {/* OCAP® DATA SOVEREIGNTY CHARTER & GOVERNANCE MANIFESTO */}
+        <section aria-label="OCAP Charter & Governance" className="p-8 sm:p-12 rounded-[36px] border border-amber-500/20 bg-gradient-to-b from-amber-500/10 via-[#0C0F1D]/80 to-[#080A12] backdrop-blur-2xl space-y-8">
+          <div className="max-w-3xl space-y-3">
+            <span className="eyebrow text-amber-400">DATA SOVEREIGNTY MANIFESTO</span>
+            <h2 className="text-3xl sm:text-4xl font-extrabold text-white tracking-tight">
+              First Nations OCAP® Principles & Governance Charter
+            </h2>
+            <p className="text-sm sm:text-base text-[#D9D9E2] leading-relaxed">
+              Voice Roots is legally and architecturally bounded by the principles of First Nations OCAP®
+              (Ownership, Control, Access, and Possession) and the CARE Principles for Indigenous Data
+              Governance. We firmly reject digital colonialism and extractive data practices.
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-6">
+            <div className="p-6 rounded-2xl border border-white/10 bg-black/30 space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-lg">
+                <Lock className="w-5 h-5" />
+                <span>1. Ownership (Whose Voices Are These?)</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#A9AEC5] leading-relaxed">
+                Indigenous voices, clan narratives, ethnobotanical formulas, and songs belong exclusively
+                to the individual speakers and their communities. Contributing speakers retain 100% intellectual
+                property rights. Voice Roots acts solely as an ethical custodian.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-white/10 bg-black/30 space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-lg">
+                <Users className="w-5 h-5" />
+                <span>2. Control (Customary Elder Authority)</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#A9AEC5] leading-relaxed">
+                Tribal councils and accredited customary elders hold unilateral veto power over the
+                classification, moderation, and publication of any recording. Sacred clan lore, restricted
+                rituals, and customary legal disputes are shielded from public exposure.
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-white/10 bg-black/30 space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-lg">
+                <ShieldCheck className="w-5 h-5" />
+                <span>3. Access (Four Server-Enforced Tiers)</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#A9AEC5] leading-relaxed">
+                Data access is enforced at the database and storage level across four distinct tiers:
+                <strong className="text-white"> Public</strong> (open heritage),
+                <strong className="text-white"> Community</strong> (authenticated tribal members),
+                <strong className="text-white"> Research</strong> (institutional scholars with OCAP MOUs), and
+                <strong className="text-white"> Private</strong> (family vault only).
+              </p>
+            </div>
+
+            <div className="p-6 rounded-2xl border border-white/10 bg-black/30 space-y-3">
+              <div className="flex items-center gap-2 text-amber-400 font-bold text-lg">
+                <FileCheck2 className="w-5 h-5" />
+                <span>4. Possession (Immutable Master Preservation)</span>
+              </div>
+              <p className="text-xs sm:text-sm text-[#A9AEC5] leading-relaxed">
+                The original 48kHz acoustic master recording is permanently preserved in lossless FLAC format
+                with cryptographic SHA-256 integrity verification. AI transcripts and translations are secondary
+                annotation layers that can never overwrite the immutable master.
+              </p>
+            </div>
+          </div>
+
+          <div className="p-6 rounded-2xl border border-red-500/20 bg-red-500/5 space-y-3">
+            <div className="flex items-center gap-2 text-red-300 font-bold text-base">
+              <Flame className="w-5 h-5 text-red-400" />
+              <span>Strict Commercial Prohibition & AI Mining Moratorium</span>
+            </div>
+            <p className="text-xs sm:text-sm text-red-200/80 leading-relaxed">
+              No audio recording, phonetic transcription, or lexical alignment archived within Voice Roots
+              may be sold, sublicensed, aggregated, or utilized for commercial foundation model training,
+              synthetic voice cloning, or commercial advertising. Any commercial exploitation constitutes
+              an immediate breach of community trust and triggers automated data isolation.
+            </p>
+          </div>
+
+          <div className="p-6 rounded-2xl border border-amber-500/20 bg-amber-500/5 space-y-3">
+            <div className="flex items-center gap-2 text-amber-300 font-bold text-base">
+              <HeartHandshake className="w-5 h-5 text-amber-400" />
+              <span>Academic Pilot Status & IRB Ethics Moratorium</span>
+            </div>
+            <p className="text-xs sm:text-sm text-amber-200/80 leading-relaxed">
+              All records currently displayed on this demonstration instance are designated as
+              <strong className="text-white"> DEMO / SYNTHETIC EVALUATION DATA</strong>. Field archiving of real
+              ancestral voices will only commence following formal Institutional Review Board (IRB) ethics clearance
+              and bilateral community consent agreements with participating Gond, Koya, Santhali, and Lambadi councils.
+            </p>
+          </div>
+        </section>
+
         {/* CANONICAL 8-PHASE PRESERVATION LIFECYCLE */}
         <section aria-label="Preservation Lifecycle" className="p-8 sm:p-12 rounded-[36px] border border-white/10 bg-[rgba(36,41,66,0.8)] backdrop-blur-2xl space-y-8">
           <div className="flex flex-col md:flex-row md:items-end justify-between gap-4 border-b border-white/10 pb-6">

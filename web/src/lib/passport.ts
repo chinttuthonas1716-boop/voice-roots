@@ -58,7 +58,7 @@ export function createHeritageRecordFromStored(
   record: StoredVoiceRecord,
   baseUrl?: string
 ): HeritageRecord {
-  const domain = baseUrl || (typeof window !== "undefined" ? window.location.origin : "https://farming-proposition-love-showcase.trycloudflare.com");
+  const domain = baseUrl || (typeof window !== "undefined" ? window.location.origin : "https://voice-roots.onrender.com");
   const numId = record.id.replace(/\D/g, "") || "106";
   const recordId = `VR-2026-0${numId.padStart(3, "0")}`;
   const publicUrl = `${domain}/recordings/${record.id}`;

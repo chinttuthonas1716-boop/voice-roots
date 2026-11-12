@@ -29,6 +29,7 @@ export function Navbar() {
     { href: "/record", label: t("nav.record"), icon: Mic },
     { href: "/translate", label: t("action.translate"), icon: Languages },
     { href: "/dictionary", label: t("nav.dictionary"), icon: BookOpen },
+    { href: "/about", label: "Governance", icon: ShieldCheck },
     { href: "/dashboard", label: t("nav.dashboard"), icon: HardDrive },
     ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: t("nav.reviewer"), icon: ShieldCheck }] : []),
   ];
