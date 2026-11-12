@@ -58,8 +58,8 @@ class BaseStorageProvider(ABC):
         ...
 
     @abstractmethod
-    def delete_file(self, filename: str) -> bool:
-        """Delete stored audio object."""
+    def delete_file(self, filename: str, consent_withdrawn: bool = True) -> bool:
+        """Delete stored audio object (protected by OCAP consent withdrawal checks)."""
         ...
 
     @abstractmethod
@@ -111,7 +111,9 @@ class LocalStorageProvider(BaseStorageProvider):
         # Standard isolated audio route
         return f"/storage/audio/{filename}"
 
-    def delete_file(self, filename: str) -> bool:
+    def delete_file(self, filename: str, consent_withdrawn: bool = True) -> bool:
+        if not consent_withdrawn:
+            return False
         path = os.path.join(self.storage_dir, filename)
         if os.path.exists(path):
             os.remove(path)

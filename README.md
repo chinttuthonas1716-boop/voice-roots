@@ -1,5 +1,6 @@
 # Voice Roots: Rooting Oral Languages in Text with AI
-## Community-Governed, Offline-First Speech Preservation & Linguistic Intelligence Platform
+
+**Community-Governed, Offline-First Speech Preservation & Linguistic Intelligence Platform**
 
 > **Live Production Web Application**: [`https://voice-roots.onrender.com`](https://voice-roots.onrender.com)  
 > **Live Production API Gateway**: [`https://voice-roots-api.onrender.com`](https://voice-roots-api.onrender.com)  
@@ -16,6 +17,7 @@
 Voice Roots is an ethical, source-grounded platform designed to document, archive, revitalize, and semantically search endangered oral and indigenous languages—with core specialization in vulnerable Dravidian and Adivasi tongues including **Gondi**, **Koya**, **Santhali**, and **Lambadi**.
 
 Built in strict compliance with the **OCAP® principles** (Ownership, Control, Access, and Possession):
+
 - **Audio Master is Immutable**: The original speaker's acoustic recording is permanently retained as an unedited 48kHz lossless master asset with cryptographic SHA-256 integrity verification.
 - **AI as an Assistive Annotation Layer**: Speech recognition (Whisper) and neural translation (IndicTrans2) are secondary annotation layers. All unreviewed machine translations carry explicit draft badges (`[DRAFT - UNREVIEWED MACHINE GENERATION]`).
 - **Elder Human Review Guardrail**: Machine translations for unwritten oral tongues require mandatory community elder verification before publication.
@@ -28,17 +30,22 @@ For full governance policies, review [docs/ETHICAL_GOVERNANCE_AND_OCAP.md](file:
 ## 2. Ethics Statement, Informed Consent & Privacy Notice
 
 ### Ethics & Data-Governance Statement
+
 Voice Roots recognizes that indigenous voices, traditional oral folklore, and clan lineages belong exclusively to the communities from which they originate. The platform rejects extractive data-mining practices. No voice recordings or derived linguistic assets gathered through Voice Roots may be sold, licensed to commercial foundation-model corporations, or utilized for unconsented commercial speech synthesis.
 
 ### Dual Affirmative Consent Protocol
+
 Consent is never assumed, bundled, or pre-checked:
+
 1. **Master Archival Preservation Consent**:
    > *"I hereby give voluntary permission for my voice recording to be archived in the Voice Roots community linguistic repository. I understand that my recording will be preserved as an immutable master asset to safeguard our ancestral tongue for future generations. I retain ownership of my voice, and I may withdraw my consent at any time without penalty or explanation."*
 2. **Assistive AI Transcription Consent**:
    > *"I explicitly consent to having my recorded voice processed by assistive artificial intelligence speech recognition software solely to generate a written draft transcript and phonetic alignment. I understand that machine transcripts are unreviewed drafts and will not be published as definitive community knowledge until reviewed by accredited language elders."*
 
 ### Privacy Notice & Access Tiers
+
 Server-side access control strictly isolates recordings into four tiers:
+
 - **`public`**: Open heritage recordings approved by speakers and elders for global cultural education.
 - **`community`**: Restricted to authenticated community members and cultural reviewers.
 - **`research`**: Accessible strictly to verified researchers holding institutional research tokens.
@@ -60,7 +67,7 @@ Server-side access control strictly isolates recordings into four tiers:
 
 ## 4. Production Stack & Architecture
 
-```
+```text
                                  [ User / Browser ]
                                           │
                      ┌────────────────────┴────────────────────┐
@@ -102,6 +109,7 @@ The platform provides pre-seeded accounts covering each ecosystem role:
 ## 6. Quick Start & Execution
 
 ### 1. Local Development (Next.js 14 + FastAPI)
+
 ```bash
 # Terminal 1: FastAPI Backend
 python3 -m uvicorn main:app --app-dir backend --port 8000 --reload
@@ -109,9 +117,11 @@ python3 -m uvicorn main:app --app-dir backend --port 8000 --reload
 # Terminal 2: Next.js Frontend
 cd web && npm run dev
 ```
+
 Open **`http://localhost:3000`** in your browser. The Next.js dev server rewrites `/api/v1/*` to `http://localhost:8000`.
 
 ### 2. Running Automated Quality Gates & Tests
+
 ```bash
 # Backend unit, integration & security test suites
 pytest tests/test_t*.py -v

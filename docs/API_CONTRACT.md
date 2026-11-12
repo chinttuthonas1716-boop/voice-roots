@@ -9,18 +9,22 @@
 ## 1. Global Conventions & Protocol
 
 ### Base URLs
+
 - **Production API Gateway**: `https://voice-roots-api.onrender.com`
 - **Frontend App Router Proxy**: `https://voice-roots.onrender.com/api/v1/*` (rewrites transparently to API service)
 - **Local Development**: `http://localhost:8000/api/v1/*`
 
 ### Authentication & Authorization Headers
+
 - **Admin Endpoints**: `X-Admin-Key: <token>` or `Authorization: Bearer <admin_jwt>`
 - **Authenticated Users (Contributor, Reviewer, Researcher)**: `Authorization: Bearer <jwt_access_token>`
 - **Institutional Research**: `X-Research-Key: <research_api_key>`
 - **Distributed Tracing**: All requests return an `X-Request-ID: req_<id>` response header. Clients may supply custom request IDs to preserve trace continuity.
 
 ### Standard Response Headers
+
 Every API response attaches defense-in-depth headers:
+
 ```http
 X-Content-Type-Options: nosniff
 X-Frame-Options: DENY
@@ -80,7 +84,7 @@ X-Request-ID: req_<timestamp>_<random>
 | :--- | :---: | :---: | :--- | :--- |
 | `GET /api/v1/prompts` | `GET` | None | `language`, `category`, `difficulty`, `limit` | Browse prompt catalog across Gondi, Koya, Santhali, and Lambadi with phonetic hints. |
 | `GET /api/v1/prompts/{id}` | `GET` | None | Path ID | Retrieve single prompt card with contextual metadata, dialect notes, and reference script. |
-| `GET /api/v1/prompts/{id}/audio` | `GET` | None | Path ID | Stream acoustic reference pronunciation audio for prompt prompt phrase. |
+| `GET /api/v1/prompts/{id}/audio` | `GET` | None | Path ID | Stream acoustic reference pronunciation audio for prompt phrase. |
 
 ---
 

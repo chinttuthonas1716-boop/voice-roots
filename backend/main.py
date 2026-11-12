@@ -5,6 +5,7 @@ and static streaming of preserved acoustic audio masters.
 """
 
 import hashlib
+import importlib
 import io
 import json
 import logging
@@ -1355,7 +1356,7 @@ def health_check():
     if database_url and (database_url.startswith("postgres://") or database_url.startswith("postgresql://")):
         db_type = "postgresql"
         try:
-            import psycopg2
+            psycopg2 = importlib.import_module("psycopg2")
             norm_url = database_url.replace("postgres://", "postgresql://", 1) if database_url.startswith("postgres://") else database_url
             conn = psycopg2.connect(norm_url, connect_timeout=5)
             with conn.cursor() as cur:
@@ -1402,7 +1403,7 @@ def readiness_check():
 
     if database_url and (database_url.startswith("postgres://") or database_url.startswith("postgresql://")):
         try:
-            import psycopg2
+            psycopg2 = importlib.import_module("psycopg2")
             norm_url = database_url.replace("postgres://", "postgresql://", 1) if database_url.startswith("postgres://") else database_url
             conn = psycopg2.connect(norm_url, connect_timeout=5)
             with conn.cursor() as cur:

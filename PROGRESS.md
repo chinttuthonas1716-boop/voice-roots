@@ -2103,8 +2103,11 @@
   - NEEDS FROM OTHER AGENT: none.
 
 ---
+
 ### VOICE ROOTS v2.0 — FINAL INSTITUTIONAL MILESTONE SIGN-OFF (M24–M33 COMPLETE)
+
 All 10 stages of the Voice Roots v2.0 Roadmap are implemented, verified, tested (285 passing automated tests), and committed to `development/v2.0`:
+
 - Milestone 24: Foundation & Audit (6/6 tests passed)
 - Milestone 25: Module 1 - Advanced Speech Intelligence (7/7 tests passed)
 - Milestone 26: Module 2 - Multilingual Dictionary Architecture (7/7 tests passed)
@@ -2115,6 +2118,7 @@ All 10 stages of the Voice Roots v2.0 Roadmap are implemented, verified, tested 
 - Milestone 31: Module 7 - Institutional Command Center & Disaster Recovery (6/6 tests passed)
 - Milestone 32: End-to-End System Integration & Penetration Audit (3/3 tests passed)
 - Milestone 33: Institutional Pilot Launch Gate Preparation (6/6 tests passed)
+
 Platform is 100% certified pilot-ready. Zero cloud API spend target maintained ($0.00). Original audio recordings preserved as immutable master assets. OCAP principles strictly enforced.
 
 ---
@@ -2289,9 +2293,9 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
        - Lists pending review items across transcripts (`verification_status IN ('draft', 'submitted', 'awaiting_review', 'under_review')`), translations (`verified = 0` or `review_status = 'unreviewed_draft'`), and dictionary entries (`status IN ('submitted', 'pending_review', 'draft')` or `is_elder_approved = 0`).
        - Supported actions: `approve`, `correct`, `reject`.
        - Core Invariant: "Approval moves DRAFT to PUBLISHED":
-         * Transcripts: updates `verification_status = 'published'`, `status = 'Published'`, `privacy_level = 'public'`, `verified_by = reviewer_name`, `verified_at = now`.
-         * Translations: updates `verified = 1`, `review_status = 'elder_approved'`, `badge_label = 'Elder Approved'`.
-         * Dictionary: updates `status = 'approved'`, `is_elder_approved = 1`, `approved_by = reviewer_name`, `approved_at = now`.
+         - Transcripts: updates `verification_status = 'published'`, `status = 'Published'`, `privacy_level = 'public'`, `verified_by = reviewer_name`, `verified_at = now`.
+         - Translations: updates `verified = 1`, `review_status = 'elder_approved'`, `badge_label = 'Elder Approved'`.
+         - Dictionary: updates `status = 'approved'`, `is_elder_approved = 1`, `approved_by = reviewer_name`, `approved_at = now`.
        - Correction Flow: allows reviewers to refine transcripts, translations, or dictionary meanings; writes revision record to `corrections` table and marks item published/approved.
        - Rejection Flow: updates status to `withdrawn_or_rejected` / `Rejected`.
        - Immutable Governance Audit Logging: every decision is recorded in `governance_audit_logs` (`action_type = f"REVIEWER_{action.upper()}"`, `actor_name = reviewer_name`, `actor_role = reviewer_role`, `entity_type = item_type`, `entity_id = item_id`, `details_json = ...`, `timestamp = now`).
@@ -2697,9 +2701,19 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
   - NOT VERIFIED: Live network reachability to external public IP from local sandbox (external network egress boundary).
   - NEEDS FROM OTHER AGENT: none. Launch milestone completed.
 
-
-
-
-
-
-
+- [2026-11-12] [ANTIGRAVITY] DONE: Diagnostic Cleanup Across Backend, TypeScript, CI Workflow & Documentation.
+  - Fixes Applied:
+    1. `backend/storage_service.py`: Added `consent_withdrawn: bool = True` to `BaseStorageProvider.delete_file` and `LocalStorageProvider.delete_file` signatures so polymorphic `provider.delete_file(..., consent_withdrawn=True)` calls in `backend/main.py` type-check cleanly across all storage adapters without `reportCallIssue` errors.
+    2. `backend/main.py`: Replaced static optional `import psycopg2` in `/health` and `/ready` Postgres branches with `importlib.import_module("psycopg2")` so Pylance does not flag `reportMissingModuleSource` when PostgreSQL drivers are absent from local SQLite dev environments.
+    3. `web/tsconfig.json`: Upgraded `compilerOptions.target` from deprecated `"es5"` to `"ES2020"` to resolve TypeScript 7.0 deprecation diagnostics cleanly.
+    4. `.github/workflows/ci.yml`: Fixed Render deploy hook steps by moving empty-secret guards inside the `run:` shell script (`if [ -n "${RENDER_*_DEPLOY_HOOK:-}" ]`) because step-level `env:` variables are not evaluated in the same step's `if:` condition. (Note: `Context access might be invalid` warnings in VS Code persist until `RENDER_BACKEND_DEPLOY_HOOK` and `RENDER_FRONTEND_DEPLOY_HOOK` are configured in GitHub repository Secrets.)
+    5. Markdownlint Remediation (`docs/API_CONTRACT.md`, `docs/DEPLOYMENT.md`, `docs/ETHICAL_GOVERNANCE_AND_OCAP.md`, `docs/SOFT_LAUNCH_GUIDE.md`, `README.md`, `PROGRESS.md`): Resolved MD004 (list markers `-`), MD012 (trailing consecutive blank lines), MD022 (blanks around headings), MD031 (blanks around code fences), MD032 (blanks around lists), MD040 (fenced code language `text`), MD058 (blanks around tables), and MD060 (table pipe spacing).
+  - VERIFIED:
+    1. `pytest tests/test_t*.py tests/test_milestone4_persistence.py -q`: 115 passed in 38.29s.
+    2. `python3 -m ruff check backend/`: All checks passed (0 errors).
+    3. `npm run typecheck --prefix web`: Clean (`tsc --noEmit` exited 0).
+    4. `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web`: Compiled cleanly across all 22 routes.
+    5. `API_BASE_URL=http://localhost:8000 npm run test:e2e --prefix web`: 8 passed in 8.4s.
+    6. PyYAML parse of `.github/workflows/ci.yml`: `YAML valid`.
+  - NOT VERIFIED: VS Code UI extension live secret validation for GitHub Actions until secrets are provisioned in GitHub repository settings; live Render deploy hook invocation.
+  - NEEDS FROM OTHER AGENT: none.

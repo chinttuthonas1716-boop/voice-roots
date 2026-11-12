@@ -160,20 +160,26 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: Trigger Render Backend Deploy Hook
-        if: env.RENDER_BACKEND_DEPLOY_HOOK != ''
         env:
           RENDER_BACKEND_DEPLOY_HOOK: ${{ secrets.RENDER_BACKEND_DEPLOY_HOOK }}
         run: |
-          curl -sS -X POST "$RENDER_BACKEND_DEPLOY_HOOK"
-          echo "Render backend deploy hook successfully triggered."
+          if [ -n "${RENDER_BACKEND_DEPLOY_HOOK:-}" ]; then
+            curl -sS -X POST "$RENDER_BACKEND_DEPLOY_HOOK"
+            echo "Render backend deploy hook successfully triggered."
+          else
+            echo "RENDER_BACKEND_DEPLOY_HOOK not configured; skipping backend webhook trigger."
+          fi
 
       - name: Trigger Render Frontend Deploy Hook
-        if: env.RENDER_FRONTEND_DEPLOY_HOOK != ''
         env:
           RENDER_FRONTEND_DEPLOY_HOOK: ${{ secrets.RENDER_FRONTEND_DEPLOY_HOOK }}
         run: |
-          curl -sS -X POST "$RENDER_FRONTEND_DEPLOY_HOOK"
-          echo "Render frontend deploy hook successfully triggered."
+          if [ -n "${RENDER_FRONTEND_DEPLOY_HOOK:-}" ]; then
+            curl -sS -X POST "$RENDER_FRONTEND_DEPLOY_HOOK"
+            echo "Render frontend deploy hook successfully triggered."
+          else
+            echo "RENDER_FRONTEND_DEPLOY_HOOK not configured; skipping frontend webhook trigger."
+          fi
 
       - name: Verify Live Service Availability
         run: |

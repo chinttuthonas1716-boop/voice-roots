@@ -8,7 +8,7 @@
 
 ## 1. Production System Architecture
 
-```
+```text
                                   [ Global Web Clients ]
                                              │
                        ┌─────────────────────┴─────────────────────┐
@@ -41,11 +41,11 @@
 | Subsystem | Service / Technology | Plan / Specification | Cost / SLA |
 | :--- | :--- | :--- | :--- |
 | **Frontend Web Service** | Render (`voice-roots`) | Node.js 18+ runtime, Next.js 14 App Router | Standard Free/Starter, Global Edge CDN |
-| **Backend API Service** | Render (`voice-roots-api`)| Python 3.11/3.14 runtime, FastAPI, Uvicorn | Starter Plan (Always-On; eliminates cold-start sleeps) |
+| **Backend API Service** | Render (`voice-roots-api`) | Python 3.11/3.14 runtime, FastAPI, Uvicorn | Starter Plan (Always-On; eliminates cold-start sleeps) |
 | **Relational Database** | Managed PostgreSQL 15+ | Non-expiring database, pooled connections | Automated Alembic migrations on startup |
 | **Audio Master Storage** | Cloudflare R2 Object Store | S3-compatible, multi-region redundancy | $0 egress fees, object versioning enabled |
-| **Offline Compute Engine**| Local Whisper & Embeddings | CPU/GPU local execution (offline capable) | $0 recurring transcription/translation spend |
-| **Observability & Logging**| Structured JSON + Sentry APM | Request correlation IDs (`X-Request-ID`) | OCAP-compliant (`send_default_pii=False`) |
+| **Offline Compute Engine** | Local Whisper & Embeddings | CPU/GPU local execution (offline capable) | $0 recurring transcription/translation spend |
+| **Observability & Logging** | Structured JSON + Sentry APM | Request correlation IDs (`X-Request-ID`) | OCAP-compliant (`send_default_pii=False`) |
 
 ---
 
@@ -101,6 +101,7 @@ services:
 ## 4. Environment Variables Reference
 
 ### Backend API (`voice-roots-api`)
+
 | Variable | Required | Default / Example | Purpose |
 | :--- | :---: | :--- | :--- |
 | `DATABASE_URL` | Yes (Hosted) | `postgresql://user:pass@host:5432/db` | Connection string for PostgreSQL database |
@@ -115,40 +116,51 @@ services:
 | `STRUCTURED_LOGGING` | Optional | `true` | Outputs JSON formatted logs with correlation IDs |
 
 ### Frontend UI (`voice-roots`)
+
 | Variable | Required | Default / Example | Purpose |
 | :--- | :---: | :--- | :--- |
-| `API_BASE_URL` | Yes (Build-time)| `https://voice-roots-api.onrender.com` | Target for Next.js App Router `/api/v1/*` proxy rewrites |
+| `API_BASE_URL` | Yes (Build-time) | `https://voice-roots-api.onrender.com` | Target for Next.js App Router `/api/v1/*` proxy rewrites |
 | `NEXT_PUBLIC_SITE_URL` | No | `https://voice-roots.onrender.com` | Canonical site origin for metadata and PWA manifests |
-| `NEXT_PUBLIC_SENTRY_DSN`| No | `https://publicKey@sentry.io/project` | Optional client-side error reporting |
+| `NEXT_PUBLIC_SENTRY_DSN` | No | `https://publicKey@sentry.io/project` | Optional client-side error reporting |
 
 ---
 
 ## 5. Automated Database Migrations & Point-in-Time Backups
 
 ### Alembic Database Migrations
+
 When `DATABASE_URL` is configured, `backend/main.py` automatically validates and applies Alembic migrations upon container startup:
+
 ```bash
 # Manual migration command (if needed)
 alembic upgrade head
 ```
 
 ### Automated Backup & Snapshot Protocol (Task T3.3)
+
 1. **SQLite / Postgres Automated Backups**:
+
    ```bash
    # Run point-in-time database snapshot with rolling retention
    python3 scripts/backup_database.py
    ```
+
 2. **Cloudflare R2 Object Versioning & Sync**:
+
    ```bash
    # Verify R2 bucket versioning and sync audio assets to backup store
    python3 scripts/backup_r2_storage.py --sync
    ```
+
 3. **Admin Restore Runbook**:
    - Inspect snapshot without mutating active database:
+
      ```bash
      python3 scripts/restore_database.py --snapshot storage/backups/backup_20261107.db --dry-run
      ```
+
    - Execute restore with automatic safety pre-snapshot:
+
      ```bash
      python3 scripts/restore_database.py --snapshot storage/backups/backup_20261107.db
      ```
