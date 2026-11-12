@@ -674,13 +674,16 @@ monitoring_service.init_error_tracking()
 # CORS configuration for frontend services (Next.js web + Render + local dev)
 # Browser calls go through the Next.js /api/v1 rewrite, so CORS mainly matters
 # if anything calls the API origin directly (mobile app, scripts, other sites).
+is_prod_env = os.getenv("VOICE_ROOTS_ENV", "").lower() == "production"
+default_cors = (
+    "https://voice-roots.onrender.com"
+    if is_prod_env
+    else "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,http://localhost:3001,https://voice-roots.onrender.com"
+)
 _raw_cors = (
     os.getenv("CORS_ORIGINS")
     or os.getenv("VOICE_ROOTS_ALLOWED_ORIGINS")
-    or (
-        "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,"
-        "http://127.0.0.1:5173,http://localhost:3001,https://voice-roots.onrender.com"
-    )
+    or default_cors
 )
 ALLOWED_ORIGINS = [
     origin.strip()
