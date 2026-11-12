@@ -19,12 +19,38 @@ import json
 import sqlite3
 from datetime import datetime, timezone
 
+import pytest
 from fastapi.testclient import TestClient
 
 from backend import main
 from backend.main import DB_PATH
 
 client = TestClient(main.app)
+
+_CREATED_IDS: list[dict[str, int]] = []
+
+
+def _cleanup_test_data(ids: dict[str, int]) -> None:
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            if ids.get("transcript_id"):
+                cursor.execute("DELETE FROM transcripts WHERE id = ?", (ids["transcript_id"],))
+            if ids.get("translation_id"):
+                cursor.execute("DELETE FROM translations WHERE id = ?", (ids["translation_id"],))
+            if ids.get("dictionary_id"):
+                cursor.execute("DELETE FROM dictionary WHERE id = ?", (ids["dictionary_id"],))
+            conn.commit()
+    except Exception:
+        pass
+
+
+@pytest.fixture(autouse=True)
+def cleanup_test_records_after_each_test():
+    yield
+    while _CREATED_IDS:
+        ids = _CREATED_IDS.pop()
+        _cleanup_test_data(ids)
 
 
 def _init_test_data() -> dict[str, int]:
@@ -113,11 +139,13 @@ def _init_test_data() -> dict[str, int]:
         dictionary_id = cursor.lastrowid
         conn.commit()
 
-    return {
+    created = {
         "transcript_id": transcript_id,
         "translation_id": translation_id,
         "dictionary_id": dictionary_id,
     }
+    _CREATED_IDS.append(created)
+    return created
 
 
 def test_reviewer_queue_retrieval_and_filtering():

@@ -65,73 +65,78 @@ def test_restricted_export_excludes_withdrawn_and_private_records():
     test_uuid_private = f"priv_{uuid.uuid4().hex[:8]}"
     test_uuid_withdrawn = f"withdrawn_{uuid.uuid4().hex[:8]}"
 
-    with sqlite3.connect(DB_PATH) as conn:
-        cursor = conn.cursor()
-        # Insert a private record
-        cursor.execute(
-            """
-            INSERT INTO transcripts (
-                uuid_id, title, audio_filename, audio_url, language,
-                transcript_text, status, duration_seconds, created_at, updated_at,
-                consent_at, privacy_level, consent_public_publication
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                test_uuid_private,
-                "Private Secret Lore",
-                "priv.wav",
-                "/audio/priv.wav",
-                "Gondi",
-                "Secret sacred text",
-                "submitted",
-                10.0,
-                "2026-11-06T10:00:00Z",
-                "2026-11-06T10:00:00Z",
-                "2026-11-06T10:00:00Z",
-                "private",
-                0,
-            ),
+    try:
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            # Insert a private record
+            cursor.execute(
+                """
+                INSERT INTO transcripts (
+                    uuid_id, title, audio_filename, audio_url, language,
+                    transcript_text, status, duration_seconds, created_at, updated_at,
+                    consent_at, privacy_level, consent_public_publication
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    test_uuid_private,
+                    "Private Secret Lore",
+                    "priv.wav",
+                    "/audio/priv.wav",
+                    "Gondi",
+                    "Secret sacred text",
+                    "submitted",
+                    10.0,
+                    "2026-11-06T10:00:00Z",
+                    "2026-11-06T10:00:00Z",
+                    "2026-11-06T10:00:00Z",
+                    "private",
+                    0,
+                ),
+            )
+
+            # Insert a withdrawn record
+            cursor.execute(
+                """
+                INSERT INTO transcripts (
+                    uuid_id, title, audio_filename, audio_url, language,
+                    transcript_text, status, duration_seconds, created_at, updated_at,
+                    consent_at, privacy_level, consent_public_publication, archived_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    test_uuid_withdrawn,
+                    "Withdrawn Folktale",
+                    "withdrawn.wav",
+                    "/audio/withdrawn.wav",
+                    "Koya",
+                    "Withdrawn text",
+                    "withdrawn",
+                    12.0,
+                    "2026-11-06T10:00:00Z",
+                    "2026-11-06T10:00:00Z",
+                    "2026-11-06T10:00:00Z",
+                    "public",
+                    1,
+                    "2026-11-06T11:00:00Z",
+                ),
+            )
+            conn.commit()
+
+        # Query dry run
+        res = client.get(
+            "/api/v1/export/public-audio?dry_run=true",
+            headers={"X-Admin-Key": ADMIN_KEY},
         )
+        assert res.status_code == 200
+        records = res.json()["records"]
+        uuids = [r["uuid_id"] for r in records]
 
-        # Insert a withdrawn record
-        cursor.execute(
-            """
-            INSERT INTO transcripts (
-                uuid_id, title, audio_filename, audio_url, language,
-                transcript_text, status, duration_seconds, created_at, updated_at,
-                consent_at, privacy_level, consent_public_publication, archived_at
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """,
-            (
-                test_uuid_withdrawn,
-                "Withdrawn Folktale",
-                "withdrawn.wav",
-                "/audio/withdrawn.wav",
-                "Koya",
-                "Withdrawn text",
-                "withdrawn",
-                12.0,
-                "2026-11-06T10:00:00Z",
-                "2026-11-06T10:00:00Z",
-                "2026-11-06T10:00:00Z",
-                "public",
-                1,
-                "2026-11-06T11:00:00Z",
-            ),
-        )
-        conn.commit()
-
-    # Query dry run
-    res = client.get(
-        "/api/v1/export/public-audio?dry_run=true",
-        headers={"X-Admin-Key": ADMIN_KEY},
-    )
-    assert res.status_code == 200
-    records = res.json()["records"]
-    uuids = [r["uuid_id"] for r in records]
-
-    assert test_uuid_private not in uuids, "Private tier records must not be exported."
-    assert test_uuid_withdrawn not in uuids, "Consent-withdrawn records must not be exported."
+        assert test_uuid_private not in uuids, "Private tier records must not be exported."
+        assert test_uuid_withdrawn not in uuids, "Consent-withdrawn records must not be exported."
+    finally:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("DELETE FROM transcripts WHERE uuid_id IN (?, ?)", (test_uuid_private, test_uuid_withdrawn))
+            conn.commit()
 
 
 def test_restricted_export_zip_package_generation():
@@ -209,3 +214,6 @@ def test_restricted_export_zip_package_generation():
     finally:
         if os.path.exists(audio_full_path):
             os.remove(audio_full_path)
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.execute("DELETE FROM transcripts WHERE uuid_id = ?", (test_uuid,))
+            conn.commit()

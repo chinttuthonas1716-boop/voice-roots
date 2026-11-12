@@ -1875,8 +1875,9 @@ async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str, str | No
                 digest.update(chunk)
         sha256_hash = digest.hexdigest()
 
-        # Ingest Deduplication: reuse master if identical audio already exists in database
+        # Ingest Deduplication: reuse master if identical audio already exists in database AND on storage
         try:
+            storage_prov = create_storage_provider(storage_dir=AUDIO_STORAGE)
             with get_db_connection() as conn:
                 cur = conn.cursor()
                 cur.execute(
@@ -1884,7 +1885,7 @@ async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str, str | No
                     (sha256_hash, sha256_hash),
                 )
                 existing = cur.fetchone()
-                if existing:
+                if existing and existing["audio_filename"] and storage_prov.file_exists(existing["audio_filename"]):
                     logger.info("SHA-256 dedupe: audio master %s already exists as %s. Reusing master.", sha256_hash, existing["audio_filename"])
                     if os.path.exists(temp_path):
                         os.remove(temp_path)
@@ -2400,8 +2401,17 @@ def withdraw_transcript_consent(transcript_id: str):
         if rec.get("archived_at") is not None:
             raise HTTPException(status_code=404, detail=f"Recording {t_id} is already withdrawn under OCAP consent protocols.")
 
-        # 3. Purge audio master and flac files from storage provider and disk
+        # Check if any other active transcript still shares this physical audio file
+        other_active_count = 0
         if audio_filename:
+            cursor.execute(
+                "SELECT COUNT(*) FROM transcripts WHERE audio_filename = ? AND id != ? AND archived_at IS NULL",
+                (audio_filename, t_id),
+            )
+            other_active_count = cursor.fetchone()[0]
+
+        # 3. Purge audio master and flac files from storage provider and disk (only if no other active transcript shares it)
+        if audio_filename and other_active_count == 0:
             try:
                 provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
                 # Attempt delete with consent_withdrawn=True (mandatory for R2 write-once policy)
