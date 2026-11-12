@@ -22,71 +22,7 @@
 
 ---
 
-## 2. 🧠 Master Project Flow (25-Step Pre-Defined Sequence)
-
-Both the **Voice Roots Website** and **Mobile Companion App** strictly follow this unified 25-step pipeline:
-
-```text
-01. LOGIN / REGISTER
-          ↓
-02. HOME
-          ↓
-03. EXPLORE
-          ↓
-04. ARCHIVE
-          ↓
-05. SEARCH
-          ↓
-06. STORY DETAILS
-          ↓
-07. LISTEN TO ORIGINAL RECORDING
-          ↓
-08. RECORD / UPLOAD
-          ↓
-09. AUDIO PROCESSING
-          ↓
-10. LANGUAGE DETECTION
-          ↓
-11. AI TRANSCRIPTION
-          ↓
-12. TRANSCRIPT REVIEW / EDIT
-          ↓
-13. AI TRANSLATION
-          ↓
-14. CULTURAL CONTEXT
-          ↓
-15. CONSENT & ACCESS CONTROL
-          ↓
-16. HUMAN REVIEW
-          ↓
-17. VERIFICATION
-          ↓
-18. HERITAGE RECORD
-          ↓
-19. HERITAGE PASSPORT
-          ↓
-20. QR / PUBLIC HERITAGE PAGE
-          ↓
-21. VOICE ROOTS AI
-          ↓
-22. OFFLINE SAVE
-          ↓
-23. RECONNECT
-          ↓
-24. SYNC
-          ↓
-25. PRESERVED ORAL HERITAGE
-```
-
-### Core Architecture & System Unity
-- **Single Source of Truth:** Both the Website and Mobile Companion App run against the exact same backend engine, database, and browser storage keys (`voice_roots_user_recordings`).
-- **Website Role:** Comprehensive workstation for deep exploration, linguist review, semantic search, and full-screen folklore dossiers.
-- **Mobile App Role:** Field-first capture tool optimized for elders and local custodians: rapid high-fidelity recording, offline-first IndexedDB caching, phonetic inspection, and QR generation.
-- **Preservation Principle:** *Voice → Transcribe → Translate → Understand → Preserve.* AI enhances discovery; original 48kHz audio is permanently preserved.
-
----
-
-## 3. 🧠 Core AI Pipeline
+## 2. 🧠 Core AI Pipeline
 
 ```text
                     🎙️ VOICE
@@ -122,7 +58,7 @@ Both the **Voice Roots Website** and **Mobile Companion App** strictly follow th
 
 ---
 
-## 4. 🏠 Main Website Experience
+## 3. 🏠 Main Website Experience
 
 ### Main sections
 
@@ -136,7 +72,7 @@ Both the **Voice Roots Website** and **Mobile Companion App** strictly follow th
 
 ---
 
-## 5. 🎨 Visual Design System
+## 4. 🎨 Visual Design System
 
 - **Aesthetic:** Dark cinematic + Liquid Glass + premium cultural archive.
 - **Components:** Glass cards, soft blurs (`backdrop-blur-xl`), rounded pill buttons, subtle glow shadows (`#38ef7d`), and high-contrast typography.
@@ -144,7 +80,7 @@ Both the **Voice Roots Website** and **Mobile Companion App** strictly follow th
 
 ---
 
-## 6. 🚫 Branding Rules
+## 5. 🚫 Branding Rules
 
 - **Zero Hotstar / JioHotstar references.**
 - Use **VOICE ROOTS** or **ORAL HERITAGE PLATFORM**.
@@ -152,7 +88,7 @@ Both the **Voice Roots Website** and **Mobile Companion App** strictly follow th
 
 ---
 
-## 7. 📖 Story Details Architecture
+## 6. 📖 Story Details Architecture
 
 Every preserved oral story adheres to the 9-part structure:
 
@@ -166,17 +102,30 @@ Every preserved oral story adheres to the 9-part structure:
 
 ---
 
-## 8. 🔀 Three Language Layers
+## 7. 🔀 Three Language Layers & Universal Multilingual Support
 
 | Layer | Function | Example |
 | :--- | :--- | :--- |
-| **App Language** | Controls UI buttons, menus, and AI chat chrome | English (`en`) |
-| **Story Language** | Represents source recording and native script | Telugu / Gondi |
-| **Translation Language** | Controls multilingual interpretation layer | Hindi / Tamil |
+| **App Language** | Controls UI buttons, menus, and AI chat chrome | English (`en`), Telugu, Spanish, Swahili |
+| **Story Language** | Represents source recording and native script | Gondi (`gon`), Koya (`kff`), Quechua (`qu`), Welsh (`cy`) |
+| **Translation Language** | Controls multilingual interpretation layer | English, Hindi, Spanish, Arabic |
+
+### 7.1 Universal Multilingual Dynamic System
+- **Global Scope**: Not restricted to Indian languages; natively extensible to any spoken and written tongue worldwide.
+- **Dynamic Registry**: Initialized with 44 world languages across Indigenous/Oral, Regional, Scheduled, and Major World categories with standard BCP 47/ISO codes.
+- **Runtime Registration**: `POST /api/v1/languages/register` allows community onboarding of new languages without code redeployments.
+- **Oral Language Sovereignty (OCAP)**: Unwritten oral tongues (Gondi, Koya, Santhali, Lambadi, etc.) strictly mandate community elder verification before translation layers are certified, preventing synthetic AI hallucination.
+- **ChromaDB Vector Archive**: Indexed across global linguistic corpora with transparent character n-gram lexical fallback.
+
+### 7.2 Independent Translation Persistence Layer (OCAP Compliance)
+- **Relational Storage**: Translations are persisted in a dedicated SQLite table (`translations`), referencing the parent transcript via `FOREIGN KEY (transcript_id) REFERENCES transcripts(id)`.
+- **Annotation Integrity**: The original acoustic audio master and primary transcript text are immutable and never modified or overwritten by machine or community translations.
+- **Verification States**: Translations record provider, model, creation timestamp, and native speaker verification status (`verified: 0 | 1`) with optional elder commentary.
+- **API Endpoints**: `POST /api/v1/translate` (stores with `transcript_id`), `GET /api/v1/transcripts/{id}/translations`, `PATCH /api/v1/translations/{id}`, `DELETE /api/v1/translations/{id}`.
 
 ---
 
-## 9. 🎙️ Recording & AI Contribution Studio
+## 8. 🎙️ Recording & AI Contribution Studio
 
 1. **Microphone Permission & Acoustic Capture**
 2. **Real-time Waveform Canvas Visualizer**
@@ -191,7 +140,7 @@ Every preserved oral story adheres to the 9-part structure:
 
 ---
 
-## 10. 📱 Responsive & Motion Specifications
+## 9. 📱 Responsive & Motion Specifications
 
 - Viewport categories: Phone (<768px), Tablet (768–1199px), Desktop (1200px+).
 - Mobile navigation: Compact bottom navigation bar with safe-area padding.
@@ -199,10 +148,7 @@ Every preserved oral story adheres to the 9-part structure:
 
 ---
 
-## 11. 🌐 Active Public Deployment & Live Endpoints
+## 10. 🌐 Active Public Deployment
 
-- **Live Web App:** <https://learned-fairly-qualifying-notifications.trycloudflare.com>
-- **Mobile Simulator:** <https://learned-fairly-qualifying-notifications.trycloudflare.com/app>
-- **Master Project Flow (25-Step Pipeline):** <https://learned-fairly-qualifying-notifications.trycloudflare.com/flow>
-- **1-Page Team Sign-Off QA Checklist:** <https://learned-fairly-qualifying-notifications.trycloudflare.com/checklist>
-- **All Links & QR Code Hub:** <https://learned-fairly-qualifying-notifications.trycloudflare.com/links>
+- **Web App:** <https://indexed-tricks-placed-apt.trycloudflare.com>
+- **Mobile Simulator:** <https://indexed-tricks-placed-apt.trycloudflare.com/app>

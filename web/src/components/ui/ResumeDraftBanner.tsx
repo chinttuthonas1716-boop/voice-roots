@@ -8,23 +8,13 @@ import {
   clearDraftCheckpoint,
   type DraftStoryState,
 } from "@/lib/offlineSync";
-import { getActiveWorkflow, getNextValidRoute, type PreservationWorkflow } from "@/lib/workflow";
 
 export function ResumeDraftBanner() {
   const router = useRouter();
   const [draft, setDraft] = useState<DraftStoryState | null>(null);
-  const [activeWf, setActiveWf] = useState<PreservationWorkflow | null>(null);
   const [isVisible, setIsVisible] = useState(false);
 
   useEffect(() => {
-    // Check both workflow state machine and offline checkpoint
-    const wf = getActiveWorkflow();
-    if (wf && wf.status !== "PUBLISHED" && wf.status !== "REJECTED") {
-      setActiveWf(wf);
-      setIsVisible(true);
-      return;
-    }
-
     const active = getActiveDraftCheckpoint();
     if (active && active.progressPercent < 100) {
       setDraft(active);
@@ -32,15 +22,11 @@ export function ResumeDraftBanner() {
     }
   }, []);
 
-  if (!isVisible || (!draft && !activeWf)) return null;
+  if (!isVisible || !draft) return null;
 
   const handleResume = () => {
-    if (activeWf) {
-      const nextUrl = getNextValidRoute(activeWf);
-      router.push(nextUrl);
-    } else {
-      router.push("/preserve");
-    }
+    // Navigate to studio / upload with draft context
+    router.push("/#studio");
     setIsVisible(false);
   };
 
@@ -48,10 +34,6 @@ export function ResumeDraftBanner() {
     clearDraftCheckpoint();
     setIsVisible(false);
   };
-
-  const title = activeWf?.title || draft?.title || "Untitled Oral Story";
-  const stepName = activeWf ? activeWf.status.replace(/_/g, " ") : (draft?.step?.replace(/_/g, " ") || "In Progress");
-  const progressPercent = activeWf ? 50 : (draft?.progressPercent || 30);
 
   return (
     <aside aria-label="Resume unfinished preservation draft" className="fixed bottom-6 right-6 z-50 max-w-md animate-fade-in">
@@ -64,7 +46,7 @@ export function ResumeDraftBanner() {
             <div>
               <p className="text-xs font-bold text-white">Welcome Back · Resume Unfinished Work</p>
               <p className="text-[10px] text-amber-300 font-mono">
-                {activeWf ? "Active preservation session" : "Last auto-saved checkpoint intact"}
+                Last auto-saved checkpoint intact
               </p>
             </div>
           </div>
@@ -80,18 +62,18 @@ export function ResumeDraftBanner() {
 
         <div className="my-3 space-y-1 text-xs">
           <p className="font-semibold text-white truncate">
-            Story: {title}
+            Story: {draft.title}
           </p>
           <div className="flex items-center justify-between text-[11px] text-slate-300">
-            <span>Step: {stepName}</span>
-            <span className="font-mono text-teal-300">{progressPercent}% Completed</span>
+            <span>Step: {draft.step.replace(/_/g, " ")}</span>
+            <span className="font-mono text-teal-300">{draft.progressPercent}% Completed</span>
           </div>
 
           {/* Mini progress bar */}
           <div className="w-full bg-white/10 h-1.5 rounded-full overflow-hidden mt-1">
             <div
               className="bg-gradient-to-r from-amber-400 to-teal-400 h-full transition-all duration-300"
-              style={{ width: `${progressPercent}%` }}
+              style={{ width: `${draft.progressPercent}%` }}
             />
           </div>
         </div>

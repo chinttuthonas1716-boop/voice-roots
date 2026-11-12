@@ -1,15 +1,13 @@
 """Analytics API — platform-wide statistics."""
 import structlog
-from fastapi import APIRouter, Depends
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, func
-
-from app.database.session import get_db
 from app.auth.dependencies import get_current_user
-from app.models.user import User
-from app.models.recording import Recording, RecordingStatus
+from app.database.session import get_db
 from app.models.language import Language
-from app.models.transcript import Transcript
+from app.models.recording import Recording, RecordingStatus
+from app.models.user import User
+from fastapi import APIRouter, Depends
+from sqlalchemy import func, select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/analytics", tags=["Analytics"])
 logger = structlog.get_logger(__name__)

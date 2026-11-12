@@ -1,283 +1,268 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import {
-  ArrowRight,
-  AudioLines,
-  BookOpen,
-  Mic,
-  Cloud,
-  ShieldCheck,
-  RefreshCw,
-  HardDrive,
-  Lock,
-  Download,
-  Trash2,
-  Check,
-} from "lucide-react";
+import { Search, Play, Pause, Mic, ArrowRight, RefreshCw, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
-import { AIAssistant } from "@/components/ai/AIAssistant";
-import { getStorageStats, getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
-import { getCloudStorageTelemetry, syncLocalRecordsToCloud, type CloudStorageMetrics } from "@/lib/cloudStorage";
+import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
+import { useOfflineSync } from "@/lib/offlineQueue";
 
 export default function DashboardPage() {
-  const [records, setRecords] = useState<StoredVoiceRecord[]>([]);
-  const [count, setCount] = useState(0);
-  const [cloudMetrics, setCloudMetrics] = useState<CloudStorageMetrics | null>(null);
-  const [isSyncing, setIsSyncing] = useState(false);
-  const [syncFeedback, setSyncFeedback] = useState<string | null>(null);
+  const [recordings, setRecordings] = useState<StoredVoiceRecord[]>([]);
+  const [searchQuery, setSearchQuery] = useState("");
+  const [playingId, setPlayingId] = useState<string | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { queue, pendingCount, syncedCount, isSyncing, triggerSync, clearSynced } = useOfflineSync();
 
   useEffect(() => {
-    const localRecords = getUserRecordings();
-    setRecords(localRecords);
-    setCount(getStorageStats().totalRecordingsCount);
-
-    getCloudStorageTelemetry().then(setCloudMetrics);
+    setRecordings(getUserRecordings());
   }, []);
 
-  const handleSyncToCloud = async () => {
-    setIsSyncing(true);
-    setSyncFeedback(null);
+  const handleTogglePlay = (record: StoredVoiceRecord) => {
+    const src = record.audioUrl || `/audio/${record.audioFileName}`;
+
+    if (playingId === record.id) {
+      audioRef.current?.pause();
+      setPlayingId(null);
+      return;
+    }
+
+    if (audioRef.current) {
+      audioRef.current.pause();
+    }
+
+    audioRef.current = new Audio(src);
+    audioRef.current.onended = () => setPlayingId(null);
+    audioRef.current.onerror = () => setPlayingId(null);
+
+    audioRef.current.play().then(() => {
+      setPlayingId(record.id);
+    }).catch((e) => {
+      console.warn("Audio play blocked", e);
+      setPlayingId(null);
+    });
+  };
+
+  const filtered = recordings.filter((r) => {
+    const q = searchQuery.toLowerCase().trim();
+    if (!q) return true;
+    return (
+      r.title.toLowerCase().includes(q) ||
+      r.language.toLowerCase().includes(q) ||
+      (r.community && r.community.toLowerCase().includes(q))
+    );
+  });
+
+  const getPlainStatus = (record: StoredVoiceRecord): string => {
+    if (record.isUserUploaded) return "Waiting for review";
+    return "Verified";
+  };
+
+  const formatDate = (isoString?: string): string => {
+    if (!isoString) return "Recent";
     try {
-      const res = await syncLocalRecordsToCloud(records);
-      setSyncFeedback(`Successfully synchronized ${res.syncedCount} oral tradition records to Cloud Archive.`);
-      const updatedMetrics = await getCloudStorageTelemetry();
-      setCloudMetrics(updatedMetrics);
-    } catch (e: any) {
-      setSyncFeedback("Sync completed with local cryptographic fallback.");
-    } finally {
-      setIsSyncing(false);
+      const d = new Date(isoString);
+      return d.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+    } catch {
+      return "Recent";
     }
   };
 
-  const handleExportData = () => {
-    const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(records, null, 2));
-    const downloadAnchor = document.createElement("a");
-    downloadAnchor.setAttribute("href", dataStr);
-    downloadAnchor.setAttribute("download", `voice_roots_heritage_backup_${Date.now()}.json`);
-    document.body.appendChild(downloadAnchor);
-    downloadAnchor.click();
-    downloadAnchor.remove();
-  };
-
   return (
-    <div className="vr-app pb-24">
+    <div className="min-h-screen pb-24 pt-20">
       <Navbar />
-      <main className="mx-auto max-w-7xl space-y-8 px-4 pt-10 sm:px-6 lg:px-8">
-        <header>
-          <span className="eyebrow">
-            MY HERITAGE · CUSTODIAN WORKSPACE
-          </span>
-          <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-4xl">
-            Heritage Custodian Workspace
-          </h1>
-          <p className="mt-1 text-sm text-[#D9D9E2]">
-            Manage oral recordings, cryptographic provenance hashes, and cloud storage replication.
-          </p>
-        </header>
 
-        {/* Top Metric Cards */}
-        <div className="grid grid-cols-2 gap-4 sm:grid-cols-4">
-          <div className="rounded-2xl p-5 border border-white/10 bg-[rgba(66,71,108,0.25)]">
-            <span className="block text-3xl font-extrabold text-white">{count}</span>
-            <span className="mt-1 text-xs text-[#A9AEC5]">Saved Recordings</span>
+      <main className="mx-auto max-w-4xl px-4 py-8 space-y-6">
+        {/* Header & Search */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl sm:text-3xl font-extrabold tracking-tight text-[#F8FAFC]">
+              My recordings
+            </h1>
+            <p className="text-sm text-[#94A3B8] mt-1">
+              {recordings.length} {recordings.length === 1 ? "voice story" : "voice stories"} preserved.
+            </p>
           </div>
-          <div className="rounded-2xl p-5 border border-white/10 bg-[rgba(66,71,108,0.25)]">
-            <span className="block text-3xl font-extrabold text-[#F9B17A]">
-              {new Set(records.map((r) => r.language)).size}
-            </span>
-            <span className="mt-1 text-xs text-[#A9AEC5]">Story Languages</span>
-          </div>
-          <div className="rounded-2xl p-5 border border-white/10 bg-[rgba(66,71,108,0.25)]">
-            <span className="block text-3xl font-extrabold text-[#F9B17A]">
-              {cloudMetrics ? `${(cloudMetrics.totalSizeBytes / 1000000).toFixed(1)} MB` : "48.2 MB"}
-            </span>
-            <span className="mt-1 text-xs text-[#A9AEC5]">Cloud Preserved Data</span>
-          </div>
-          <Link
-            href="/preserve"
-            className="flex flex-col justify-center items-center gap-1.5 rounded-2xl p-4 text-sm font-bold text-[#242942] bg-[#F9B17A] hover:bg-[#F6A875] transition shadow-md active:scale-95"
-          >
-            <Mic className="h-5 w-5" />
-            <span>Preserve New Voice</span>
+
+          <Link href="/record" className="btn-primary self-start sm:self-auto">
+            <Mic className="h-4 w-4" />
+            <span>Record voice</span>
           </Link>
         </div>
 
-        {/* WORKSPACE MODULES: EVERYDAY CONVERSATIONS & AUDIO TRANSCRIPTION */}
-        <section aria-label="Core workspace features" className="grid grid-cols-1 md:grid-cols-2 gap-5">
-          <Link
-            href="/translate"
-            className="group rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.3)] p-6 hover:border-[#F9B17A]/50 transition backdrop-blur-xl flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F9B17A] bg-[#F9B17A]/15 border border-[#F9B17A]/30 px-2.5 py-1 rounded-full">
-                  Interactive Module
-                </span>
-                <span className="text-xs text-[#A9AEC5]">10 Dialogue Categories</span>
-              </div>
-              <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#F9B17A] transition-colors">
-                Everyday Conversations
-              </h2>
-              <p className="text-xs text-[#A9AEC5] leading-relaxed mb-4">
-                Browse verified daily dialogues across Greetings, College, Shopping, Food, Travel, Healthcare and more with Telugu, English, Hindi, and Gondi transliteration, pronunciation tips, and voice playback.
-              </p>
-            </div>
-            <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-[#F9B17A] font-semibold">
-              <span>Open Conversation Module</span>
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
+        {/* Search Box */}
+        <div className="relative">
+          <label htmlFor="search-recordings" className="sr-only">
+            Search recordings
+          </label>
+          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-[#94A3B8]" />
+          <input
+            id="search-recordings"
+            type="search"
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            placeholder="Search by title, language, or community..."
+            className="w-full min-h-[48px] rounded-xl border border-white/15 bg-white/5 pl-11 pr-4 text-base text-[#F8FAFC] placeholder-[#94A3B8] focus:border-[#F59E0B] focus:outline-none focus:ring-1 focus:ring-[#F59E0B]"
+          />
+        </div>
 
-          <Link
-            href="/upload"
-            className="group rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.3)] p-6 hover:border-[#F9B17A]/50 transition backdrop-blur-xl flex flex-col justify-between"
-          >
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <span className="text-[10px] font-bold uppercase tracking-wider text-[#F9B17A] bg-[#F9B17A]/15 border border-[#F9B17A]/30 px-2.5 py-1 rounded-full">
-                  AI Pipeline
-                </span>
-                <span className="text-xs text-[#A9AEC5]">WAV · MP3 · M4A · WebM</span>
+        {/* Offline Sync Queue Section */}
+        {queue.length > 0 && (
+          <div className="glass-card p-4 sm:p-5 space-y-3 border-amber-500/20">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <RefreshCw className={`h-4 w-4 text-amber-400 ${isSyncing ? "animate-spin" : ""}`} />
+                <h2 className="text-sm font-bold text-white">
+                  Offline Recording Queue ({pendingCount} pending, {syncedCount} synced)
+                </h2>
               </div>
-              <h2 className="text-xl font-bold text-white mb-2 group-hover:text-[#F9B17A] transition-colors">
-                Audio Transcription & Translation
-              </h2>
-              <p className="text-xs text-[#A9AEC5] leading-relaxed mb-4">
-                Ingest audio recordings, play original audio, perform speech-to-text recognition in the source language, edit the transcript, and translate into the selected target language.
-              </p>
-            </div>
-            <div className="pt-3 border-t border-white/10 flex items-center justify-between text-xs text-[#F9B17A] font-semibold">
-              <span>Launch Audio Pipeline</span>
-              <ArrowRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
-            </div>
-          </Link>
-        </section>
 
-        {/* Cloud Object Storage & Data Protection Panel */}
-        <section className="overflow-hidden rounded-3xl border border-white/15 bg-[rgba(36,41,66,0.85)] p-6 sm:p-8 shadow-2xl space-y-6 backdrop-blur-xl">
-          <div className="flex flex-wrap items-center justify-between gap-4 border-b border-white/10 pb-5">
-            <div className="flex items-center gap-3">
-              <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 text-[#F9B17A]">
-                <Cloud className="h-6 w-6" />
-              </div>
-              <div>
-                <div className="flex items-center gap-2">
-                  <h2 className="text-lg font-bold text-white">Cloud Object Storage Repository</h2>
-                  <span className="inline-flex items-center gap-1 rounded-full bg-[#F9B17A]/15 px-2 py-0.5 text-[10px] font-bold text-[#F9B17A] border border-[#F9B17A]/30">
-                    <Check className="h-3 w-3" /> ACTIVE & ENCRYPTED
-                  </span>
-                </div>
-                <p className="text-xs text-[#A9AEC5]">
-                  Automated geo-redundant backup with hardware-accelerated AES-256-GCM encryption.
-                </p>
+              <div className="flex items-center gap-2">
+                {pendingCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => triggerSync()}
+                    disabled={isSyncing}
+                    className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-semibold transition"
+                  >
+                    {isSyncing ? "Syncing..." : "Sync All Now"}
+                  </button>
+                )}
+                {syncedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => clearSynced()}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#94A3B8] hover:text-white text-xs font-medium transition"
+                  >
+                    Clear Synced
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={handleSyncToCloud}
-                disabled={isSyncing}
-                className="vr-button vr-button-primary !min-h-10 text-xs font-bold"
-              >
-                <RefreshCw className={`h-3.5 w-3.5 ${isSyncing ? "animate-spin" : ""}`} />
-                <span>{isSyncing ? "Synchronizing..." : "Sync All to Cloud"}</span>
-              </button>
-
-              <button
-                type="button"
-                onClick={handleExportData}
-                className="vr-button vr-button-secondary !min-h-10 text-xs font-semibold"
-                title="Export Data Backup"
-              >
-                <Download className="h-3.5 w-3.5" />
-                <span className="hidden sm:inline">Export JSON</span>
-              </button>
-            </div>
-          </div>
-
-          {syncFeedback && (
-            <div className="rounded-2xl border border-[#F9B17A]/30 bg-[#F9B17A]/10 p-3.5 text-xs font-semibold text-[#F9B17A] flex items-center gap-2">
-              <Check className="h-4 w-4 shrink-0" />
-              <span>{syncFeedback}</span>
-            </div>
-          )}
-
-          {/* Cloud Storage Spec Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 text-xs">
-            <div className="rounded-2xl border border-white/10 bg-[#242942]/60 p-4 space-y-1">
-              <span className="text-[#A9AEC5] flex items-center gap-1">
-                <HardDrive className="h-3.5 w-3.5 text-[#F9B17A]" /> Storage Provider:
-              </span>
-              <p className="font-bold text-white truncate">{cloudMetrics?.provider || "Cloudflare R2 / Multi-Cloud"}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-[#242942]/60 p-4 space-y-1">
-              <span className="text-[#A9AEC5] flex items-center gap-1">
-                <Cloud className="h-3.5 w-3.5 text-[#F9B17A]" /> Storage Bucket:
-              </span>
-              <p className="font-bold text-white font-mono">{cloudMetrics?.bucket || "voice-roots-heritage-cloud"}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-[#242942]/60 p-4 space-y-1">
-              <span className="text-[#A9AEC5] flex items-center gap-1">
-                <Lock className="h-3.5 w-3.5 text-[#F9B17A]" /> Encryption:
-              </span>
-              <p className="font-bold text-white">{cloudMetrics?.encryption || "AES-256-GCM (At Rest & Transit)"}</p>
-            </div>
-            <div className="rounded-2xl border border-white/10 bg-[#242942]/60 p-4 space-y-1">
-              <span className="text-[#A9AEC5] flex items-center gap-1">
-                <ShieldCheck className="h-3.5 w-3.5 text-[#F9B17A]" /> Sovereignty:
-              </span>
-              <p className="font-bold text-[#F9B17A]">OCAP Indigenous Guarded</p>
-            </div>
-          </div>
-        </section>
-
-        {/* Recent Recordings List */}
-        {records.length === 0 ? (
-          <section className="rounded-3xl p-6 sm:p-8 text-center space-y-3 border border-white/10 bg-[rgba(66,71,108,0.2)]">
-            <AudioLines className="h-8 w-8 text-[#F9B17A] mx-auto" />
-            <h2 className="text-lg font-bold text-white">Your first story starts with a voice</h2>
-            <p className="text-sm text-[#A9AEC5] max-w-md mx-auto">
-              No recordings currently in local browser. Use the Studio to record spoken lore or upload 48kHz acoustic audio files.
-            </p>
-          </section>
-        ) : (
-          <section className="space-y-4">
-            <div className="flex items-center justify-between">
-              <h2 className="text-lg font-bold text-white">Preserved Oral Recordings</h2>
-              <Link href="/archive" className="text-xs font-semibold text-[#F9B17A] hover:underline">
-                View entire archive →
-              </Link>
-            </div>
-
-            <div className="grid gap-3.5 md:grid-cols-2">
-              {records.slice(0, 6).map((record) => (
-                <Link
-                  key={record.id}
-                  href={`/story/${record.id}`}
-                  className="flex items-center justify-between gap-4 rounded-2xl p-4 border border-white/10 bg-[rgba(66,71,108,0.25)] hover:border-[#F9B17A]/40 hover:bg-[rgba(66,71,108,0.4)] transition"
+            <div className="space-y-2 pt-1">
+              {queue.map((item) => (
+                <div
+                  key={item.clientOperationId}
+                  className="p-3 rounded-xl bg-black/30 border border-white/5 flex items-center justify-between gap-3 text-xs"
                 >
-                  <span className="min-w-0">
-                    <span className="block truncate font-bold text-white text-sm">{record.title}</span>
-                    <span className="mt-1 block text-xs text-[#A9AEC5]">
-                      {record.language} {record.dialect ? `(${record.dialect})` : ""} · {record.duration}
+                  <div className="min-w-0 flex-1">
+                    <span className="font-semibold text-white truncate block">{item.title}</span>
+                    <span className="text-[#94A3B8] text-[11px]">
+                      {item.language} · {item.durationSeconds}s · {new Date(item.createdAt).toLocaleTimeString()}
                     </span>
-                  </span>
-                  <div className="flex items-center gap-2">
-                    <span className="rounded bg-white/5 border border-white/10 px-2 py-0.5 text-[10px] font-mono text-[#A9AEC5]">
-                      {record.id.toUpperCase()}
-                    </span>
-                    <ArrowRight className="h-4 w-4 shrink-0 text-[#F9B17A]" />
                   </div>
-                </Link>
+
+                  <div>
+                    {item.status === "synced" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold text-[11px]">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                        <span>Synced to Cloud</span>
+                      </span>
+                    )}
+                    {item.status === "pending" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-[11px]">
+                        <Clock className="h-3 w-3 text-amber-400" />
+                        <span>Queued for Sync</span>
+                      </span>
+                    )}
+                    {item.status === "syncing" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-semibold text-[11px]">
+                        <RefreshCw className="h-3 w-3 text-cyan-400 animate-spin" />
+                        <span>Syncing...</span>
+                      </span>
+                    )}
+                    {item.status === "failed" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-semibold text-[11px]">
+                        <AlertCircle className="h-3 w-3 text-rose-400" />
+                        <span>Sync Failed</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
               ))}
             </div>
-          </section>
+          </div>
+        )}
+
+        {/* Simple List */}
+        {filtered.length === 0 ? (
+          <div className="glass-card p-10 text-center space-y-3">
+            <p className="text-base font-semibold text-[#F8FAFC]">No recordings found</p>
+            <p className="text-sm text-[#94A3B8]">
+              {searchQuery
+                ? `No results matching "${searchQuery}". Clear search or try another keyword.`
+                : "You don't have any recordings yet. Record your voice or upload a file."}
+            </p>
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery("")}
+                className="btn-glass mt-2"
+              >
+                Clear search
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {filtered.map((record) => {
+              const isPlaying = playingId === record.id;
+              const statusText = getPlainStatus(record);
+
+              return (
+                <div
+                  key={record.id}
+                  className="glass-card p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4"
+                >
+                  <div className="min-w-0 flex-1 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <h2 className="text-base font-bold text-[#F8FAFC] truncate">
+                        {record.title}
+                      </h2>
+                      <span className="text-xs px-2 py-0.5 rounded-full border border-white/10 bg-white/5 text-[#94A3B8] shrink-0">
+                        {statusText}
+                      </span>
+                    </div>
+                    <p className="text-sm text-[#94A3B8]">
+                      {record.language} · {formatDate(record.uploadDate)} · {record.duration}
+                    </p>
+                  </div>
+
+                  <div className="flex items-center gap-2 shrink-0 self-end sm:self-center">
+                    <button
+                      type="button"
+                      onClick={() => handleTogglePlay(record)}
+                      className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-xl border border-white/15 bg-white/5 text-sm font-medium text-[#F8FAFC] hover:bg-white/10 transition"
+                      aria-label={isPlaying ? `Pause ${record.title}` : `Play ${record.title}`}
+                    >
+                      {isPlaying ? (
+                        <>
+                          <Pause className="h-4 w-4 text-[#F59E0B]" />
+                          <span>Pause</span>
+                        </>
+                      ) : (
+                        <>
+                          <Play className="h-4 w-4 text-[#F59E0B] fill-current" />
+                          <span>Play</span>
+                        </>
+                      )}
+                    </button>
+
+                    <Link
+                      href={`/passport/${record.id}`}
+                      className="inline-flex items-center gap-1 min-h-[44px] px-3.5 rounded-xl border border-white/15 bg-white/5 text-sm font-medium text-[#F8FAFC] hover:bg-white/10 transition"
+                    >
+                      <span>Passport</span>
+                      <ArrowRight className="h-4 w-4 text-[#94A3B8]" />
+                    </Link>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
         )}
       </main>
-      <AIAssistant />
     </div>
   );
 }

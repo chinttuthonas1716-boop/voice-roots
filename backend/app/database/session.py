@@ -1,9 +1,7 @@
 """Database session and engine setup for Voice Roots."""
 import structlog
-from sqlalchemy.ext.asyncio import AsyncSession, create_async_engine, async_sessionmaker
-from sqlalchemy.pool import NullPool
-
 from app.config import settings
+from sqlalchemy.ext.asyncio import AsyncSession, async_sessionmaker, create_async_engine
 
 logger = structlog.get_logger(__name__)
 
@@ -41,8 +39,8 @@ async def get_db() -> AsyncSession:
 
 async def create_tables() -> None:
     """Create all tables on startup (dev only; use Alembic in production)."""
-    from app.database.base import Base  # noqa: F401
     import app.models  # noqa: F401 – registers all models
+    from app.database.base import Base
 
     async with engine.begin() as conn:
         # Enable pgvector extension

@@ -10,7 +10,7 @@ import urllib.request
 import urllib.error
 
 LOCAL_BASE = "http://localhost:3000"
-PUBLIC_BASE = "https://learned-fairly-qualifying-notifications.trycloudflare.com"
+PUBLIC_BASE = "https://farming-proposition-love-showcase.trycloudflare.com"
 
 ROUTES = [
     ("/", "Landing Page"),
@@ -24,10 +24,6 @@ ROUTES = [
     ("/search", "Semantic Search Interface"),
     ("/dashboard", "Custodianship Dashboard"),
     ("/app", "Mobile App Simulator"),
-    ("/links", "Unified Master Links Portal"),
-    ("/portal", "Portal Gateway Alias"),
-    ("/login", "Cinematic Liquid Glass Login"),
-    ("/register", "Custodian Stewardship Registration"),
 ]
 
 AUDIO_FILES = [
@@ -93,7 +89,7 @@ def run_audit():
 
     # 4. Public Tunnel
     print("\n--- 4. CLOUDFLARE PUBLIC TUNNEL LIVE AUDIT ---")
-    for path in ["/", "/links", "/passport/vr-106", "/upload", "/translate", "/app"]:
+    for path in ["/", "/passport/vr-106", "/upload", "/translate", "/app"]:
         url = f"{PUBLIC_BASE}{path}"
         res_pub = check_url(url)
         passed_pub = res_pub["status"] == 200

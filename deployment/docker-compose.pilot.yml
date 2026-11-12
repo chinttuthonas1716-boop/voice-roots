@@ -1,0 +1,63 @@
+# Voice Roots — Controlled Institutional Pilot Docker Compose Stack
+# Includes persistent volumes, non-root execution (UID 1000), and Caddy edge TLS reverse proxy.
+
+version: "3.8"
+
+services:
+  # Caddy Edge Reverse Proxy with Automated TLS
+  edge-proxy:
+    image: caddy:2-alpine
+    container_name: voice-roots-edge-proxy
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+      - caddy-logs:/var/log/caddy
+    depends_on:
+      voice-roots-backend:
+        condition: service_healthy
+
+  # Voice Roots FastAPI ASGI Application
+  voice-roots-backend:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    container_name: voice-roots-backend
+    restart: unless-stopped
+    user: "1000:1000"
+    environment:
+      - VOICE_ROOTS_ENV=production
+      - VOICE_ROOTS_DB_PATH=/data/voice_roots.db
+      - VOICE_ROOTS_STORAGE_DIR=/data/storage
+      - VOICE_ROOTS_AUDIO_STORAGE=/data/storage/audio
+      - VOICE_ROOTS_BACKUP_DIR=/data/backups
+      - VOICE_ROOTS_CHROMA_DIR=/data/chroma_db
+      - VOICE_ROOTS_FRONTEND_DIST=/app/frontend/dist
+      - VOICE_ROOTS_TRANSCRIPTION_PROVIDER=whisper-local
+      - VOICE_ROOTS_WHISPER_MODEL_SIZE=base
+      - VOICE_ROOTS_ALLOWED_ORIGINS=https://pilot.voiceroots.ai
+      - VOICE_ROOTS_ADMIN_KEY=${VOICE_ROOTS_ADMIN_KEY:-pilot_primary_admin_key_secure_2026}
+      - VOICE_ROOTS_ADMIN_USERS=${VOICE_ROOTS_ADMIN_USERS:-pi_linguist_1:token_pi_01,elder_custodian_1:token_elder_01}
+    volumes:
+      - voice-roots-persistent-data:/data
+    expose:
+      - "8000"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/ready"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+volumes:
+  # Persistent storage volume for master audio, SQLite DB, and Chroma vectors
+  voice-roots-persistent-data:
+    name: voice-roots-pilot-persistent-data
+  caddy-data:
+  caddy-config:
+  caddy-logs:
+

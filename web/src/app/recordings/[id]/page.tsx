@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import {
   ArrowLeft,
   BookOpen,
@@ -14,6 +14,8 @@ import {
   Volume2,
   VolumeX,
   ShieldCheck,
+  ShieldAlert,
+  Trash2,
   Users,
   Sparkles,
   Bot,
@@ -27,11 +29,10 @@ import {
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { AIAssistant } from "@/components/ai/AIAssistant";
-import { getUserRecordings, getRecordingAudio, type StoredVoiceRecord } from "@/lib/storage";
+import { getUserRecordings, withdrawConsent, type StoredVoiceRecord } from "@/lib/storage";
 import { getCurrentUser, canAccessRecording } from "@/lib/auth";
-import { DualTrackAudioPlayer } from "@/components/audio/DualTrackAudioPlayer";
+import { EnhancedAudioPlayer } from "@/components/audio/EnhancedAudioPlayer";
 import { PreservationTimeline } from "@/components/heritage/PreservationTimeline";
-import { formatCardMetadata } from "@/lib/indiaGeoData";
 
 const TRANSLATION_LANGUAGES = [
   { code: "en", name: "English", native: "English" },
@@ -58,14 +59,31 @@ export default function RecordingDetailPage() {
   const [translateError, setTranslateError] = useState<string | null>(null);
   const [accessAllowed, setAccessAllowed] = useState(true);
   const [accessReason, setAccessReason] = useState<string>("");
+  const router = useRouter();
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [isWithdrawing, setIsWithdrawing] = useState(false);
+
+  const handleWithdrawConsent = async () => {
+    if (!record) return;
+    setIsWithdrawing(true);
+    try {
+      await withdrawConsent(record.id);
+      router.push(`/passport/${record.id}`);
+    } catch (err) {
+      console.error("Error withdrawing consent:", err);
+    } finally {
+      setIsWithdrawing(false);
+      setShowWithdrawModal(false);
+    }
+  };
 
   const audioRef = useRef<HTMLAudioElement | null>(null);
-  const objectUrlRef = useRef<string | null>(null);
 
   const triggerTranslation = async (targetLang: "en" | "te" | "hi" | "ta" | "kn" | "ml") => {
     setSelectedTransLang(targetLang);
     if (!record) return;
 
+    // If already exists and not forcing re-translation, do nothing
     if (record.translations?.[targetLang]) {
       return;
     }
@@ -74,116 +92,53 @@ export default function RecordingDetailPage() {
     setTranslateError(null);
 
     try {
-      const response = await fetch("/api/translate", {
+      const resp = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           text: record.originalTranscript,
-          source_lang: record.language.toLowerCase().startsWith("tel")
-            ? "te"
-            : record.language.toLowerCase().startsWith("hin")
-            ? "hi"
-            : record.language.toLowerCase().startsWith("tam")
-            ? "ta"
-            : record.language.toLowerCase().startsWith("kan")
-            ? "kn"
-            : record.language.toLowerCase().startsWith("mal")
-            ? "ml"
-            : "en",
-          target_lang: targetLang,
+          sourceLang: record.language.toLowerCase(),
+          targetLang,
         }),
       });
 
-      if (!response.ok) {
-        throw new Error(`Translation API responded with ${response.status}`);
-      }
+      if (!resp.ok) throw new Error("Translation service returned an error");
+      const data = await resp.json();
 
-      const data = await response.json();
-      const translated = data.translated_text || data.translation || "Translation generated.";
+      const updatedRecord: StoredVoiceRecord = {
+        ...record,
+        translations: {
+          ...record.translations,
+          [targetLang]: data.translation,
+        },
+      };
 
-      setRecord((prev) => {
-        if (!prev) return prev;
-        const updated = {
-          ...prev,
-          translations: {
-            ...prev.translations,
-            [targetLang]: translated,
-          },
-        };
-        return updated;
-      });
-    } catch (err: any) {
-      console.warn("Translation fallback:", err);
-      setTranslateError("Live IndicTrans2 service currently unreachable. Displaying cached contextual gloss.");
+      setRecord(updatedRecord);
+    } catch (e: any) {
+      setTranslateError("Failed to translate. Click retry below.");
     } finally {
       setIsTranslating(false);
     }
   };
 
   useEffect(() => {
+    const list = getUserRecordings();
+    setAllRecords(list);
+
     if (!id) return;
+    const item = list.find((r) => r.id === id) || null;
+    setRecord(item);
 
-    const all = getUserRecordings();
-    setAllRecords(all);
-
-    const found = all.find((item) => item.id === id);
-
-    if (found) {
-      const currentUser = getCurrentUser();
-      const check = canAccessRecording(currentUser, found);
+    if (item) {
+      const activeUser = getCurrentUser();
+      const check = canAccessRecording(activeUser, item);
       setAccessAllowed(check.allowed);
-      setAccessReason(check.reason || "");
+      setAccessReason(check.reason);
 
       if (check.allowed) {
-        setRecord(found);
-
-        // Revoke any previous object URL
-        if (objectUrlRef.current) {
-          URL.revokeObjectURL(objectUrlRef.current);
-          objectUrlRef.current = null;
-        }
-
-        // Asynchronously load real audio
-        let isCancelled = false;
-
-        const loadAudio = async () => {
-          if (found.isUserUploaded) {
-            try {
-              const blob = await getRecordingAudio(found.id);
-              if (!isCancelled && blob && blob.size > 0) {
-                const url = URL.createObjectURL(blob);
-                objectUrlRef.current = url;
-                setAudioUrl(url);
-                return;
-              }
-            } catch (err) {
-              console.warn("Could not read audio from IndexedDB:", err);
-            }
-          }
-
-          if (!isCancelled) {
-            if (found.audioUrl) {
-              setAudioUrl(found.audioUrl);
-            } else {
-              setAudioUrl(null);
-            }
-          }
-        };
-
-        void loadAudio();
-
-        return () => {
-          isCancelled = true;
-          if (objectUrlRef.current) {
-            URL.revokeObjectURL(objectUrlRef.current);
-            objectUrlRef.current = null;
-          }
-        };
+        const src = item.audioUrl || `/audio/${item.audioFileName}`;
+        setAudioUrl(src);
       }
-    } else {
-      setAccessAllowed(false);
-      setAccessReason("Recording record not found.");
-      setAudioUrl(null);
     }
   }, [id]);
 
@@ -192,7 +147,11 @@ export default function RecordingDetailPage() {
     if (!audio) return;
 
     const onTimeUpdate = () => setCurrentTime(audio.currentTime);
-    const onLoadedMetadata = () => setDuration(audio.duration || 0);
+    const onLoadedMetadata = () => {
+      if (Number.isFinite(audio.duration) && audio.duration > 0) {
+        setDuration(audio.duration);
+      }
+    };
     const onEnded = () => setIsPlaying(false);
 
     audio.addEventListener("timeupdate", onTimeUpdate);
@@ -206,33 +165,88 @@ export default function RecordingDetailPage() {
     };
   }, [audioUrl]);
 
+  const togglePlay = () => {
+    if (!audioRef.current) return;
+    if (isPlaying) {
+      audioRef.current.pause();
+      setIsPlaying(false);
+    } else {
+      audioRef.current.play().then(() => setIsPlaying(true)).catch(console.error);
+    }
+  };
+
+  const handleSeek = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const targetTime = Number(e.target.value);
+    setCurrentTime(targetTime);
+    if (audioRef.current) {
+      audioRef.current.currentTime = targetTime;
+    }
+  };
+
+  const toggleMute = () => {
+    if (!audioRef.current) return;
+    audioRef.current.muted = !isMuted;
+    setIsMuted(!isMuted);
+  };
+
+  const formatSeconds = (sec: number) => {
+    const m = Math.floor(sec / 60);
+    const s = Math.floor(sec % 60);
+    return `${String(m).padStart(2, "0")}:${String(s).padStart(2, "0")}`;
+  };
+
   const relatedStories = allRecords.filter((r) => r.id !== id).slice(0, 3);
 
   return (
-    <div className="vr-app pb-28">
+    <div className="min-h-screen bg-obsidian pb-28 text-primary-text">
       <Navbar />
 
-      <main className="mx-auto max-w-5xl space-y-8 px-4 pb-12 pt-10 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-5xl space-y-8 px-4 pb-12 pt-24 sm:px-6 sm:pt-28 lg:px-8">
         {/* Navigation Breadcrumb */}
         <Link
           href="/archive"
-          className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-[#A9AEC5] hover:text-white transition"
+          className="inline-flex min-h-10 items-center gap-2 text-xs font-semibold text-secondary-text hover:text-white transition"
         >
           <ArrowLeft className="h-4 w-4" /> Back to Oral Archive
         </Link>
 
         {!record ? (
-          <section className="rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.25)] p-8 sm:p-12 text-center space-y-4">
+          <section className="glass-surface rounded-3xl p-8 sm:p-12 text-center space-y-4">
             <h1 className="text-2xl font-bold text-white">Oral Story Not Found</h1>
-            <p className="text-sm text-[#A9AEC5] max-w-md mx-auto">
+            <p className="text-sm text-secondary-text max-w-md mx-auto">
               This recording could not be retrieved from the archive. You can discover other oral traditions or record your own.
             </p>
             <Link
               href="/archive"
-              className="vr-button vr-button-primary text-xs font-bold"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-root-green px-6 text-sm font-bold text-obsidian shadow-glow"
             >
               Explore Archive
             </Link>
+          </section>
+        ) : (record.isWithdrawn || record.status === "withdrawn" || record.status === "Consent Withdrawn") ? (
+          <section className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-8 sm:p-12 text-center space-y-4 backdrop-blur-2xl">
+            <div className="mx-auto grid h-14 w-14 place-items-center rounded-2xl bg-rose-500/20 text-rose-400 border border-rose-500/40">
+              <ShieldAlert className="h-7 w-7" />
+            </div>
+            <h1 className="text-2xl font-bold text-white">Recording Purged Under Consent Withdrawal</h1>
+            <p className="text-sm text-rose-200 max-w-lg mx-auto leading-relaxed">
+              The speaker has exercised their inalienable right to withdraw consent under OCAP sovereignty protocols.
+              The original audio master, transcripts, translations, and search vector embeddings have been permanently purged.
+            </p>
+            <div className="flex flex-wrap justify-center gap-3 pt-3">
+              <Link
+                href={`/passport/${record.id}`}
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-xs font-bold text-black hover:bg-amber-400 transition"
+              >
+                View Withdrawn Passport Dossier
+              </Link>
+              <Link
+                href="/dashboard"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 text-xs font-semibold text-white hover:bg-white/10 transition"
+              >
+                Return to Recordings
+              </Link>
+            </div>
           </section>
         ) : !accessAllowed ? (
           <section className="rounded-3xl border border-rose-500/30 bg-rose-950/20 p-8 sm:p-12 text-center space-y-4 backdrop-blur-2xl">
@@ -246,13 +260,13 @@ export default function RecordingDetailPage() {
             <div className="flex flex-wrap justify-center gap-3 pt-3">
               <Link
                 href="/login"
-                className="vr-button vr-button-primary text-xs font-bold"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full bg-amber-500 px-6 text-xs font-bold text-black hover:bg-amber-400 transition"
               >
                 Sign In as Authorized Contributor
               </Link>
               <Link
                 href="/archive"
-                className="vr-button vr-button-secondary text-xs font-semibold"
+                className="inline-flex min-h-11 items-center gap-2 rounded-full border border-white/20 bg-white/5 px-6 text-xs font-semibold text-white hover:bg-white/10 transition"
               >
                 Explore Public Archive
               </Link>
@@ -263,15 +277,15 @@ export default function RecordingDetailPage() {
             {/* 1. Header & Cover Hero */}
             <header className="space-y-4 border-b border-white/10 pb-8">
               <div className="flex flex-wrap items-center gap-2.5">
-                <span className="rounded-full border border-[#6F76A0]/40 bg-[#6F76A0]/20 px-3 py-1 text-xs font-semibold text-[#F9B17A]">
+                <span className="rounded-full border border-root-green/30 bg-root-green/15 px-3 py-1 text-xs font-semibold text-leaf-green">
                   {record.language}
                 </span>
                 {record.dialect && (
-                  <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-[#A9AEC5]">
+                  <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-secondary-text">
                     {record.dialect}
                   </span>
                 )}
-                <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-[#A9AEC5]">
+                <span className="rounded-full border border-white/15 bg-white/[0.04] px-3 py-1 text-xs text-secondary-text">
                   {record.type}
                 </span>
               </div>
@@ -280,13 +294,13 @@ export default function RecordingDetailPage() {
                 {record.title}
               </h1>
 
-              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-[#A9AEC5]">
-                <span className="inline-flex items-center gap-1.5 font-medium text-white/90">
-                  <Users className="h-3.5 w-3.5 text-[#F9B17A]" />
+              <div className="flex flex-wrap items-center gap-x-6 gap-y-2 text-xs text-secondary-text">
+                <span className="inline-flex items-center gap-1.5 font-medium text-white/80">
+                  <Users className="h-3.5 w-3.5 text-leaf-green" />
                   {record.community || "Heritage Community Custodians"}
                 </span>
                 <span className="inline-flex items-center gap-1.5">
-                  <MapPin className="h-3.5 w-3.5 text-[#F9B17A]" />
+                  <MapPin className="h-3.5 w-3.5 text-leaf-green" />
                   {record.location || "Regional Oral Archive"}
                 </span>
                 <span>
@@ -296,39 +310,47 @@ export default function RecordingDetailPage() {
             </header>
 
             {/* Heritage Passport Verification Dossier Banner */}
-            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-3xl border border-[#F9B17A]/30 bg-[rgba(36,41,66,0.85)] p-5 sm:p-6 backdrop-blur-xl shadow-2xl">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 rounded-3xl border border-amber-400/30 bg-gradient-to-r from-amber-500/15 via-emerald-500/10 to-transparent p-5 sm:p-6 backdrop-blur-xl shadow-2xl">
               <div className="space-y-1">
-                <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-wider text-[#F9B17A] uppercase">
+                <div className="flex items-center gap-2 text-xs font-mono font-bold tracking-wider text-amber-300 uppercase">
                   <FileCheck className="h-4 w-4" /> Official Heritage Passport Issued
                 </div>
                 <h3 className="text-lg font-bold text-white">
                   Preservation Provenance & Human Verification Dossier
                 </h3>
-                <p className="text-xs text-[#A9AEC5] max-w-xl">
+                <p className="text-xs text-secondary-text max-w-xl">
                   This recording possesses a verified digital heritage passport ({record.id.toUpperCase()}) with consent controls, scannable QR token, and audit history.
                 </p>
               </div>
-              <Link
-                href={`/passport/${record.id}`}
-                className="shrink-0 vr-button vr-button-primary !min-h-11 text-xs font-bold"
-              >
-                <QrCode className="h-4 w-4 mr-1" />
-                <span>📜 View Heritage Passport</span>
-                <ArrowRight className="h-4 w-4 ml-1" />
-              </Link>
+              <div className="flex flex-wrap items-center gap-2 shrink-0">
+                <Link
+                  href={`/passport/${record.id}`}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-amber-400/40 bg-amber-400/15 px-5 text-xs font-bold text-amber-200 transition hover:bg-amber-400/25 hover:border-amber-400 shadow-glow"
+                >
+                  <QrCode className="h-4 w-4" />
+                  <span>📜 View Heritage Passport</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                <button
+                  type="button"
+                  onClick={() => setShowWithdrawModal(true)}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-2xl border border-rose-500/30 bg-rose-500/10 px-4 text-xs font-bold text-rose-300 transition hover:bg-rose-500/20 hover:border-rose-500/50"
+                  aria-label="Delete recording and withdraw consent"
+                >
+                  <Trash2 className="h-4 w-4 text-rose-400" />
+                  <span>Withdraw Consent</span>
+                </button>
+              </div>
             </div>
 
-            {/* 2. Centerpiece Dual-Track Audio Player (Original Master + Translated Track) */}
-            <DualTrackAudioPlayer
-              storyId={record.id}
-              originalAudioUrl={audioUrl || `/audio/${record.audioFileName}`}
+            {/* 2. Centerpiece Audio Player */}
+            <EnhancedAudioPlayer
+              audioUrl={audioUrl || `/audio/${record.audioFileName}`}
               title={record.title}
-              sourceLanguage={record.language}
-              location={record.location}
+              language={record.language}
               speaker={record.community || "Heritage Elder"}
               durationSeconds={record.durationSeconds}
-              originalTranscript={record.originalTranscript}
-              translations={record.translations}
               onTimeUpdate={(t) => setCurrentTime(t)}
             />
 
@@ -339,59 +361,59 @@ export default function RecordingDetailPage() {
               reviewerName="Elder Soyam Laxman"
             />
 
-            {/* 4. Original Transcript */}
+            {/* 3. Original Transcript (Master Spec Section 10: Original First!) */}
             <section
-              className="space-y-4 rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.25)] p-5 sm:p-7 shadow-2xl backdrop-blur-xl"
+              className="glass-surface space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7 shadow-2xl"
               aria-labelledby="original-transcript-heading"
             >
               <div className="flex flex-wrap items-center justify-between gap-2 border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#F9B17A]/15 text-[#F9B17A]">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-root-green/20 text-leaf-green">
                     <BookOpen className="h-4 w-4" />
                   </div>
                   <div>
                     <h2 id="original-transcript-heading" className="text-sm font-bold text-white">
                       Source Speech Transcript ({record.language})
                     </h2>
-                    <p className="text-[11px] text-[#A9AEC5]">
+                    <p className="text-[11px] text-secondary-text">
                       Original dialect text transcribed directly from spoken audio
                     </p>
                   </div>
                 </div>
 
-                <span className="rounded-full border border-[#F9B17A]/30 bg-[#F9B17A]/10 px-3 py-1 text-xs font-semibold text-[#F9B17A]">
+                <span className="rounded-full border border-root-green/30 bg-root-green/10 px-3 py-1 text-xs font-semibold text-leaf-green">
                   Preserved in {record.language}
                 </span>
               </div>
 
-              <blockquote className="rounded-2xl border border-white/10 bg-[#242942]/60 p-5 text-base sm:text-lg leading-relaxed text-white font-medium">
+              <blockquote className="rounded-2xl border border-white/10 bg-black/40 p-5 text-base sm:text-lg leading-relaxed text-white/95 font-medium">
                 &ldquo;{record.originalTranscript}&rdquo;
               </blockquote>
             </section>
 
-            {/* 5. Multi-Lingual Translation */}
+            {/* 4. Multi-Lingual Translation (Release 01 Feature) */}
             <section
-              className="space-y-5 rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.25)] p-5 sm:p-7 shadow-2xl backdrop-blur-xl"
+              className="glass-surface space-y-5 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7 shadow-2xl"
               aria-labelledby="translation-heading"
             >
               <div className="flex flex-wrap items-center justify-between gap-3 border-b border-white/10 pb-3">
                 <div className="flex items-center gap-2.5">
-                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#6F76A0]/25 text-[#F9B17A]">
+                  <div className="grid h-8 w-8 place-items-center rounded-xl bg-root-green/20 text-leaf-green">
                     <Languages className="h-4 w-4" />
                   </div>
                   <div>
                     <h2 id="translation-heading" className="text-sm font-bold text-white">
                       Multi-Lingual Translation Layer (IndicTrans2)
                     </h2>
-                    <p className="text-[11px] text-[#A9AEC5]">
+                    <p className="text-[11px] text-secondary-text">
                       Original source transcript is permanently preserved and never replaced
                     </p>
                   </div>
                 </div>
 
-                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-[#242942]/70 px-3 py-1 text-xs">
-                  <span className="text-[#A9AEC5]">Original:</span>
-                  <span className="font-semibold text-[#F9B17A]">{record.language}</span>
+                <div className="inline-flex items-center gap-1.5 rounded-full border border-white/10 bg-black/40 px-3 py-1 text-xs">
+                  <span className="text-secondary-text">Original:</span>
+                  <span className="font-semibold text-leaf-green">{record.language}</span>
                 </div>
               </div>
 
@@ -399,7 +421,7 @@ export default function RecordingDetailPage() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-semibold text-white/90">Translate to:</span>
-                  <span className="text-[#A9AEC5] font-mono text-[11px]">
+                  <span className="text-secondary-text font-mono text-[11px]">
                     Available on-demand · Cached permanently
                   </span>
                 </div>
@@ -413,15 +435,15 @@ export default function RecordingDetailPage() {
                         key={lang.code}
                         type="button"
                         onClick={() => triggerTranslation(lang.code)}
-                        className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold transition active:scale-95 ${
+                        className={`inline-flex min-h-9 items-center gap-1.5 rounded-xl px-3.5 text-xs font-semibold transition ${
                           isSelected
-                            ? "bg-[#F9B17A] text-[#242942] font-bold shadow-sm"
-                            : "border border-white/10 bg-[#242942]/50 text-[#A9AEC5] hover:text-white hover:border-white/20"
+                            ? "bg-root-green text-obsidian shadow-glow font-bold"
+                            : "border border-white/10 bg-black/30 text-secondary-text hover:text-white hover:border-white/20"
                         }`}
                       >
                         <span>{lang.native}</span>
                         <span className="text-[10px] opacity-75">({lang.name})</span>
-                        {isCached && isSelected && <Check className="h-3 w-3 text-[#242942]" />}
+                        {isCached && isSelected && <Check className="h-3 w-3 text-obsidian" />}
                       </button>
                     );
                   })}
@@ -429,24 +451,24 @@ export default function RecordingDetailPage() {
               </div>
 
               {/* Translation Display Card */}
-              <div className="rounded-2xl border border-white/10 bg-[#242942]/60 p-5 space-y-3">
-                <div className="flex items-center justify-between text-xs text-[#A9AEC5] border-b border-white/10 pb-2">
-                  <span className="font-semibold text-[#F9B17A] flex items-center gap-1.5">
-                    <span className="font-mono text-[10px] uppercase tracking-wider text-[#A9AEC5]">TRANSLATION:</span>
+              <div className="rounded-2xl border border-white/10 bg-black/40 p-5 space-y-3">
+                <div className="flex items-center justify-between text-xs text-secondary-text border-b border-white/10 pb-2">
+                  <span className="font-semibold text-leaf-green flex items-center gap-1.5">
+                    <span className="font-mono text-[10px] uppercase tracking-wider text-secondary-text">TRANSLATION:</span>
                     {TRANSLATION_LANGUAGES.find((l) => l.code === selectedTransLang)?.name} ({TRANSLATION_LANGUAGES.find((l) => l.code === selectedTransLang)?.native})
                   </span>
                   <div className="flex items-center gap-2">
                     {isTranslating ? (
-                      <span className="flex items-center gap-1 text-[#F9B17A] animate-pulse">
+                      <span className="flex items-center gap-1 text-leaf-green animate-pulse">
                         <RefreshCw className="h-3 w-3 animate-spin" /> Synthesizing...
                       </span>
                     ) : (
-                      <span className="font-mono text-[11px] text-[#A9AEC5]">IndicTrans2 · 96.4% confidence</span>
+                      <span className="font-mono text-[11px] text-secondary-text">IndicTrans2 · 96.4% confidence</span>
                     )}
                   </div>
                 </div>
 
-                <p className="text-sm sm:text-base leading-relaxed text-white/95">
+                <p className="text-sm sm:text-base leading-relaxed text-white/90">
                   {isTranslating
                     ? "Calling IndicTrans2 neural translation engine..."
                     : record.translations?.[selectedTransLang] ||
@@ -469,32 +491,59 @@ export default function RecordingDetailPage() {
               </div>
             </section>
 
-            {/* 6. Cultural Context */}
+            {/* 5. Cultural Context (Master Spec Section 8) */}
             <section
-              className="space-y-4 rounded-3xl border border-white/10 bg-[rgba(66,71,108,0.25)] p-5 sm:p-7 shadow-2xl backdrop-blur-xl"
+              className="glass-surface space-y-4 rounded-3xl border border-white/10 bg-white/[0.03] p-5 sm:p-7 shadow-2xl"
               aria-labelledby="cultural-context-heading"
             >
               <div className="flex items-center gap-2.5 border-b border-white/10 pb-3">
-                <div className="grid h-8 w-8 place-items-center rounded-xl bg-[#F9B17A]/15 text-[#F9B17A]">
+                <div className="grid h-8 w-8 place-items-center rounded-xl bg-root-green/20 text-leaf-green">
                   <Sparkles className="h-4 w-4" />
                 </div>
                 <div>
                   <h2 id="cultural-context-heading" className="text-sm font-bold text-white">
                     Cultural Lore & Ecological Significance
                   </h2>
-                  <p className="text-[11px] text-[#A9AEC5]">
+                  <p className="text-[11px] text-secondary-text">
                     Oral tradition context provided by clan elders and community documentation
                   </p>
                 </div>
               </div>
 
-              <p className="text-sm sm:text-base leading-relaxed text-[#D9D9E2]">
+              <p className="text-sm sm:text-base leading-relaxed text-secondary-text">
                 {record.culturalContext ||
                   "This recording holds sacred significance among the community elders and represents centuries-old oral preservation tradition."}
               </p>
             </section>
 
-            {/* 7. Related Stories */}
+            {/* 6. Ask Voice Roots AI Banner */}
+            <section className="rounded-3xl border border-root-green/30 bg-gradient-to-r from-root-green/10 via-root-green/5 to-transparent p-6 sm:p-8 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="space-y-1">
+                <div className="inline-flex items-center gap-2 text-xs font-bold uppercase tracking-wider text-leaf-green">
+                  <Bot className="h-4 w-4" /> Ask Voice Roots AI
+                </div>
+                <h3 className="text-xl font-bold text-white">
+                  Have questions about this oral story?
+                </h3>
+                <p className="text-xs text-secondary-text max-w-xl">
+                  Ask our AI assistant about the cultural metaphors, ethnobotanical roots, or linguistic history behind this recording.
+                </p>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => {
+                  // Trigger open AI assistant via event or custom trigger
+                  const btn = document.querySelector('[aria-label="Ask Voice Roots AI"]') as HTMLButtonElement | null;
+                  btn?.click();
+                }}
+                className="shrink-0 inline-flex min-h-11 items-center gap-2 rounded-full bg-root-green px-6 text-xs font-bold text-obsidian shadow-glow hover:bg-leaf-green transition"
+              >
+                <Bot className="h-4 w-4" /> Ask Voice Roots AI
+              </button>
+            </section>
+
+            {/* 7. Related Stories (Master Spec Section 8) */}
             {relatedStories.length > 0 && (
               <section className="space-y-4 pt-4">
                 <h3 className="text-xl font-bold text-white">Related Oral Heritage</h3>
@@ -502,23 +551,23 @@ export default function RecordingDetailPage() {
                   {relatedStories.map((rel) => (
                     <Link
                       key={rel.id}
-                      href={`/story/${rel.id}`}
-                      className="group flex flex-col justify-between rounded-2xl border border-white/10 bg-[rgba(66,71,108,0.2)] p-4 transition hover:-translate-y-1 hover:border-[#F9B17A]/40 hover:bg-[rgba(66,71,108,0.35)]"
+                      href={`/recordings/${rel.id}`}
+                      className="glass-card group flex flex-col justify-between rounded-2xl border border-white/10 bg-white/[0.03] p-4 transition hover:-translate-y-1 hover:border-root-green/40 hover:bg-white/[0.06]"
                     >
                       <div className="space-y-2">
-                        <span className="rounded-full border border-[#6F76A0]/30 bg-[#6F76A0]/15 px-2 py-0.5 text-[10px] font-semibold text-[#F9B17A]">
+                        <span className="rounded-full border border-root-green/30 bg-root-green/10 px-2 py-0.5 text-[10px] font-semibold text-leaf-green">
                           {rel.language}
                         </span>
-                        <h4 className="line-clamp-2 text-sm font-bold text-white group-hover:text-[#F9B17A] transition">
+                        <h4 className="line-clamp-2 text-sm font-bold text-white group-hover:text-leaf-green transition">
                           {rel.title}
                         </h4>
-                        <p className="line-clamp-2 text-xs text-[#A9AEC5]">
+                        <p className="line-clamp-2 text-xs text-secondary-text">
                           {rel.culturalContext}
                         </p>
                       </div>
-                      <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-[#A9AEC5]">
+                      <div className="mt-4 flex items-center justify-between border-t border-white/10 pt-3 text-[11px] text-secondary-text">
                         <span>{rel.duration}</span>
-                        <span className="text-[#F9B17A] inline-flex items-center gap-1 font-semibold">
+                        <span className="text-leaf-green inline-flex items-center gap-1">
                           Listen <ArrowRight className="h-3 w-3" />
                         </span>
                       </div>
@@ -530,6 +579,43 @@ export default function RecordingDetailPage() {
           </>
         )}
       </main>
+
+      {/* Consent Withdrawal Confirmation Modal */}
+      {showWithdrawModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-sm p-4">
+          <div className="glass-card max-w-md w-full p-6 space-y-4 border border-rose-500/40 shadow-2xl">
+            <div className="flex items-center gap-3 text-rose-400">
+              <ShieldAlert className="h-6 w-6 shrink-0" />
+              <h3 className="text-lg font-bold text-white">Withdraw Consent & Delete Recording?</h3>
+            </div>
+            <p className="text-xs text-secondary-text leading-relaxed">
+              Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker holds perpetual authority over their voice.
+              Withdrawing consent will <strong className="text-white">permanently delete the master audio, transcript, translations, and search vector embeddings</strong> from both your device and all servers.
+            </p>
+            <div className="rounded-xl border border-rose-500/20 bg-rose-500/10 p-3 text-xs text-rose-300">
+              ⚠️ This action cannot be undone. The digital passport will reflect a withdrawn state for audit transparency.
+            </div>
+            <div className="flex items-center justify-end gap-3 pt-2">
+              <button
+                type="button"
+                onClick={() => setShowWithdrawModal(false)}
+                disabled={isWithdrawing}
+                className="btn-glass text-xs"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleWithdrawConsent}
+                disabled={isWithdrawing}
+                className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold transition disabled:opacity-50"
+              >
+                {isWithdrawing ? "Purging data..." : "Yes, Withdraw Consent & Delete"}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
 
       <AIAssistant />
     </div>

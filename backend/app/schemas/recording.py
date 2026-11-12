@@ -1,8 +1,9 @@
 """Pydantic schemas for Recording endpoints."""
 import uuid
 from datetime import datetime
+
+from app.models.recording import PrivacyLevel, RecordingStatus, RecordingType
 from pydantic import BaseModel, Field
-from app.models.recording import RecordingType, RecordingStatus, PrivacyLevel
 
 
 class RecordingCreate(BaseModel):

@@ -1,5 +1,4 @@
 # Dependencies
-node_modules
 node_modules/
 .pnp
 .pnp.js
@@ -21,6 +20,7 @@ eggs/
 .eggs/
 /lib/
 /lib64/
+*.tsbuildinfo
 parts/
 sdist/
 var/
@@ -40,29 +40,54 @@ out/
 .env.test.local
 .env.production.local
 
-# Storage & Audio Uploads
+# Storage & Audio Uploads (Private acoustic masters)
 backend/storage/
-/storage/
+storage/
+backend/chroma_db/
+scratch/
 *.wav
 *.mp3
 *.webm
-backups/
-data/postgres/
-web/data/
+*.ogg
+*.m4a
+*.flac
+*.aac
+*.mp4
+*.mov
 *.zip
-*.tsbuildinfo
 
-# Whitelist authentic oral heritage demo audio recordings
-!web/public/audio/harvest_song.wav
-!web/public/audio/gondi_legend.wav
-!web/public/audio/koya_remedy.wav
-!web/public/audio/general_folk.wav
-!web/public/audio/vr-106-telugu-recording.wav
-!web/public/audio/vr-107-gondi-recording.wav
-!web/public/audio/vr-108-koya-recording.wav
-!web/public/audio/vr-109-tulu-recording.wav
-!web/public/audio/vr-110-lambadi-recording.wav
-!mobile/assets/audio/*.wav
+# Local test databases, backups & coverage
+test_*.db
+*.sqlite3
+backend/storage/backups/
+backend/backups/
+backups/
+*.db
+*.db-shm
+*.db-wal
+backend/voice_roots.db
+backend/voice_roots.db-shm
+backend/voice_roots.db-wal
+.coverage
+htmlcov/
+coverage/
+test-results/
+playwright-report/
+web/test-results/
+web/playwright-report/
+
+# Local Model weights & caches
+models/
+*.pt
+*.bin
+*.onnx
+*.safetensors
+.cache/
+
+# Credentials & secrets
+*.pem
+*.key
+*.cert
 
 # OS
 .DS_Store

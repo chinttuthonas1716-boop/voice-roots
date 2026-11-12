@@ -1,13 +1,13 @@
 """Main FastAPI application entry point for Voice Roots."""
+import os
 from contextlib import asynccontextmanager
+
 import structlog
+from app.api.v1 import api_router
+from app.config import settings
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
-import os
-
-from app.config import settings
-from app.api.v1 import api_router
 
 logger = structlog.get_logger(__name__)
 
@@ -47,7 +47,7 @@ app = FastAPI(
 # CORS Middleware
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=settings.allowed_origins if settings.allowed_origins else ["*"],
+    allow_origins=settings.allowed_origin_list if settings.allowed_origin_list else ["*"],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],

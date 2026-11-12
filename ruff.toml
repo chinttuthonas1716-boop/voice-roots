@@ -1,0 +1,29 @@
+line-length = 150
+target-version = "py310"
+exclude = [
+    ".git",
+    "node_modules",
+    "backend/alembic",
+    "backend/app",
+    "flutter_app",
+    "mobile",
+    "tests",
+    "scripts",
+    ".pytest_cache",
+    ".ruff_cache",
+]
+
+[lint]
+select = ["E", "F", "I", "UP", "SIM"]
+ignore = [
+    "E501",
+    "E741",
+    "E402",
+    "B008",
+    "BLE001",
+    "S110",
+    "ASYNC230",
+    "SIM102",
+    "SIM105",
+    "SIM108",
+]

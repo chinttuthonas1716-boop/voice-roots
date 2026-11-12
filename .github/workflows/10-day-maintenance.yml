@@ -30,28 +30,28 @@ jobs:
         with:
           node-version: 20
           cache: 'npm'
-          cache-dependency-path: 'web/package-lock.json'
+          cache-dependency-path: 'frontend/package-lock.json'
 
       - name: Set up Python 3.11
         uses: actions/setup-python@v5
         with:
           python-version: '3.11'
 
-      - name: Install Web Dependencies
+      - name: Install Frontend Dependencies
         run: |
-          npm ci --prefix web
+          npm ci --prefix frontend
 
       - name: Run Build & Type Diagnostics
         id: build_check
         continue-on-error: true
         run: |
-          npm run build --prefix web
+          npm run build --prefix frontend
 
       - name: Run Security & Dependency Audit
         id: audit_check
         continue-on-error: true
         run: |
-          npm audit --prefix web --audit-level=moderate || true
+          npm audit --prefix frontend --audit-level=moderate || true
 
       - name: Execute 10-Day Maintenance Cycle Diagnostics
         id: diagnostics

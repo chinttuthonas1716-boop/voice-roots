@@ -2,138 +2,127 @@
 @tailwind components;
 @tailwind utilities;
 
-@import "../styles/tokens.css";
-@import "../styles/components.css";
+:root {
+  color-scheme: dark;
+  --bg-gradient-from: #080A12;
+  --bg-gradient-to: #0E121A;
+  --text-primary: #F8FAFC;
+  --text-muted: #94A3B8;
+  --accent-amber: #F59E0B;
+  --accent-amber-hover: #D97706;
+  --accent-teal: #14B8A6;
+  --glass-bg: rgba(255, 255, 255, 0.06);
+  --glass-bg-hover: rgba(255, 255, 255, 0.12);
+  --glass-border: rgba(255, 255, 255, 0.15);
+}
 
 html {
   scroll-behavior: smooth;
-  background: var(--vr-bg);
+  font-size: 16px;
 }
 
 body {
   min-height: 100vh;
-  overflow-x: clip;
-  background: var(--vr-bg);
-  color: var(--vr-text);
-  font-family: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Display", "SF Pro Text", "Segoe UI", sans-serif;
+  overflow-x: hidden;
+  background: linear-gradient(180deg, #080A12 0%, #0E121A 100%);
+  color: #F8FAFC;
+  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-size: 1rem;
+  line-height: 1.5;
   -webkit-font-smoothing: antialiased;
-  background-image: 
-    radial-gradient(ellipse 75% 55% at 50% 15%, rgba(66, 71, 108, 0.40), transparent 75%),
-    radial-gradient(ellipse 65% 50% at 85% 70%, rgba(36, 41, 66, 0.45), transparent 70%);
-  background-attachment: fixed;
 }
 
 ::selection {
-  background: var(--vr-peach);
-  color: var(--vr-bg-deep);
+  background: rgba(245, 158, 11, 0.35);
+  color: #ffffff;
 }
 
-/* Brand Header Specification (Zero wrap guarantee) */
-.brand {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  flex-shrink: 0;
-  min-width: max-content;
-  text-decoration: none;
-}
-.brand-text {
-  display: flex;
-  flex-direction: column;
-  white-space: nowrap;
-}
-.brand-name {
-  font-size: 18px;
-  font-weight: 700;
-  line-height: 1.1;
-  white-space: nowrap;
-  color: #FFFFFF;
-  letter-spacing: 0.04em;
-}
-.brand-tagline {
-  font-size: 11px;
-  line-height: 1.2;
-  white-space: nowrap;
-  color: #A9AEC5;
-}
-
-/* Reference-Driven Soft Glass Surfaces (compatible aliases) */
-.glass-surface {
-  background: var(--vr-glass);
-  border: 1px solid var(--vr-glass-border);
-  box-shadow: var(--vr-shadow-soft);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-}
-
+/* Glassmorphic Single-Level Card */
 .glass-card {
-  border: 1px solid var(--vr-glass-border);
-  background: var(--vr-glass);
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-radius: var(--vr-radius-lg);
-  transition: all .2s cubic-bezier(.22,1,.36,1);
+  background-color: rgba(255, 255, 255, 0.06);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 1rem;
+  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  transition: transform 180ms ease-out, border-color 180ms ease-out, background-color 180ms ease-out;
 }
 .glass-card:hover {
-  border-color: rgba(249, 177, 122, 0.35);
-  background: rgba(255, 255, 255, 0.10);
+  background-color: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.25);
   transform: translateY(-2px);
-  box-shadow: 0 20px 50px -10px rgba(0, 0, 0, 0.35);
+}
+
+/* Primary Accent Button (Amber) */
+.btn-primary {
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+  background-color: #F59E0B;
+  color: #000000;
+  font-weight: 700;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 180ms ease-out;
+}
+.btn-primary:hover {
+  background-color: #D97706;
+  transform: translateY(-1px);
+}
+.btn-primary:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5);
+}
+
+/* Secondary Glass Button */
+.btn-glass {
+  min-height: 48px;
+  padding: 0.75rem 1.5rem;
+  background-color: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #F8FAFC;
+  font-weight: 600;
+  border-radius: 0.75rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 180ms ease-out;
+}
+.btn-glass:hover {
+  background-color: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  transform: translateY(-1px);
+}
+.btn-glass:focus-visible {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
 }
 
 .glass-button {
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  background: var(--vr-glass);
-  color: #FFFFFF;
-  backdrop-filter: blur(14px);
+  border: 1px solid rgba(245, 158, 11, .4);
+  background: rgba(245, 158, 11, .15);
+  color: #FBBF24;
   transition: all .2s ease;
 }
 .glass-button:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.22);
+  background: rgba(245, 158, 11, .25);
+  border-color: rgba(245, 158, 11, .7);
   transform: translateY(-1px);
-}
-
-/* Primary Action Buttons */
-.btn-primary {
-  background: var(--vr-peach);
-  color: var(--vr-bg-deep);
-  font-weight: 700;
-  border-radius: 14px;
-  min-height: 48px;
-  transition: all 180ms ease;
-}
-.btn-primary:hover {
-  background: var(--vr-peach-soft);
-  transform: translateY(-1px);
-  box-shadow: 0 6px 20px -2px rgba(249, 177, 122, 0.30);
-}
-
-.btn-secondary {
-  background: var(--vr-glass);
-  border: 1px solid rgba(255, 255, 255, 0.14);
-  color: #FFFFFF;
-  font-weight: 600;
-  border-radius: 14px;
-  min-height: 48px;
-  backdrop-filter: blur(12px);
-  transition: all 180ms ease;
-}
-.btn-secondary:hover {
-  background: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.22);
 }
 
 .shadow-amber-glow {
-  box-shadow: 0 4px 16px -2px rgba(249, 177, 122, 0.25);
+  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.35);
 }
 
 .shadow-violet-glow {
-  box-shadow: 0 4px 16px -2px rgba(111, 118, 160, 0.25);
+  box-shadow: 0 0 35px -5px rgba(139, 92, 246, 0.35);
 }
 
 .shadow-teal-glow {
-  box-shadow: 0 4px 16px -2px rgba(246, 168, 117, 0.25);
+  box-shadow: 0 0 35px -5px rgba(20, 184, 166, 0.35);
 }
 
 .lift-hover {

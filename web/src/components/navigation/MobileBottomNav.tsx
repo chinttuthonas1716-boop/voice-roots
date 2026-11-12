@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Compass, Mic, BookOpen, User, MessageSquare, Cpu, LogIn } from "lucide-react";
+import { Home, Mic, Languages, HardDrive, User, ShieldCheck } from "lucide-react";
 import { getCurrentUser, type UserProfile } from "@/lib/auth";
 
 export function MobileBottomNav() {
@@ -12,71 +12,54 @@ export function MobileBottomNav() {
 
   useEffect(() => {
     setUser(getCurrentUser());
-    const handleAuthChange = (e: any) => {
-      if (e && e.detail !== undefined) {
-        setUser(e.detail);
-      } else {
-        setUser(getCurrentUser());
-      }
-    };
-    window.addEventListener("vr-auth-changed", handleAuthChange);
-    window.addEventListener("storage", handleAuthChange);
-    return () => {
-      window.removeEventListener("vr-auth-changed", handleAuthChange);
-      window.removeEventListener("storage", handleAuthChange);
-    };
-  }, []);
+  }, [pathname]);
 
-  const navItems = [
-    { label: "Home", href: "/", icon: Home },
-    { label: "Conversations", href: "/translate", icon: MessageSquare },
-    { label: "Transcribe", href: "/upload", icon: Cpu, isCenter: true },
-    { label: "Archive", href: "/archive", icon: BookOpen },
-    {
-      label: user ? "Profile" : "Log In",
-      href: user ? "/profile" : "/login",
-      icon: user ? User : LogIn,
-    },
-  ];
+  const isReviewer = user?.role === "reviewer" || user?.role === "admin" || user?.verifiedElder;
+  const navItems = isReviewer
+    ? [
+        { label: "Home", href: "/", icon: Home },
+        { label: "Record", href: "/record", icon: Mic },
+        { label: "Review", href: "/reviewer", icon: ShieldCheck },
+        { label: "Recordings", href: "/dashboard", icon: HardDrive },
+        { label: "Profile", href: "/login", icon: User },
+      ]
+    : [
+        { label: "Home", href: "/", icon: Home },
+        { label: "Record", href: "/record", icon: Mic },
+        { label: "Translate", href: "/translate", icon: Languages },
+        { label: "Recordings", href: "/dashboard", icon: HardDrive },
+        { label: user ? "Profile" : "Log in", href: "/login", icon: User },
+      ];
 
   return (
     <nav
       aria-label="Mobile Navigation"
-      className="mobile-nav"
+      className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-[#080A12]/90 backdrop-blur-xl border-t border-white/10 px-2 pt-2"
+      style={{ paddingBottom: "max(0.5rem, env(safe-area-inset-bottom))" }}
     >
-      {navItems.map((item) => {
-        const isActive = pathname === item.href;
-        const Icon = item.icon;
+      <div className="flex items-center justify-around max-w-md mx-auto h-14">
+        {navItems.map((item) => {
+          const isActive = pathname === item.href;
+          const Icon = item.icon;
 
-        if (item.isCenter) {
           return (
-            <div key={item.href} className="flex justify-center items-center">
-              <Link
-                href={item.href}
-                className="preserve-fab"
-                title="Preserve a Voice"
-                aria-label="Preserve a Voice"
-              >
-                <Icon className="w-6 h-6 stroke-[2.3]" />
-              </Link>
-            </div>
+            <Link
+              key={item.href}
+              href={item.href}
+              className={`flex flex-col items-center justify-center min-w-[60px] py-1 rounded-xl transition ${
+                isActive
+                  ? "text-[#F59E0B]"
+                  : "text-[#94A3B8] hover:text-[#F8FAFC]"
+              }`}
+            >
+              <Icon className="w-5 h-5 mb-0.5" />
+              <span className="text-[11px] font-medium tracking-tight">
+                {item.label}
+              </span>
+            </Link>
           );
-        }
-
-        return (
-          <Link
-            key={item.href}
-            href={item.href}
-            className={`mobile-nav-item ${isActive ? "active" : ""}`}
-            aria-current={isActive ? "page" : undefined}
-          >
-            <Icon className="mobile-nav-icon w-5 h-5 stroke-[2]" />
-            <span>{item.label}</span>
-          </Link>
-        );
-      })}
+        })}
+      </div>
     </nav>
   );
 }
-
-export default MobileBottomNav;

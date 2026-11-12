@@ -1,15 +1,14 @@
 """Auth API endpoints — register, login, refresh, logout."""
 import structlog
-from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
-
+from app.auth.jwt import create_access_token, create_refresh_token, decode_token
+from app.auth.password import hash_password, verify_password
 from app.database.session import get_db
 from app.models.user import User
-from app.auth.password import hash_password, verify_password
-from app.auth.jwt import create_access_token, create_refresh_token, decode_token
-from app.schemas.user import UserCreate, UserLogin, UserResponse, Token, TokenRefresh
+from app.schemas.user import Token, TokenRefresh, UserCreate, UserLogin, UserResponse
+from fastapi import APIRouter, Depends, HTTPException, status
 from jose import JWTError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/auth", tags=["Authentication"])
 logger = structlog.get_logger(__name__)

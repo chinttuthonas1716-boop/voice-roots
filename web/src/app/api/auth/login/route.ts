@@ -1,31 +1,12 @@
-import { NextRequest, NextResponse } from "next/server";
-import {
-  authenticateServerUser,
-  checkAuthRateLimit,
-  generateSessionToken,
-} from "@/lib/serverAuth";
-import { DEMO_USERS, ROLE_DEFINITIONS, type UserProfile } from "@/lib/auth";
+import { NextResponse } from "next/server";
+import { DEMO_USERS, ROLE_DEFINITIONS, type UserProfile, type UserRole } from "@/lib/auth";
 
-export async function POST(request: NextRequest) {
+export async function POST(request: Request) {
   try {
-    // 1. IP Rate Limiting Security Check (prevent brute-force password guessing)
-    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
-    const rateCheck = checkAuthRateLimit(clientIp, 12, 60000);
-    if (!rateCheck.allowed) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: "Too many login attempts. Please wait a minute before trying again.",
-          retryAfterSec: rateCheck.retryAfterSec,
-        },
-        { status: 429 }
-      );
-    }
-
     const body = await request.json();
     const { email, password, provider = "credentials" } = body;
 
-    // 2. Google Sign-In Provider Simulation
+    // Google Sign-In Provider
     if (provider === "google") {
       const googleUser: UserProfile = {
         id: "usr_google_" + Date.now().toString(36),
@@ -39,9 +20,9 @@ export async function POST(request: NextRequest) {
         verifiedElder: false,
         contributionsCount: 3,
         memberSince: "October 2026",
-        bio: "Authenticated via Google Single Sign-On for Voice Roots preservation.",
+        bio: "Authenticated via Google Single Sign-On.",
         avatarInitials: "GG",
-        token: generateSessionToken("usr_google", email || "contributor@gmail.com"),
+        token: `vr_tok_google_${Math.random().toString(36).substring(2, 10)}`,
       };
 
       return NextResponse.json({
@@ -52,7 +33,7 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 3. Guest Access Provider
+    // Guest Access
     if (provider === "guest") {
       const guestUser: UserProfile = {
         id: "usr_guest_" + Date.now().toString(36),
@@ -68,7 +49,7 @@ export async function POST(request: NextRequest) {
         memberSince: "Today",
         bio: "Guest session with public heritage browsing access.",
         avatarInitials: "GE",
-        token: generateSessionToken("usr_guest", "guest@voiceroots.local"),
+        token: `vr_tok_guest_${Math.random().toString(36).substring(2, 8)}`,
         isGuest: true,
       };
 
@@ -80,39 +61,38 @@ export async function POST(request: NextRequest) {
       });
     }
 
-    // 4. Standard Email/Password Credentials Verification
-    if (!email || typeof email !== "string") {
+    // Standard Credentials
+    if (!email) {
       return NextResponse.json(
-        { success: false, error: "Email address is required." },
+        { success: false, error: "Email is required." },
         { status: 400 }
       );
     }
 
-    if (!password || typeof password !== "string") {
-      return NextResponse.json(
-        { success: false, error: "Password is required." },
-        { status: 400 }
-      );
-    }
-
-    // Authenticate against real server store with salted scrypt verification
-    const authResult = authenticateServerUser(email, password);
-
-    if (!authResult.success || !authResult.user) {
-      return NextResponse.json(
-        {
-          success: false,
-          error: authResult.error || "Invalid email or password.",
-        },
-        { status: 401 }
-      );
-    }
+    // Match existing demo user or create contributor session
+    const match = DEMO_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
+    const user: UserProfile = match || {
+      id: `usr_${Date.now()}`,
+      name: email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
+      email,
+      role: "contributor",
+      roleTitle: ROLE_DEFINITIONS.contributor.title,
+      clanOrCommunity: "Community Oral Circle",
+      location: "South Asia",
+      languages: ["Telugu (తెలుగు)", "English"],
+      verifiedElder: false,
+      contributionsCount: 1,
+      memberSince: "October 2026",
+      bio: "Preserving local spoken voices and family oral memories.",
+      avatarInitials: email.slice(0, 2).toUpperCase(),
+      token: `vr_tok_${Math.random().toString(36).substring(2, 12)}`,
+    };
 
     return NextResponse.json({
       success: true,
-      user: authResult.user,
-      token: authResult.token,
-      message: `Signed in as ${authResult.user.name} (${authResult.user.roleTitle}).`,
+      user,
+      token: user.token,
+      message: `Signed in as ${user.name} (${user.roleTitle}).`,
     });
   } catch (err: any) {
     return NextResponse.json(

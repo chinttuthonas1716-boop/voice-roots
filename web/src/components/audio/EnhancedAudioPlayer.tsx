@@ -111,7 +111,7 @@ export function EnhancedAudioPlayer({
   const progressPercent = totalDuration > 0 ? (currentTime / totalDuration) * 100 : 0;
 
   return (
-    <div className="relative overflow-hidden rounded-3xl border border-white/12 bg-gradient-to-b from-royal-indigo/90 via-[#140E0C]/95 to-obsidian/95 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
+    <div className="relative overflow-hidden rounded-3xl border border-white/15 bg-gradient-to-b from-white/[0.06] to-[#080A12]/90 p-6 sm:p-8 backdrop-blur-2xl shadow-2xl">
       <audio
         ref={audioRef}
         src={audioUrl}
@@ -124,17 +124,17 @@ export function EnhancedAudioPlayer({
       {/* Header Info */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-5">
         <div>
-          <span className="text-[10px] font-bold uppercase tracking-widest text-heritage-gold">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-amber-400">
             Centerpiece Oral Audio Playback
           </span>
-          <h3 className="text-xl font-bold text-warm-ivory mt-0.5">{title}</h3>
-          <p className="text-xs text-soft-lavender">
+          <h3 className="text-xl font-bold text-white mt-0.5">{title}</h3>
+          <p className="text-xs text-slate-400">
             {language} • Spoken by {speaker}
           </p>
         </div>
 
         <div className="flex items-center gap-2 self-start sm:self-auto">
-          <span className="rounded-full border border-heritage-teal/30 bg-heritage-teal/10 px-3 py-1 text-xs font-semibold text-heritage-teal">
+          <span className="rounded-full border border-teal-500/30 bg-teal-500/10 px-3 py-1 text-xs font-semibold text-teal-300">
             48kHz Lossless Master
           </span>
         </div>
@@ -153,7 +153,7 @@ export function EnhancedAudioPlayer({
                 style={{ height: `${height}px` }}
                 className={`w-1.5 rounded-full transition-all duration-150 ${
                   isPassed
-                    ? "bg-gradient-to-t from-heritage-gold to-[#f0c978] shadow-gold-glow"
+                    ? "bg-gradient-to-t from-amber-500 to-amber-300 shadow-amber-glow"
                     : "bg-white/15"
                 } ${isPlaying && isPassed ? "animate-pulse" : ""}`}
               />
@@ -169,10 +169,10 @@ export function EnhancedAudioPlayer({
             max={totalDuration || 100}
             value={currentTime}
             onChange={handleSeek}
-            className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-[#E58A4E]"
+            className="w-full h-1.5 bg-white/10 rounded-lg appearance-none cursor-pointer accent-amber-400"
             aria-label="Seek oral audio track"
           />
-          <div className="flex justify-between text-[11px] font-mono text-soft-lavender mt-1">
+          <div className="flex justify-between text-[11px] font-mono text-slate-400 mt-1">
             <span>{formatTime(currentTime)}</span>
             <span>{formatTime(totalDuration)}</span>
           </div>
@@ -186,7 +186,7 @@ export function EnhancedAudioPlayer({
           <button
             type="button"
             onClick={togglePlay}
-            className="flex h-13 w-13 items-center justify-center rounded-2xl bg-heritage-gold text-[#0C0908] shadow-gold-glow transition hover:scale-105 active:scale-95 font-bold"
+            className="flex h-13 w-13 items-center justify-center rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-black shadow-amber-glow transition hover:scale-105 active:scale-95"
             aria-label={isPlaying ? "Pause audio" : "Play audio"}
           >
             {isPlaying ? (
@@ -204,7 +204,7 @@ export function EnhancedAudioPlayer({
                 setCurrentTime(0);
               }
             }}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-soft-lavender hover:text-warm-ivory hover:bg-white/10 transition"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition"
             title="Restart"
           >
             <RotateCcw className="h-4 w-4" />
@@ -217,7 +217,7 @@ export function EnhancedAudioPlayer({
           <button
             type="button"
             onClick={cycleSpeed}
-            className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-heritage-gold hover:bg-white/10 transition"
+            className="inline-flex items-center gap-1.5 rounded-xl border border-white/15 bg-white/5 px-3 py-2 text-xs font-bold text-amber-300 hover:bg-white/10 transition"
             title="Adjust playback speed"
           >
             <Gauge className="h-3.5 w-3.5" />
@@ -228,7 +228,7 @@ export function EnhancedAudioPlayer({
           <button
             type="button"
             onClick={toggleMute}
-            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-soft-lavender hover:text-warm-ivory hover:bg-white/10 transition"
+            className="flex h-10 w-10 items-center justify-center rounded-xl border border-white/10 bg-white/5 text-slate-300 hover:text-white hover:bg-white/10 transition"
             title={isMuted ? "Unmute" : "Mute"}
           >
             {isMuted ? <VolumeX className="h-4 w-4 text-rose-400" /> : <Volume2 className="h-4 w-4" />}

@@ -98,27 +98,27 @@ export function PreservationTimeline({
   ];
 
   return (
-    <section className="rounded-3xl border border-white/10 bg-royal-indigo/40 p-6 sm:p-8 backdrop-blur-2xl">
+    <section className="rounded-3xl border border-white/10 bg-white/[0.03] p-6 sm:p-8 backdrop-blur-2xl">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between border-b border-white/10 pb-5 mb-6">
         <div>
-          <div className="inline-flex items-center gap-1.5 rounded-full border border-heritage-gold/30 bg-heritage-gold/10 px-3 py-1 text-[11px] font-bold text-heritage-gold uppercase tracking-wider">
+          <div className="inline-flex items-center gap-1.5 rounded-full border border-amber-500/30 bg-amber-500/10 px-3 py-1 text-[11px] font-bold text-amber-300 uppercase tracking-wider">
             <Clock className="h-3.5 w-3.5" /> Preservation Provenance Timeline
           </div>
-          <h3 className="mt-2 text-xl font-bold text-warm-ivory">
+          <h3 className="mt-2 text-xl font-bold text-white">
             Ethical Voice Preservation Journey
           </h3>
-          <p className="text-xs text-soft-lavender">
+          <p className="text-xs text-slate-400">
             A clear audit trail of what happened to this voice recording from oral capture to global passport.
           </p>
         </div>
         <div className="flex items-center gap-2">
-          <span className="inline-flex items-center gap-1.5 rounded-full border border-heritage-teal/40 bg-heritage-teal/10 px-3 py-1 text-xs font-semibold text-heritage-teal">
+          <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-400/40 bg-emerald-400/10 px-3 py-1 text-xs font-semibold text-emerald-300">
             <CheckCircle2 className="h-3.5 w-3.5" /> Human Verified Record
           </span>
         </div>
       </div>
 
-      <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-heritage-gold before:via-heritage-teal before:to-electric-violet">
+      <div className="relative pl-6 sm:pl-8 space-y-6 before:absolute before:left-3 sm:before:left-4 before:top-3 before:bottom-3 before:w-0.5 before:bg-gradient-to-b before:from-amber-400 before:via-teal-400 before:to-violet-500">
         {stages.map((stage, idx) => {
           const Icon = stage.icon;
           const isDone = stage.status === "completed";
@@ -129,27 +129,27 @@ export function PreservationTimeline({
               <div
                 className={`absolute -left-[30px] sm:-left-[35px] top-1 grid h-7 w-7 place-items-center rounded-full border text-xs transition ${
                   isDone
-                    ? "border-heritage-gold bg-heritage-gold text-[#0C0908] shadow-gold-glow font-bold"
-                    : "border-white/20 bg-obsidian text-soft-lavender"
+                    ? "border-amber-400 bg-amber-400 text-black shadow-amber-glow font-bold"
+                    : "border-white/20 bg-[#080A12] text-slate-500"
                 }`}
               >
                 {isDone ? <CheckCircle2 className="h-4 w-4" /> : <span>{idx + 1}</span>}
               </div>
 
               {/* Stage Card */}
-              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 transition hover:border-heritage-gold/40 hover:bg-white/[0.05]">
+              <div className="rounded-2xl border border-white/10 bg-white/[0.02] p-4 transition hover:border-amber-500/40 hover:bg-white/[0.05]">
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1">
                   <div className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-heritage-gold shrink-0" />
-                    <h4 className="text-sm font-bold text-warm-ivory">{stage.title}</h4>
+                    <Icon className="h-4 w-4 text-amber-400 shrink-0" />
+                    <h4 className="text-sm font-bold text-white">{stage.title}</h4>
                   </div>
                   {stage.detail && (
-                    <span className="text-[10px] font-mono text-heritage-teal rounded-md border border-heritage-teal/30 bg-heritage-teal/10 px-2 py-0.5 self-start sm:self-auto font-medium">
+                    <span className="text-[10px] font-mono text-teal-300 rounded-md border border-teal-500/30 bg-teal-500/10 px-2 py-0.5 self-start sm:self-auto">
                       {stage.detail}
                     </span>
                   )}
                 </div>
-                <p className="mt-1 text-xs text-soft-lavender leading-relaxed">
+                <p className="mt-1 text-xs text-slate-300 leading-relaxed">
                   {stage.subtitle}
                 </p>
               </div>

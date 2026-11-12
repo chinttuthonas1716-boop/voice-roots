@@ -1,21 +1,20 @@
-import path from "path";
-import { fileURLToPath } from "url";
+// T1.2 - replace the hardcoded localhost:8000 rewrite.
+// Adapt to next.config.mjs / .ts if that is what the repo uses.
+// NOTE: rewrites() is evaluated at build time, so API_BASE_URL must exist
+// as a build-time env var on the frontend service.
+const API_BASE_URL = process.env.API_BASE_URL;
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+if (process.env.NODE_ENV === "production" && !API_BASE_URL) {
+  throw new Error(
+    "API_BASE_URL must be set for production builds, e.g. https://voice-roots-api.onrender.com"
+  );
+}
 
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   reactStrictMode: true,
   eslint: {
     ignoreDuringBuilds: true,
-  },
-  webpack: (config) => {
-    config.resolve.alias = {
-      ...(config.resolve.alias || {}),
-      "@": path.resolve(__dirname, "src"),
-    };
-    return config;
   },
   images: {
     domains: ["images.unsplash.com", "api.qrserver.com"],
@@ -66,7 +65,7 @@ const nextConfig = {
     return [
       {
         source: "/api/v1/:path*",
-        destination: "http://localhost:8000/api/v1/:path*",
+        destination: `${API_BASE_URL || "http://localhost:8000"}/api/v1/:path*`,
       },
     ];
   },

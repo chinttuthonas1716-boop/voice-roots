@@ -1,0 +1,53 @@
+# Voice Roots — Production Caddy Reverse Proxy Configuration (PR-02)
+# Handles automatic Let's Encrypt TLS certificates, HSTS, security headers, and proxy streaming.
+
+{
+    email admin@voiceroots.ai
+    admin off
+}
+
+# Replace 'pilot.voiceroots.ai' with your institution's pilot domain
+pilot.voiceroots.ai {
+    # Encode responses using modern compression
+    encode zstd gzip
+
+    # Reverse proxy to Voice Roots ASGI service
+    reverse_proxy voice-roots-backend:8000 {
+        header_up Host {host}
+        header_up X-Real-IP {remote_host}
+        header_up X-Forwarded-For {remote_host}
+        header_up X-Forwarded-Proto https
+
+        # Optimize for audio streaming and chunked partial content
+        transport http {
+            response_header_timeout 60s
+            read_buffer 8192
+        }
+    }
+
+    # Security Headers
+    header {
+        Strict-Transport-Security "max-age=31536000; includeSubDomains; preload"
+        X-Content-Type-Options "nosniff"
+        X-Frame-Options "DENY"
+        Referrer-Policy "strict-origin-when-cross-origin"
+        Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: https:; media-src 'self' blob: data:; connect-src 'self' http: https:;"
+        Permissions-Policy "camera=(), microphone=(self), geolocation=()"
+        -Server
+    }
+
+    # Maximum upload size for acoustic audio masters (500MB)
+    request_body {
+        max_size 500MB
+    }
+
+    # Structured access logging
+    log {
+        output file /var/log/caddy/access.log {
+            roll_size 50mb
+            roll_keep 7
+        }
+        format json
+    }
+}
+

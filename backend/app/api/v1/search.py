@@ -1,18 +1,16 @@
 """Search API — keyword + semantic search across the archive."""
 import uuid
-import structlog
-from pydantic import BaseModel, Field
-from fastapi import APIRouter, Depends, Query
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select, text
 
-from app.database.session import get_db
+import structlog
 from app.auth.dependencies import get_current_user
+from app.database.session import get_db
+from app.models.recording import PrivacyLevel, Recording
 from app.models.user import User
-from app.models.recording import Recording, PrivacyLevel
-from app.models.transcript import Transcript
-from app.models.embedding import Embedding
 from app.schemas.recording import RecordingResponse
+from fastapi import APIRouter, Depends, Query
+from pydantic import BaseModel, Field
+from sqlalchemy import select, text
+from sqlalchemy.ext.asyncio import AsyncSession
 
 router = APIRouter(prefix="/search", tags=["Search"])
 logger = structlog.get_logger(__name__)

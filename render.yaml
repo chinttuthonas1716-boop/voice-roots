@@ -1,15 +1,26 @@
+# Voice Roots — Render Infrastructure as Code Blueprint
+# Reference: https://render.com/docs/blueprint-spec
+
 services:
   - type: web
-    name: voice-roots
-    runtime: node
-    region: singapore
-    plan: free
-    rootDir: web
-    buildCommand: npm install --include=dev && npm run build
-    startCommand: npm run start -- -p $PORT -H 0.0.0.0
+    name: voice-roots-api
+    runtime: python
+    plan: starter            # always-on; free instances sleep after idle
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn backend.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /health
     envVars:
-      - key: NODE_VERSION
-        value: "20"
-      - key: NODE_ENV
-        value: production
-
+      - key: DATABASE_URL      # set in the Render dashboard (non-expiring Postgres)
+        sync: false
+      - key: CORS_ORIGINS
+        value: https://voice-roots.onrender.com
+      - key: SECRET_KEY
+        generateValue: true
+      - key: R2_ENDPOINT_URL   # used from T1.4
+        sync: false
+      - key: R2_ACCESS_KEY_ID
+        sync: false
+      - key: R2_SECRET_ACCESS_KEY
+        sync: false
+      - key: R2_BUCKET
+        sync: false

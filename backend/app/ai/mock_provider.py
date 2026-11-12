@@ -5,34 +5,40 @@ Returns plausible Telugu/multilingual data so the full Voice Roots
 workflow can be demonstrated without GPU or API keys.
 """
 import asyncio
-import random
 import math
+import random
+
 from app.ai.base import (
-    AIProvider, TranscriptionResult, LanguageDetectionResult,
-    TranslationResult, EmbeddingResult, SpeakerSegment, SummarizationResult,
+    AIProvider,
+    EmbeddingResult,
+    LanguageDetectionResult,
+    SpeakerSegment,
+    SummarizationResult,
+    TranscriptionResult,
+    TranslationResult,
 )
 
 # Sample Telugu content for realistic mock responses
 _TELUGU_SAMPLES = [
-    "మా ఊరిలో ప్రతి సంవత్సరం వేసవికాలంలో పెద్ద పండుగ జరుగుతుంది. "
-    "పెద్దలు చెప్పే కథలు వింటూ పిల్లలు రాత్రంతా మేల్కొని ఉంటారు.",
+    ("మా ఊరిలో ప్రతి సంవత్సరం వేసవికాలంలో పెద్ద పండుగ జరుగుతుంది. "
+    "పెద్దలు చెప్పే కథలు వింటూ పిల్లలు రాత్రంతా మేల్కొని ఉంటారు."),
 
-    "మా నాన్నమ్మ చెప్పిన కథ ఇది. చాలా కాలం క్రితం మన పల్లెలో "
-    "ఒక తెలివైన రైతు ఉండేవాడు. అతను భూమిని చాలా ప్రేమించేవాడు.",
+    ("మా నాన్నమ్మ చెప్పిన కథ ఇది. చాలా కాలం క్రితం మన పల్లెలో "
+    "ఒక తెలివైన రైతు ఉండేవాడు. అతను భూమిని చాలా ప్రేమించేవాడు."),
 
-    "వర్షాకాలంలో వ్యవసాయం చాలా కష్టంగా ఉంటుంది. అయినా రైతులు "
-    "పొలాలలో పని చేస్తూ మనందరికి అన్నం పెడతారు.",
+    ("వర్షాకాలంలో వ్యవసాయం చాలా కష్టంగా ఉంటుంది. అయినా రైతులు "
+    "పొలాలలో పని చేస్తూ మనందరికి అన్నం పెడతారు."),
 ]
 
 _EN_TRANSLATIONS = [
-    "In our village, a grand festival takes place every summer. "
-    "Children stay awake all night listening to the stories told by elders.",
+    ("In our village, a grand festival takes place every summer. "
+    "Children stay awake all night listening to the stories told by elders."),
 
-    "This is a story my grandmother told. Long ago, in our village, "
-    "there lived a wise farmer. He loved the land very much.",
+    ("This is a story my grandmother told. Long ago, in our village, "
+    "there lived a wise farmer. He loved the land very much."),
 
-    "Farming is very difficult during the monsoon season. Yet farmers "
-    "work in the fields to feed all of us.",
+    ("Farming is very difficult during the monsoon season. Yet farmers "
+    "work in the fields to feed all of us."),
 ]
 
 

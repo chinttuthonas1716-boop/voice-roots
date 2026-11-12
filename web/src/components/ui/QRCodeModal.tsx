@@ -31,9 +31,8 @@ export function QRCodeModal({
 
   if (!isOpen) return null;
 
-  const currentOrigin = typeof window !== "undefined" ? window.location.origin : "https://village-meat-bracelets-nova.trycloudflare.com";
-  const publicBase = currentOrigin.includes("trycloudflare.com") ? currentOrigin : "https://village-meat-bracelets-nova.trycloudflare.com";
-  const localBase = typeof window !== "undefined" && !window.location.origin.includes("trycloudflare.com") ? window.location.origin : "http://192.168.1.12:3000";
+  const publicBase = "https://farming-proposition-love-showcase.trycloudflare.com";
+  const localBase = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
   const currentBase = networkMode === "public" ? publicBase : localBase;
 
   const getUrl = () => {
@@ -61,26 +60,26 @@ export function QRCodeModal({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-fade-in">
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/15 bg-royal-indigo/95 p-6 shadow-2xl transition-all backdrop-blur-2xl text-warm-ivory"
+        className="relative w-full max-w-md overflow-hidden rounded-3xl border border-white/15 bg-[#0e121a] p-6 shadow-2xl transition-all"
         onClick={(e) => e.stopPropagation()}
       >
         {/* Glow accent */}
-        <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-heritage-gold/15 blur-3xl" />
+        <div className="pointer-events-none absolute -right-20 -top-20 h-48 w-48 rounded-full bg-root-green/15 blur-3xl" />
 
         {/* Header */}
         <div className="flex items-center justify-between pb-4 border-b border-white/10">
           <div className="flex items-center gap-2.5">
-            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-heritage-gold/15 text-heritage-gold border border-heritage-gold/30">
+            <div className="grid h-10 w-10 place-items-center rounded-2xl bg-root-green/10 text-leaf-green border border-root-green/30">
               <QrCode className="h-5 w-5" />
             </div>
             <div>
-              <h2 className="text-base font-bold text-warm-ivory">Scan with Phone</h2>
-              <p className="text-xs text-soft-lavender">Camera-scannable QR code</p>
+              <h2 className="text-base font-bold text-white">Scan with Phone</h2>
+              <p className="text-xs text-secondary-text">Camera-scannable QR code</p>
             </div>
           </div>
           <button
             onClick={onClose}
-            className="grid h-8 w-8 place-items-center rounded-full text-soft-lavender hover:bg-white/10 hover:text-warm-ivory transition"
+            className="grid h-8 w-8 place-items-center rounded-full text-secondary-text hover:bg-white/10 hover:text-white transition"
             aria-label="Close modal"
           >
             <X className="h-4 w-4" />
@@ -94,8 +93,8 @@ export function QRCodeModal({
             onClick={() => setActiveTab("app")}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl font-semibold transition ${
               activeTab === "app"
-                ? "bg-heritage-gold text-[#0C0908] shadow-gold-glow font-bold"
-                : "text-soft-lavender hover:text-warm-ivory"
+                ? "bg-root-green text-obsidian shadow-glow font-bold"
+                : "text-secondary-text hover:text-white"
             }`}
           >
             <Smartphone className="h-3.5 w-3.5" /> Mobile App
@@ -105,8 +104,8 @@ export function QRCodeModal({
             onClick={() => setActiveTab("website")}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl font-semibold transition ${
               activeTab === "website"
-                ? "bg-heritage-gold text-[#0C0908] shadow-gold-glow font-bold"
-                : "text-soft-lavender hover:text-warm-ivory"
+                ? "bg-root-green text-obsidian shadow-glow font-bold"
+                : "text-secondary-text hover:text-white"
             }`}
           >
             <Globe className="h-3.5 w-3.5" /> Website
@@ -116,8 +115,8 @@ export function QRCodeModal({
             onClick={() => setActiveTab("passport")}
             className={`flex-1 flex items-center justify-center gap-1.5 py-2 rounded-xl font-semibold transition ${
               activeTab === "passport"
-                ? "bg-heritage-gold text-[#0C0908] shadow-gold-glow font-bold"
-                : "text-soft-lavender hover:text-warm-ivory"
+                ? "bg-root-green text-obsidian shadow-glow font-bold"
+                : "text-secondary-text hover:text-white"
             }`}
           >
             <FileCheck className="h-3.5 w-3.5" /> Passport
@@ -126,11 +125,11 @@ export function QRCodeModal({
 
         {/* Network Mode Switcher */}
         <div className="mt-3 flex items-center justify-between rounded-xl border border-white/10 bg-white/[0.02] px-3 py-2 text-xs">
-          <span className="text-soft-lavender flex items-center gap-1.5 text-[11px]">
+          <span className="text-secondary-text flex items-center gap-1.5 text-[11px]">
             {networkMode === "public" ? (
-              <Radio className="h-3 w-3 text-heritage-teal" />
+              <Radio className="h-3 w-3 text-leaf-green" />
             ) : (
-              <Wifi className="h-3 w-3 text-heritage-gold" />
+              <Wifi className="h-3 w-3 text-amber-400" />
             )}
             Target Network:
           </span>
@@ -139,8 +138,8 @@ export function QRCodeModal({
               onClick={() => setNetworkMode("public")}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
                 networkMode === "public"
-                  ? "bg-heritage-teal/20 text-heritage-teal border border-heritage-teal/40"
-                  : "text-soft-lavender hover:text-warm-ivory"
+                  ? "bg-leaf-green/20 text-leaf-green border border-leaf-green/40"
+                  : "text-secondary-text hover:text-white"
               }`}
             >
               Public HTTPS
@@ -149,8 +148,8 @@ export function QRCodeModal({
               onClick={() => setNetworkMode("wifi")}
               className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition ${
                 networkMode === "wifi"
-                  ? "bg-heritage-gold/20 text-heritage-gold border border-heritage-gold/40"
-                  : "text-soft-lavender hover:text-warm-ivory"
+                  ? "bg-amber-400/20 text-amber-300 border border-amber-400/40"
+                  : "text-secondary-text hover:text-white"
               }`}
             >
               Local Wi-Fi
@@ -160,7 +159,7 @@ export function QRCodeModal({
 
         {/* QR Code Container */}
         <div className="mt-5 flex flex-col items-center justify-center space-y-3">
-          <div className="p-4 rounded-2xl bg-white shadow-xl border-4 border-heritage-gold/30">
+          <div className="p-4 rounded-2xl bg-white shadow-xl border-4 border-root-green/30">
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img
               src={getQrImage()}
@@ -170,22 +169,22 @@ export function QRCodeModal({
               className="rounded-lg object-contain"
             />
           </div>
-          <p className="text-center text-xs text-soft-lavender max-w-xs">
+          <p className="text-center text-xs text-secondary-text max-w-xs">
             Open your smartphone camera and point it at this QR code to launch instantly.
           </p>
         </div>
 
         {/* URL Pill & Copy Actions */}
         <div className="mt-4 flex items-center gap-2 rounded-xl border border-white/10 bg-black/40 p-2 text-xs font-mono">
-          <span className="flex-1 truncate text-soft-lavender pl-2">{getUrl()}</span>
+          <span className="flex-1 truncate text-secondary-text pl-2">{getUrl()}</span>
           <button
             onClick={handleCopy}
-            className="flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-warm-ivory hover:bg-white/20 transition"
+            className="flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-white hover:bg-white/20 transition"
           >
             {copied ? (
               <>
-                <Check className="h-3.5 w-3.5 text-heritage-teal" />
-                <span className="text-[11px] font-sans text-heritage-teal">Copied</span>
+                <Check className="h-3.5 w-3.5 text-leaf-green" />
+                <span className="text-[11px] font-sans text-leaf-green">Copied</span>
               </>
             ) : (
               <>
@@ -198,7 +197,7 @@ export function QRCodeModal({
             href={getUrl()}
             target="_blank"
             rel="noopener noreferrer"
-            className="flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-warm-ivory hover:bg-white/20 transition"
+            className="flex items-center gap-1 rounded-lg bg-white/10 px-2.5 py-1 text-white hover:bg-white/20 transition"
           >
             <ExternalLink className="h-3.5 w-3.5" />
             <span className="text-[11px] font-sans">Open</span>

@@ -1,16 +1,16 @@
 """FastAPI auth dependencies."""
 import uuid
-import structlog
-from fastapi import Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordBearer
-from jose import JWTError
-from sqlalchemy.ext.asyncio import AsyncSession
-from sqlalchemy import select
 
+import structlog
 from app.auth.jwt import decode_token
 from app.auth.rbac import has_permission
 from app.database.session import get_db
 from app.models.user import User, UserRole
+from fastapi import Depends, HTTPException, status
+from fastapi.security import OAuth2PasswordBearer
+from jose import JWTError
+from sqlalchemy import select
+from sqlalchemy.ext.asyncio import AsyncSession
 
 logger = structlog.get_logger(__name__)
 

@@ -1,7 +1,8 @@
 """Voice Roots application configuration."""
 from functools import lru_cache
 from typing import Literal
-from pydantic import field_validator
+
+from pydantic import field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,8 +25,27 @@ class Settings(BaseSettings):
         if isinstance(v, str):
             return v.lower() in ("true", "1", "yes", "debug", "development")
         return bool(v)
+
+    allowed_origins: str = (
+        "http://localhost:3000,http://localhost:3001,https://voice-roots.onrender.com"
+    )
+
+    @property
+    def allowed_origin_list(self) -> list[str]:
+        """Parse comma-separated or JSON-array CORS origins from the environment."""
+        value = self.allowed_origins.strip()
+        if value.startswith("[") and value.endswith("]"):
+            import json
+
+            try:
+                origins = json.loads(value)
+            except json.JSONDecodeError:
+                origins = None
+            if isinstance(origins, list):
+                return [str(origin).strip() for origin in origins if str(origin).strip()]
+        return [origin.strip() for origin in value.split(",") if origin.strip()]
+
     secret_key: str = "change-me-in-production"
-    allowed_origins: list[str] = ["http://localhost:3000", "http://localhost:3001"]
 
     # Database
     database_url: str = "postgresql+asyncpg://postgres:postgres@localhost:5432/voice_roots"
@@ -51,7 +71,7 @@ class Settings(BaseSettings):
     s3_bucket: str = "voice-roots-audio"
 
     # AI
-    ai_provider: Literal["mock", "whisper", "huggingface"] = "mock"
+    ai_provider: Literal["disabled", "mock", "whisper", "huggingface"] = "disabled"
     whisper_model_size: str = "base"
     asr_model: str = "openai/whisper-base"
     lid_model: str = "papluca/xlm-roberta-base-language-detection"
@@ -77,8 +97,23 @@ class Settings(BaseSettings):
         "video/mp4", "video/webm", "video/ogg",
     ]
 
+    @model_validator(mode="after")
+    def validate_production_security(self):
+        if self.app_env == "production":
+            if self.debug:
+                raise ValueError("DEBUG must be false when APP_ENV is production.")
+            if (
+                len(self.jwt_secret_key) < 32
+                or self.jwt_secret_key == "change-me-jwt-secret"
+                or self.jwt_secret_key.lower().startswith(("your-", "change-me", "changeme"))
+            ):
+                raise ValueError(
+                    "Set JWT_SECRET_KEY to a non-placeholder value of at least 32 characters in production."
+                )
+        return self
 
-@lru_cache()
+
+@lru_cache
 def get_settings() -> Settings:
     """Return cached settings instance."""
     return Settings()

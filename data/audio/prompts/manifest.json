@@ -1,0 +1,94 @@
+{
+  "version": "2.0",
+  "standard": "OCAP-Oral-Consent-v1",
+  "prompts": {
+    "gon": {
+      "language": "Gondi",
+      "language_code": "gon",
+      "dialect": "Adilabad Raj Gondi",
+      "filename": "gondi_consent_prompt.wav",
+      "sample_rate": 16000,
+      "channels": 1,
+      "bit_depth": 16,
+      "duration_seconds": 3.5,
+      "sha256": "67867041c57c31058158e19f05b77fffa4c17401f62c191b22e07ca8894892a6",
+      "prompt_vernacular": "నమస్కార్. వోయిస్ రూట్స్ నమస్కారమ్. మీ మాటా సగా రికార్డ్ కీతోమ్. ఇద్ రికార్డింగ్ నమ కమ్యూనిటీ ఆర్కైవ్స్ తగా దాచుతోమ్. పెర్సాపెన్ సగా పూజ మాటా గోప్యముగా ఉంచతోమ్. మీ పర్మిషన్ మత్తే ఆమోదించండి.",
+      "prompt_roman": "Namaskar. Voice Roots namaskaram. Mee maata saga record keetom. Id recording nama community archives taga daachutom. Persapen saga puja maata gopyamugaa unchatom. Mee permission matte aamodhinchandi.",
+      "prompt_english": "Greetings. Voice Roots recording consent. We are recording your clan voice. This recording will be preserved in our community archives. Persapen sacred rites remain secret. Please affirm your consent if you agree.",
+      "ocap_facets": [
+        "archival_intent",
+        "educational_and_research_use",
+        "sacred_lore_access_classification",
+        "attribution_preference",
+        "prohibition_of_commercial_exploitation",
+        "unconditional_right_of_revocation"
+      ]
+    },
+    "kff": {
+      "language": "Koya",
+      "language_code": "kff",
+      "dialect": "Godavari Valley Koya",
+      "filename": "koya_consent_prompt.wav",
+      "sample_rate": 16000,
+      "channels": 1,
+      "bit_depth": 16,
+      "duration_seconds": 3.5,
+      "sha256": "a9caa7570cb70c530971ccb0923a43c0d6a20b7a65f0fffc8fb8f192b3b4c94a",
+      "prompt_vernacular": "జోహార్. వోయిస్ రూట్స్ కొయినా మాటా రికార్డు కీతోమ్. మావా గోట్టి మాటలు ఆర్కైవ్ తగా కాపాడతోమ్. సమ్మక్క సారక్క పవిత్ర పదాలు ఎల్డర్స్ అనుమతితోనే చూపతోమ్. మీ ఇష్టముతో సమ్మతి ఇవ్వండి.",
+      "prompt_roman": "Johar. Voice Roots koyina maata record keetom. Maawa gotti maatalu archive taga kaapaadatom. Sammakka Sarakka pavitra padaalu elders anumatithone choopatom. Mee ishtamutho sammathi ivvandi.",
+      "prompt_english": "Johar. Voice Roots is recording the Koya voice. Our traditional Gotti words will be protected in the archive. Sammakka-Sarakka sacred words will only be shown with elder permission. Please give your free consent.",
+      "ocap_facets": [
+        "archival_intent",
+        "educational_and_research_use",
+        "sacred_lore_access_classification",
+        "attribution_preference",
+        "prohibition_of_commercial_exploitation",
+        "unconditional_right_of_revocation"
+      ]
+    },
+    "sat": {
+      "language": "Santhali",
+      "language_code": "sat",
+      "dialect": "Chhotanagpur Santhali (Ol Chiki)",
+      "filename": "santhali_consent_prompt.wav",
+      "sample_rate": 16000,
+      "channels": 1,
+      "bit_depth": 16,
+      "duration_seconds": 3.5,
+      "sha256": "c190f04ea2417785908b0c6dfa8e3ad7e0f50fe3b5672fdcf9298ad8d4ec2a7f",
+      "prompt_vernacular": "ᱡᱚᱦᱟᱨ ᱾ ᱣᱚᱭᱤᱥ ᱨᱩᱴᱥ ᱦᱚᱲ ᱨᱚᱲ ᱨᱮᱠᱚᱨᱰ ᱮᱫᱟ ᱾ ᱱᱚᱣᱟ ᱨᱚᱲ ᱫᱚ ᱟᱵᱚᱣᱟᱜ ᱡᱟᱦᱮᱨ ᱛᱷᱟᱱ ᱟᱨ ᱟᱹᱛᱩ ᱟᱨᱠᱟᱭᱤᱵᱽ ᱨᱮ ᱫᱚᱦᱚ ᱦᱩᱭᱩᱜᱼᱟ ᱾ ᱢᱟᱹᱧᱡᱷᱤ ᱦᱟᱲᱟᱢ ᱟᱜ ᱦᱩᱠᱩᱢ ᱛᱮ ᱥᱟᱱᱟᱢ ᱠᱟᱹᱢᱤ ᱦᱩᱭᱩᱜᱼᱟ ᱾ ᱟᱢᱟᱜ ᱨᱮᱵᱮᱱ ᱮᱢ ᱢᱮ ᱾",
+      "prompt_roman": "Johar. Voice Roots hor ror record eda. Nowa ror do abowag Jaher Than ar aatu archive re doho huyuga. Manjhi Hadam ag hukum te sanam kami huyuga. Amag reben em me.",
+      "prompt_english": "Johar. Voice Roots is recording our Santhali voice. This will be preserved in our village and Jaher Than archive. All procedures follow Manjhi Hadam customary guidance. Please affirm your consent.",
+      "ocap_facets": [
+        "archival_intent",
+        "educational_and_research_use",
+        "sacred_lore_access_classification",
+        "attribution_preference",
+        "prohibition_of_commercial_exploitation",
+        "unconditional_right_of_revocation"
+      ]
+    },
+    "lmn": {
+      "language": "Lambadi",
+      "language_code": "lmn",
+      "dialect": "Telangana Gor Boli",
+      "filename": "lambadi_consent_prompt.wav",
+      "sample_rate": 16000,
+      "channels": 1,
+      "bit_depth": 16,
+      "duration_seconds": 3.5,
+      "sha256": "6e54764a705bfe7a2b4fe9c3f23848248b3915e1b3b7bb3a8b09ad6f4c994537",
+      "prompt_vernacular": "రామ్ రామ్. వోయిస్ రూట్స్ గోర్ బోలి రికార్డ్ కరేచ. యే వాత్ అపణి తాండా ఆర్కైవ్ మా సాంబాలేచ. నాయక్ పంచాయతి నిబంధన పాళేచ. తమారి ఖుషీతీ అనుమతి దీజో.",
+      "prompt_roman": "Ram Ram. Voice Roots Gor Boli record karecha. Ye vaat apani tanda archive maa sambhalecha. Naayak panchayati nibandhana paalecha. Tamaari khusheeti anumati deejo.",
+      "prompt_english": "Ram Ram. Voice Roots is recording Gor Boli. This voice will be safeguarded in our Tanda archive under Naayak customary governance. Please grant your willing consent.",
+      "ocap_facets": [
+        "archival_intent",
+        "educational_and_research_use",
+        "sacred_lore_access_classification",
+        "attribution_preference",
+        "prohibition_of_commercial_exploitation",
+        "unconditional_right_of_revocation"
+      ]
+    }
+  }
+}
