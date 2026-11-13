@@ -3,6 +3,7 @@ import path from "path";
 
 const ROUTES = [
   { name: "landing", path: "/" },
+  { name: "login", path: "/login" },
   { name: "record", path: "/record" },
   { name: "translate", path: "/translate" },
   { name: "dictionary", path: "/dictionary" },

@@ -2,7 +2,7 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { Mic, Upload, Languages, Play, Pause, ArrowRight } from "lucide-react";
+import { Mic, Upload, Languages, Play, Pause, ArrowRight, BookOpen, ShieldCheck, TreePine, Sparkles } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
 
@@ -45,77 +45,124 @@ export default function HomePage() {
     <div className="min-h-screen pb-24 pt-20">
       <Navbar />
 
-      <main className="mx-auto max-w-3xl px-4 py-8 space-y-10">
-        {/* Short Greeting */}
-        <section className="text-center space-y-3 pt-4 sm:pt-8">
-          <h1 className="text-3xl sm:text-4xl font-extrabold tracking-tight text-[#F8FAFC]">
-            Welcome to Voice Roots
+      <main className="mx-auto max-w-4xl px-4 py-6 sm:py-10 space-y-12">
+        {/* Cinematic Misty Forest Hero (Reference: Image 1) */}
+        <section className="relative text-center space-y-6 pt-6 sm:pt-12 px-4">
+          {/* Ambient Ethereal Glow */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#A6C48A]/10 rounded-full blur-[100px] pointer-events-none -z-10" />
+
+          {/* Micro Tag */}
+          <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#102B20]/80 border border-[#A6C48A]/30 text-xs font-semibold text-[#A6C48A] backdrop-blur-md shadow-sm">
+            <Sparkles className="h-3.5 w-3.5" />
+            <span className="tracking-wide">INDIGENOUS ORAL HERITAGE & AI PRESERVATION</span>
+          </div>
+
+          {/* Lowercase Iconic Hero Typography: voice roots. */}
+          <h1 className="text-5xl sm:text-7xl font-extrabold tracking-tight text-[#F5F3E9] font-sans">
+            voice roots<span className="text-[#A6C48A]">.</span>
           </h1>
-          <p className="text-base sm:text-lg text-[#94A3B8] max-w-xl mx-auto">
-            Preserve and understand spoken voices in indigenous and regional languages.
+
+          <p className="text-base sm:text-xl text-[#A6C48A]/90 max-w-2xl mx-auto font-light leading-relaxed">
+            Voice Roots is a community-owned platform that roots oral languages in text with AI.
+            Preserving spoken stories across Gondi, Koya, Santhali, and Lambadi.
           </p>
+
+          {/* Micro Badge Indicators (Reference: Image 1 bottom row) */}
+          <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 pt-2 text-xs font-medium text-[#F5F3E9]/80">
+            <div className="flex items-center gap-2 bg-[#102B20]/60 border border-[#A6C48A]/20 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+              <span className="font-bold text-[#A6C48A] border border-[#A6C48A]/40 rounded-full px-1.5 py-0.5 text-[10px]">OCAP</span>
+              <span className="tracking-wider uppercase text-[11px]">COMMUNITY SOVEREIGNTY</span>
+            </div>
+            <div className="flex items-center gap-2 bg-[#102B20]/60 border border-[#A6C48A]/20 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+              <ShieldCheck className="h-4 w-4 text-[#A6C48A]" />
+              <span className="tracking-wider uppercase text-[11px]">PRESERVE ROOTS</span>
+            </div>
+            <div className="flex items-center gap-2 bg-[#102B20]/60 border border-[#A6C48A]/20 px-3.5 py-1.5 rounded-full backdrop-blur-md">
+              <TreePine className="h-4 w-4 text-[#A6C48A]" />
+              <span className="tracking-wider uppercase text-[11px]">IMMUTABLE AUDIO</span>
+            </div>
+          </div>
         </section>
 
-        {/* 3 Big Glass Buttons */}
-        <section aria-label="Main actions" className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        {/* 4 Frosted Action Cards */}
+        <section aria-label="Main actions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
           <Link
             href="/record"
-            className="glass-card flex flex-col items-center justify-center gap-3 p-6 min-h-[120px] text-center border-amber-500/30 hover:border-amber-400 group"
+            className="forest-glass-panel flex flex-col items-center justify-center gap-3 p-6 text-center hover:border-[#A6C48A]/60 group transition-all"
           >
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-amber-500/15 text-[#F59E0B] group-hover:scale-105 transition-transform">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#1F5138] border border-[#A6C48A]/30 text-[#F5F3E9] group-hover:scale-105 group-hover:bg-[#A6C48A] group-hover:text-[#102B20] transition-all">
               <Mic className="h-6 w-6" />
             </div>
             <div>
-              <span className="block text-lg font-bold text-[#F8FAFC]">Record</span>
-              <span className="block text-xs text-[#94A3B8] mt-0.5">Capture live voice</span>
+              <span className="block text-lg font-bold text-[#F5F3E9]">Record</span>
+              <span className="block text-xs text-[#A6C48A]/80 mt-0.5">Capture live oral voice</span>
             </div>
           </Link>
 
           <Link
             href="/upload"
-            className="glass-card flex flex-col items-center justify-center gap-3 p-6 min-h-[120px] text-center group"
+            className="forest-glass-panel flex flex-col items-center justify-center gap-3 p-6 text-center hover:border-[#A6C48A]/60 group transition-all"
           >
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-white/10 text-[#F8FAFC] group-hover:scale-105 transition-transform">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#163B2C] border border-[#A6C48A]/20 text-[#A6C48A] group-hover:scale-105 group-hover:bg-[#A6C48A] group-hover:text-[#102B20] transition-all">
               <Upload className="h-6 w-6" />
             </div>
             <div>
-              <span className="block text-lg font-bold text-[#F8FAFC]">Upload</span>
-              <span className="block text-xs text-[#94A3B8] mt-0.5">Add an audio file</span>
+              <span className="block text-lg font-bold text-[#F5F3E9]">Upload</span>
+              <span className="block text-xs text-[#A6C48A]/80 mt-0.5">Add an archival audio file</span>
             </div>
           </Link>
 
           <Link
             href="/translate"
-            className="glass-card flex flex-col items-center justify-center gap-3 p-6 min-h-[120px] text-center group"
+            className="forest-glass-panel flex flex-col items-center justify-center gap-3 p-6 text-center hover:border-[#A6C48A]/60 group transition-all"
           >
-            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-teal-500/15 text-teal-400 group-hover:scale-105 transition-transform">
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#163B2C] border border-[#A6C48A]/20 text-[#A6C48A] group-hover:scale-105 group-hover:bg-[#A6C48A] group-hover:text-[#102B20] transition-all">
               <Languages className="h-6 w-6" />
             </div>
             <div>
-              <span className="block text-lg font-bold text-[#F8FAFC]">Translate</span>
-              <span className="block text-xs text-[#94A3B8] mt-0.5">Across 13 languages</span>
+              <span className="block text-lg font-bold text-[#F5F3E9]">Translate</span>
+              <span className="block text-xs text-[#A6C48A]/80 mt-0.5">Honest AI & elder review</span>
+            </div>
+          </Link>
+
+          <Link
+            href="/dictionary"
+            className="forest-glass-panel flex flex-col items-center justify-center gap-3 p-6 text-center hover:border-[#A6C48A]/60 group transition-all"
+          >
+            <div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#163B2C] border border-[#A6C48A]/20 text-[#A6C48A] group-hover:scale-105 group-hover:bg-[#A6C48A] group-hover:text-[#102B20] transition-all">
+              <BookOpen className="h-6 w-6" />
+            </div>
+            <div>
+              <span className="block text-lg font-bold text-[#F5F3E9]">Dictionary</span>
+              <span className="block text-xs text-[#A6C48A]/80 mt-0.5">Explore 4 indigenous lexicons</span>
             </div>
           </Link>
         </section>
 
-        {/* Your Recent Recordings (Max 3) */}
+        {/* Your Recent Recordings Section */}
         <section aria-label="Recent recordings" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <h2 className="text-xl font-bold text-[#F8FAFC]">Your recent recordings</h2>
+          <div className="flex items-center justify-between px-1">
+            <h2 className="text-xl font-bold text-[#F5F3E9] flex items-center gap-2">
+              <TreePine className="h-5 w-5 text-[#A6C48A]" />
+              <span>Your recent recordings</span>
+            </h2>
             <Link
               href="/dashboard"
-              className="text-sm font-medium text-[#F59E0B] hover:underline flex items-center gap-1"
+              className="text-sm font-semibold text-[#A6C48A] hover:text-[#F5F3E9] flex items-center gap-1.5 transition"
             >
-              <span>View all</span>
+              <span>My recordings</span>
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
 
           {recentRecordings.length === 0 ? (
-            <div className="glass-card p-8 text-center space-y-2">
-              <p className="text-base text-[#F8FAFC] font-medium">No recordings yet.</p>
-              <p className="text-sm text-[#94A3B8]">
-                Press Record or Upload above to save your first spoken story.
+            <div className="forest-glass-panel p-8 sm:p-10 text-center space-y-3">
+              <div className="inline-grid h-12 w-12 place-items-center rounded-2xl bg-[#1F5138]/40 border border-[#A6C48A]/30 text-[#A6C48A] mx-auto text-xl">
+                🌲
+              </div>
+              <p className="text-base text-[#F5F3E9] font-medium">No recordings saved in local session yet.</p>
+              <p className="text-sm text-[#A6C48A]/80 max-w-md mx-auto">
+                Press Record or Upload above to save your first spoken story in Gondi, Koya, Santhali, or Lambadi.
               </p>
             </div>
           ) : (
@@ -125,13 +172,13 @@ export default function HomePage() {
                 return (
                   <div
                     key={recording.id}
-                    className="glass-card p-4 sm:p-5 flex items-center justify-between gap-4"
+                    className="forest-glass-panel p-4 sm:p-5 flex items-center justify-between gap-4"
                   >
                     <div className="min-w-0 flex-1">
-                      <h3 className="text-base font-semibold text-[#F8FAFC] truncate">
+                      <h3 className="text-base font-semibold text-[#F5F3E9] truncate">
                         {recording.title}
                       </h3>
-                      <p className="text-sm text-[#94A3B8] mt-0.5">
+                      <p className="text-sm text-[#A6C48A]/80 mt-0.5">
                         {recording.language} · {recording.duration}
                       </p>
                     </div>
@@ -140,17 +187,17 @@ export default function HomePage() {
                       <button
                         type="button"
                         onClick={() => handleTogglePlay(recording)}
-                        className="inline-flex items-center gap-1.5 min-h-[44px] px-3.5 rounded-xl border border-white/15 bg-white/5 text-sm font-medium text-[#F8FAFC] hover:bg-white/10 transition"
+                        className="inline-flex items-center gap-1.5 min-h-[44px] px-4 rounded-full border border-[#A6C48A]/30 bg-[#1F5138] text-sm font-semibold text-[#F5F3E9] hover:bg-[#A6C48A] hover:text-[#102B20] transition-all"
                         aria-label={isPlaying ? `Pause ${recording.title}` : `Play ${recording.title}`}
                       >
                         {isPlaying ? (
                           <>
-                            <Pause className="h-4 w-4 text-[#F59E0B]" />
+                            <Pause className="h-4 w-4" />
                             <span>Pause</span>
                           </>
                         ) : (
                           <>
-                            <Play className="h-4 w-4 text-[#F59E0B] fill-current" />
+                            <Play className="h-4 w-4 fill-current" />
                             <span>Play</span>
                           </>
                         )}
@@ -158,7 +205,7 @@ export default function HomePage() {
 
                       <Link
                         href={`/passport/${recording.id}`}
-                        className="inline-flex items-center gap-1 min-h-[44px] px-3 rounded-xl border border-white/15 bg-white/5 text-sm font-medium text-[#94A3B8] hover:text-[#F8FAFC] hover:bg-white/10 transition"
+                        className="inline-flex items-center gap-1 min-h-[44px] px-3.5 rounded-full border border-[#A6C48A]/25 bg-white/5 text-sm font-medium text-[#A6C48A] hover:text-[#F5F3E9] hover:bg-white/10 transition"
                       >
                         <span>Passport</span>
                       </Link>
@@ -169,6 +216,12 @@ export default function HomePage() {
             </div>
           )}
         </section>
+
+        {/* Footer Statement (Reference: Image 1) */}
+        <footer className="text-center text-xs text-[#A6C48A]/60 pt-8 pb-4 space-y-1">
+          <p className="font-medium text-[#F5F3E9]/75">Stay rooted whenever, wherever.</p>
+          <p>Voice Roots © 2026. Preserving oral heritage under OCAP® principles.</p>
+        </footer>
       </main>
     </div>
   );

@@ -26,11 +26,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen overflow-x-hidden bg-[#080A12] text-[#F8FAFC] antialiased">
-        {/* Soft static blurred color blobs behind glass */}
+      <body className="min-h-screen overflow-x-hidden bg-[#0B1E16] text-[#F5F3E9] antialiased misty-forest-atmosphere">
+        {/* Soft ambient misty emerald forest light rays behind glass */}
         <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10" aria-hidden="true">
-          <div className="absolute -left-32 -top-32 h-[420px] w-[420px] rounded-full bg-[#F59E0B]/12 blur-[120px]" />
-          <div className="absolute -right-32 top-1/2 h-[420px] w-[420px] rounded-full bg-[#14B8A6]/10 blur-[120px]" />
+          <div className="absolute left-1/4 -top-40 h-[520px] w-[520px] rounded-full bg-[#A6C48A]/10 blur-[140px]" />
+          <div className="absolute -left-32 top-1/3 h-[480px] w-[480px] rounded-full bg-[#1F5138]/25 blur-[130px]" />
+          <div className="absolute -right-32 top-1/2 h-[520px] w-[520px] rounded-full bg-[#163B2C]/30 blur-[140px]" />
         </div>
         <LanguageProvider>
           {/* Universal DEMO DATA & OCAP Governance Disclaimer Banner */}

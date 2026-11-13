@@ -2736,3 +2736,20 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     7. Playwright Responsive & Screenshot Suite: `npm run test:e2e --prefix web -- e2e/screenshots_and_responsive.spec.ts` passed 16/16 tests in 17.2s with zero horizontal overflow across 1280px desktop and 390px mobile viewports.
   - NOT VERIFIED: Live Render production deployment sync pending remote push and deploy hook trigger.
   - NEEDS FROM OTHER AGENT: none. Theme refresh complete and verified.
+
+- [2026-11-13] [ANTIGRAVITY] DONE: Implemented Cinematic Misty Forest & Frosted Glass Split-Hero UI (Reference Designs Alignment).
+  - Aligned landing page and authentication experiences with reference designs (`forest.` atmospheric canopy and frosted split-screen sign up):
+    1. `web/src/app/globals.css`: Added `.forest-glass-panel` (backdrop-blur-28px, deep forest translucent green), `.pill-input` (rounded-full with icon prefix), `.pill-btn-solid` (warm ivory/sage pill button), `.font-serif-display` (classic uppercase tracked serif typography), and `.misty-forest-atmosphere` (ambient ethereal canopy gradient lighting).
+    2. `web/src/app/layout.tsx`: Replaced obsolete background blobs with ambient misty emerald forest lighting (`bg-[#0B1E16]`, `#A6C48A` and `#1F5138` canopy glows).
+    3. `web/src/components/ui/Navbar.tsx`: Refreshed navigation header with deep forest glassmorphism (`bg-[#102B20]/85 backdrop-blur-2xl border-b border-[#A6C48A]/15`) and lowercase iconic `voice roots.` branding.
+    4. `web/src/app/page.tsx`: Elevated landing experience to match Reference Image 1 with cinematic hero typography `voice roots.`, micro-badge row (`(OCAP) COMMUNITY SOVEREIGNTY`, `PRESERVE ROOTS`, `IMMUTABLE AUDIO`), 4 frosted glass cards for primary actions, and recent recordings with sage-green audio controls.
+    5. `web/src/app/login/page.tsx`: Redesigned authentication to match Reference Image 2 split-screen layout with frosted glass card, serif display header `BE A PART OF COLLECTIVE ACTION.`, pill inputs with icons (`User`, `Mail`, `Lock`), ethical consent checkbox, and right-hand display typography `SAVE THE ROOTS, PRESERVE THE VOICES.` with `‹ ‹ ‹ ‹` chevron indicators.
+    6. `web/e2e/screenshots_and_responsive.spec.ts`: Added `/login` route to automated responsive verification and captured refreshed desktop (1280px) and mobile (390px) screenshots.
+  - Files touched: `web/src/app/globals.css`, `web/src/app/layout.tsx`, `web/src/components/ui/Navbar.tsx`, `web/src/app/page.tsx`, `web/src/app/login/page.tsx`, `web/e2e/screenshots_and_responsive.spec.ts`, `docs/screenshots/*`, `PROGRESS.md`.
+  - VERIFIED:
+    1. TypeScript Strict Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    2. Next.js Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 53 static/dynamic routes with zero errors.
+    3. Playwright E2E User Lifecycle: `npm run test:e2e --prefix web -- e2e/voice_roots_workflow.spec.ts` passed 8/8 tests in 8.6s.
+    4. Playwright Responsive & Screenshot Suite: `npm run test:e2e --prefix web -- e2e/screenshots_and_responsive.spec.ts` passed 18/18 tests in 27.9s with 0px horizontal overflow across all viewports.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none. UI alignment complete and verified.

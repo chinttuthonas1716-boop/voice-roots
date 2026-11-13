@@ -53,6 +53,85 @@ body {
   transform: translateY(-2px);
 }
 
+/* Atmospheric Forest Deep Glass Card (Reference: Image 2) */
+.forest-glass-panel {
+  background: rgba(16, 43, 32, 0.72);
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+  border: 1px solid rgba(166, 196, 138, 0.28);
+  border-radius: 1.75rem;
+  box-shadow: 0 25px 60px -15px rgba(8, 22, 16, 0.75), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: all 220ms ease;
+}
+
+/* Translucent Pill Inputs (Reference: Image 2) */
+.pill-input {
+  width: 100%;
+  min-height: 48px;
+  border-radius: 9999px;
+  background: rgba(22, 59, 44, 0.38);
+  border: 1px solid rgba(166, 196, 138, 0.3);
+  padding: 0.75rem 1.5rem 0.75rem 3rem;
+  color: #F5F3E9;
+  font-size: 0.95rem;
+  transition: all 180ms ease-out;
+}
+.pill-input::placeholder {
+  color: rgba(166, 196, 138, 0.6);
+}
+.pill-input:focus {
+  outline: none;
+  background: rgba(31, 81, 56, 0.5);
+  border-color: #A6C48A;
+  box-shadow: 0 0 0 3px rgba(166, 196, 138, 0.25);
+}
+
+/* Pill CTA Button (Reference: Image 2) */
+.pill-btn-solid {
+  min-height: 48px;
+  border-radius: 9999px;
+  padding: 0.75rem 2rem;
+  background: #F5F3E9;
+  color: #102B20;
+  font-weight: 700;
+  font-size: 0.9rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.4);
+  transition: all 180ms ease-out;
+}
+.pill-btn-solid:hover {
+  background: #A6C48A;
+  color: #102B20;
+  transform: translateY(-1px);
+  box-shadow: 0 12px 28px -6px rgba(166, 196, 138, 0.4);
+}
+.pill-btn-solid:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+/* Serif Display Typography (Reference: Image 1 & 2) */
+.font-serif-display {
+  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  letter-spacing: 0.04em;
+}
+
+/* Atmospheric Misty Forest Backdrop (Reference: Image 1) */
+.misty-forest-atmosphere {
+  position: relative;
+  background: 
+    radial-gradient(ellipse 80% 50% at 50% -20%, rgba(166, 196, 138, 0.15), transparent),
+    radial-gradient(ellipse 60% 40% at 20% 40%, rgba(31, 81, 56, 0.25), transparent),
+    radial-gradient(ellipse 60% 40% at 80% 60%, rgba(22, 59, 44, 0.3), transparent),
+    linear-gradient(180deg, #102B20 0%, #0D231A 50%, #081610 100%);
+}
+
 /* Primary Accent Button (Forest Green) */
 .btn-primary {
   min-height: 48px;
