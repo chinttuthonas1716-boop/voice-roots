@@ -308,6 +308,27 @@ export const resolveMediaUrl = (url: string | undefined | null): string => {
 };
 
 export function App() {
+  // Theme State: Natural Earth (Warm Ivory) vs Deep Forest Dark Mode
+  const [theme, setTheme] = useState<'earth' | 'dark'>(() => {
+    if (typeof window !== 'undefined') {
+      return (localStorage.getItem('voiceroots_theme') as 'earth' | 'dark') || 'earth';
+    }
+    return 'earth';
+  });
+
+  useEffect(() => {
+    if (typeof document !== 'undefined') {
+      if (theme === 'dark') {
+        document.documentElement.setAttribute('data-theme', 'dark');
+        document.body.setAttribute('data-theme', 'dark');
+      } else {
+        document.documentElement.removeAttribute('data-theme');
+        document.body.removeAttribute('data-theme');
+      }
+      localStorage.setItem('voiceroots_theme', theme);
+    }
+  }, [theme]);
+
   // Backend Connection State
   const [health, setHealth] = useState<ApiHealth | null>(null);
   const [healthError, setHealthError] = useState<string | null>(null);
@@ -2024,7 +2045,7 @@ ${feedbackRecommendation}
         alignItems: 'center',
         padding: '16px 0',
         marginBottom: '28px',
-        borderBottom: '1px solid rgba(35, 83, 71, 0.45)',
+        borderBottom: '1px solid rgba(31, 81, 56, 0.45)',
         flexWrap: 'wrap',
         gap: '16px'
       }}>
@@ -2038,17 +2059,17 @@ ${feedbackRecommendation}
             width: '36px',
             height: '36px',
             borderRadius: '10px',
-            background: 'linear-gradient(135deg, #163832 0%, #0B2B26 100%)',
-            border: '1px solid #235347',
+            background: 'linear-gradient(135deg, #163B2C 0%, #102B20 100%)',
+            border: '1px solid #1F5138',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            boxShadow: '0 2px 8px rgba(5, 31, 32, 0.4)'
+            boxShadow: '0 2px 8px rgba(16, 43, 32, 0.4)'
           }}>
-            <Sprout size={18} color="#8EB69B" />
+            <Sprout size={18} color="#A6C48A" />
           </div>
-          <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em', color: '#DAF1DE' }}>
-            Voice <span style={{ color: '#8EB69B' }}>Roots</span>
+          <span style={{ fontSize: '20px', fontWeight: '800', letterSpacing: '-0.02em', color: '#F5F3E9' }}>
+            Voice <span style={{ color: '#A6C48A' }}>Roots</span>
           </span>
         </div>
 
@@ -2076,11 +2097,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'home' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'home' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'home' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'home' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'home' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2097,11 +2118,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'record' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'record' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'record' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'record' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'record' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2118,11 +2139,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'assistant' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'assistant' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'assistant' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'assistant' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'assistant' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2139,11 +2160,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'languages' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'languages' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'languages' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'languages' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'languages' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2160,11 +2181,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'graph' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'graph' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'graph' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'graph' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'graph' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -2185,11 +2206,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'cultural' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'cultural' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'cultural' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'cultural' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'cultural' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -2210,11 +2231,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'speech' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'speech' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'speech' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'speech' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'speech' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -2235,11 +2256,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'dictionary' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'dictionary' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'dictionary' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'dictionary' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'dictionary' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -2260,11 +2281,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'learning' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'learning' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'learning' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'learning' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'learning' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -2285,11 +2306,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'research' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'research' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'research' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'research' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'research' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
               alignItems: 'center',
@@ -2310,11 +2331,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'search' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'search' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'search' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'search' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'search' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2331,11 +2352,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'archive' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'archive' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'archive' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'archive' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'archive' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2352,11 +2373,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'community' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'community' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'community' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'community' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'community' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2373,11 +2394,11 @@ ${feedbackRecommendation}
               border: 'none',
               padding: '8px 14px',
               borderRadius: '20px',
-              color: activeNavTab === 'command' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              color: activeNavTab === 'command' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
               fontWeight: activeNavTab === 'command' ? '700' : '500',
               fontSize: '14px',
               cursor: 'pointer',
-              borderBottom: activeNavTab === 'command' ? '2px solid #8EB69B' : '2px solid transparent',
+              borderBottom: activeNavTab === 'command' ? '2px solid #A6C48A' : '2px solid transparent',
               transition: 'all 0.15s ease'
             }}
           >
@@ -2393,8 +2414,8 @@ ${feedbackRecommendation}
               width: '10px',
               height: '10px',
               borderRadius: '50%',
-              background: health ? '#8EB69B' : '#EF4444',
-              boxShadow: health ? '0 0 8px #8EB69B' : 'none',
+              background: health ? '#A6C48A' : '#EF4444',
+              boxShadow: health ? '0 0 8px #A6C48A' : 'none',
               marginRight: '4px'
             }}
           />
@@ -2406,18 +2427,18 @@ ${feedbackRecommendation}
             title={backupMessage || "Create atomic SQLite database snapshot"}
             style={{
               background: 'transparent',
-              border: '1px solid #235347',
+              border: '1px solid #1F5138',
               borderRadius: '20px',
               padding: '6px 12px',
               fontSize: '12px',
-              color: '#DAF1DE',
+              color: '#F5F3E9',
               cursor: 'pointer',
               display: 'inline-flex',
               alignItems: 'center',
               gap: '6px'
             }}
           >
-            {isCreatingBackup ? <Loader2 size={12} className="spin" /> : <Database size={12} color="#8EB69B" />}
+            {isCreatingBackup ? <Loader2 size={12} className="spin" /> : <Database size={12} color="#A6C48A" />}
             <span>{isCreatingBackup ? 'Saving...' : 'Backup'}</span>
           </button>
 
@@ -2444,6 +2465,29 @@ ${feedbackRecommendation}
             <span>Faculty Viva Guide</span>
           </button>
 
+          {/* 🌿 Theme Toggle: Natural Earth / Deep Forest */}
+          <button
+            type="button"
+            onClick={() => setTheme(prev => prev === 'earth' ? 'dark' : 'earth')}
+            title={`Current theme: ${theme === 'earth' ? 'Natural Earth (Warm Ivory)' : 'Deep Forest (Dark Mode)'}. Click to switch.`}
+            style={{
+              background: 'rgba(166, 196, 138, 0.18)',
+              border: '1px solid #A6C48A',
+              borderRadius: '20px',
+              padding: '6px 12px',
+              fontSize: '12px',
+              color: '#F5F3E9',
+              cursor: 'pointer',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '6px',
+              fontWeight: '600',
+              transition: 'all 0.15s ease'
+            }}
+          >
+            <span>{theme === 'earth' ? '🌿 Natural Earth' : '🌲 Deep Forest'}</span>
+          </button>
+
           {currentUser ? (
             <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
               <button
@@ -2453,11 +2497,11 @@ ${feedbackRecommendation}
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'rgba(35, 83, 71, 0.5)',
-                  border: '1px solid #8EB69B',
+                  background: 'rgba(31, 81, 56, 0.5)',
+                  border: '1px solid #A6C48A',
                   borderRadius: '20px',
                   padding: '4px 12px',
-                  color: '#DAF1DE',
+                  color: '#F5F3E9',
                   fontSize: '12px',
                   fontWeight: 600,
                   cursor: 'pointer'
@@ -2505,8 +2549,8 @@ ${feedbackRecommendation}
                   minHeight: '34px',
                   fontSize: '13px',
                   borderRadius: '20px',
-                  background: activeNavTab === 'login' && authMode === 'login' ? 'rgba(142, 182, 155, 0.2)' : 'rgba(11, 43, 38, 0.6)',
-                  borderColor: activeNavTab === 'login' && authMode === 'login' ? '#8EB69B' : '#235347'
+                  background: activeNavTab === 'login' && authMode === 'login' ? 'rgba(166, 196, 138, 0.2)' : 'rgba(16, 43, 32, 0.6)',
+                  borderColor: activeNavTab === 'login' && authMode === 'login' ? '#A6C48A' : '#1F5138'
                 }}
               >
                 Login
@@ -2545,14 +2589,14 @@ ${feedbackRecommendation}
       {(activeNavTab === 'record' || activeNavTab === 'studio') && (
         <>
           {/* Mission & Protocol Notice Card */}
-          <div className="glass-card" style={{ marginBottom: '28px', borderLeft: '4px solid #8EB69B' }}>
+          <div className="glass-card" style={{ marginBottom: '28px', borderLeft: '4px solid #A6C48A' }}>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-              <Info size={22} color="#8EB69B" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <Info size={22} color="#A6C48A" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#DAF1DE' }}>
+                <h2 style={{ fontSize: '16px', fontWeight: '700', marginBottom: '4px', color: '#F5F3E9' }}>
                   Ethical Language Preservation & Speech AI
                 </h2>
-                <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.8)', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '14px', color: 'rgba(245, 243, 233, 0.8)', lineHeight: '1.6' }}>
                   Voice Roots roots unwritten oral, tribal, and regional tongues into searchable text.
                   Under Indigenous Data Sovereignty (OCAP) protocols, the original speaker's audio recording is preserved permanently as the immutable master.
                   Automated AI transcription is processed with explicit consent and stored as an annotation layer that never overwrites the master voice.
@@ -2572,7 +2616,7 @@ ${feedbackRecommendation}
         <section className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <FileAudio size={20} color="#8EB69B" />
+              <FileAudio size={20} color="#A6C48A" />
               <span>Capture Oral Audio</span>
             </h3>
 
@@ -2582,8 +2626,8 @@ ${feedbackRecommendation}
                 type="button"
                 onClick={() => setMode('record')}
                 style={{
-                  background: mode === 'record' ? '#8EB69B' : 'transparent',
-                  color: mode === 'record' ? '#051F20' : 'rgba(218, 241, 222, 0.7)',
+                  background: mode === 'record' ? '#A6C48A' : 'transparent',
+                  color: mode === 'record' ? '#102B20' : 'rgba(245, 243, 233, 0.7)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '6px 14px',
@@ -2599,8 +2643,8 @@ ${feedbackRecommendation}
                 type="button"
                 onClick={() => setMode('upload')}
                 style={{
-                  background: mode === 'upload' ? '#8EB69B' : 'transparent',
-                  color: mode === 'upload' ? '#051F20' : 'rgba(218, 241, 222, 0.7)',
+                  background: mode === 'upload' ? '#A6C48A' : 'transparent',
+                  color: mode === 'upload' ? '#102B20' : 'rgba(245, 243, 233, 0.7)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '6px 14px',
@@ -2634,7 +2678,7 @@ ${feedbackRecommendation}
                 <span style={{ fontSize: '12px', color: '#F9E79F', fontWeight: '700', display: 'block' }}>
                   Live Faculty Demo Preset
                 </span>
-                <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>
+                <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.65)' }}>
                   Pre-loads authentic Gondi oral sample & affirmative OCAP consent
                 </span>
               </div>
@@ -2645,7 +2689,7 @@ ${feedbackRecommendation}
               disabled={isLoadingDemoPreset}
               style={{
                 background: '#D4AF37',
-                color: '#051F20',
+                color: '#102B20',
                 border: 'none',
                 borderRadius: '8px',
                 padding: '6px 14px',
@@ -2667,7 +2711,7 @@ ${feedbackRecommendation}
           <form onSubmit={handleSubmit} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
             {/* Title Input */}
             <div>
-              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '6px' }}>
                 Recording Title *
               </label>
               <input
@@ -2684,7 +2728,7 @@ ${feedbackRecommendation}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '12px' }}>
               <div>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '500', color: 'rgba(218, 241, 222, 0.72)' }}>
+                  <label style={{ fontSize: '13px', fontWeight: '500', color: 'rgba(245, 243, 233, 0.72)' }}>
                     Language *
                   </label>
                   <button
@@ -2693,7 +2737,7 @@ ${feedbackRecommendation}
                     style={{
                       background: 'transparent',
                       border: 'none',
-                      color: '#8EB69B',
+                      color: '#A6C48A',
                       fontSize: '11px',
                       cursor: 'pointer',
                       display: 'flex',
@@ -2751,8 +2795,8 @@ ${feedbackRecommendation}
                   const curr = languages.find(l => l.name.toLowerCase() === selectedLanguage.toLowerCase() || l.code.toLowerCase() === selectedLanguage.toLowerCase());
                   if (!curr || selectedLanguage === 'auto') return null;
                   return (
-                    <div style={{ marginTop: '4px', fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
-                      <span>BCP 47: <code style={{ color: '#8EB69B' }}>{curr.code}</code></span>
+                    <div style={{ marginTop: '4px', fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                      <span>BCP 47: <code style={{ color: '#A6C48A' }}>{curr.code}</code></span>
                       {curr.script && <span>Script: {curr.script.split('/')[0].trim()}</span>}
                     </div>
                   );
@@ -2760,7 +2804,7 @@ ${feedbackRecommendation}
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: '500', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '6px' }}>
                   Dialect / Variety
                 </label>
                 <input
@@ -2784,13 +2828,24 @@ ${feedbackRecommendation}
               }}>
                 <div style={{ marginBottom: '16px' }}>
                   {isRecording ? (
-                    <div style={{ color: '#EF4444', fontWeight: '700', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
-                      <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#EF4444', display: 'inline-block', animation: 'pulse 1s infinite' }} />
-                      Recording: {formatSeconds(recordingTime)}
+                    <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '10px' }}>
+                      <div style={{ color: '#EF4444', fontWeight: '700', fontSize: '20px', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px' }}>
+                        <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#EF4444', display: 'inline-block', animation: 'pulse 1s infinite' }} />
+                        Recording Master Audio: {formatSeconds(recordingTime)}
+                      </div>
+                      {/* 🌿 Sage-Green Live Acoustic Waveform Visualizer */}
+                      <div className="waveform-container" title="Capturing oral language acoustic master waveform">
+                        {[...Array(14)].map((_, i) => (
+                          <div key={i} className="waveform-bar" style={{ animationDelay: `${(i * 0.09).toFixed(2)}s` }} />
+                        ))}
+                      </div>
+                      <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '600' }}>
+                        🌿 Sage-green acoustic waveform active • 48kHz Lossless master stream
+                      </span>
                     </div>
                   ) : (
-                    <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.72)' }}>
-                      {recordedBlob ? 'Audio captured! Click play below or re-record.' : 'Click to start recording your microphone.'}
+                    <p style={{ fontSize: '14px', color: 'var(--text-muted)' }}>
+                      {recordedBlob ? 'Acoustic audio captured! Listen below or re-record.' : 'Click to start recording your microphone in lossless acoustic quality.'}
                     </p>
                   )}
                 </div>
@@ -2801,7 +2856,7 @@ ${feedbackRecommendation}
                       type="button"
                       onClick={startRecording}
                       className="btn-primary"
-                      style={{ background: '#8EB69B', color: '#051F20' }}
+                      style={{ background: '#1F5138', color: '#F5F3E9' }}
                     >
                       <Mic size={18} />
                       <span>{recordedBlob ? 'Record Again' : 'Start Recording'}</span>
@@ -2811,7 +2866,7 @@ ${feedbackRecommendation}
                       type="button"
                       onClick={stopRecording}
                       className="btn-primary"
-                      style={{ background: '#8EB69B', color: '#051F20' }}
+                      style={{ background: '#1F5138', color: '#F5F3E9' }}
                     >
                       <Square size={18} />
                       <span>Stop Recording</span>
@@ -2833,8 +2888,8 @@ ${feedbackRecommendation}
                 padding: '24px',
                 textAlign: 'center'
               }}>
-                <Upload size={32} color="#8EB69B" style={{ margin: '0 auto 12px' }} />
-                <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '12px' }}>
+                <Upload size={32} color="#A6C48A" style={{ margin: '0 auto 12px' }} />
+                <p style={{ fontSize: '14px', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '12px' }}>
                   Select a master audio file (.wav, .mp3, .m4a, .ogg, .flac)
                 </p>
                 <input
@@ -2850,7 +2905,7 @@ ${feedbackRecommendation}
 
                 {selectedFile && (
                   <div style={{ marginTop: '14px', textAlign: 'left' }}>
-                    <p style={{ fontSize: '13px', color: '#DAF1DE', fontWeight: '600' }}>
+                    <p style={{ fontSize: '13px', color: '#F5F3E9', fontWeight: '600' }}>
                       ✓ {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
                     </p>
                     {fileAudioUrl && (
@@ -2864,8 +2919,8 @@ ${feedbackRecommendation}
             {/* Affirmative Speaker Consent (Mandatory under Indigenous Ethical Protocols / OCAP) */}
             <div
               style={{
-                background: hasConsent ? 'rgba(142, 182, 155, 0.08)' : 'rgba(255, 255, 255, 0.03)',
-                border: hasConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)',
+                background: hasConsent ? 'rgba(166, 196, 138, 0.08)' : 'rgba(255, 255, 255, 0.03)',
+                border: hasConsent ? '1px solid #A6C48A' : '1px solid var(--card-border)',
                 borderRadius: '12px',
                 padding: '16px',
                 display: 'flex',
@@ -2886,22 +2941,22 @@ ${feedbackRecommendation}
                   width: '18px',
                   height: '18px',
                   marginTop: '2px',
-                  accentColor: '#8EB69B',
+                  accentColor: '#A6C48A',
                   cursor: 'pointer'
                 }}
                 required
               />
               <label
                 htmlFor="speaker-consent-checkbox"
-                style={{ fontSize: '13px', lineHeight: '1.5', color: '#DAF1DE', cursor: 'pointer', flex: 1 }}
+                style={{ fontSize: '13px', lineHeight: '1.5', color: '#F5F3E9', cursor: 'pointer', flex: 1 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
-                  <ShieldCheck size={16} color="#8EB69B" />
-                  <strong style={{ color: '#8EB69B' }}>
+                  <ShieldCheck size={16} color="#A6C48A" />
+                  <strong style={{ color: '#A6C48A' }}>
                     Affirmative Speaker Consent (Mandatory)
                   </strong>
                 </div>
-                <span style={{ color: 'rgba(218, 241, 222, 0.72)' }}>
+                <span style={{ color: 'rgba(245, 243, 233, 0.72)' }}>
                   I confirm that this recording is made with voluntary, informed consent under Indigenous Data Sovereignty (OCAP). The audio master will be stored permanently in immutable storage. Voice recordings and cultural lore will not be used for third-party model training or commercial redistribution without explicit permission.
                 </span>
               </label>
@@ -2910,8 +2965,8 @@ ${feedbackRecommendation}
             {/* AI Speech Transcription Consent (Distinct Opt-in) */}
             <div
               style={{
-                background: wantsTranscriptionConsent ? 'rgba(142, 182, 155, 0.1)' : 'rgba(255, 255, 255, 0.03)',
-                border: wantsTranscriptionConsent ? '1px solid #8EB69B' : '1px solid var(--card-border)',
+                background: wantsTranscriptionConsent ? 'rgba(166, 196, 138, 0.1)' : 'rgba(255, 255, 255, 0.03)',
+                border: wantsTranscriptionConsent ? '1px solid #A6C48A' : '1px solid var(--card-border)',
                 borderRadius: '12px',
                 padding: '14px',
                 display: 'flex',
@@ -2929,21 +2984,21 @@ ${feedbackRecommendation}
                   width: '18px',
                   height: '18px',
                   marginTop: '2px',
-                  accentColor: '#8EB69B',
+                  accentColor: '#A6C48A',
                   cursor: 'pointer'
                 }}
               />
               <label
                 htmlFor="transcription-consent-checkbox"
-                style={{ fontSize: '13px', lineHeight: '1.5', color: '#DAF1DE', cursor: 'pointer', flex: 1 }}
+                style={{ fontSize: '13px', lineHeight: '1.5', color: '#F5F3E9', cursor: 'pointer', flex: 1 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '2px' }}>
-                  <Sparkles size={16} color="#8EB69B" />
-                  <strong style={{ color: '#DAF1DE' }}>
+                  <Sparkles size={16} color="#A6C48A" />
+                  <strong style={{ color: '#F5F3E9' }}>
                     Queue AI Speech Transcription (Opt-in Consent)
                   </strong>
                 </div>
-                <span style={{ color: 'rgba(218, 241, 222, 0.72)', fontSize: '12px' }}>
+                <span style={{ color: 'rgba(245, 243, 233, 0.72)', fontSize: '12px' }}>
                   Request automated phonetic speech-to-text recognition upon upload. AI hypotheses are stored as an annotation layer without modifying the original audio.
                 </span>
               </label>
@@ -2952,14 +3007,14 @@ ${feedbackRecommendation}
             {/* Live Upload Progress Indicator */}
             {uploadProgress !== null && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)' }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: 'rgba(245, 243, 233, 0.72)' }}>
                   <span>Uploading & Preserving Master...</span>
-                  <span style={{ color: '#8EB69B', fontWeight: '600' }}>{uploadProgress}%</span>
+                  <span style={{ color: '#A6C48A', fontWeight: '600' }}>{uploadProgress}%</span>
                 </div>
                 <div style={{ background: 'rgba(255,255,255,0.08)', borderRadius: '6px', height: '6px', overflow: 'hidden' }}>
                   <div
                     style={{
-                      background: 'linear-gradient(90deg, #235347, #8EB69B)',
+                      background: 'linear-gradient(90deg, #1F5138, #A6C48A)',
                       height: '100%',
                       width: `${uploadProgress}%`,
                       transition: 'width 0.15s ease'
@@ -3000,7 +3055,7 @@ ${feedbackRecommendation}
         <section className="glass-card">
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-              <Languages size={20} color="#8EB69B" />
+              <Languages size={20} color="#A6C48A" />
               <span>Transcription Workspace</span>
             </h3>
 
@@ -3035,20 +3090,20 @@ ${feedbackRecommendation}
           {activeResult ? (
             <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', marginBottom: '4px' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', marginBottom: '4px' }}>
                   {activeResult.title}
                 </h4>
-                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)', alignItems: 'center' }}>
-                  <span>Language: <strong style={{ color: '#DAF1DE' }}>{activeResult.language}</strong></span>
+                <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', fontSize: '12px', color: 'rgba(245, 243, 233, 0.72)', alignItems: 'center' }}>
+                  <span>Language: <strong style={{ color: '#F5F3E9' }}>{activeResult.language}</strong></span>
                   <button
                     type="button"
                     onClick={() => handleDetectLanguage(activeResult.id)}
                     disabled={isDetectingLanguage || !supportsAutoDetect}
                     style={{
-                      background: supportsAutoDetect ? 'rgba(142, 182, 155, 0.15)' : 'rgba(255, 255, 255, 0.05)',
-                      border: supportsAutoDetect ? '1px solid #8EB69B' : '1px solid var(--card-border)',
+                      background: supportsAutoDetect ? 'rgba(166, 196, 138, 0.15)' : 'rgba(255, 255, 255, 0.05)',
+                      border: supportsAutoDetect ? '1px solid #A6C48A' : '1px solid var(--card-border)',
                       borderRadius: '6px',
-                      color: supportsAutoDetect ? '#8EB69B' : 'rgba(218, 241, 222, 0.5)',
+                      color: supportsAutoDetect ? '#A6C48A' : 'rgba(245, 243, 233, 0.5)',
                       fontSize: '11px',
                       padding: '2px 8px',
                       cursor: supportsAutoDetect ? 'pointer' : 'not-allowed',
@@ -3062,10 +3117,10 @@ ${feedbackRecommendation}
                     <Sparkles size={11} />
                     <span>{isDetectingLanguage ? 'Analyzing...' : (supportsAutoDetect ? 'Detect Language' : 'Detect (Unavailable)')}</span>
                   </button>
-                  {activeResult.dialect && <span>• Dialect: <strong style={{ color: '#DAF1DE' }}>{activeResult.dialect}</strong></span>}
+                  {activeResult.dialect && <span>• Dialect: <strong style={{ color: '#F5F3E9' }}>{activeResult.dialect}</strong></span>}
                   {activeResult.audio_sha256 && (
                     <span title={`SHA-256: ${activeResult.audio_sha256}`}>
-                      • SHA-256: <code style={{ color: '#8EB69B' }}>{activeResult.audio_sha256.substring(0, 8)}…</code>
+                      • SHA-256: <code style={{ color: '#A6C48A' }}>{activeResult.audio_sha256.substring(0, 8)}…</code>
                     </span>
                   )}
                   {activeResult.file_size_bytes && (
@@ -3291,9 +3346,9 @@ ${feedbackRecommendation}
                   <div style={{
                     padding: '10px 12px',
                     borderRadius: '8px',
-                    background: 'rgba(142, 182, 155, 0.1)',
-                    border: '1px solid #235347',
-                    color: '#DAF1DE',
+                    background: 'rgba(166, 196, 138, 0.1)',
+                    border: '1px solid #1F5138',
+                    color: '#F5F3E9',
                     fontSize: '13px'
                   }}>
                     <p style={{ marginBottom: '6px' }}>
@@ -3396,14 +3451,14 @@ ${feedbackRecommendation}
 
               {/* ─── Box 2: Community Corrected Transcript (Editable) ─── */}
               <div style={{
-                background: 'rgba(142, 182, 155, 0.04)',
-                border: '1px solid #235347',
+                background: 'rgba(166, 196, 138, 0.04)',
+                border: '1px solid #1F5138',
                 borderRadius: '12px',
                 padding: '16px'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                  <label style={{ fontSize: '13px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                    <Edit3 size={15} color="#8EB69B" />
+                  <label style={{ fontSize: '13px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                    <Edit3 size={15} color="#A6C48A" />
                     <span>Community Transcript & Corrections (Editable)</span>
                   </label>
                   {activeResult.status === 'Community Edited' && (
@@ -3422,7 +3477,7 @@ ${feedbackRecommendation}
                 />
 
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '10px', flexWrap: 'wrap', gap: '8px' }}>
-                  <p style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)' }}>
+                  <p style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)' }}>
                     Saved separately without modifying the immutable audio master or original AI output.
                   </p>
 
@@ -3439,10 +3494,10 @@ ${feedbackRecommendation}
                 </div>
 
                 {/* ─── Community Corrections Version Timeline & Form ─── */}
-                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(35, 83, 71, 0.4)' }}>
+                <div style={{ marginTop: '16px', paddingTop: '14px', borderTop: '1px solid rgba(31, 81, 56, 0.4)' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                      <History size={14} color="#8EB69B" />
+                    <span style={{ fontSize: '12px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                      <History size={14} color="#A6C48A" />
                       <span>Correction Audit Trail & Versions {isLoadingCorrections ? '(Loading...)' : `(${corrections.length})`}</span>
                     </span>
                     <button
@@ -3506,12 +3561,12 @@ ${feedbackRecommendation}
                       />
 
                       {/* Consent Checkbox */}
-                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '10px', cursor: 'pointer' }}>
+                      <label style={{ display: 'flex', alignItems: 'center', gap: '6px', fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '10px', cursor: 'pointer' }}>
                         <input
                           type="checkbox"
                           checked={corrConsent}
                           onChange={(e) => setCorrConsent(e.target.checked)}
-                          style={{ accentColor: '#8EB69B' }}
+                          style={{ accentColor: '#A6C48A' }}
                         />
                         <span>I affirmatively consent under OCAP protocols to archive this revision. Community contributions will not be used for commercial redistribution or unapproved training.</span>
                       </label>
@@ -3582,7 +3637,7 @@ ${feedbackRecommendation}
                                     type="button"
                                     onClick={() => handleReviewCorrection(c.id, 'approved', 'uncertain_dialect_variation')}
                                     className="btn-secondary"
-                                    style={{ padding: '2px 6px', fontSize: '10px', minHeight: '22px', background: 'rgba(142,182,155,0.15)', color: '#8EB69B' }}
+                                    style={{ padding: '2px 6px', fontSize: '10px', minHeight: '22px', background: 'rgba(142,182,155,0.15)', color: '#A6C48A' }}
                                     title="Approve with dialect variation caveat"
                                   >
                                     + Dialect Caveat
@@ -3691,15 +3746,15 @@ ${feedbackRecommendation}
                   <div style={{
                     padding: '12px',
                     borderRadius: '8px',
-                    background: 'rgba(35, 83, 71, 0.35)',
-                    border: '1px solid rgba(142, 182, 155, 0.35)',
-                    color: '#DAF1DE',
+                    background: 'rgba(31, 81, 56, 0.35)',
+                    border: '1px solid rgba(166, 196, 138, 0.35)',
+                    color: '#F5F3E9',
                     fontSize: '12px',
                     lineHeight: '1.5',
                     marginBottom: '10px'
                   }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '6px', fontWeight: '700', marginBottom: '4px' }}>
-                      <AlertCircle size={14} color="#8EB69B" />
+                      <AlertCircle size={14} color="#A6C48A" />
                       <span>Indigenous Oral Tongue Protection Active</span>
                     </div>
                     <p>{oralReviewNotice}</p>
@@ -3849,14 +3904,14 @@ ${feedbackRecommendation}
       {activeNavTab === 'translate' && (
         <section style={{ display: 'flex', flexDirection: 'column', gap: '28px', marginBottom: '40px' }}>
           {/* Header Banner */}
-          <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B' }}>
+          <div className="glass-card" style={{ borderLeft: '4px solid #A6C48A' }}>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-              <Languages size={24} color="#8EB69B" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <Languages size={24} color="#A6C48A" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px', color: '#DAF1DE' }}>
+                <h2 style={{ fontSize: '18px', fontWeight: '700', marginBottom: '4px', color: '#F5F3E9' }}>
                   AI-Powered Translation for Oral & Written Tongues
                 </h2>
-                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.72)', lineHeight: '1.6' }}>
                   Translate unwritten oral transcriptions and text between indigenous, regional, and national languages.
                   Oral languages are protected with elder verification safeguards and strict annotation provenance.
                 </p>
@@ -3873,7 +3928,7 @@ ${feedbackRecommendation}
           <div className="glass-card">
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '14px', alignItems: 'end', marginBottom: '20px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '6px' }}>
                   SOURCE LANGUAGE
                 </label>
                 <select
@@ -3897,12 +3952,12 @@ ${feedbackRecommendation}
                   title="Swap source and target languages"
                   style={{ borderRadius: '50%', width: '42px', height: '42px', padding: 0 }}
                 >
-                  <RotateCcw size={16} color="#8EB69B" />
+                  <RotateCcw size={16} color="#A6C48A" />
                 </button>
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '6px' }}>
                   TARGET LANGUAGE
                 </label>
                 <select
@@ -3926,7 +3981,7 @@ ${feedbackRecommendation}
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '6px' }}>
                   LOAD FROM ARCHIVE (OPTIONAL)
                 </label>
                 <select
@@ -3945,7 +4000,7 @@ ${feedbackRecommendation}
             </div>
 
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '6px' }}>
                 TEXT TO TRANSLATE *
               </label>
               <textarea
@@ -3958,7 +4013,7 @@ ${feedbackRecommendation}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '10px' }}>
-              <span style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.5)' }}>
+              <span style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.5)' }}>
                 {freeformInputText.length} characters • {freeformInputText.trim().split(/\s+/).filter(Boolean).length} words
               </span>
 
@@ -3976,14 +4031,14 @@ ${feedbackRecommendation}
           </div>
 
           {oralReviewNotice && (
-            <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B', background: 'rgba(11, 43, 38, 0.85)' }}>
+            <div className="glass-card" style={{ borderLeft: '4px solid #A6C48A', background: 'rgba(16, 43, 32, 0.85)' }}>
               <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-start' }}>
-                <ShieldCheck size={20} color="#8EB69B" style={{ flexShrink: 0, marginTop: '2px' }} />
+                <ShieldCheck size={20} color="#A6C48A" style={{ flexShrink: 0, marginTop: '2px' }} />
                 <div>
-                  <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginBottom: '2px' }}>
+                  <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#F5F3E9', marginBottom: '2px' }}>
                     Elder Linguistic Safeguard Enforced
                   </h4>
-                  <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.85)', lineHeight: '1.5' }}>
+                  <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.85)', lineHeight: '1.5' }}>
                     {oralReviewNotice}
                   </p>
                 </div>
@@ -3999,10 +4054,10 @@ ${feedbackRecommendation}
           )}
 
           {translationResult && (
-            <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B', background: '#0B2B26' }}>
+            <div className="glass-card" style={{ borderLeft: '4px solid #A6C48A', background: '#102B20' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '12px', flexWrap: 'wrap', gap: '8px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#DAF1DE' }}>
+                  <span style={{ fontSize: '13px', fontWeight: '700', color: '#F5F3E9' }}>
                     {translationResult.source_language} ➔ {translationResult.target_language}
                   </span>
                   <span className="badge badge-teal" style={{ fontSize: '11px' }}>
@@ -4030,19 +4085,19 @@ ${feedbackRecommendation}
 
               <div style={{
                 fontSize: '18px',
-                color: '#DAF1DE',
+                color: '#F5F3E9',
                 fontWeight: '600',
                 lineHeight: '1.6',
-                background: 'rgba(5, 31, 32, 0.6)',
+                background: 'rgba(16, 43, 32, 0.6)',
                 padding: '16px 20px',
                 borderRadius: '12px',
-                border: '1px solid #235347'
+                border: '1px solid #1F5138'
               }}>
                 "{translationResult.translated_text}"
               </div>
 
               {translationResult.limitation_note && (
-                <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.65)', marginTop: '10px', fontStyle: 'italic' }}>
+                <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.65)', marginTop: '10px', fontStyle: 'italic' }}>
                   Linguistic Note: {translationResult.limitation_note}
                 </p>
               )}
@@ -4051,11 +4106,11 @@ ${feedbackRecommendation}
 
           {/* Persistent Saved Translations List */}
           <div className="glass-card">
-            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', marginBottom: '12px' }}>
+            <h3 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', marginBottom: '12px' }}>
               Recent Preserved Translations
             </h3>
             {savedTranslations.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.55)', fontStyle: 'italic' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.55)', fontStyle: 'italic' }}>
                 No translations stored yet. Generate and save translations to preserve cultural annotations.
               </p>
             ) : (
@@ -4064,21 +4119,21 @@ ${feedbackRecommendation}
                   <div
                     key={tr.id}
                     style={{
-                      background: '#0B2B26',
-                      border: '1px solid #235347',
+                      background: '#102B20',
+                      border: '1px solid #1F5138',
                       borderRadius: '10px',
                       padding: '12px 14px'
                     }}
                   >
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '6px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B' }}>
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#A6C48A' }}>
                         {tr.source_language} ➔ {tr.target_language}
                       </span>
                       <span className="badge badge-teal" style={{ fontSize: '10px' }}>
                         {tr.provider}
                       </span>
                     </div>
-                    <p style={{ fontSize: '14px', color: '#DAF1DE', margin: 0 }}>
+                    <p style={{ fontSize: '14px', color: '#F5F3E9', margin: 0 }}>
                       "{tr.translated_text}"
                     </p>
                   </div>
@@ -4094,11 +4149,11 @@ ${feedbackRecommendation}
         <section className="glass-card" style={{ marginBottom: '32px' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
           <div>
-            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE' }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#F5F3E9' }}>
               Language Archive & Saved Transcripts ({transcripts.length})
             </h3>
-            <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)' }}>
-              Permanently persisted in SQLite database (<code style={{ color: '#8EB69B' }}>voice_roots.db</code>)
+            <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.72)' }}>
+              Permanently persisted in SQLite database (<code style={{ color: '#A6C48A' }}>voice_roots.db</code>)
             </p>
           </div>
 
@@ -4112,10 +4167,10 @@ ${feedbackRecommendation}
                 setArchiveDisplayLimit(15);
               }}
               style={{
-                background: 'rgba(5, 31, 32, 0.7)',
-                border: '1px solid #235347',
+                background: 'rgba(16, 43, 32, 0.7)',
+                border: '1px solid #1F5138',
                 borderRadius: '8px',
-                color: '#DAF1DE',
+                color: '#F5F3E9',
                 padding: '6px 12px',
                 fontSize: '13px',
                 outline: 'none',
@@ -4143,18 +4198,18 @@ ${feedbackRecommendation}
           flexWrap: 'wrap',
           gap: '10px',
           paddingBottom: '14px',
-          borderBottom: '1px solid rgba(35, 83, 71, 0.6)'
+          borderBottom: '1px solid rgba(31, 81, 56, 0.6)'
         }}>
           {/* Classification Filter Chips */}
           <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
-            <span style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.6)', marginRight: '4px' }}>Filter:</span>
+            <span style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.6)', marginRight: '4px' }}>Filter:</span>
             <button
               type="button"
               onClick={() => { setArchiveCategoryFilter('all'); setArchiveDisplayLimit(15); }}
               style={{
-                background: archiveCategoryFilter === 'all' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
-                color: archiveCategoryFilter === 'all' ? '#051F20' : '#DAF1DE',
-                border: '1px solid ' + (archiveCategoryFilter === 'all' ? '#8EB69B' : '#235347'),
+                background: archiveCategoryFilter === 'all' ? '#A6C48A' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'all' ? '#102B20' : '#F5F3E9',
+                border: '1px solid ' + (archiveCategoryFilter === 'all' ? '#A6C48A' : '#1F5138'),
                 borderRadius: '16px',
                 padding: '4px 12px',
                 fontSize: '12px',
@@ -4169,9 +4224,9 @@ ${feedbackRecommendation}
               type="button"
               onClick={() => { setArchiveCategoryFilter('oral'); setArchiveDisplayLimit(15); }}
               style={{
-                background: archiveCategoryFilter === 'oral' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
-                color: archiveCategoryFilter === 'oral' ? '#051F20' : '#DAF1DE',
-                border: '1px solid ' + (archiveCategoryFilter === 'oral' ? '#8EB69B' : '#235347'),
+                background: archiveCategoryFilter === 'oral' ? '#A6C48A' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'oral' ? '#102B20' : '#F5F3E9',
+                border: '1px solid ' + (archiveCategoryFilter === 'oral' ? '#A6C48A' : '#1F5138'),
                 borderRadius: '16px',
                 padding: '4px 12px',
                 fontSize: '12px',
@@ -4186,9 +4241,9 @@ ${feedbackRecommendation}
               type="button"
               onClick={() => { setArchiveCategoryFilter('verified'); setArchiveDisplayLimit(15); }}
               style={{
-                background: archiveCategoryFilter === 'verified' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
-                color: archiveCategoryFilter === 'verified' ? '#051F20' : '#DAF1DE',
-                border: '1px solid ' + (archiveCategoryFilter === 'verified' ? '#8EB69B' : '#235347'),
+                background: archiveCategoryFilter === 'verified' ? '#A6C48A' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'verified' ? '#102B20' : '#F5F3E9',
+                border: '1px solid ' + (archiveCategoryFilter === 'verified' ? '#A6C48A' : '#1F5138'),
                 borderRadius: '16px',
                 padding: '4px 12px',
                 fontSize: '12px',
@@ -4203,9 +4258,9 @@ ${feedbackRecommendation}
               type="button"
               onClick={() => { setArchiveCategoryFilter('pending'); setArchiveDisplayLimit(15); }}
               style={{
-                background: archiveCategoryFilter === 'pending' ? '#8EB69B' : 'rgba(255,255,255,0.06)',
-                color: archiveCategoryFilter === 'pending' ? '#051F20' : '#DAF1DE',
-                border: '1px solid ' + (archiveCategoryFilter === 'pending' ? '#8EB69B' : '#235347'),
+                background: archiveCategoryFilter === 'pending' ? '#A6C48A' : 'rgba(255,255,255,0.06)',
+                color: archiveCategoryFilter === 'pending' ? '#102B20' : '#F5F3E9',
+                border: '1px solid ' + (archiveCategoryFilter === 'pending' ? '#A6C48A' : '#1F5138'),
                 borderRadius: '16px',
                 padding: '4px 12px',
                 fontSize: '12px',
@@ -4220,7 +4275,7 @@ ${feedbackRecommendation}
 
           {/* Research Corpus Bulk Export Toolbar */}
           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '600' }}>Research Corpus:</span>
+            <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '600' }}>Research Corpus:</span>
             <button
               type="button"
               onClick={handleExportBulkJson}
@@ -4228,7 +4283,7 @@ ${feedbackRecommendation}
               title="Download entire linguistic dataset as JSON with SHA-256 integrity hashes"
               style={{ fontSize: '12px', padding: '5px 12px', gap: '6px', borderRadius: '8px' }}
             >
-              <Download size={13} color="#8EB69B" />
+              <Download size={13} color="#A6C48A" />
               <span>Export JSON</span>
             </button>
             <button
@@ -4238,17 +4293,17 @@ ${feedbackRecommendation}
               title="Download dataset as CSV spreadsheet for Excel / computational analysis"
               style={{ fontSize: '12px', padding: '5px 12px', gap: '6px', borderRadius: '8px' }}
             >
-              <FileText size={13} color="#8EB69B" />
+              <FileText size={13} color="#A6C48A" />
               <span>Export CSV</span>
             </button>
           </div>
         </div>
 
         {isLoadingArchive ? (
-          <p style={{ padding: '24px', textAlign: 'center', color: 'rgba(218, 241, 222, 0.72)' }}>Loading saved transcripts from SQLite...</p>
+          <p style={{ padding: '24px', textAlign: 'center', color: 'rgba(245, 243, 233, 0.72)' }}>Loading saved transcripts from SQLite...</p>
         ) : transcripts.length === 0 ? (
-          <div style={{ padding: '36px', textAlign: 'center', color: 'rgba(218, 241, 222, 0.5)' }}>
-            <p style={{ fontSize: '14px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '4px' }}>Archive is currently empty.</p>
+          <div style={{ padding: '36px', textAlign: 'center', color: 'rgba(245, 243, 233, 0.5)' }}>
+            <p style={{ fontSize: '14px', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '4px' }}>Archive is currently empty.</p>
             <p style={{ fontSize: '13px' }}>Use the capture studio above to save the first recording into SQLite.</p>
           </div>
         ) : (
@@ -4281,7 +4336,7 @@ ${feedbackRecommendation}
 
               if (filteredTranscripts.length === 0) {
                 return (
-                  <p style={{ padding: '24px', textAlign: 'center', color: 'rgba(218, 241, 222, 0.6)' }}>
+                  <p style={{ padding: '24px', textAlign: 'center', color: 'rgba(245, 243, 233, 0.6)' }}>
                     No recordings match "{archiveSearchQuery}".
                   </p>
                 );
@@ -4293,8 +4348,8 @@ ${feedbackRecommendation}
               <div
                 key={t.id}
                 style={{
-                  background: activeResult?.id === t.id ? 'rgba(142, 182, 155, 0.12)' : '#0B2B26',
-                  border: activeResult?.id === t.id ? '1px solid #8EB69B' : '1px solid #235347',
+                  background: activeResult?.id === t.id ? 'rgba(166, 196, 138, 0.12)' : '#102B20',
+                  border: activeResult?.id === t.id ? '1px solid #A6C48A' : '1px solid #1F5138',
                   borderRadius: '12px',
                   padding: '16px',
                   display: 'flex',
@@ -4305,11 +4360,11 @@ ${feedbackRecommendation}
               >
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                   <div>
-                    <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#DAF1DE' }}>
+                    <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#F5F3E9' }}>
                       {t.title}
                     </h4>
-                    <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)' }}>
-                      <strong style={{ color: '#8EB69B' }}>{t.language}</strong>
+                    <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.72)' }}>
+                      <strong style={{ color: '#A6C48A' }}>{t.language}</strong>
                       {t.dialect && ` (${t.dialect})`} • Saved: {new Date(t.created_at).toLocaleString()}
                     </p>
                   </div>
@@ -4454,7 +4509,7 @@ ${feedbackRecommendation}
                       padding: '8px 12px'
                     }}>
                       <div style={{ flex: 1 }}>
-                        <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                           Community Corrected Transcript:
                         </span>
                         <p style={{ color: '#E2E8F0', fontStyle: 'italic', lineHeight: '1.5' }}>
@@ -4507,8 +4562,8 @@ ${feedbackRecommendation}
                 type="button"
                 onClick={() => setDiscoveryView('archives')}
                 style={{
-                  background: discoveryView === 'archives' ? '#8EB69B' : 'transparent',
-                  color: discoveryView === 'archives' ? '#051F20' : 'rgba(218, 241, 222, 0.72)',
+                  background: discoveryView === 'archives' ? '#A6C48A' : 'transparent',
+                  color: discoveryView === 'archives' ? '#102B20' : 'rgba(245, 243, 233, 0.72)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '8px 16px',
@@ -4524,8 +4579,8 @@ ${feedbackRecommendation}
                 <Search size={15} />
                 <span>Oral Archive Discovery</span>
                 <span style={{
-                  background: discoveryView === 'archives' ? 'rgba(5, 31, 32, 0.2)' : 'rgba(142, 182, 155, 0.2)',
-                  color: discoveryView === 'archives' ? '#051F20' : '#8EB69B',
+                  background: discoveryView === 'archives' ? 'rgba(16, 43, 32, 0.2)' : 'rgba(166, 196, 138, 0.2)',
+                  color: discoveryView === 'archives' ? '#102B20' : '#A6C48A',
                   fontSize: '10px',
                   padding: '1px 6px',
                   borderRadius: '6px'
@@ -4537,8 +4592,8 @@ ${feedbackRecommendation}
                 type="button"
                 onClick={() => setDiscoveryView('seed_resources')}
                 style={{
-                  background: discoveryView === 'seed_resources' ? '#8EB69B' : 'transparent',
-                  color: discoveryView === 'seed_resources' ? '#051F20' : 'rgba(218, 241, 222, 0.72)',
+                  background: discoveryView === 'seed_resources' ? '#A6C48A' : 'transparent',
+                  color: discoveryView === 'seed_resources' ? '#102B20' : 'rgba(245, 243, 233, 0.72)',
                   border: 'none',
                   borderRadius: '8px',
                   padding: '8px 16px',
@@ -4567,10 +4622,10 @@ ${feedbackRecommendation}
                 style={{ fontSize: '12px', padding: '8px 14px', minHeight: '36px', display: 'flex', alignItems: 'center', gap: '6px' }}
                 title="View deterministic cross-lingual search evaluation metrics (MRR, P@1)"
               >
-                <Sparkles size={14} color="#8EB69B" />
+                <Sparkles size={14} color="#A6C48A" />
                 <span>Benchmark Evaluation</span>
                 {benchmarkResult?.mean_reciprocal_rank !== undefined && (
-                  <span style={{ background: '#8EB69B', color: '#051F20', fontSize: '10px', fontWeight: '800', padding: '1px 6px', borderRadius: '6px' }}>
+                  <span style={{ background: '#A6C48A', color: '#102B20', fontSize: '10px', fontWeight: '800', padding: '1px 6px', borderRadius: '6px' }}>
                     MRR {benchmarkResult.mean_reciprocal_rank.toFixed(2)}
                   </span>
                 )}
@@ -4594,11 +4649,11 @@ ${feedbackRecommendation}
             <div>
               {/* Header */}
               <div style={{ marginBottom: '20px' }}>
-                <h3 style={{ fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px', color: '#DAF1DE' }}>
-                  <Search size={22} color="#8EB69B" />
+                <h3 style={{ fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px', color: '#F5F3E9' }}>
+                  <Search size={22} color="#A6C48A" />
                   <span>Oral Archives Semantic Search & Multilingual Discovery</span>
                 </h3>
-                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', marginTop: '4px' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.72)', marginTop: '4px' }}>
                   Unified discovery across oral transcripts, English translations, Romanized/Devanagari/Telugu scripts, and verified lore with $0.00 offline hybrid retrieval.
                 </p>
               </div>
@@ -4615,10 +4670,10 @@ ${feedbackRecommendation}
                       handleDiscoverySearch({ mode: m, page: 1 });
                     }}
                     style={{
-                      background: discoveryMode === m ? '#8EB69B' : 'rgba(255, 255, 255, 0.05)',
-                      color: discoveryMode === m ? '#051F20' : 'rgba(218, 241, 222, 0.72)',
+                      background: discoveryMode === m ? '#A6C48A' : 'rgba(255, 255, 255, 0.05)',
+                      color: discoveryMode === m ? '#102B20' : 'rgba(245, 243, 233, 0.72)',
                       border: '1px solid',
-                      borderColor: discoveryMode === m ? '#8EB69B' : 'rgba(255, 255, 255, 0.1)',
+                      borderColor: discoveryMode === m ? '#A6C48A' : 'rgba(255, 255, 255, 0.1)',
                       borderRadius: '20px',
                       padding: '4px 14px',
                       fontSize: '11px',
@@ -4640,32 +4695,32 @@ ${feedbackRecommendation}
                 gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))',
                 gap: '10px',
                 marginBottom: '20px',
-                background: '#0B2B26',
+                background: '#102B20',
                 padding: '12px 16px',
                 borderRadius: '10px',
                 border: '1px solid var(--card-border)'
               }}>
                 <div>
-                  <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>FTS5 Index</span>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#DAF1DE', marginTop: '2px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase' }}>FTS5 Index</span>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#F5F3E9', marginTop: '2px' }}>
                     {discoveryStats?.fts_indexed_transcripts ?? 350} Records (Unicode61)
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>Vector Store</span>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#8EB69B', marginTop: '2px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase' }}>Vector Store</span>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#A6C48A', marginTop: '2px' }}>
                     {discoveryStats?.vector_indexed_transcripts ?? 350} Embeddings (384-dim)
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>Retrieval Latency</span>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#DAF1DE', marginTop: '2px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase' }}>Retrieval Latency</span>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#F5F3E9', marginTop: '2px' }}>
                     {discoveryLatency !== null ? `${discoveryLatency} ms` : '~4.2 ms'}
                   </p>
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>Engine & Cost</span>
-                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#8EB69B', marginTop: '2px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase' }}>Engine & Cost</span>
+                  <p style={{ fontSize: '13px', fontWeight: '700', color: '#A6C48A', marginTop: '2px' }}>
                     100% Offline / $0.00
                   </p>
                 </div>
@@ -4683,7 +4738,7 @@ ${feedbackRecommendation}
                       onChange={(e) => setDiscoveryQuery(e.target.value)}
                       style={{ width: '100%', paddingLeft: '38px', minHeight: '44px' }}
                     />
-                    <Search size={16} color="#8EB69B" style={{ position: 'absolute', left: '12px', top: '14px', pointerEvents: 'none' }} />
+                    <Search size={16} color="#A6C48A" style={{ position: 'absolute', left: '12px', top: '14px', pointerEvents: 'none' }} />
                     {discoveryQuery && (
                       <button
                         type="button"
@@ -4842,7 +4897,7 @@ ${feedbackRecommendation}
                   Showing {discoveryResults.length} of {discoveryTotalCount} oral records
                   {discoveryLanguage ? ` in ${discoveryLanguage}` : ''}
                   {discoveryQuery ? ` matching "${discoveryQuery}"` : ''}
-                  {' • '}Mode: <strong style={{ color: '#8EB69B' }}>{discoveryMode}</strong>
+                  {' • '}Mode: <strong style={{ color: '#A6C48A' }}>{discoveryMode}</strong>
                   {discoveryLatency !== null && ` (${discoveryLatency}ms)`}
                 </span>
               </div>
@@ -4877,7 +4932,7 @@ ${feedbackRecommendation}
                       {/* Card Header */}
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: '8px', flexWrap: 'wrap' }}>
                         <div>
-                          <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 4px 0' }}>
+                          <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', margin: '0 0 4px 0' }}>
                             {rec.title}
                           </h4>
                           <span style={{ fontSize: '11px', color: '#94A3B8' }}>
@@ -4913,8 +4968,8 @@ ${feedbackRecommendation}
                           fontSize: '10px',
                           padding: '2px 8px',
                           borderRadius: '6px',
-                          background: rec.verification_status === 'published' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(142, 182, 155, 0.2)',
-                          color: rec.verification_status === 'published' ? '#6EE7B7' : '#8EB69B',
+                          background: rec.verification_status === 'published' ? 'rgba(16, 185, 129, 0.2)' : 'rgba(166, 196, 138, 0.2)',
+                          color: rec.verification_status === 'published' ? '#6EE7B7' : '#A6C48A',
                           fontWeight: '600'
                         }}>
                           {rec.verification_status === 'published' ? '✓ Published' : rec.verification_status || 'Submitted'}
@@ -4939,10 +4994,10 @@ ${feedbackRecommendation}
                           borderRadius: '8px',
                           padding: '10px 12px',
                           fontSize: '12px',
-                          color: '#DAF1DE',
-                          borderLeft: '3px solid #8EB69B'
+                          color: '#F5F3E9',
+                          borderLeft: '3px solid #A6C48A'
                         }}>
-                          <strong style={{ fontSize: '10px', textTransform: 'uppercase', color: '#8EB69B', display: 'block', marginBottom: '2px' }}>Match Excerpt:</strong>
+                          <strong style={{ fontSize: '10px', textTransform: 'uppercase', color: '#A6C48A', display: 'block', marginBottom: '2px' }}>Match Excerpt:</strong>
                           {rec.snippet}
                         </div>
                       )}
@@ -4965,13 +5020,13 @@ ${feedbackRecommendation}
 
                       {/* Authorized Translations */}
                       {rec.translations && rec.translations.length > 0 && (
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(142, 182, 155, 0.08)', padding: '10px', borderRadius: '8px' }}>
-                          <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700' }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '6px', background: 'rgba(166, 196, 138, 0.08)', padding: '10px', borderRadius: '8px' }}>
+                          <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700' }}>
                             Authorized Translations ({rec.translations.length}):
                           </span>
                           {rec.translations.map((tr, tidx) => (
-                            <div key={tidx} style={{ fontSize: '12px', color: '#DAF1DE', lineHeight: '1.5' }}>
-                              <strong style={{ color: '#8EB69B' }}>{tr.target_language}: </strong>
+                            <div key={tidx} style={{ fontSize: '12px', color: '#F5F3E9', lineHeight: '1.5' }}>
+                              <strong style={{ color: '#A6C48A' }}>{tr.target_language}: </strong>
                               {tr.translated_text}
                               {tr.verified && <span style={{ color: '#10B981', marginLeft: '6px' }}>✓ Verified</span>}
                             </div>
@@ -4983,7 +5038,7 @@ ${feedbackRecommendation}
                       {rec.audio_url && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '4px' }}>
                           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                            <span style={{ fontSize: '11px', color: '#8EB69B', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                            <span style={{ fontSize: '11px', color: '#A6C48A', display: 'flex', alignItems: 'center', gap: '4px' }}>
                               <Volume2 size={12} />
                               Master Audio Recording
                             </span>
@@ -5030,7 +5085,7 @@ ${feedbackRecommendation}
                   >
                     Previous
                   </button>
-                  <span style={{ fontSize: '13px', color: '#DAF1DE', fontWeight: '600' }}>
+                  <span style={{ fontSize: '13px', color: '#F5F3E9', fontWeight: '600' }}>
                     Page {discoveryPage} of {discoveryTotalPages}
                   </span>
                   <button
@@ -5053,10 +5108,10 @@ ${feedbackRecommendation}
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
             <div>
               <h3 style={{ fontSize: '20px', fontWeight: '800', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <Database size={22} color="#8EB69B" />
+                <Database size={22} color="#A6C48A" />
                 <span>Multilingual Semantic Vector Search (ChromaDB)</span>
               </h3>
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', marginTop: '4px' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.72)', marginTop: '4px' }}>
                 Search oral literature, epic chants, medicine lore, and work songs indexed across 13 languages with offline 384-dimensional embeddings.
               </p>
             </div>
@@ -5083,18 +5138,18 @@ ${feedbackRecommendation}
                   fontSize: '12px',
                   padding: '8px 14px',
                   minHeight: '36px',
-                  borderColor: showModerationQueue ? '#8EB69B' : '#235347',
-                  color: showModerationQueue ? '#DAF1DE' : 'rgba(218, 241, 222, 0.72)',
-                  background: showModerationQueue ? 'rgba(142, 182, 155, 0.15)' : undefined
+                  borderColor: showModerationQueue ? '#A6C48A' : '#1F5138',
+                  color: showModerationQueue ? '#F5F3E9' : 'rgba(245, 243, 233, 0.72)',
+                  background: showModerationQueue ? 'rgba(166, 196, 138, 0.15)' : undefined
                 }}
                 title="View community submissions and elder review queue"
               >
-                <ShieldCheck size={14} color={showModerationQueue ? '#8EB69B' : 'rgba(218, 241, 222, 0.72)'} />
+                <ShieldCheck size={14} color={showModerationQueue ? '#A6C48A' : 'rgba(245, 243, 233, 0.72)'} />
                 <span>Elder Review Queue</span>
                 {submissions.filter(s => s.status === 'pending_verification').length > 0 && (
                   <span style={{
-                    background: '#8EB69B',
-                    color: '#051F20',
+                    background: '#A6C48A',
+                    color: '#102B20',
                     fontSize: '10px',
                     fontWeight: '800',
                     padding: '1px 6px',
@@ -5124,32 +5179,32 @@ ${feedbackRecommendation}
             gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))',
             gap: '12px',
             marginBottom: '24px',
-            background: '#0B2B26',
+            background: '#102B20',
             padding: '16px',
             borderRadius: '12px',
             border: '1px solid var(--card-border)'
           }}>
             <div>
-              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ChromaDB Collection</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>ChromaDB Collection</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#F5F3E9', marginTop: '2px' }}>
                 {vectorStats?.collection_name || 'language_resources'}
               </p>
             </div>
             <div>
-              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Indexed Documents</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#8EB69B', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Indexed Documents</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#A6C48A', marginTop: '2px' }}>
                 {vectorStats?.total_records ?? 18} Verified Records
               </p>
             </div>
             <div>
-              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Offline Embedding Engine</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Offline Embedding Engine</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#F5F3E9', marginTop: '2px' }}>
                 384-dim Subword n-grams
               </p>
             </div>
             <div>
-              <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Languages Indexed</span>
-              <p style={{ fontSize: '14px', fontWeight: '700', color: '#8EB69B', marginTop: '2px' }}>
+              <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Languages Indexed</span>
+              <p style={{ fontSize: '14px', fontWeight: '700', color: '#A6C48A', marginTop: '2px' }}>
                 {vectorStats ? Object.keys(vectorStats.languages_indexed).length : 13} Target Tongues
               </p>
             </div>
@@ -5157,13 +5212,13 @@ ${feedbackRecommendation}
 
           {ingestStatus && (
             <div style={{
-              background: 'rgba(142, 182, 155, 0.1)',
-              border: '1px solid #235347',
+              background: 'rgba(166, 196, 138, 0.1)',
+              border: '1px solid #1F5138',
               borderRadius: '8px',
               padding: '10px 14px',
               marginBottom: '20px',
               fontSize: '13px',
-              color: '#DAF1DE'
+              color: '#F5F3E9'
             }}>
               {ingestStatus}
             </div>
@@ -5172,19 +5227,19 @@ ${feedbackRecommendation}
           {/* Elder Moderation Queue Container */}
           {showModerationQueue && (
             <div style={{
-              background: '#0B2B26',
-              border: '1px solid #235347',
+              background: '#102B20',
+              border: '1px solid #1F5138',
               borderRadius: '12px',
               padding: '20px',
               marginBottom: '24px'
             }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                 <div>
-                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <ShieldCheck size={18} color="#8EB69B" />
+                  <h4 style={{ fontSize: '15px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <ShieldCheck size={18} color="#A6C48A" />
                     <span>Community Contributor Submissions & Elder Moderation Queue</span>
                   </h4>
-                  <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)', marginTop: '2px' }}>
+                  <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.72)', marginTop: '2px' }}>
                     Verify cultural authenticity and approve field submissions into the ChromaDB vector database with 384-dim embeddings.
                   </p>
                 </div>
@@ -5196,8 +5251,8 @@ ${feedbackRecommendation}
                       type="button"
                       onClick={() => setSubmissionFilter(filterKey)}
                       style={{
-                        background: submissionFilter === filterKey ? '#8EB69B' : 'rgba(255,255,255,0.05)',
-                        color: submissionFilter === filterKey ? '#051F20' : 'rgba(218, 241, 222, 0.72)',
+                        background: submissionFilter === filterKey ? '#A6C48A' : 'rgba(255,255,255,0.05)',
+                        color: submissionFilter === filterKey ? '#102B20' : 'rgba(245, 243, 233, 0.72)',
                         border: 'none',
                         borderRadius: '6px',
                         padding: '4px 10px',
@@ -5307,7 +5362,7 @@ ${feedbackRecommendation}
                                   ? 'rgba(239, 68, 68, 0.2)'
                                   : sub.status === 'withdrawn'
                                   ? 'rgba(100, 116, 139, 0.2)'
-                                  : 'rgba(142, 182, 155, 0.2)',
+                                  : 'rgba(166, 196, 138, 0.2)',
                               color:
                                 sub.status === 'verified'
                                   ? '#6EE7B7'
@@ -5315,7 +5370,7 @@ ${feedbackRecommendation}
                                   ? '#FCA5A5'
                                   : sub.status === 'withdrawn'
                                   ? '#94A3B8'
-                                  : '#8EB69B'
+                                  : '#A6C48A'
                             }}>
                               {sub.status === 'verified' && '✓ Approved & Indexed in ChromaDB'}
                               {sub.status === 'rejected' && 'Rejected'}
@@ -5373,7 +5428,7 @@ ${feedbackRecommendation}
                         </div>
 
                         {sub.reviewer_notes && (
-                          <div style={{ fontSize: '11px', color: '#8EB69B', background: 'rgba(142, 182, 155, 0.1)', padding: '4px 8px', borderRadius: '4px' }}>
+                          <div style={{ fontSize: '11px', color: '#A6C48A', background: 'rgba(166, 196, 138, 0.1)', padding: '4px 8px', borderRadius: '4px' }}>
                             Elder Notes: {sub.reviewer_notes}
                           </div>
                         )}
@@ -5645,7 +5700,7 @@ ${feedbackRecommendation}
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: '8px', alignItems: 'center' }}>
                       <span style={{ color: '#64748B' }}>License:</span>
                       <div style={{ display: 'flex', gap: '6px' }}>
-                        <span style={{ background: 'rgba(142, 182, 155, 0.15)', color: '#8EB69B', padding: '1px 6px', borderRadius: '4px' }}>
+                        <span style={{ background: 'rgba(166, 196, 138, 0.15)', color: '#A6C48A', padding: '1px 6px', borderRadius: '4px' }}>
                           {rec.license}
                         </span>
                         <span style={{ background: 'rgba(16, 185, 129, 0.15)', color: '#6EE7B7', padding: '1px 6px', borderRadius: '4px' }}>
@@ -5685,8 +5740,8 @@ ${feedbackRecommendation}
               padding: '20px'
             }}>
               <div style={{
-                background: '#0B2B26',
-                border: '1px solid #235347',
+                background: '#102B20',
+                border: '1px solid #1F5138',
                 borderRadius: '16px',
                 padding: '24px',
                 maxWidth: '800px',
@@ -5695,8 +5750,8 @@ ${feedbackRecommendation}
                 overflowY: 'auto'
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
-                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <Sparkles size={20} color="#8EB69B" />
+                  <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <Sparkles size={20} color="#A6C48A" />
                     <span>Multilingual Discovery Benchmark Evaluation</span>
                   </h3>
                   <button
@@ -5718,7 +5773,7 @@ ${feedbackRecommendation}
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px', marginBottom: '20px' }}>
                       <div style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}>Mean Reciprocal Rank</span>
-                        <p style={{ fontSize: '22px', fontWeight: '800', color: '#8EB69B', margin: '4px 0 0 0' }}>
+                        <p style={{ fontSize: '22px', fontWeight: '800', color: '#A6C48A', margin: '4px 0 0 0' }}>
                           {benchmarkResult.mean_reciprocal_rank !== undefined ? `${(benchmarkResult.mean_reciprocal_rank * 100).toFixed(1)}%` : 'N/A'}
                         </p>
                       </div>
@@ -5730,20 +5785,20 @@ ${feedbackRecommendation}
                       </div>
                       <div style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}>Precision @ 3</span>
-                        <p style={{ fontSize: '22px', fontWeight: '800', color: '#8EB69B', margin: '4px 0 0 0' }}>
+                        <p style={{ fontSize: '22px', fontWeight: '800', color: '#A6C48A', margin: '4px 0 0 0' }}>
                           {benchmarkResult.precision_at_3 !== undefined ? `${(benchmarkResult.precision_at_3 * 100).toFixed(1)}%` : 'N/A'}
                         </p>
                       </div>
                       <div style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '10px', border: '1px solid rgba(255,255,255,0.06)' }}>
                         <span style={{ fontSize: '11px', color: '#94A3B8', textTransform: 'uppercase' }}>Avg Latency</span>
-                        <p style={{ fontSize: '22px', fontWeight: '800', color: '#DAF1DE', margin: '4px 0 0 0' }}>
+                        <p style={{ fontSize: '22px', fontWeight: '800', color: '#F5F3E9', margin: '4px 0 0 0' }}>
                           {benchmarkResult.avg_latency_ms ?? 0} ms
                         </p>
                       </div>
                     </div>
 
                     <div style={{ marginBottom: '18px' }}>
-                      <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
+                      <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
                         Validated Languages ({benchmarkResult.validated_languages?.length || 0}):
                       </span>
                       <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap' }}>
@@ -5755,17 +5810,17 @@ ${feedbackRecommendation}
                       </div>
                     </div>
 
-                    <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginBottom: '10px' }}>
+                    <h4 style={{ fontSize: '14px', fontWeight: '700', color: '#F5F3E9', marginBottom: '10px' }}>
                       Benchmark Query Results ({benchmarkResult.evaluations?.length || 0} Queries):
                     </h4>
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                       {benchmarkResult.evaluations?.map((ev: any, idx: number) => (
-                        <div key={idx} style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', borderLeft: ev.hit_rank === 1 ? '3px solid #10B981' : '3px solid #8EB69B' }}>
+                        <div key={idx} style={{ background: 'rgba(0,0,0,0.25)', padding: '10px 12px', borderRadius: '8px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px', borderLeft: ev.hit_rank === 1 ? '3px solid #10B981' : '3px solid #A6C48A' }}>
                           <div>
-                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#DAF1DE' }}>"{ev.query}"</span>
+                            <span style={{ fontSize: '13px', fontWeight: '600', color: '#F5F3E9' }}>"{ev.query}"</span>
                             <span style={{ fontSize: '11px', color: '#94A3B8', marginLeft: '8px' }}>({ev.type?.replace(/_/g, ' ')} • {ev.language_focus})</span>
                             {ev.matched_title && (
-                              <p style={{ fontSize: '12px', color: '#8EB69B', margin: '2px 0 0 0' }}>Matched: {ev.matched_title}</p>
+                              <p style={{ fontSize: '12px', color: '#A6C48A', margin: '2px 0 0 0' }}>Matched: {ev.matched_title}</p>
                             )}
                           </div>
                           <div style={{ display: 'flex', gap: '8px', alignItems: 'center' }}>
@@ -5812,8 +5867,8 @@ ${feedbackRecommendation}
               padding: '20px'
             }}>
               <div style={{
-                background: '#0B2B26',
-                border: '1px solid #235347',
+                background: '#102B20',
+                border: '1px solid #1F5138',
                 borderRadius: '16px',
                 padding: '24px',
                 maxWidth: '700px',
@@ -5823,10 +5878,10 @@ ${feedbackRecommendation}
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
                   <div>
-                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#DAF1DE', margin: '0 0 4px 0' }}>
+                    <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#F5F3E9', margin: '0 0 4px 0' }}>
                       {activeStoryModal.title}
                     </h3>
-                    <span style={{ fontSize: '12px', color: '#8EB69B' }}>
+                    <span style={{ fontSize: '12px', color: '#A6C48A' }}>
                       {activeStoryModal.language} • {activeStoryModal.dialect || 'Standard'} • {activeStoryModal.verification_status || 'Submitted'}
                     </span>
                   </div>
@@ -5841,7 +5896,7 @@ ${feedbackRecommendation}
 
                 {/* Master Audio */}
                 <div style={{ background: 'rgba(0,0,0,0.3)', padding: '14px', borderRadius: '10px', marginBottom: '16px' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px' }}>
                     <Volume2 size={14} /> Master Acoustic Recording (Immutable Master)
                   </span>
                   <audio
@@ -5867,7 +5922,7 @@ ${feedbackRecommendation}
                     <span style={{ fontSize: '11px', color: '#94A3B8', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '6px' }}>
                       Script Transliteration:
                     </span>
-                    <p style={{ fontSize: '14px', color: '#DAF1DE', lineHeight: '1.6', margin: 0 }}>
+                    <p style={{ fontSize: '14px', color: '#F5F3E9', lineHeight: '1.6', margin: 0 }}>
                       {activeStoryModal.transliteration_text}
                     </p>
                   </div>
@@ -5887,14 +5942,14 @@ ${feedbackRecommendation}
 
                 {/* Translations */}
                 {activeStoryModal.translations && activeStoryModal.translations.length > 0 && (
-                  <div style={{ background: 'rgba(142, 182, 155, 0.08)', padding: '14px', borderRadius: '10px', marginBottom: '16px' }}>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
+                  <div style={{ background: 'rgba(166, 196, 138, 0.08)', padding: '14px', borderRadius: '10px', marginBottom: '16px' }}>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', textTransform: 'uppercase', display: 'block', marginBottom: '8px' }}>
                       Authorized Translations:
                     </span>
                     {activeStoryModal.translations.map((tr, idx) => (
                       <div key={idx} style={{ marginBottom: '8px' }}>
-                        <strong style={{ color: '#8EB69B', fontSize: '12px' }}>{tr.target_language}: </strong>
-                        <span style={{ fontSize: '13px', color: '#DAF1DE' }}>{tr.translated_text}</span>
+                        <strong style={{ color: '#A6C48A', fontSize: '12px' }}>{tr.target_language}: </strong>
+                        <span style={{ fontSize: '13px', color: '#F5F3E9' }}>{tr.translated_text}</span>
                       </div>
                     ))}
                   </div>
@@ -6011,20 +6066,20 @@ ${feedbackRecommendation}
                     <span style={{ fontSize: '10px', color: '#7DD3FC' }}>Verified Local Whisper Base</span>
                   </div>
 
-                  <div style={{ background: '#0B2B26', padding: '10px 12px', borderRadius: '8px', border: '1px solid #235347' }}>
-                    <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>Gondi Oral Recording</span>
-                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#8EB69B', marginTop: '2px' }}>
+                  <div style={{ background: '#102B20', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1F5138' }}>
+                    <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase' }}>Gondi Oral Recording</span>
+                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#A6C48A', marginTop: '2px' }}>
                       Phonetic Fidelity
                     </p>
-                    <span style={{ fontSize: '10px', color: '#DAF1DE' }}>Unstandardized Orthography</span>
+                    <span style={{ fontSize: '10px', color: '#F5F3E9' }}>Unstandardized Orthography</span>
                   </div>
 
-                  <div style={{ background: '#0B2B26', padding: '10px 12px', borderRadius: '8px', border: '1px solid #235347' }}>
-                    <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.72)', textTransform: 'uppercase' }}>Vector Search MRR</span>
-                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#8EB69B', marginTop: '2px' }}>
+                  <div style={{ background: '#102B20', padding: '10px 12px', borderRadius: '8px', border: '1px solid #1F5138' }}>
+                    <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.72)', textTransform: 'uppercase' }}>Vector Search MRR</span>
+                    <p style={{ fontSize: '18px', fontWeight: '800', color: '#A6C48A', marginTop: '2px' }}>
                       MRR: {evaluationReport.semantic_vector_search?.mrr ?? 0.47}
                     </p>
-                    <span style={{ fontSize: '10px', color: '#DAF1DE' }}>
+                    <span style={{ fontSize: '10px', color: '#F5F3E9' }}>
                       Hit@1: {evaluationReport.semantic_vector_search?.hit_at_1_percent ?? 33.3}% | Hit@3: {evaluationReport.semantic_vector_search?.hit_at_3_percent ?? 66.7}%
                     </span>
                   </div>
@@ -6035,30 +6090,30 @@ ${feedbackRecommendation}
                   <div style={{
                     marginTop: '12px',
                     padding: '12px 14px',
-                    background: 'rgba(142, 182, 155, 0.08)',
-                    border: '1px solid #235347',
+                    background: 'rgba(166, 196, 138, 0.08)',
+                    border: '1px solid #1F5138',
                     borderRadius: '10px'
                   }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px', flexWrap: 'wrap', gap: '8px' }}>
-                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <Award size={14} color="#8EB69B" />
+                      <span style={{ fontSize: '12px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '6px' }}>
+                        <Award size={14} color="#A6C48A" />
                         <span>Live Pilot Review Metrics (Compared Against Elder-Approved Transcripts)</span>
                       </span>
-                      <span style={{ fontSize: '11px', color: '#DAF1DE', background: 'rgba(142, 182, 155, 0.2)', padding: '2px 8px', borderRadius: '8px' }}>
+                      <span style={{ fontSize: '11px', color: '#F5F3E9', background: 'rgba(166, 196, 138, 0.2)', padding: '2px 8px', borderRadius: '8px' }}>
                         {evaluationReport.community_reviewed_performance.total_reviewed_samples} Verified Sample(s)
                       </span>
                     </div>
 
                     <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '8px', marginBottom: '8px' }}>
                       {Object.entries(evaluationReport.community_reviewed_performance.languages || {}).map(([langName, data]: [string, any]) => (
-                        <div key={langName} style={{ background: '#0B2B26', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', border: '1px solid #235347' }}>
-                          <div style={{ fontWeight: '700', color: '#DAF1DE', marginBottom: '4px' }}>{langName}</div>
-                          <div style={{ color: 'rgba(218, 241, 222, 0.72)', fontSize: '11px' }}>
-                            Model: <strong style={{ color: '#DAF1DE' }}>{data.models_used?.join(', ')}</strong> •
-                            CER: <strong style={{ color: '#8EB69B' }}>{(data.average_cer * 100).toFixed(1)}%</strong> •
-                            WER: <strong style={{ color: '#8EB69B' }}>{(data.average_wer * 100).toFixed(1)}%</strong>
+                        <div key={langName} style={{ background: '#102B20', padding: '8px 12px', borderRadius: '8px', fontSize: '12px', border: '1px solid #1F5138' }}>
+                          <div style={{ fontWeight: '700', color: '#F5F3E9', marginBottom: '4px' }}>{langName}</div>
+                          <div style={{ color: 'rgba(245, 243, 233, 0.72)', fontSize: '11px' }}>
+                            Model: <strong style={{ color: '#F5F3E9' }}>{data.models_used?.join(', ')}</strong> •
+                            CER: <strong style={{ color: '#A6C48A' }}>{(data.average_cer * 100).toFixed(1)}%</strong> •
+                            WER: <strong style={{ color: '#A6C48A' }}>{(data.average_wer * 100).toFixed(1)}%</strong>
                           </div>
-                          <p style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.6)', marginTop: '4px', fontStyle: 'italic' }}>
+                          <p style={{ fontSize: '10px', color: 'rgba(245, 243, 233, 0.6)', marginTop: '4px', fontStyle: 'italic' }}>
                             {data.sample_size_caveat}
                           </p>
                         </div>
@@ -6143,7 +6198,7 @@ ${feedbackRecommendation}
                       key={lang.code}
                       style={{
                         background: 'rgba(255, 255, 255, 0.03)',
-                        border: isOral ? '1px solid rgba(142, 182, 155, 0.4)' : '1px solid var(--card-border)',
+                        border: isOral ? '1px solid rgba(166, 196, 138, 0.4)' : '1px solid var(--card-border)',
                         borderRadius: '12px',
                         padding: '16px',
                         display: 'flex',
@@ -6158,7 +6213,7 @@ ${feedbackRecommendation}
                             <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F8FAFC' }}>
                               {lang.name}
                             </h4>
-                            <code style={{ fontSize: '11px', color: '#8EB69B', background: 'rgba(142, 182, 155, 0.1)', padding: '1px 5px', borderRadius: '4px' }}>
+                            <code style={{ fontSize: '11px', color: '#A6C48A', background: 'rgba(166, 196, 138, 0.1)', padding: '1px 5px', borderRadius: '4px' }}>
                               {lang.code}
                             </code>
                           </div>
@@ -6176,8 +6231,8 @@ ${feedbackRecommendation}
                             fontSize: '10px',
                             padding: '2px 8px',
                             borderRadius: '6px',
-                            background: isOral ? 'rgba(142, 182, 155, 0.2)' : 'rgba(20, 184, 166, 0.15)',
-                            color: isOral ? '#8EB69B' : '#5EEAD4',
+                            background: isOral ? 'rgba(166, 196, 138, 0.2)' : 'rgba(20, 184, 166, 0.15)',
+                            color: isOral ? '#A6C48A' : '#5EEAD4',
                             fontWeight: '600'
                           }}>
                             {isOral ? 'Indigenous / Oral' : lang.category || 'Standard'}
@@ -6207,7 +6262,7 @@ ${feedbackRecommendation}
                         <div>
                           <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>SPEECH RECOGNITION</span>
                           <span style={{
-                            color: lang.speech_recognition === 'available' ? '#34D399' : '#8EB69B',
+                            color: lang.speech_recognition === 'available' ? '#34D399' : '#A6C48A',
                             fontWeight: '600',
                             display: 'flex',
                             alignItems: 'center',
@@ -6222,7 +6277,7 @@ ${feedbackRecommendation}
                         <div>
                           <span style={{ color: '#64748B', display: 'block', fontSize: '10px' }}>TRANSLATION</span>
                           <span style={{
-                            color: lang.translation === 'available' ? '#34D399' : (lang.translation === 'elder_review_required' || lang.translation === 'restricted') ? '#F87171' : '#8EB69B',
+                            color: lang.translation === 'available' ? '#34D399' : (lang.translation === 'elder_review_required' || lang.translation === 'restricted') ? '#F87171' : '#A6C48A',
                             fontWeight: '600',
                             display: 'flex',
                             alignItems: 'center',
@@ -6254,14 +6309,14 @@ ${feedbackRecommendation}
                       {/* Linguistic Constraints & Limitations */}
                       <div style={{
                         fontSize: '12px',
-                        color: 'rgba(218, 241, 222, 0.72)',
+                        color: 'rgba(245, 243, 233, 0.72)',
                         lineHeight: '1.5',
                         background: 'rgba(255,255,255,0.02)',
                         padding: '10px',
                         borderRadius: '8px',
-                        borderLeft: isOral ? '3px solid #8EB69B' : '3px solid #235347'
+                        borderLeft: isOral ? '3px solid #A6C48A' : '3px solid #1F5138'
                       }}>
-                        <span style={{ fontSize: '11px', color: isOral ? '#8EB69B' : 'rgba(218, 241, 222, 0.72)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
+                        <span style={{ fontSize: '11px', color: isOral ? '#A6C48A' : 'rgba(245, 243, 233, 0.72)', fontWeight: '600', display: 'block', marginBottom: '2px' }}>
                           Linguistic Context & Known Constraints:
                         </span>
                         {lang.known_limitations}
@@ -6290,19 +6345,19 @@ ${feedbackRecommendation}
           <div style={{ marginTop: '28px' }}>
             <div
               style={{
-                backgroundColor: '#163832',
+                backgroundColor: '#163B2C',
                 borderRadius: '12px 12px 0 0',
                 padding: '14px 20px',
-                borderBottom: '1px solid rgba(142, 182, 155, 0.2)',
+                borderBottom: '1px solid rgba(166, 196, 138, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#DAF1DE' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#F5F3E9' }}>
                 Interactive Knowledge Graph Network & Entity Topology
               </span>
-              <span style={{ fontSize: '0.78rem', color: '#8EB69B' }}>
+              <span style={{ fontSize: '0.78rem', color: '#A6C48A' }}>
                 Milestone 16 • Cytoscape Graph Engine
               </span>
             </div>
@@ -6341,19 +6396,19 @@ ${feedbackRecommendation}
           <div style={{ marginTop: '28px' }}>
             <div
               style={{
-                backgroundColor: '#163832',
+                backgroundColor: '#163B2C',
                 borderRadius: '12px 12px 0 0',
                 padding: '14px 20px',
-                borderBottom: '1px solid rgba(142, 182, 155, 0.2)',
+                borderBottom: '1px solid rgba(166, 196, 138, 0.2)',
                 display: 'flex',
                 alignItems: 'center',
                 justifyContent: 'space-between',
               }}
             >
-              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#DAF1DE' }}>
+              <span style={{ fontSize: '0.95rem', fontWeight: 700, color: '#F5F3E9' }}>
                 Curated Community Educational Collections & Vocabulary Modules
               </span>
-              <span style={{ fontSize: '0.78rem', color: '#8EB69B' }}>
+              <span style={{ fontSize: '0.78rem', color: '#A6C48A' }}>
                 Milestone 19 • Pedagogical Collections
               </span>
             </div>
@@ -6393,14 +6448,14 @@ ${feedbackRecommendation}
           {currentUser ? (
             /* Authenticated User Profile & Sovereignty Hub */
             <div style={{
-              background: 'linear-gradient(135deg, rgba(11, 43, 38, 0.9) 0%, rgba(5, 31, 32, 0.95) 100%)',
+              background: 'linear-gradient(135deg, rgba(16, 43, 32, 0.9) 0%, rgba(16, 43, 32, 0.95) 100%)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)',
-              color: '#DAF1DE',
+              color: '#F5F3E9',
               padding: '36px 32px',
               borderRadius: '24px',
-              border: '1px solid rgba(142, 182, 155, 0.25)',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(142, 182, 155, 0.15)'
+              border: '1px solid rgba(166, 196, 138, 0.25)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.6), inset 0 1px 0 rgba(166, 196, 138, 0.15)'
             }}>
               {/* Profile Header */}
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '20px', marginBottom: '28px' }}>
@@ -6433,7 +6488,7 @@ ${feedbackRecommendation}
                   </div>
                   <div>
                     <div style={{ display: 'flex', alignItems: 'center', gap: '10px', flexWrap: 'wrap', marginBottom: '4px' }}>
-                      <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#DAF1DE', margin: 0 }}>
+                      <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#F5F3E9', margin: 0 }}>
                         {currentUser.full_name || currentUser.username}
                       </h3>
                       <span style={{
@@ -6456,7 +6511,7 @@ ${feedbackRecommendation}
                         {currentUser.role}
                       </span>
                     </div>
-                    <p style={{ fontSize: '13px', color: '#8EB69B', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <p style={{ fontSize: '13px', color: '#A6C48A', margin: 0, display: 'flex', alignItems: 'center', gap: '8px' }}>
                       <span>@{currentUser.username}</span>
                       <span>•</span>
                       <span>{currentUser.email}</span>
@@ -6485,15 +6540,15 @@ ${feedbackRecommendation}
               {currentUser.bio && (
                 <div style={{
                   padding: '14px 18px',
-                  background: 'rgba(5, 31, 32, 0.65)',
+                  background: 'rgba(16, 43, 32, 0.65)',
                   borderRadius: '12px',
-                  border: '1px solid rgba(35, 83, 71, 0.8)',
+                  border: '1px solid rgba(31, 81, 56, 0.8)',
                   marginBottom: '24px'
                 }}>
-                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#8EB69B', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>
+                  <span style={{ fontSize: '11px', fontWeight: 800, color: '#A6C48A', textTransform: 'uppercase', letterSpacing: '0.06em', display: 'block', marginBottom: '4px' }}>
                     Profile Affiliation & Bio
                   </span>
-                  <p style={{ fontSize: '13px', color: '#DAF1DE', margin: 0, lineHeight: 1.5 }}>
+                  <p style={{ fontSize: '13px', color: '#F5F3E9', margin: 0, lineHeight: 1.5 }}>
                     {currentUser.bio}
                   </p>
                 </div>
@@ -6501,36 +6556,36 @@ ${feedbackRecommendation}
 
               {/* 4 Status Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '14px', marginBottom: '28px' }}>
-                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
-                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>Active Role</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#DAF1DE', marginTop: '4px', textTransform: 'capitalize' }}>
+                <div style={{ padding: '16px', background: 'rgba(22, 59, 44, 0.5)', borderRadius: '14px', border: '1px solid rgba(31, 81, 56, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#A6C48A', fontWeight: 700, textTransform: 'uppercase' }}>Active Role</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#F5F3E9', marginTop: '4px', textTransform: 'capitalize' }}>
                     {currentUser.role}
                   </div>
                 </div>
-                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
-                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>Account Status</div>
+                <div style={{ padding: '16px', background: 'rgba(22, 59, 44, 0.5)', borderRadius: '14px', border: '1px solid rgba(31, 81, 56, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#A6C48A', fontWeight: 700, textTransform: 'uppercase' }}>Account Status</div>
                   <div style={{ fontSize: '16px', fontWeight: 800, color: '#10B981', marginTop: '4px', display: 'flex', alignItems: 'center', gap: '6px' }}>
                     <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#10B981', boxShadow: '0 0 8px #10B981' }}></span>
                     Active & Verified
                   </div>
                 </div>
-                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
-                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>Data Governance</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
+                <div style={{ padding: '16px', background: 'rgba(22, 59, 44, 0.5)', borderRadius: '14px', border: '1px solid rgba(31, 81, 56, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#A6C48A', fontWeight: 700, textTransform: 'uppercase' }}>Data Governance</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#F5F3E9', marginTop: '4px' }}>
                     OCAP® Protected
                   </div>
                 </div>
-                <div style={{ padding: '16px', background: 'rgba(22, 56, 50, 0.5)', borderRadius: '14px', border: '1px solid rgba(35, 83, 71, 0.8)' }}>
-                  <div style={{ fontSize: '11px', color: '#8EB69B', fontWeight: 700, textTransform: 'uppercase' }}>AI Processing</div>
-                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
+                <div style={{ padding: '16px', background: 'rgba(22, 59, 44, 0.5)', borderRadius: '14px', border: '1px solid rgba(31, 81, 56, 0.8)' }}>
+                  <div style={{ fontSize: '11px', color: '#A6C48A', fontWeight: 700, textTransform: 'uppercase' }}>AI Processing</div>
+                  <div style={{ fontSize: '16px', fontWeight: 800, color: '#F5F3E9', marginTop: '4px' }}>
                     Offline Zero-Cloud
                   </div>
                 </div>
               </div>
 
               {/* Navigation Action Hub */}
-              <div style={{ borderTop: '1px solid rgba(35, 83, 71, 0.7)', paddingTop: '22px' }}>
-                <span style={{ fontSize: '12px', fontWeight: 700, color: '#8EB69B', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '12px' }}>
+              <div style={{ borderTop: '1px solid rgba(31, 81, 56, 0.7)', paddingTop: '22px' }}>
+                <span style={{ fontSize: '12px', fontWeight: 700, color: '#A6C48A', textTransform: 'uppercase', letterSpacing: '0.05em', display: 'block', marginBottom: '12px' }}>
                   Quick Navigation Hub
                 </span>
                 <div style={{ display: 'flex', gap: '10px', flexWrap: 'wrap' }}>
@@ -6540,7 +6595,7 @@ ${feedbackRecommendation}
                     className="btn-secondary"
                     style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
                   >
-                    <Sparkles size={14} color="#8EB69B" />
+                    <Sparkles size={14} color="#A6C48A" />
                     <span>Home Dashboard</span>
                   </button>
                   <button
@@ -6549,7 +6604,7 @@ ${feedbackRecommendation}
                     className="btn-secondary"
                     style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
                   >
-                    <Mic size={14} color="#8EB69B" />
+                    <Mic size={14} color="#A6C48A" />
                     <span>Record Audio</span>
                   </button>
                   <button
@@ -6558,7 +6613,7 @@ ${feedbackRecommendation}
                     className="btn-secondary"
                     style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
                   >
-                    <Sprout size={14} color="#8EB69B" />
+                    <Sprout size={14} color="#A6C48A" />
                     <span>Cultural Archives</span>
                   </button>
                   <button
@@ -6567,7 +6622,7 @@ ${feedbackRecommendation}
                     className="btn-secondary"
                     style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
                   >
-                    <Network size={14} color="#8EB69B" />
+                    <Network size={14} color="#A6C48A" />
                     <span>Speech Intelligence</span>
                   </button>
                   <button
@@ -6576,7 +6631,7 @@ ${feedbackRecommendation}
                     className="btn-secondary"
                     style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
                   >
-                    <BookOpen size={14} color="#8EB69B" />
+                    <BookOpen size={14} color="#A6C48A" />
                     <span>Language Learning</span>
                   </button>
                   <button
@@ -6585,7 +6640,7 @@ ${feedbackRecommendation}
                     className="btn-secondary"
                     style={{ fontSize: '13px', padding: '8px 16px', borderRadius: '10px' }}
                   >
-                    <GraduationCap size={14} color="#8EB69B" />
+                    <GraduationCap size={14} color="#A6C48A" />
                     <span>Research Portal</span>
                   </button>
                 </div>
@@ -6597,17 +6652,17 @@ ${feedbackRecommendation}
               display: 'grid',
               gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))',
               borderRadius: '24px',
-              border: '1px solid rgba(142, 182, 155, 0.25)',
-              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(142, 182, 155, 0.15)',
+              border: '1px solid rgba(166, 196, 138, 0.25)',
+              boxShadow: '0 25px 60px rgba(0, 0, 0, 0.65), inset 0 1px 0 rgba(166, 196, 138, 0.15)',
               overflow: 'hidden',
-              background: 'rgba(11, 43, 38, 0.85)',
+              background: 'rgba(16, 43, 32, 0.85)',
               backdropFilter: 'blur(20px)',
               WebkitBackdropFilter: 'blur(20px)'
             }}>
               {/* Left Column: Interactive Form */}
               <div style={{
-                background: 'rgba(11, 43, 38, 0.9)',
-                color: '#DAF1DE',
+                background: 'rgba(16, 43, 32, 0.9)',
+                color: '#F5F3E9',
                 padding: '36px 32px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -6619,10 +6674,10 @@ ${feedbackRecommendation}
                     display: 'flex',
                     gap: '6px',
                     marginBottom: '24px',
-                    background: 'rgba(5, 31, 32, 0.7)',
+                    background: 'rgba(16, 43, 32, 0.7)',
                     padding: '4px',
                     borderRadius: '14px',
-                    border: '1px solid rgba(35, 83, 71, 0.8)'
+                    border: '1px solid rgba(31, 81, 56, 0.8)'
                   }}>
                     <button
                       type="button"
@@ -6631,9 +6686,9 @@ ${feedbackRecommendation}
                         flex: 1,
                         padding: '10px 14px',
                         borderRadius: '10px',
-                        border: authMode === 'login' ? '1px solid #8EB69B' : '1px solid transparent',
-                        background: authMode === 'login' ? 'linear-gradient(135deg, #163832, #235347)' : 'transparent',
-                        color: authMode === 'login' ? '#DAF1DE' : '#8EB69B',
+                        border: authMode === 'login' ? '1px solid #A6C48A' : '1px solid transparent',
+                        background: authMode === 'login' ? 'linear-gradient(135deg, #163B2C, #1F5138)' : 'transparent',
+                        color: authMode === 'login' ? '#F5F3E9' : '#A6C48A',
                         fontWeight: 700,
                         fontSize: '13px',
                         cursor: 'pointer',
@@ -6642,7 +6697,7 @@ ${feedbackRecommendation}
                         justifyContent: 'center',
                         gap: '6px',
                         transition: 'all 0.2s ease',
-                        boxShadow: authMode === 'login' ? '0 4px 12px rgba(5, 31, 32, 0.5)' : 'none'
+                        boxShadow: authMode === 'login' ? '0 4px 12px rgba(16, 43, 32, 0.5)' : 'none'
                       }}
                     >
                       <User size={14} />
@@ -6655,9 +6710,9 @@ ${feedbackRecommendation}
                         flex: 1,
                         padding: '10px 14px',
                         borderRadius: '10px',
-                        border: authMode === 'signup' ? '1px solid #8EB69B' : '1px solid transparent',
-                        background: authMode === 'signup' ? 'linear-gradient(135deg, #163832, #235347)' : 'transparent',
-                        color: authMode === 'signup' ? '#DAF1DE' : '#8EB69B',
+                        border: authMode === 'signup' ? '1px solid #A6C48A' : '1px solid transparent',
+                        background: authMode === 'signup' ? 'linear-gradient(135deg, #163B2C, #1F5138)' : 'transparent',
+                        color: authMode === 'signup' ? '#F5F3E9' : '#A6C48A',
                         fontWeight: 700,
                         fontSize: '13px',
                         cursor: 'pointer',
@@ -6666,7 +6721,7 @@ ${feedbackRecommendation}
                         justifyContent: 'center',
                         gap: '6px',
                         transition: 'all 0.2s ease',
-                        boxShadow: authMode === 'signup' ? '0 4px 12px rgba(5, 31, 32, 0.5)' : 'none'
+                        boxShadow: authMode === 'signup' ? '0 4px 12px rgba(16, 43, 32, 0.5)' : 'none'
                       }}
                     >
                       <Sprout size={14} />
@@ -6675,10 +6730,10 @@ ${feedbackRecommendation}
                   </div>
 
                   {/* Header Titles */}
-                  <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#DAF1DE', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
+                  <h3 style={{ fontSize: '24px', fontWeight: 800, color: '#F5F3E9', margin: '0 0 6px 0', letterSpacing: '-0.02em' }}>
                     {authMode === 'login' ? 'Welcome Back' : 'Join Voice Roots'}
                   </h3>
-                  <p style={{ fontSize: '13px', color: '#8EB69B', margin: '0 0 20px 0', lineHeight: 1.5 }}>
+                  <p style={{ fontSize: '13px', color: '#A6C48A', margin: '0 0 20px 0', lineHeight: 1.5 }}>
                     {authMode === 'login'
                       ? 'Sign in to access sovereign audio archives, review transcripts, or conduct dialect research.'
                       : 'Create your community-governed account to safeguard endangered mother tongues.'}
@@ -6689,15 +6744,15 @@ ${feedbackRecommendation}
                     <div style={{
                       marginBottom: '20px',
                       padding: '12px 14px',
-                      background: 'rgba(5, 31, 32, 0.65)',
+                      background: 'rgba(16, 43, 32, 0.65)',
                       borderRadius: '14px',
-                      border: '1px solid rgba(35, 83, 71, 0.8)'
+                      border: '1px solid rgba(31, 81, 56, 0.8)'
                     }}>
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                        <span style={{ fontSize: '11px', fontWeight: 800, color: '#8EB69B', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
+                        <span style={{ fontSize: '11px', fontWeight: 800, color: '#A6C48A', textTransform: 'uppercase', letterSpacing: '0.06em' }}>
                           ⚡ Quick Evaluation Presets
                         </span>
-                        <span style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.6)' }}>
+                        <span style={{ fontSize: '10px', color: 'rgba(245, 243, 233, 0.6)' }}>
                           Click to autofill
                         </span>
                       </div>
@@ -6712,7 +6767,7 @@ ${feedbackRecommendation}
                             borderRadius: '8px',
                             border: '1px solid rgba(16, 185, 129, 0.3)',
                             background: 'rgba(16, 185, 129, 0.1)',
-                            color: '#DAF1DE',
+                            color: '#F5F3E9',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -6733,7 +6788,7 @@ ${feedbackRecommendation}
                             borderRadius: '8px',
                             border: '1px solid rgba(245, 158, 11, 0.3)',
                             background: 'rgba(245, 158, 11, 0.1)',
-                            color: '#DAF1DE',
+                            color: '#F5F3E9',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -6754,7 +6809,7 @@ ${feedbackRecommendation}
                             borderRadius: '8px',
                             border: '1px solid rgba(59, 130, 246, 0.3)',
                             background: 'rgba(59, 130, 246, 0.1)',
-                            color: '#DAF1DE',
+                            color: '#F5F3E9',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -6775,7 +6830,7 @@ ${feedbackRecommendation}
                             borderRadius: '8px',
                             border: '1px solid rgba(225, 29, 72, 0.3)',
                             background: 'rgba(225, 29, 72, 0.1)',
-                            color: '#DAF1DE',
+                            color: '#F5F3E9',
                             cursor: 'pointer',
                             display: 'flex',
                             alignItems: 'center',
@@ -6832,11 +6887,11 @@ ${feedbackRecommendation}
                     /* ─── Sign In Form ─── */
                     <form onSubmit={handleAuthLogin} style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#8EB69B', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#A6C48A', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Email or Username
                         </label>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                          <Mail size={16} color="#8EB69B" style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }} />
+                          <Mail size={16} color="#A6C48A" style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }} />
                           <input
                             type="text"
                             required
@@ -6850,11 +6905,11 @@ ${feedbackRecommendation}
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#8EB69B', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <label style={{ display: 'block', fontSize: '12px', fontWeight: 700, color: '#A6C48A', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Password
                         </label>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                          <Lock size={16} color="#8EB69B" style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }} />
+                          <Lock size={16} color="#A6C48A" style={{ position: 'absolute', left: '14px', pointerEvents: 'none' }} />
                           <input
                             type={showPassword ? "text" : "password"}
                             required
@@ -6873,7 +6928,7 @@ ${feedbackRecommendation}
                               right: '12px',
                               background: 'transparent',
                               border: 'none',
-                              color: '#8EB69B',
+                              color: '#A6C48A',
                               cursor: 'pointer',
                               padding: '4px',
                               display: 'flex',
@@ -6887,17 +6942,17 @@ ${feedbackRecommendation}
                       </div>
 
                       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '2px', fontSize: '12px' }}>
-                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#DAF1DE', cursor: 'pointer', userSelect: 'none' }}>
+                        <label style={{ display: 'flex', alignItems: 'center', gap: '8px', color: '#F5F3E9', cursor: 'pointer', userSelect: 'none' }}>
                           <input
                             type="checkbox"
                             checked={rememberMe}
                             onChange={(e) => setRememberMe(e.target.checked)}
-                            style={{ accentColor: '#8EB69B', width: '15px', height: '15px', borderRadius: '4px' }}
+                            style={{ accentColor: '#A6C48A', width: '15px', height: '15px', borderRadius: '4px' }}
                           />
                           <span>Remember session</span>
                         </label>
-                        <span style={{ color: '#8EB69B', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600 }}>
-                          <Shield size={12} color="#8EB69B" />
+                        <span style={{ color: '#A6C48A', display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: 600 }}>
+                          <Shield size={12} color="#A6C48A" />
                           OCAP® Secured
                         </span>
                       </div>
@@ -6913,7 +6968,7 @@ ${feedbackRecommendation}
                           fontSize: '14px',
                           fontWeight: 800,
                           letterSpacing: '0.02em',
-                          boxShadow: '0 6px 18px rgba(35, 83, 71, 0.4)'
+                          boxShadow: '0 6px 18px rgba(31, 81, 56, 0.4)'
                         }}
                       >
                         {authLoading ? (
@@ -6933,11 +6988,11 @@ ${feedbackRecommendation}
                     /* ─── Sign Up Form ─── */
                     <form onSubmit={handleAuthSignup} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
                       <div>
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#A6C48A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Full Name
                         </label>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                          <User size={15} color="#8EB69B" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
+                          <User size={15} color="#A6C48A" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
                           <input
                             type="text"
                             required
@@ -6952,7 +7007,7 @@ ${feedbackRecommendation}
 
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(140px, 1fr))', gap: '12px' }}>
                         <div>
-                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#A6C48A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                             Username
                           </label>
                           <input
@@ -6967,7 +7022,7 @@ ${feedbackRecommendation}
                         </div>
 
                         <div>
-                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                          <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#A6C48A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                             Email Address
                           </label>
                           <input
@@ -6983,11 +7038,11 @@ ${feedbackRecommendation}
                       </div>
 
                       <div>
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#A6C48A', marginBottom: '4px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Password (Min 6 Characters)
                         </label>
                         <div style={{ position: 'relative', display: 'flex', alignItems: 'center' }}>
-                          <Lock size={15} color="#8EB69B" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
+                          <Lock size={15} color="#A6C48A" style={{ position: 'absolute', left: '12px', pointerEvents: 'none' }} />
                           <input
                             type={showPassword ? "text" : "password"}
                             required
@@ -7006,7 +7061,7 @@ ${feedbackRecommendation}
                               right: '10px',
                               background: 'transparent',
                               border: 'none',
-                              color: '#8EB69B',
+                              color: '#A6C48A',
                               cursor: 'pointer',
                               padding: '4px',
                               display: 'flex',
@@ -7021,7 +7076,7 @@ ${feedbackRecommendation}
 
                       {/* Interactive Community Role Selection Cards */}
                       <div>
-                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#8EB69B', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
+                        <label style={{ display: 'block', fontSize: '11px', fontWeight: 700, color: '#A6C48A', marginBottom: '8px', textTransform: 'uppercase', letterSpacing: '0.04em' }}>
                           Select Community Role
                         </label>
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -7031,8 +7086,8 @@ ${feedbackRecommendation}
                             style={{
                               padding: '10px 14px',
                               borderRadius: '12px',
-                              border: authRole === 'contributor' ? '1.5px solid #10B981' : '1px solid rgba(35, 83, 71, 0.8)',
-                              background: authRole === 'contributor' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(5, 31, 32, 0.6)',
+                              border: authRole === 'contributor' ? '1.5px solid #10B981' : '1px solid rgba(31, 81, 56, 0.8)',
+                              background: authRole === 'contributor' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(16, 43, 32, 0.6)',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -7054,10 +7109,10 @@ ${feedbackRecommendation}
                               <Mic size={16} />
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#F5F3E9' }}>
                                 Contributor / Speaker
                               </div>
-                              <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                              <div style={{ fontSize: '11px', color: '#A6C48A' }}>
                                 Record folklore, songs, and native dialect speech
                               </div>
                             </div>
@@ -7070,8 +7125,8 @@ ${feedbackRecommendation}
                             style={{
                               padding: '10px 14px',
                               borderRadius: '12px',
-                              border: authRole === 'reviewer' ? '1.5px solid #F59E0B' : '1px solid rgba(35, 83, 71, 0.8)',
-                              background: authRole === 'reviewer' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(5, 31, 32, 0.6)',
+                              border: authRole === 'reviewer' ? '1.5px solid #F59E0B' : '1px solid rgba(31, 81, 56, 0.8)',
+                              background: authRole === 'reviewer' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(16, 43, 32, 0.6)',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -7093,10 +7148,10 @@ ${feedbackRecommendation}
                               <Sprout size={16} />
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#F5F3E9' }}>
                                 Community Elder / Reviewer
                               </div>
-                              <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                              <div style={{ fontSize: '11px', color: '#A6C48A' }}>
                                 Sovereign oversight, verify accuracy, approve lore
                               </div>
                             </div>
@@ -7109,8 +7164,8 @@ ${feedbackRecommendation}
                             style={{
                               padding: '10px 14px',
                               borderRadius: '12px',
-                              border: authRole === 'researcher' ? '1.5px solid #3B82F6' : '1px solid rgba(35, 83, 71, 0.8)',
-                              background: authRole === 'researcher' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(5, 31, 32, 0.6)',
+                              border: authRole === 'researcher' ? '1.5px solid #3B82F6' : '1px solid rgba(31, 81, 56, 0.8)',
+                              background: authRole === 'researcher' ? 'rgba(59, 130, 246, 0.15)' : 'rgba(16, 43, 32, 0.6)',
                               cursor: 'pointer',
                               display: 'flex',
                               alignItems: 'center',
@@ -7132,10 +7187,10 @@ ${feedbackRecommendation}
                               <GraduationCap size={16} />
                             </div>
                             <div style={{ flex: 1 }}>
-                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>
+                              <div style={{ fontSize: '12px', fontWeight: 700, color: '#F5F3E9' }}>
                                 Academic Researcher
                               </div>
-                              <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                              <div style={{ fontSize: '11px', color: '#A6C48A' }}>
                                 Access verified corpora, phonetics, and linguistics
                               </div>
                             </div>
@@ -7155,7 +7210,7 @@ ${feedbackRecommendation}
                           fontSize: '14px',
                           fontWeight: 800,
                           letterSpacing: '0.02em',
-                          boxShadow: '0 6px 18px rgba(35, 83, 71, 0.4)'
+                          boxShadow: '0 6px 18px rgba(31, 81, 56, 0.4)'
                         }}
                       >
                         {authLoading ? (
@@ -7175,9 +7230,9 @@ ${feedbackRecommendation}
                 </div>
 
                 {/* Footer Assurance */}
-                <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(35, 83, 71, 0.6)', textAlign: 'center' }}>
-                  <p style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
-                    <ShieldCheck size={14} color="#8EB69B" />
+                <div style={{ marginTop: '24px', paddingTop: '16px', borderTop: '1px solid rgba(31, 81, 56, 0.6)', textAlign: 'center' }}>
+                  <p style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', margin: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px' }}>
+                    <ShieldCheck size={14} color="#A6C48A" />
                     <span>Protected by OCAP® Indigenous Sovereign Data Governance</span>
                   </p>
                 </div>
@@ -7185,7 +7240,7 @@ ${feedbackRecommendation}
 
               {/* Right Column: Forest Heritage Hero Brand */}
               <div style={{
-                background: 'linear-gradient(145deg, rgba(16, 56, 50, 0.85) 0%, rgba(11, 43, 38, 0.95) 50%, rgba(5, 31, 32, 1) 100%)',
+                background: 'linear-gradient(145deg, rgba(16, 56, 50, 0.85) 0%, rgba(16, 43, 32, 0.95) 50%, rgba(16, 43, 32, 1) 100%)',
                 padding: '40px 32px',
                 display: 'flex',
                 flexDirection: 'column',
@@ -7193,67 +7248,67 @@ ${feedbackRecommendation}
                 alignItems: 'center',
                 textAlign: 'center',
                 position: 'relative',
-                borderLeft: '1px solid rgba(35, 83, 71, 0.6)'
+                borderLeft: '1px solid rgba(31, 81, 56, 0.6)'
               }}>
                 <div style={{
                   width: '72px',
                   height: '72px',
                   borderRadius: '20px',
-                  background: 'rgba(142, 182, 155, 0.15)',
-                  border: '1px solid #8EB69B',
+                  background: 'rgba(166, 196, 138, 0.15)',
+                  border: '1px solid #A6C48A',
                   display: 'flex',
                   alignItems: 'center',
                   justifyContent: 'center',
                   marginBottom: '18px',
-                  boxShadow: '0 8px 24px rgba(142, 182, 155, 0.2)'
+                  boxShadow: '0 8px 24px rgba(166, 196, 138, 0.2)'
                 }}>
-                  <Sparkles size={36} color="#8EB69B" />
+                  <Sparkles size={36} color="#A6C48A" />
                 </div>
-                <h4 style={{ fontSize: '28px', fontWeight: 800, color: '#DAF1DE', marginBottom: '8px', letterSpacing: '-0.02em' }}>
-                  Voice <span style={{ color: '#8EB69B' }}>Roots</span>
+                <h4 style={{ fontSize: '28px', fontWeight: 800, color: '#F5F3E9', marginBottom: '8px', letterSpacing: '-0.02em' }}>
+                  Voice <span style={{ color: '#A6C48A' }}>Roots</span>
                 </h4>
-                <p style={{ fontSize: '13px', color: '#8EB69B', maxWidth: '300px', lineHeight: 1.5, marginBottom: '28px' }}>
+                <p style={{ fontSize: '13px', color: '#A6C48A', maxWidth: '300px', lineHeight: 1.5, marginBottom: '28px' }}>
                   Rooting Oral Languages in Text with AI • Sovereign, Offline & Community Governed
                 </p>
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', width: '100%', maxWidth: '320px', textAlign: 'left' }}>
-                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Shield size={16} color="#8EB69B" />
+                  <div style={{ padding: '12px', background: 'rgba(16, 43, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(31, 81, 56, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(166, 196, 138, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Shield size={16} color="#A6C48A" />
                     </div>
                     <div>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>OCAP® Data Sovereignty</div>
-                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>100% community ownership & zero telemetry</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#F5F3E9' }}>OCAP® Data Sovereignty</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.65)' }}>100% community ownership & zero telemetry</div>
                     </div>
                   </div>
 
-                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Mic size={16} color="#8EB69B" />
+                  <div style={{ padding: '12px', background: 'rgba(16, 43, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(31, 81, 56, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(166, 196, 138, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Mic size={16} color="#A6C48A" />
                     </div>
                     <div>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>Immutable Lossless Masters</div>
-                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>Sacred voice audio is never overwritten</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#F5F3E9' }}>Immutable Lossless Masters</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.65)' }}>Sacred voice audio is never overwritten</div>
                     </div>
                   </div>
 
-                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Sprout size={16} color="#8EB69B" />
+                  <div style={{ padding: '12px', background: 'rgba(16, 43, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(31, 81, 56, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(166, 196, 138, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Sprout size={16} color="#A6C48A" />
                     </div>
                     <div>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>Elder Review Layer</div>
-                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>Human cultural verification for sacred lore</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#F5F3E9' }}>Elder Review Layer</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.65)' }}>Human cultural verification for sacred lore</div>
                     </div>
                   </div>
 
-                  <div style={{ padding: '12px', background: 'rgba(5, 31, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(35, 83, 71, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
-                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                      <Cpu size={16} color="#8EB69B" />
+                  <div style={{ padding: '12px', background: 'rgba(16, 43, 32, 0.65)', borderRadius: '12px', border: '1px solid rgba(31, 81, 56, 0.7)', display: 'flex', alignItems: 'center', gap: '12px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: 'rgba(166, 196, 138, 0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <Cpu size={16} color="#A6C48A" />
                     </div>
                     <div>
-                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#DAF1DE' }}>Zero-Cloud Edge AI</div>
-                      <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>Runs offline on local workstation • $0.00 bills</div>
+                      <div style={{ fontSize: '12px', fontWeight: 700, color: '#F5F3E9' }}>Zero-Cloud Edge AI</div>
+                      <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.65)' }}>Runs offline on local workstation • $0.00 bills</div>
                     </div>
                   </div>
                 </div>
@@ -7297,7 +7352,7 @@ ${feedbackRecommendation}
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Globe size={20} color="#8EB69B" />
+                <Globe size={20} color="#A6C48A" />
                 <span>Register Any Language Worldwide</span>
               </h3>
               <button
@@ -7661,8 +7716,8 @@ ${feedbackRecommendation}
         }}>
           <div className="glass-card" style={{ maxWidth: '580px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <FileText size={18} color="#8EB69B" />
+              <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <FileText size={18} color="#A6C48A" />
                 <span>Pilot Tester Feedback Form</span>
               </h3>
               <button
@@ -7676,14 +7731,14 @@ ${feedbackRecommendation}
               </button>
             </div>
 
-            <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.72)', marginBottom: '16px', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.72)', marginBottom: '16px', lineHeight: '1.5' }}>
               Record observations from testing sessions with community speakers. Feedback is formatted for responsible evaluation under Indigenous Data Sovereignty protocols.
             </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>TESTER NAME</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>TESTER NAME</label>
                   <input
                     type="text"
                     className="input-field"
@@ -7694,7 +7749,7 @@ ${feedbackRecommendation}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>TESTER ROLE</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>TESTER ROLE</label>
                   <select
                     className="select-field"
                     value={feedbackTesterRole}
@@ -7711,7 +7766,7 @@ ${feedbackRecommendation}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>TARGET LANGUAGE</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>TARGET LANGUAGE</label>
                   <input
                     type="text"
                     className="input-field"
@@ -7722,7 +7777,7 @@ ${feedbackRecommendation}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>DIALECT / REGION</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>DIALECT / REGION</label>
                   <input
                     type="text"
                     className="input-field"
@@ -7736,7 +7791,7 @@ ${feedbackRecommendation}
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>FEEDBACK CATEGORY</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>FEEDBACK CATEGORY</label>
                   <select
                     className="select-field"
                     value={feedbackCategory}
@@ -7750,7 +7805,7 @@ ${feedbackRecommendation}
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>AUDIO QUALITY</label>
+                  <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>AUDIO QUALITY</label>
                   <select
                     className="select-field"
                     value={feedbackAudioQuality}
@@ -7765,7 +7820,7 @@ ${feedbackRecommendation}
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>
                   OBSERVATIONS, PHONETIC ERRORS & SYSTEMATIC PATTERNS *
                 </label>
                 <textarea
@@ -7779,7 +7834,7 @@ ${feedbackRecommendation}
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginBottom: '4px' }}>OVERALL RECOMMENDATION</label>
+                <label style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginBottom: '4px' }}>OVERALL RECOMMENDATION</label>
                 <select
                   className="select-field"
                   value={feedbackRecommendation}
@@ -7793,7 +7848,7 @@ ${feedbackRecommendation}
               </div>
 
               {feedbackExportMsg && (
-                <div style={{ color: '#DAF1DE', background: 'rgba(142,182,155,0.15)', border: '1px solid #235347', padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
+                <div style={{ color: '#F5F3E9', background: 'rgba(142,182,155,0.15)', border: '1px solid #1F5138', padding: '8px 12px', borderRadius: '8px', fontSize: '12px' }}>
                   {feedbackExportMsg}
                 </div>
               )}
@@ -7811,7 +7866,7 @@ ${feedbackRecommendation}
                   type="button"
                   onClick={handleCopyPilotFeedback}
                   className="btn-secondary"
-                  style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px', borderColor: '#235347', color: '#DAF1DE' }}
+                  style={{ minHeight: '34px', padding: '6px 14px', fontSize: '12px', borderColor: '#1F5138', color: '#F5F3E9' }}
                 >
                   <Copy size={13} />
                   <span>Copy Form (MD)</span>
@@ -7857,7 +7912,7 @@ ${feedbackRecommendation}
                     Voice Roots — Faculty Viva & Architecture Guide
                   </h3>
                 </div>
-                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.75)', margin: 0 }}>
+                <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.75)', margin: 0 }}>
                   Preserving Indigenous Oral Languages via OCAP Sovereignty, AI Guardrails & Local Offline Edge Stack
                 </p>
               </div>
@@ -7865,7 +7920,7 @@ ${feedbackRecommendation}
                 type="button"
                 onClick={() => setShowFacultyVivaModal(false)}
                 className="btn-secondary"
-                style={{ padding: '6px 10px', minHeight: '30px', borderColor: '#235347' }}
+                style={{ padding: '6px 10px', minHeight: '30px', borderColor: '#1F5138' }}
                 aria-label="Close viva modal"
               >
                 <X size={16} />
@@ -7873,13 +7928,13 @@ ${feedbackRecommendation}
             </div>
 
             {/* Navigation Tabs */}
-            <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap', borderBottom: '1px solid rgba(35, 83, 71, 0.6)', paddingBottom: '10px' }}>
+            <div style={{ display: 'flex', gap: '6px', marginBottom: '20px', flexWrap: 'wrap', borderBottom: '1px solid rgba(31, 81, 56, 0.6)', paddingBottom: '10px' }}>
               <button
                 type="button"
                 onClick={() => setFacultyVivaTab('problem')}
                 style={{
                   background: facultyVivaTab === 'problem' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
-                  color: facultyVivaTab === 'problem' ? '#051F20' : '#DAF1DE',
+                  color: facultyVivaTab === 'problem' ? '#102B20' : '#F5F3E9',
                   border: 'none',
                   borderRadius: '16px',
                   padding: '6px 14px',
@@ -7896,7 +7951,7 @@ ${feedbackRecommendation}
                 onClick={() => setFacultyVivaTab('ocap')}
                 style={{
                   background: facultyVivaTab === 'ocap' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
-                  color: facultyVivaTab === 'ocap' ? '#051F20' : '#DAF1DE',
+                  color: facultyVivaTab === 'ocap' ? '#102B20' : '#F5F3E9',
                   border: 'none',
                   borderRadius: '16px',
                   padding: '6px 14px',
@@ -7913,7 +7968,7 @@ ${feedbackRecommendation}
                 onClick={() => setFacultyVivaTab('guardrails')}
                 style={{
                   background: facultyVivaTab === 'guardrails' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
-                  color: facultyVivaTab === 'guardrails' ? '#051F20' : '#DAF1DE',
+                  color: facultyVivaTab === 'guardrails' ? '#102B20' : '#F5F3E9',
                   border: 'none',
                   borderRadius: '16px',
                   padding: '6px 14px',
@@ -7930,7 +7985,7 @@ ${feedbackRecommendation}
                 onClick={() => setFacultyVivaTab('architecture')}
                 style={{
                   background: facultyVivaTab === 'architecture' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
-                  color: facultyVivaTab === 'architecture' ? '#051F20' : '#DAF1DE',
+                  color: facultyVivaTab === 'architecture' ? '#102B20' : '#F5F3E9',
                   border: 'none',
                   borderRadius: '16px',
                   padding: '6px 14px',
@@ -7947,7 +8002,7 @@ ${feedbackRecommendation}
                 onClick={() => setFacultyVivaTab('qa')}
                 style={{
                   background: facultyVivaTab === 'qa' ? '#D4AF37' : 'rgba(255,255,255,0.06)',
-                  color: facultyVivaTab === 'qa' ? '#051F20' : '#DAF1DE',
+                  color: facultyVivaTab === 'qa' ? '#102B20' : '#F5F3E9',
                   border: 'none',
                   borderRadius: '16px',
                   padding: '6px 14px',
@@ -7963,7 +8018,7 @@ ${feedbackRecommendation}
 
             {/* Tab 1: Research Motivation */}
             {facultyVivaTab === 'problem' && (
-              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', color: '#DAF1DE' }}>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', fontSize: '13px', lineHeight: '1.6', color: '#F5F3E9' }}>
                 <div style={{ background: 'rgba(239, 68, 68, 0.12)', border: '1px solid rgba(239, 68, 68, 0.4)', borderRadius: '10px', padding: '14px' }}>
                   <h4 style={{ color: '#FCA5A5', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
                     The Extinction Crisis (197+ Endangered Indian Languages)
@@ -7973,11 +8028,11 @@ ${feedbackRecommendation}
                   </p>
                 </div>
 
-                <div style={{ background: 'rgba(142, 182, 155, 0.1)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
-                  <h4 style={{ color: '#8EB69B', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
+                <div style={{ background: 'rgba(166, 196, 138, 0.1)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px' }}>
+                  <h4 style={{ color: '#A6C48A', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
                     Why Commercial AI Models Fail on Oral Tongues
                   </h4>
-                  <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px', color: 'rgba(218, 241, 222, 0.85)' }}>
+                  <ul style={{ margin: 0, paddingLeft: '18px', display: 'flex', flexDirection: 'column', gap: '6px', color: 'rgba(245, 243, 233, 0.85)' }}>
                     <li><strong>Lack of Written Scripts:</strong> Big-tech models (Google Translate, ChatGPT) rely on massive written text corpora. Oral languages lack standardized scripts, so models hallucinate non-existent translations.</li>
                     <li><strong>Extractive Data Mining:</strong> Commercial models vacuum indigenous knowledge into cloud data lakes without consent, removing ownership from native custodians.</li>
                     <li><strong>Mandatory Internet Requirement:</strong> Remote tribal settlements lack reliable 4G/5G, making cloud-tethered AI inaccessible in the field.</li>
@@ -7990,38 +8045,38 @@ ${feedbackRecommendation}
             {facultyVivaTab === 'ocap' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '13px', lineHeight: '1.6' }}>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '12px' }}>
-                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.7)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                       Ownership (O)
                     </span>
-                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                    <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.8)', fontSize: '12px' }}>
                       The indigenous community retains moral, cultural, and legal ownership of all voice recordings. Voice Roots makes zero claim of copyright or intellectual property over community speech.
                     </p>
                   </div>
 
-                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.7)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                       Control (C) & Cultural Privacy Gates
                     </span>
-                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                    <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.8)', fontSize: '12px' }}>
                       Sacred, secret, or ritualistic lore is protected under strict privacy gates. Accessing restricted content triggers an automated <strong>HTTP 403 Forbidden</strong> to shield sacred folklore from public scraping.
                     </p>
                   </div>
 
-                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.7)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                       Access (A) & Immediate Consent Withdrawal
                     </span>
-                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                    <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.8)', fontSize: '12px' }}>
                       Affirmative speaker consent is mandatory (HTTP 400 rejection if absent). If a speaker or elder requests consent withdrawal, the recording is instantly unpublished and hidden from public search.
                     </p>
                   </div>
 
-                  <div style={{ background: 'rgba(5, 31, 32, 0.7)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
-                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.7)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px' }}>
+                    <span style={{ fontSize: '15px', fontWeight: '800', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                       Possession (P) & Immutable Master Audio
                     </span>
-                    <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.8)', fontSize: '12px' }}>
+                    <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.8)', fontSize: '12px' }}>
                       The original audio master is the immutable single source of truth, protected with SHA-256 cryptographic hashes. Machine transcripts are only secondary annotation layers and can never overwrite voice masters.
                     </p>
                   </div>
@@ -8044,21 +8099,21 @@ ${feedbackRecommendation}
                   </blockquote>
                 </div>
 
-                <div style={{ background: 'rgba(142, 182, 155, 0.1)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
-                  <h4 style={{ color: '#8EB69B', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
+                <div style={{ background: 'rgba(166, 196, 138, 0.1)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px' }}>
+                  <h4 style={{ color: '#A6C48A', margin: '0 0 6px 0', fontSize: '14px', fontWeight: '700' }}>
                     Dual-Tier Annotation Pipeline
                   </h4>
-                  <p style={{ margin: '0 0 8px 0', color: 'rgba(218, 241, 222, 0.85)' }}>
+                  <p style={{ margin: '0 0 8px 0', color: 'rgba(245, 243, 233, 0.85)' }}>
                     Voice Roots maintains a strict technical separation between two distinct layers of truth:
                   </p>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
-                    <div style={{ background: 'rgba(5, 31, 32, 0.8)', padding: '10px', borderRadius: '8px', border: '1px solid #235347' }}>
-                      <span style={{ color: '#8EB69B', fontWeight: '700', display: 'block', fontSize: '12px' }}>Tier 1: Machine Draft (Whisper)</span>
-                      <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)' }}>Acoustic baseline, labeled clearly as machine output; never treated as definitive ground truth.</span>
+                    <div style={{ background: 'rgba(16, 43, 32, 0.8)', padding: '10px', borderRadius: '8px', border: '1px solid #1F5138' }}>
+                      <span style={{ color: '#A6C48A', fontWeight: '700', display: 'block', fontSize: '12px' }}>Tier 1: Machine Draft (Whisper)</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.7)' }}>Acoustic baseline, labeled clearly as machine output; never treated as definitive ground truth.</span>
                     </div>
-                    <div style={{ background: 'rgba(5, 31, 32, 0.8)', padding: '10px', borderRadius: '8px', border: '1px solid #D4AF37' }}>
+                    <div style={{ background: 'rgba(16, 43, 32, 0.8)', padding: '10px', borderRadius: '8px', border: '1px solid #D4AF37' }}>
                       <span style={{ color: '#F9E79F', fontWeight: '700', display: 'block', fontSize: '12px' }}>Tier 2: Elder-Verified Transcript</span>
-                      <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)' }}>Reviewed, corrected, and certified by native community elders before indexing into ChromaDB.</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.7)' }}>Reviewed, corrected, and certified by native community elders before indexing into ChromaDB.</span>
                     </div>
                   </div>
                 </div>
@@ -8075,28 +8130,28 @@ ${feedbackRecommendation}
                     </h4>
                     <span className="badge badge-green">100% Local CPU/GPU</span>
                   </div>
-                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.9)' }}>
+                  <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.9)' }}>
                     Voice Roots has zero mandatory external API subscriptions. All inference and storage run on the local host machine, making it viable for rural battery/solar-powered edge boxes:
                   </p>
                 </div>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '10px' }}>
-                  <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '8px', padding: '12px' }}>
-                    <span style={{ color: '#8EB69B', fontWeight: '700', fontSize: '13px', display: 'block' }}>Speech ASR</span>
-                    <span style={{ color: '#DAF1DE', fontSize: '12px', fontWeight: '600' }}>Local Whisper (Base Model)</span>
-                    <p style={{ margin: '4px 0 0 0', color: 'rgba(218, 241, 222, 0.65)', fontSize: '11px' }}>Runs CPU inference in ~1.8s. 0 paid tokens.</p>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ color: '#A6C48A', fontWeight: '700', fontSize: '13px', display: 'block' }}>Speech ASR</span>
+                    <span style={{ color: '#F5F3E9', fontSize: '12px', fontWeight: '600' }}>Local Whisper (Base Model)</span>
+                    <p style={{ margin: '4px 0 0 0', color: 'rgba(245, 243, 233, 0.65)', fontSize: '11px' }}>Runs CPU inference in ~1.8s. 0 paid tokens.</p>
                   </div>
 
-                  <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '8px', padding: '12px' }}>
-                    <span style={{ color: '#8EB69B', fontWeight: '700', fontSize: '13px', display: 'block' }}>Semantic Search</span>
-                    <span style={{ color: '#DAF1DE', fontSize: '12px', fontWeight: '600' }}>Embedded ChromaDB</span>
-                    <p style={{ margin: '4px 0 0 0', color: 'rgba(218, 241, 222, 0.65)', fontSize: '11px' }}>384-dim subword embeddings indexed locally on disk.</p>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ color: '#A6C48A', fontWeight: '700', fontSize: '13px', display: 'block' }}>Semantic Search</span>
+                    <span style={{ color: '#F5F3E9', fontSize: '12px', fontWeight: '600' }}>Embedded ChromaDB</span>
+                    <p style={{ margin: '4px 0 0 0', color: 'rgba(245, 243, 233, 0.65)', fontSize: '11px' }}>384-dim subword embeddings indexed locally on disk.</p>
                   </div>
 
-                  <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '8px', padding: '12px' }}>
-                    <span style={{ color: '#8EB69B', fontWeight: '700', fontSize: '13px', display: 'block' }}>Relational Persistence</span>
-                    <span style={{ color: '#DAF1DE', fontSize: '12px', fontWeight: '600' }}>SQLite (voice_roots.db)</span>
-                    <p style={{ margin: '4px 0 0 0', color: 'rgba(218, 241, 222, 0.65)', fontSize: '11px' }}>ACID atomic transactions with point-in-time backup snapshots.</p>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '8px', padding: '12px' }}>
+                    <span style={{ color: '#A6C48A', fontWeight: '700', fontSize: '13px', display: 'block' }}>Relational Persistence</span>
+                    <span style={{ color: '#F5F3E9', fontSize: '12px', fontWeight: '600' }}>SQLite (voice_roots.db)</span>
+                    <p style={{ margin: '4px 0 0 0', color: 'rgba(245, 243, 233, 0.65)', fontSize: '11px' }}>ACID atomic transactions with point-in-time backup snapshots.</p>
                   </div>
                 </div>
               </div>
@@ -8105,38 +8160,38 @@ ${feedbackRecommendation}
             {/* Tab 5: Faculty Q&A / Viva Defense */}
             {facultyVivaTab === 'qa' && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', fontSize: '12px', lineHeight: '1.6' }}>
-                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px' }}>
                   <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
                     Q1: How does your system differ from standard Google Translate or commercial Whisper APIs?
                   </span>
-                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                  <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.85)' }}>
                     <strong>Defense:</strong> Commercial APIs treat languages extractively and require internet connectivity. Unwritten oral languages like Gondi have no standardized script, causing commercial MT to hallucinate words. Voice Roots enforces OCAP data sovereignty, operates 100% offline, blocks automated MT for unwritten tongues, and mandates elder community verification.
                   </p>
                 </div>
 
-                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px' }}>
                   <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
                     Q2: What happens if an elder rejects an AI transcription?
                   </span>
-                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                  <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.85)' }}>
                     <strong>Defense:</strong> The machine transcript is never considered ground truth; it is only a raw annotation. Elders can correct or reject it in the Community Moderation queue. The original audio master remains untouched and verified by SHA-256 hash.
                   </p>
                 </div>
 
-                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px' }}>
                   <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
                     Q3: How is speaker consent enforced from a software engineering perspective?
                   </span>
-                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                  <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.85)' }}>
                     <strong>Defense:</strong> In <code>backend/main.py</code>, <code>has_consent</code> is validated at the endpoint level. Any upload without explicit consent is rejected with <code>HTTP 400</code> before any audio is written to disk. Consent timestamps and version strings are permanently logged.
                   </p>
                 </div>
 
-                <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '12px' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px' }}>
                   <span style={{ color: '#F9E79F', fontWeight: '700', fontSize: '13px', display: 'block', marginBottom: '4px' }}>
                     Q4: What is the cost of operating Voice Roots?
                   </span>
-                  <p style={{ margin: 0, color: 'rgba(218, 241, 222, 0.85)' }}>
+                  <p style={{ margin: 0, color: 'rgba(245, 243, 233, 0.85)' }}>
                     <strong>Defense:</strong> $0 per month. The entire pipeline—Whisper ASR, ChromaDB vector search, SQLite database, and FastAPI server—runs locally on standard commodity hardware without cloud subscriptions.
                   </p>
                 </div>
@@ -8144,7 +8199,7 @@ ${feedbackRecommendation}
             )}
 
             {/* Modal Footer */}
-            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '18px', borderTop: '1px solid rgba(35, 83, 71, 0.6)', paddingTop: '12px' }}>
+            <div style={{ display: 'flex', justifyContent: 'flex-end', gap: '8px', marginTop: '18px', borderTop: '1px solid rgba(31, 81, 56, 0.6)', paddingTop: '12px' }}>
               <button
                 type="button"
                 onClick={() => setShowFacultyVivaModal(false)}
@@ -8159,7 +8214,7 @@ ${feedbackRecommendation}
       )}
 
       {/* ─── Footer ─── */}
-      <footer style={{ marginTop: '40px', padding: '20px 0', borderTop: '1px solid var(--card-border)', textAlign: 'center', fontSize: '13px', color: 'rgba(218, 241, 222, 0.6)' }}>
+      <footer style={{ marginTop: '40px', padding: '20px 0', borderTop: '1px solid var(--card-border)', textAlign: 'center', fontSize: '13px', color: 'rgba(245, 243, 233, 0.6)' }}>
         Voice Roots • Rooting Oral Languages in Text with AI • Indigenous Data Sovereignty (OCAP) Compliant
       </footer>
     </div>

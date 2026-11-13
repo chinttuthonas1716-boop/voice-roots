@@ -151,7 +151,7 @@ export function RecordingStudio({ onSaved }: { onSaved?: (record: StoredVoiceRec
     analyser.getByteTimeDomainData(samples);
     context.clearRect(0, 0, canvas.width, canvas.height);
     context.lineWidth = 2.5;
-    context.strokeStyle = "#38ef7d";
+    context.strokeStyle = "#A6C48A"; // Sage Green for organic audio waveform
     context.beginPath();
     const step = canvas.width / samples.length;
     samples.forEach((sample, index) => {

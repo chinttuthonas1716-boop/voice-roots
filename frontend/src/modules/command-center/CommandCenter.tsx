@@ -258,11 +258,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
   return (
     <div
       style={{
-        backgroundColor: '#0B2B26',
-        color: '#DAF1DE',
+        backgroundColor: '#102B20',
+        color: '#F5F3E9',
         borderRadius: '16px',
         padding: '28px',
-        border: '1px solid rgba(142, 182, 155, 0.25)',
+        border: '1px solid rgba(166, 196, 138, 0.25)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
@@ -275,7 +275,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: '16px',
-          borderBottom: '1px solid rgba(142, 182, 155, 0.2)',
+          borderBottom: '1px solid rgba(166, 196, 138, 0.2)',
           paddingBottom: '20px',
           marginBottom: '24px',
         }}
@@ -283,11 +283,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
             <ShieldCheck style={{ color: '#52B788', width: '30px', height: '30px' }} />
-            <h2 style={{ fontSize: '1.65rem', fontWeight: 800, margin: 0, color: '#DAF1DE' }}>
+            <h2 style={{ fontSize: '1.65rem', fontWeight: 800, margin: 0, color: '#F5F3E9' }}>
               Institutional Command Center & Governance Hub
             </h2>
           </div>
-          <p style={{ margin: '6px 0 0 0', color: 'rgba(218, 241, 222, 0.75)', fontSize: '0.92rem' }}>
+          <p style={{ margin: '6px 0 0 0', color: 'rgba(245, 243, 233, 0.75)', fontSize: '0.92rem' }}>
             Elder moderation portal, model rollback dashboard, atomic disaster recovery, and real-time security audit streaming.
           </p>
         </div>
@@ -296,7 +296,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
           <div
             style={{
-              backgroundColor: '#163832',
+              backgroundColor: '#163B2C',
               border: '1px solid #52B788',
               padding: '6px 14px',
               borderRadius: '20px',
@@ -316,9 +316,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             style={{
               padding: '8px',
               borderRadius: '8px',
-              backgroundColor: '#163832',
-              border: '1px solid rgba(142, 182, 155, 0.3)',
-              color: '#DAF1DE',
+              backgroundColor: '#163B2C',
+              border: '1px solid rgba(166, 196, 138, 0.3)',
+              color: '#F5F3E9',
               cursor: 'pointer',
             }}
             title="Refresh All Telemetry"
@@ -332,19 +332,19 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       {actionMessage && (
         <div
           style={{
-            backgroundColor: '#163832',
-            border: '1px solid #8EB69B',
+            backgroundColor: '#163B2C',
+            border: '1px solid #A6C48A',
             borderRadius: '8px',
             padding: '12px 18px',
             marginBottom: '20px',
             fontSize: '0.9rem',
-            color: '#DAF1DE',
+            color: '#F5F3E9',
             display: 'flex',
             alignItems: 'center',
             gap: '10px',
           }}
         >
-          <Sparkles style={{ width: '18px', height: '18px', color: '#8EB69B' }} />
+          <Sparkles style={{ width: '18px', height: '18px', color: '#A6C48A' }} />
           <span>{actionMessage}</span>
         </div>
       )}
@@ -353,10 +353,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
       <div
         style={{
           display: 'flex',
-          backgroundColor: '#163832',
+          backgroundColor: '#163B2C',
           padding: '4px',
           borderRadius: '12px',
-          border: '1px solid rgba(142, 182, 155, 0.3)',
+          border: '1px solid rgba(166, 196, 138, 0.3)',
           gap: '4px',
           marginBottom: '24px',
           overflowX: 'auto',
@@ -374,8 +374,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             cursor: 'pointer',
             fontSize: '0.86rem',
             fontWeight: 600,
-            backgroundColor: activeTab === 'overview' ? '#235347' : 'transparent',
-            color: activeTab === 'overview' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+            backgroundColor: activeTab === 'overview' ? '#1F5138' : 'transparent',
+            color: activeTab === 'overview' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
           }}
         >
           <Activity style={{ width: '15px', height: '15px' }} />
@@ -393,8 +393,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             cursor: 'pointer',
             fontSize: '0.86rem',
             fontWeight: 600,
-            backgroundColor: activeTab === 'moderation' ? '#235347' : 'transparent',
-            color: activeTab === 'moderation' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+            backgroundColor: activeTab === 'moderation' ? '#1F5138' : 'transparent',
+            color: activeTab === 'moderation' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
           }}
         >
           <Users style={{ width: '15px', height: '15px' }} />
@@ -426,8 +426,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             cursor: 'pointer',
             fontSize: '0.86rem',
             fontWeight: 600,
-            backgroundColor: activeTab === 'models' ? '#235347' : 'transparent',
-            color: activeTab === 'models' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+            backgroundColor: activeTab === 'models' ? '#1F5138' : 'transparent',
+            color: activeTab === 'models' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
           }}
         >
           <Cpu style={{ width: '15px', height: '15px' }} />
@@ -445,8 +445,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             cursor: 'pointer',
             fontSize: '0.86rem',
             fontWeight: 600,
-            backgroundColor: activeTab === 'backups' ? '#235347' : 'transparent',
-            color: activeTab === 'backups' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+            backgroundColor: activeTab === 'backups' ? '#1F5138' : 'transparent',
+            color: activeTab === 'backups' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
           }}
         >
           <HardDrive style={{ width: '15px', height: '15px' }} />
@@ -464,8 +464,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             cursor: 'pointer',
             fontSize: '0.86rem',
             fontWeight: 600,
-            backgroundColor: activeTab === 'audits' ? '#235347' : 'transparent',
-            color: activeTab === 'audits' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+            backgroundColor: activeTab === 'audits' ? '#1F5138' : 'transparent',
+            color: activeTab === 'audits' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
           }}
         >
           <Clock style={{ width: '15px', height: '15px' }} />
@@ -475,7 +475,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
 
       {/* Loading & Error States */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8EB69B' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#A6C48A' }}>
           <Sparkles style={{ width: '32px', height: '32px', animation: 'spin 2s linear infinite', marginBottom: '12px' }} />
           <p style={{ fontSize: '1rem', fontWeight: 500 }}>Connecting to Institutional Command Center telemetry...</p>
         </div>
@@ -509,50 +509,50 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
             <div>
               {/* Top Key Metrics Grid */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ backgroundColor: '#163832', padding: '20px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
-                  <div style={{ fontSize: '0.76rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '20px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                     Total Recorded Audio
                   </div>
                   <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#52B788', marginTop: '4px' }}>
                     {overview.preservation_summary.total_recorded_audio_hours} hrs
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#8EB69B', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#A6C48A', marginTop: '4px' }}>
                     Immutable Master Recordings (SHA-256)
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#163832', padding: '20px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
-                  <div style={{ fontSize: '0.76rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '20px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                     Indexed Transcripts
                   </div>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
+                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#F5F3E9', marginTop: '4px' }}>
                     {overview.preservation_summary.total_transcripts_indexed}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#8EB69B', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#A6C48A', marginTop: '4px' }}>
                     {overview.preservation_summary.verified_transcripts} verified by elders
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#163832', padding: '20px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
-                  <div style={{ fontSize: '0.76rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '20px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                     Approved Lexicon
                   </div>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
+                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#F5F3E9', marginTop: '4px' }}>
                     {overview.preservation_summary.approved_dictionary_entries}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#8EB69B', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#A6C48A', marginTop: '4px' }}>
                     {overview.preservation_summary.registered_languages} languages cataloged
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#163832', padding: '20px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
-                  <div style={{ fontSize: '0.76rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '20px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
+                  <div style={{ fontSize: '0.76rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                     Sacred Lore Shielded
                   </div>
                   <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#E9D8A6', marginTop: '4px' }}>
                     {overview.preservation_summary.sacred_lore_shielded}
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.7)', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.7)', marginTop: '4px' }}>
                     Restricted under OCAP community protocols
                   </div>
                 </div>
@@ -561,29 +561,29 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               {/* System Compliance & Active Model Status Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(360px, 1fr))', gap: '20px' }}>
                 {/* Active Speech Recognition Model */}
-                <div style={{ backgroundColor: '#163832', padding: '22px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '22px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                    <Cpu style={{ width: '20px', height: '20px', color: '#8EB69B' }} />
-                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#DAF1DE', fontWeight: 700 }}>
+                    <Cpu style={{ width: '20px', height: '20px', color: '#A6C48A' }} />
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#F5F3E9', fontWeight: 700 }}>
                       Active Speech Recognition Model
                     </h3>
                   </div>
                   <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#52B788', marginBottom: '8px' }}>
                     {overview.active_production_model.name}
                   </div>
-                  <div style={{ fontSize: '0.82rem', color: 'rgba(218, 241, 222, 0.7)', marginBottom: '14px' }}>
-                    Identifier: <code style={{ color: '#8EB69B' }}>{overview.active_production_model.model_id}</code>
+                  <div style={{ fontSize: '0.82rem', color: 'rgba(245, 243, 233, 0.7)', marginBottom: '14px' }}>
+                    Identifier: <code style={{ color: '#A6C48A' }}>{overview.active_production_model.model_id}</code>
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '10px' }}>
                     <div style={{ backgroundColor: '#0E2924', padding: '10px', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '0.74rem', color: 'rgba(218, 241, 222, 0.6)' }}>Benchmark WER:</span>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#DAF1DE' }}>
+                      <span style={{ fontSize: '0.74rem', color: 'rgba(245, 243, 233, 0.6)' }}>Benchmark WER:</span>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F5F3E9' }}>
                         {(overview.active_production_model.wer * 100).toFixed(1)}%
                       </div>
                     </div>
                     <div style={{ backgroundColor: '#0E2924', padding: '10px', borderRadius: '8px' }}>
-                      <span style={{ fontSize: '0.74rem', color: 'rgba(218, 241, 222, 0.6)' }}>Benchmark CER:</span>
-                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#DAF1DE' }}>
+                      <span style={{ fontSize: '0.74rem', color: 'rgba(245, 243, 233, 0.6)' }}>Benchmark CER:</span>
+                      <div style={{ fontSize: '1.2rem', fontWeight: 700, color: '#F5F3E9' }}>
                         {(overview.active_production_model.cer * 100).toFixed(1)}%
                       </div>
                     </div>
@@ -591,28 +591,28 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 </div>
 
                 {/* Institutional Governance Standards */}
-                <div style={{ backgroundColor: '#163832', padding: '22px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '22px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-                    <Database style={{ width: '20px', height: '20px', color: '#8EB69B' }} />
-                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#DAF1DE', fontWeight: 700 }}>
+                    <Database style={{ width: '20px', height: '20px', color: '#A6C48A' }} />
+                    <h3 style={{ margin: 0, fontSize: '1.15rem', color: '#F5F3E9', fontWeight: 700 }}>
                       Governance & Sovereign Compliance
                     </h3>
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '0.86rem' }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(142, 182, 155, 0.15)', paddingBottom: '6px' }}>
-                      <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>OCAP Protocol Mode:</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(166, 196, 138, 0.15)', paddingBottom: '6px' }}>
+                      <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>OCAP Protocol Mode:</span>
                       <strong style={{ color: '#52B788' }}>{overview.security_governance.ocap_compliance_mode}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(142, 182, 155, 0.15)', paddingBottom: '6px' }}>
-                      <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>External Cloud Spend:</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(166, 196, 138, 0.15)', paddingBottom: '6px' }}>
+                      <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>External Cloud Spend:</span>
                       <strong style={{ color: '#52B788' }}>{overview.security_governance.cloud_spend_target}</strong>
                     </div>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(142, 182, 155, 0.15)', paddingBottom: '6px' }}>
-                      <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>Research Rate Limits:</span>
-                      <strong style={{ color: '#DAF1DE' }}>{overview.security_governance.rate_limiting_status}</strong>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', borderBottom: '1px solid rgba(166, 196, 138, 0.15)', paddingBottom: '6px' }}>
+                      <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>Research Rate Limits:</span>
+                      <strong style={{ color: '#F5F3E9' }}>{overview.security_governance.rate_limiting_status}</strong>
                     </div>
                     <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                      <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>Atomic Snapshots:</span>
+                      <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>Atomic Snapshots:</span>
                       <strong style={{ color: '#E9D8A6' }}>{overview.disaster_recovery.total_backups_on_disk} Backups Verified</strong>
                     </div>
                   </div>
@@ -634,9 +634,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     style={{
                       padding: '6px 14px',
                       borderRadius: '8px',
-                      border: filterType === 'all' ? '1px solid #8EB69B' : '1px solid rgba(142, 182, 155, 0.2)',
-                      backgroundColor: filterType === 'all' ? '#235347' : '#163832',
-                      color: '#DAF1DE',
+                      border: filterType === 'all' ? '1px solid #A6C48A' : '1px solid rgba(166, 196, 138, 0.2)',
+                      backgroundColor: filterType === 'all' ? '#1F5138' : '#163B2C',
+                      color: '#F5F3E9',
                       fontSize: '0.82rem',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -649,9 +649,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     style={{
                       padding: '6px 14px',
                       borderRadius: '8px',
-                      border: filterType === 'transcript' ? '1px solid #8EB69B' : '1px solid rgba(142, 182, 155, 0.2)',
-                      backgroundColor: filterType === 'transcript' ? '#235347' : '#163832',
-                      color: '#DAF1DE',
+                      border: filterType === 'transcript' ? '1px solid #A6C48A' : '1px solid rgba(166, 196, 138, 0.2)',
+                      backgroundColor: filterType === 'transcript' ? '#1F5138' : '#163B2C',
+                      color: '#F5F3E9',
                       fontSize: '0.82rem',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -664,9 +664,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     style={{
                       padding: '6px 14px',
                       borderRadius: '8px',
-                      border: filterType === 'dictionary' ? '1px solid #8EB69B' : '1px solid rgba(142, 182, 155, 0.2)',
-                      backgroundColor: filterType === 'dictionary' ? '#235347' : '#163832',
-                      color: '#DAF1DE',
+                      border: filterType === 'dictionary' ? '1px solid #A6C48A' : '1px solid rgba(166, 196, 138, 0.2)',
+                      backgroundColor: filterType === 'dictionary' ? '#1F5138' : '#163B2C',
+                      color: '#F5F3E9',
                       fontSize: '0.82rem',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -679,9 +679,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     style={{
                       padding: '6px 14px',
                       borderRadius: '8px',
-                      border: filterType === 'cultural_story' ? '1px solid #8EB69B' : '1px solid rgba(142, 182, 155, 0.2)',
-                      backgroundColor: filterType === 'cultural_story' ? '#235347' : '#163832',
-                      color: '#DAF1DE',
+                      border: filterType === 'cultural_story' ? '1px solid #A6C48A' : '1px solid rgba(166, 196, 138, 0.2)',
+                      backgroundColor: filterType === 'cultural_story' ? '#1F5138' : '#163B2C',
+                      color: '#F5F3E9',
                       fontSize: '0.82rem',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -691,17 +691,17 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                   </button>
                 </div>
 
-                <div style={{ fontSize: '0.82rem', color: '#8EB69B' }}>
+                <div style={{ fontSize: '0.82rem', color: '#A6C48A' }}>
                   Elder Authority: 1-click customary verification
                 </div>
               </div>
 
               {/* Queue Items List */}
               {filteredQueue.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: '#163832', borderRadius: '12px' }}>
+                <div style={{ textAlign: 'center', padding: '60px 20px', backgroundColor: '#163B2C', borderRadius: '12px' }}>
                   <CheckCircle2 style={{ width: '36px', height: '36px', color: '#52B788', marginBottom: '10px' }} />
-                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#DAF1DE' }}>Moderation Queue Clear</h4>
-                  <p style={{ margin: '6px 0 0 0', color: 'rgba(218, 241, 222, 0.65)', fontSize: '0.88rem' }}>
+                  <h4 style={{ margin: 0, fontSize: '1.1rem', color: '#F5F3E9' }}>Moderation Queue Clear</h4>
+                  <p style={{ margin: '6px 0 0 0', color: 'rgba(245, 243, 233, 0.65)', fontSize: '0.88rem' }}>
                     All community transcripts, lexicon candidates, and cultural lore have been reviewed.
                   </p>
                 </div>
@@ -711,9 +711,9 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     <div
                       key={item.id}
                       style={{
-                        backgroundColor: '#163832',
+                        backgroundColor: '#163B2C',
                         borderRadius: '12px',
-                        border: '1px solid rgba(142, 182, 155, 0.25)',
+                        border: '1px solid rgba(166, 196, 138, 0.25)',
                         padding: '20px',
                         display: 'flex',
                         justifyContent: 'space-between',
@@ -729,22 +729,22 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                               fontSize: '0.74rem',
                               padding: '2px 8px',
                               borderRadius: '6px',
-                              backgroundColor: '#0B2B26',
-                              color: '#8EB69B',
+                              backgroundColor: '#102B20',
+                              color: '#A6C48A',
                               fontWeight: 700,
                               textTransform: 'uppercase',
                             }}
                           >
                             {item.item_type.replace('_', ' ')} • {item.language}
                           </span>
-                          <span style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.6)' }}>
+                          <span style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.6)' }}>
                             by {item.contributor} ({item.role})
                           </span>
                         </div>
-                        <h4 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#DAF1DE', fontWeight: 700 }}>
+                        <h4 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#F5F3E9', fontWeight: 700 }}>
                           {item.title}
                         </h4>
-                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(218, 241, 222, 0.8)', fontStyle: 'italic' }}>
+                        <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(245, 243, 233, 0.8)', fontStyle: 'italic' }}>
                           "{item.text_preview}"
                         </p>
                       </div>
@@ -758,8 +758,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                             padding: '8px 16px',
                             borderRadius: '8px',
                             border: '1px solid #52B788',
-                            backgroundColor: '#235347',
-                            color: '#DAF1DE',
+                            backgroundColor: '#1F5138',
+                            color: '#F5F3E9',
                             fontSize: '0.85rem',
                             fontWeight: 700,
                             cursor: 'pointer',
@@ -807,10 +807,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               {/* Rollback Action Card */}
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   padding: '20px',
                   borderRadius: '12px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                   marginBottom: '24px',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -820,10 +820,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 }}
               >
                 <div>
-                  <h4 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#DAF1DE', fontWeight: 700 }}>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#F5F3E9', fontWeight: 700 }}>
                     1-Click Production Model Rollback
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.86rem', color: 'rgba(218, 241, 222, 0.75)' }}>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: 'rgba(245, 243, 233, 0.75)' }}>
                     Instantly revert active speech recognition to verified local baseline if regressions are detected.
                   </p>
                 </div>
@@ -834,11 +834,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     onChange={(e) => setRollbackReason(e.target.value)}
                     placeholder="Reason for rollback..."
                     style={{
-                      backgroundColor: '#0B2B26',
-                      border: '1px solid rgba(142, 182, 155, 0.3)',
+                      backgroundColor: '#102B20',
+                      border: '1px solid rgba(166, 196, 138, 0.3)',
                       borderRadius: '8px',
                       padding: '8px 12px',
-                      color: '#DAF1DE',
+                      color: '#F5F3E9',
                       fontSize: '0.84rem',
                       minWidth: '260px',
                     }}
@@ -869,15 +869,15 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               {/* Models Table */}
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   borderRadius: '12px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                   overflow: 'hidden',
                 }}
               >
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.86rem' }}>
                   <thead>
-                    <tr style={{ backgroundColor: '#11352E', borderBottom: '1px solid rgba(142, 182, 155, 0.2)', color: '#8EB69B' }}>
+                    <tr style={{ backgroundColor: '#11352E', borderBottom: '1px solid rgba(166, 196, 138, 0.2)', color: '#A6C48A' }}>
                       <th style={{ padding: '14px 18px' }}>Model Name & ID</th>
                       <th style={{ padding: '14px 18px' }}>Task & Architecture</th>
                       <th style={{ padding: '14px 18px' }}>WER / CER</th>
@@ -887,24 +887,24 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                   </thead>
                   <tbody>
                     {models.map((m) => (
-                      <tr key={m.model_id} style={{ borderBottom: '1px solid rgba(142, 182, 155, 0.1)' }}>
+                      <tr key={m.model_id} style={{ borderBottom: '1px solid rgba(166, 196, 138, 0.1)' }}>
                         <td style={{ padding: '14px 18px' }}>
-                          <strong style={{ color: '#DAF1DE' }}>{m.name}</strong><br />
-                          <code style={{ fontSize: '0.78rem', color: '#8EB69B' }}>{m.model_id}</code>
+                          <strong style={{ color: '#F5F3E9' }}>{m.name}</strong><br />
+                          <code style={{ fontSize: '0.78rem', color: '#A6C48A' }}>{m.model_id}</code>
                         </td>
-                        <td style={{ padding: '14px 18px', color: 'rgba(218, 241, 222, 0.8)' }}>
+                        <td style={{ padding: '14px 18px', color: 'rgba(245, 243, 233, 0.8)' }}>
                           {m.task}<br />
-                          <span style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.6)' }}>{m.architecture}</span>
+                          <span style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.6)' }}>{m.architecture}</span>
                         </td>
                         <td style={{ padding: '14px 18px' }}>
                           <span style={{ color: '#52B788', fontWeight: 700 }}>
                             WER: {m.wer ? `${(m.wer * 100).toFixed(1)}%` : 'N/A'}
                           </span><br />
-                          <span style={{ color: 'rgba(218, 241, 222, 0.7)', fontSize: '0.78rem' }}>
+                          <span style={{ color: 'rgba(245, 243, 233, 0.7)', fontSize: '0.78rem' }}>
                             CER: {m.cer ? `${(m.cer * 100).toFixed(1)}%` : 'N/A'}
                           </span>
                         </td>
-                        <td style={{ padding: '14px 18px', color: 'rgba(218, 241, 222, 0.8)' }}>
+                        <td style={{ padding: '14px 18px', color: 'rgba(245, 243, 233, 0.8)' }}>
                           {m.latency_ms ? `${m.latency_ms} ms` : '180 ms'}
                         </td>
                         <td style={{ padding: '14px 18px' }}>
@@ -923,7 +923,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                               Active Production
                             </span>
                           ) : (
-                            <span style={{ color: 'rgba(218, 241, 222, 0.5)', fontSize: '0.78rem' }}>
+                            <span style={{ color: 'rgba(245, 243, 233, 0.5)', fontSize: '0.78rem' }}>
                               Standby Candidate
                             </span>
                           )}
@@ -944,10 +944,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               {/* Snapshot Action Card */}
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   padding: '20px',
                   borderRadius: '12px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                   marginBottom: '24px',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -957,10 +957,10 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                 }}
               >
                 <div>
-                  <h4 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#DAF1DE', fontWeight: 700 }}>
+                  <h4 style={{ margin: '0 0 6px 0', fontSize: '1.15rem', color: '#F5F3E9', fontWeight: 700 }}>
                     Instant Atomic Database Snapshot
                   </h4>
-                  <p style={{ margin: 0, fontSize: '0.86rem', color: 'rgba(218, 241, 222, 0.75)' }}>
+                  <p style={{ margin: 0, fontSize: '0.86rem', color: 'rgba(245, 243, 233, 0.75)' }}>
                     Generates non-blocking zero-downtime SQLite snapshot (VACUUM INTO) with automatic rolling retention.
                   </p>
                 </div>
@@ -971,11 +971,11 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     onChange={(e) => setBackupReason(e.target.value)}
                     placeholder="Snapshot reason/tag..."
                     style={{
-                      backgroundColor: '#0B2B26',
-                      border: '1px solid rgba(142, 182, 155, 0.3)',
+                      backgroundColor: '#102B20',
+                      border: '1px solid rgba(166, 196, 138, 0.3)',
                       borderRadius: '8px',
                       padding: '8px 12px',
-                      color: '#DAF1DE',
+                      color: '#F5F3E9',
                       fontSize: '0.84rem',
                       minWidth: '260px',
                     }}
@@ -987,8 +987,8 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                       padding: '9px 16px',
                       borderRadius: '8px',
                       border: '1px solid #52B788',
-                      backgroundColor: '#235347',
-                      color: '#DAF1DE',
+                      backgroundColor: '#1F5138',
+                      color: '#F5F3E9',
                       fontSize: '0.86rem',
                       fontWeight: 700,
                       cursor: 'pointer',
@@ -1006,15 +1006,15 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
               {/* Backups Table */}
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   borderRadius: '12px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                   overflow: 'hidden',
                 }}
               >
                 <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.86rem' }}>
                   <thead>
-                    <tr style={{ backgroundColor: '#11352E', borderBottom: '1px solid rgba(142, 182, 155, 0.2)', color: '#8EB69B' }}>
+                    <tr style={{ backgroundColor: '#11352E', borderBottom: '1px solid rgba(166, 196, 138, 0.2)', color: '#A6C48A' }}>
                       <th style={{ padding: '14px 18px' }}>Snapshot Filename</th>
                       <th style={{ padding: '14px 18px' }}>File Size</th>
                       <th style={{ padding: '14px 18px' }}>Creation Timestamp</th>
@@ -1023,14 +1023,14 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                   </thead>
                   <tbody>
                     {backups.map((b) => (
-                      <tr key={b.filename} style={{ borderBottom: '1px solid rgba(142, 182, 155, 0.1)' }}>
+                      <tr key={b.filename} style={{ borderBottom: '1px solid rgba(166, 196, 138, 0.1)' }}>
                         <td style={{ padding: '14px 18px' }}>
-                          <strong style={{ color: '#DAF1DE' }}>{b.filename}</strong>
+                          <strong style={{ color: '#F5F3E9' }}>{b.filename}</strong>
                         </td>
-                        <td style={{ padding: '14px 18px', color: 'rgba(218, 241, 222, 0.8)' }}>
+                        <td style={{ padding: '14px 18px', color: 'rgba(245, 243, 233, 0.8)' }}>
                           {(b.size_bytes / (1024 * 1024)).toFixed(2)} MB ({b.size_bytes.toLocaleString()} bytes)
                         </td>
-                        <td style={{ padding: '14px 18px', color: 'rgba(218, 241, 222, 0.7)' }}>
+                        <td style={{ padding: '14px 18px', color: 'rgba(245, 243, 233, 0.7)' }}>
                           {b.created_at || 'Archived Snapshot'}
                         </td>
                         <td style={{ padding: '14px 18px' }}>
@@ -1062,17 +1062,17 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
           {activeTab === 'audits' && (
             <div
               style={{
-                backgroundColor: '#163832',
+                backgroundColor: '#163B2C',
                 borderRadius: '12px',
-                border: '1px solid rgba(142, 182, 155, 0.25)',
+                border: '1px solid rgba(166, 196, 138, 0.25)',
                 overflow: 'hidden',
               }}
             >
-              <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(142, 182, 155, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#DAF1DE' }}>
+              <div style={{ padding: '16px 20px', borderBottom: '1px solid rgba(166, 196, 138, 0.2)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                <span style={{ fontWeight: 700, fontSize: '0.95rem', color: '#F5F3E9' }}>
                   Live Governance Audit Event Stream ({auditEvents.length} events logged)
                 </span>
-                <span style={{ fontSize: '0.78rem', color: '#8EB69B' }}>
+                <span style={{ fontSize: '0.78rem', color: '#A6C48A' }}>
                   Tamper-Evident Immutable Log
                 </span>
               </div>
@@ -1083,7 +1083,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                     key={ev.id}
                     style={{
                       padding: '14px 20px',
-                      borderBottom: '1px solid rgba(142, 182, 155, 0.1)',
+                      borderBottom: '1px solid rgba(166, 196, 138, 0.1)',
                       display: 'flex',
                       justifyContent: 'space-between',
                       alignItems: 'center',
@@ -1096,7 +1096,7 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                           style={{
                             fontWeight: 700,
                             color: ev.action.includes('REJECT') ? '#E07A5F' : '#52B788',
-                            backgroundColor: '#0B2B26',
+                            backgroundColor: '#102B20',
                             padding: '2px 6px',
                             borderRadius: '4px',
                             fontSize: '0.74rem',
@@ -1104,16 +1104,16 @@ export const CommandCenter: React.FC<CommandCenterProps> = ({
                         >
                           {ev.action}
                         </span>
-                        <strong style={{ color: '#DAF1DE' }}>{ev.entity_type}:{ev.entity_id}</strong>
-                        <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>
+                        <strong style={{ color: '#F5F3E9' }}>{ev.entity_type}:{ev.entity_id}</strong>
+                        <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>
                           by {ev.actor} ({ev.role})
                         </span>
                       </div>
-                      <div style={{ color: 'rgba(218, 241, 222, 0.75)' }}>
+                      <div style={{ color: 'rgba(245, 243, 233, 0.75)' }}>
                         {ev.details}
                       </div>
                     </div>
-                    <span style={{ color: '#8EB69B', fontSize: '0.76rem', whiteSpace: 'nowrap' }}>
+                    <span style={{ color: '#A6C48A', fontSize: '0.76rem', whiteSpace: 'nowrap' }}>
                       {ev.timestamp.replace('T', ' ').slice(0, 19)}
                     </span>
                   </div>

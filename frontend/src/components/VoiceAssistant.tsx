@@ -332,18 +332,18 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
       <div style={{ marginBottom: '24px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '8px' }}>
           <div style={{
-            background: 'linear-gradient(135deg, #235347, #0B2B26)',
+            background: 'linear-gradient(135deg, #1F5138, #102B20)',
             padding: '8px',
             borderRadius: '12px',
-            border: '1px solid #8EB69B'
+            border: '1px solid #A6C48A'
           }}>
-            <Sparkles size={24} color="#8EB69B" />
+            <Sparkles size={24} color="#A6C48A" />
           </div>
           <div>
-            <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#DAF1DE', margin: 0 }}>
+            <h2 style={{ fontSize: '24px', fontWeight: '800', color: '#F5F3E9', margin: 0 }}>
               Real-Time Multilingual Voice Assistant
             </h2>
-            <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)', margin: '4px 0 0 0' }}>
+            <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.72)', margin: '4px 0 0 0' }}>
               Conversational speech companion with phonetic transliteration and Indigenous Elder Guardrails.
             </p>
           </div>
@@ -351,8 +351,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
         {/* Ephemeral Privacy Banner */}
         <div style={{
-          background: 'rgba(11, 43, 38, 0.65)',
-          border: '1px solid rgba(142, 182, 155, 0.3)',
+          background: 'rgba(16, 43, 32, 0.65)',
+          border: '1px solid rgba(166, 196, 138, 0.3)',
           borderRadius: '12px',
           padding: '12px 16px',
           display: 'flex',
@@ -360,9 +360,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
           gap: '12px',
           marginTop: '12px',
         }}>
-          <Shield size={20} color="#8EB69B" style={{ flexShrink: 0 }} />
-          <div style={{ fontSize: '12px', color: '#DAF1DE', lineHeight: '1.5' }}>
-            <span style={{ fontWeight: '700', color: '#8EB69B' }}>🔒 Ephemeral by Default: </span>
+          <Shield size={20} color="#A6C48A" style={{ flexShrink: 0 }} />
+          <div style={{ fontSize: '12px', color: '#F5F3E9', lineHeight: '1.5' }}>
+            <span style={{ fontWeight: '700', color: '#A6C48A' }}>🔒 Ephemeral by Default: </span>
             Voice audio turns are processed locally on the server and discarded from memory immediately.
             Conversations are never written to disk or used for training without affirmative OCAP consent.
           </div>
@@ -390,8 +390,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
       {/* Session Controls Card */}
       <div className="glass-card" style={{
-        background: 'rgba(11, 43, 38, 0.45)',
-        border: '1px solid #235347',
+        background: 'rgba(16, 43, 32, 0.45)',
+        border: '1px solid #1F5138',
         borderRadius: '16px',
         padding: '20px',
         marginBottom: '24px',
@@ -399,7 +399,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', alignItems: 'flex-end' }}>
           {/* Source Language */}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
               🗣️ You Speak (Source)
             </label>
             <select
@@ -408,11 +408,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
               disabled={isRecording || isProcessing}
               style={{
                 width: '100%',
-                background: '#051F20',
-                border: '1px solid #235347',
+                background: '#102B20',
+                border: '1px solid #1F5138',
                 borderRadius: '8px',
                 padding: '10px 12px',
-                color: '#DAF1DE',
+                color: '#F5F3E9',
                 fontSize: '13px',
               }}
             >
@@ -426,7 +426,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
           {/* Target Language */}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
               🎯 Assistant Translates To
             </label>
             <select
@@ -435,11 +435,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
               disabled={isRecording || isProcessing}
               style={{
                 width: '100%',
-                background: '#051F20',
-                border: '1px solid #235347',
+                background: '#102B20',
+                border: '1px solid #1F5138',
                 borderRadius: '8px',
                 padding: '10px 12px',
-                color: '#DAF1DE',
+                color: '#F5F3E9',
                 fontSize: '13px',
               }}
             >
@@ -453,7 +453,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
           {/* Contributor Name */}
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
               👤 Speaker Name
             </label>
             <input
@@ -464,11 +464,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
               disabled={!!session}
               style={{
                 width: '100%',
-                background: '#051F20',
-                border: '1px solid #235347',
+                background: '#102B20',
+                border: '1px solid #1F5138',
                 borderRadius: '8px',
                 padding: '10px 12px',
-                color: '#DAF1DE',
+                color: '#F5F3E9',
                 fontSize: '13px',
               }}
             />
@@ -482,8 +482,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 disabled={isProcessing}
                 style={{
                   width: '100%',
-                  background: 'linear-gradient(135deg, #8EB69B, #235347)',
-                  color: '#051F20',
+                  background: 'linear-gradient(135deg, #A6C48A, #1F5138)',
+                  color: '#102B20',
                   fontWeight: '700',
                   border: 'none',
                   borderRadius: '8px',
@@ -530,7 +530,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
           <div style={{
             marginTop: '16px',
             paddingTop: '16px',
-            borderTop: '1px solid rgba(142, 182, 155, 0.15)',
+            borderTop: '1px solid rgba(166, 196, 138, 0.15)',
             display: 'flex',
             flexWrap: 'wrap',
             alignItems: 'center',
@@ -552,7 +552,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#4ADE80' }} />
                 Session Active ({session.session_id.slice(0, 10)}...)
               </span>
-              <span style={{ color: 'rgba(218, 241, 222, 0.7)' }}>
+              <span style={{ color: 'rgba(245, 243, 233, 0.7)' }}>
                 Turns: {session.turn_count} / {session.max_turns}
               </span>
             </div>
@@ -562,9 +562,9 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 <button
                   onClick={() => setShowSaveModal(true)}
                   style={{
-                    background: 'rgba(142, 182, 155, 0.15)',
-                    border: '1px solid #8EB69B',
-                    color: '#DAF1DE',
+                    background: 'rgba(166, 196, 138, 0.15)',
+                    border: '1px solid #A6C48A',
+                    color: '#F5F3E9',
                     padding: '4px 10px',
                     borderRadius: '6px',
                     fontSize: '11px',
@@ -584,8 +584,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
       {/* Main Conversation Stream */}
       <div style={{
-        background: 'rgba(5, 31, 32, 0.6)',
-        border: '1px solid #235347',
+        background: 'rgba(16, 43, 32, 0.6)',
+        border: '1px solid #1F5138',
         borderRadius: '16px',
         padding: '24px',
         minHeight: '360px',
@@ -600,11 +600,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
           <div style={{
             margin: 'auto',
             textAlign: 'center',
-            color: 'rgba(218, 241, 222, 0.5)',
+            color: 'rgba(245, 243, 233, 0.5)',
             padding: '40px 20px',
           }}>
-            <Sparkles size={36} color="#8EB69B" style={{ margin: '0 auto 12px auto', opacity: 0.7 }} />
-            <p style={{ fontSize: '15px', fontWeight: '600', color: '#DAF1DE', marginBottom: '6px' }}>
+            <Sparkles size={36} color="#A6C48A" style={{ margin: '0 auto 12px auto', opacity: 0.7 }} />
+            <p style={{ fontSize: '15px', fontWeight: '600', color: '#F5F3E9', marginBottom: '6px' }}>
               Your Conversation Stream is Ready
             </p>
             <p style={{ fontSize: '13px', maxWidth: '440px', margin: '0 auto' }}>
@@ -619,10 +619,10 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
           <div
             key={turn.turn_id}
             style={{
-              background: 'rgba(11, 43, 38, 0.5)',
+              background: 'rgba(16, 43, 32, 0.5)',
               border: turn.guardrail_triggered
                 ? '1px solid rgba(245, 158, 11, 0.5)'
-                : '1px solid rgba(142, 182, 155, 0.25)',
+                : '1px solid rgba(166, 196, 138, 0.25)',
               borderRadius: '14px',
               padding: '16px 20px',
               display: 'flex',
@@ -636,18 +636,18 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 <span style={{
                   fontSize: '11px',
                   fontWeight: '700',
-                  color: '#8EB69B',
-                  background: 'rgba(142, 182, 155, 0.1)',
+                  color: '#A6C48A',
+                  background: 'rgba(166, 196, 138, 0.1)',
                   padding: '2px 8px',
                   borderRadius: '4px',
                 }}>
                   Turn {idx + 1}
                 </span>
-                <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.5)' }}>
+                <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.5)' }}>
                   {turn.source_language.toUpperCase()} → {turn.target_language.toUpperCase()}
                 </span>
                 {turn.latency_ms > 0 && (
-                  <span style={{ fontSize: '11px', color: '#8EB69B' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A' }}>
                     ⚡ {turn.latency_ms} ms
                   </span>
                 )}
@@ -657,14 +657,14 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 <button
                   onClick={() => copyToClipboard(turn.original_transcript, `orig_${turn.turn_id}`)}
                   title="Copy transcript"
-                  style={{ background: 'transparent', border: 'none', color: '#8EB69B', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: '#A6C48A', cursor: 'pointer' }}
                 >
                   {copiedTurnId === `orig_${turn.turn_id}` ? <Check size={14} color="#4ADE80" /> : <Copy size={14} />}
                 </button>
                 <button
                   onClick={() => speakText(turn.translated_text || turn.original_transcript, turn.target_language)}
                   title="Listen (TTS)"
-                  style={{ background: 'transparent', border: 'none', color: '#8EB69B', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: '#A6C48A', cursor: 'pointer' }}
                 >
                   <Volume2 size={14} />
                 </button>
@@ -673,7 +673,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
             {/* User Speech Section */}
             <div>
-              <div style={{ fontSize: '11px', fontWeight: '600', color: '#8EB69B', marginBottom: '4px' }}>
+              <div style={{ fontSize: '11px', fontWeight: '600', color: '#A6C48A', marginBottom: '4px' }}>
                 Original Speech:
               </div>
               <div style={{ fontSize: '16px', fontWeight: '500', color: '#FFFFFF', lineHeight: '1.4' }}>
@@ -689,10 +689,10 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 borderRadius: '8px',
                 fontSize: '12px',
               }}>
-                <span style={{ color: '#8EB69B', fontWeight: '600', marginRight: '6px' }}>
+                <span style={{ color: '#A6C48A', fontWeight: '600', marginRight: '6px' }}>
                   Phonetic:
                 </span>
-                <span style={{ fontStyle: 'italic', color: '#DAF1DE' }}>
+                <span style={{ fontStyle: 'italic', color: '#F5F3E9' }}>
                   {turn.transliteration}
                 </span>
               </div>
@@ -700,8 +700,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
             {/* Translated Output / Elder Guardrail Notice */}
             <div style={{
-              background: turn.guardrail_triggered ? 'rgba(245, 158, 11, 0.1)' : 'rgba(35, 83, 71, 0.25)',
-              borderLeft: turn.guardrail_triggered ? '3px solid #F59E0B' : '3px solid #8EB69B',
+              background: turn.guardrail_triggered ? 'rgba(245, 158, 11, 0.1)' : 'rgba(31, 81, 56, 0.25)',
+              borderLeft: turn.guardrail_triggered ? '3px solid #F59E0B' : '3px solid #A6C48A',
               padding: '10px 14px',
               borderRadius: '0 8px 8px 0',
             }}>
@@ -709,31 +709,31 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 {turn.guardrail_triggered ? (
                   <ShieldAlert size={14} color="#F59E0B" />
                 ) : (
-                  <Languages size={14} color="#8EB69B" />
+                  <Languages size={14} color="#A6C48A" />
                 )}
                 <span style={{
                   fontSize: '11px',
                   fontWeight: '700',
-                  color: turn.guardrail_triggered ? '#F59E0B' : '#8EB69B',
+                  color: turn.guardrail_triggered ? '#F59E0B' : '#A6C48A',
                 }}>
                   {turn.guardrail_triggered ? 'Indigenous Oral Guardrail Active' : 'Conversational Translation'}
                 </span>
               </div>
-              <div style={{ fontSize: '14px', color: '#DAF1DE', lineHeight: '1.5' }}>
+              <div style={{ fontSize: '14px', color: '#F5F3E9', lineHeight: '1.5' }}>
                 {turn.translated_text}
               </div>
             </div>
 
             {/* Pronunciation Guidance Tips (Accordion / Chips) */}
             {turn.pronunciation_guidance?.syllables_breakdown && turn.pronunciation_guidance.syllables_breakdown.length > 0 && (
-              <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)', marginTop: '4px' }}>
-                <span style={{ fontWeight: '600', color: '#8EB69B' }}>Syllable Rhythm: </span>
+              <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.7)', marginTop: '4px' }}>
+                <span style={{ fontWeight: '600', color: '#A6C48A' }}>Syllable Rhythm: </span>
                 {turn.pronunciation_guidance.syllables_breakdown.map((s, sIdx) => (
                   <span
                     key={sIdx}
                     style={{
                       display: 'inline-block',
-                      background: 'rgba(142, 182, 155, 0.12)',
+                      background: 'rgba(166, 196, 138, 0.12)',
                       padding: '2px 6px',
                       borderRadius: '4px',
                       marginRight: '6px',
@@ -749,13 +749,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
         {isProcessing && (
           <div style={{
-            background: 'rgba(11, 43, 38, 0.4)',
+            background: 'rgba(16, 43, 32, 0.4)',
             padding: '14px 20px',
             borderRadius: '12px',
             display: 'flex',
             alignItems: 'center',
             gap: '12px',
-            color: '#8EB69B',
+            color: '#A6C48A',
             fontSize: '13px',
           }}>
             <Loader2 size={18} className="animate-spin" />
@@ -768,8 +768,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
 
       {/* Input Bar (Microphone & Text) */}
       <div className="glass-card" style={{
-        background: 'rgba(11, 43, 38, 0.6)',
-        border: '1px solid #235347',
+        background: 'rgba(16, 43, 32, 0.6)',
+        border: '1px solid #1F5138',
         borderRadius: '16px',
         padding: '16px 20px',
       }}>
@@ -781,7 +781,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
               disabled={!session || isProcessing}
               title="Click to Record Audio"
               style={{
-                background: !session ? 'rgba(142, 182, 155, 0.2)' : 'linear-gradient(135deg, #EF4444, #B91C1C)',
+                background: !session ? 'rgba(166, 196, 138, 0.2)' : 'linear-gradient(135deg, #EF4444, #B91C1C)',
                 color: '#FFFFFF',
                 border: 'none',
                 borderRadius: '50%',
@@ -833,7 +833,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 <span style={{ width: '10px', height: '10px', borderRadius: '50%', background: '#EF4444' }} />
                 Recording Voice... ({recordingDuration}s)
               </span>
-              <span style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.6)' }}>
+              <span style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.6)' }}>
                 Click square button to stop and process
               </span>
             </div>
@@ -848,11 +848,11 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 disabled={!session || isProcessing}
                 style={{
                   flex: 1,
-                  background: '#051F20',
-                  border: '1px solid #235347',
+                  background: '#102B20',
+                  border: '1px solid #1F5138',
                   borderRadius: '10px',
                   padding: '10px 14px',
-                  color: '#DAF1DE',
+                  color: '#F5F3E9',
                   fontSize: '13px',
                 }}
               />
@@ -860,8 +860,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 onClick={submitTextTurn}
                 disabled={!session || !textInput.trim() || isProcessing}
                 style={{
-                  background: '#235347',
-                  color: '#DAF1DE',
+                  background: '#1F5138',
+                  color: '#F5F3E9',
                   border: 'none',
                   borderRadius: '10px',
                   padding: '0 16px',
@@ -885,7 +885,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
           style={{
             background: 'transparent',
             border: 'none',
-            color: '#8EB69B',
+            color: '#A6C48A',
             fontSize: '13px',
             fontWeight: '600',
             cursor: 'pointer',
@@ -902,13 +902,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
         {showSavedList && (
           <div style={{
             marginTop: '12px',
-            background: 'rgba(11, 43, 38, 0.45)',
-            border: '1px solid #235347',
+            background: 'rgba(16, 43, 32, 0.45)',
+            border: '1px solid #1F5138',
             borderRadius: '12px',
             padding: '16px',
           }}>
             {savedConversations.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.6)', margin: 0 }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.6)', margin: 0 }}>
                 No saved conversations yet. Conversations are ephemeral unless explicitly saved with consent.
               </p>
             ) : (
@@ -917,7 +917,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                   <div
                     key={conv.id}
                     style={{
-                      background: 'rgba(5, 31, 32, 0.5)',
+                      background: 'rgba(16, 43, 32, 0.5)',
                       padding: '12px 14px',
                       borderRadius: '8px',
                       display: 'flex',
@@ -927,13 +927,13 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                     }}
                   >
                     <div>
-                      <span style={{ fontWeight: '700', color: '#DAF1DE', marginRight: '8px' }}>
+                      <span style={{ fontWeight: '700', color: '#F5F3E9', marginRight: '8px' }}>
                         {conv.user_name}
                       </span>
-                      <span style={{ color: '#8EB69B', marginRight: '8px' }}>
+                      <span style={{ color: '#A6C48A', marginRight: '8px' }}>
                         ({conv.source_language.toUpperCase()} → {conv.target_language.toUpperCase()})
                       </span>
-                      <span style={{ color: 'rgba(218, 241, 222, 0.5)' }}>
+                      <span style={{ color: 'rgba(245, 243, 233, 0.5)' }}>
                         {conv.turn_count} turns • {new Date(conv.created_at).toLocaleDateString()}
                       </span>
                     </div>
@@ -967,7 +967,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(5, 31, 32, 0.85)',
+          background: 'rgba(16, 43, 32, 0.85)',
           backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
@@ -976,17 +976,17 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
           padding: '16px',
         }}>
           <div style={{
-            background: '#0B2B26',
-            border: '1px solid #8EB69B',
+            background: '#102B20',
+            border: '1px solid #A6C48A',
             borderRadius: '16px',
             maxWidth: '480px',
             width: '100%',
             padding: '24px',
           }}>
-            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#DAF1DE', marginTop: 0 }}>
+            <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#F5F3E9', marginTop: 0 }}>
               Save Conversation History (OCAP Consent)
             </h3>
-            <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.8)', lineHeight: '1.5' }}>
+            <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.8)', lineHeight: '1.5' }}>
               Under Indigenous Data Sovereignty protocols (OCAP), conversation transcripts are never saved by default.
               Saving stores this session's transcripts in SQLite attributed to you. You retain full rights to delete it at any time.
             </p>
@@ -996,7 +996,7 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
               alignItems: 'flex-start',
               gap: '10px',
               fontSize: '12px',
-              color: '#DAF1DE',
+              color: '#F5F3E9',
               margin: '16px 0',
               cursor: 'pointer',
             }}>
@@ -1017,8 +1017,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 disabled={isSaving}
                 style={{
                   background: 'transparent',
-                  border: '1px solid #235347',
-                  color: '#DAF1DE',
+                  border: '1px solid #1F5138',
+                  color: '#F5F3E9',
                   borderRadius: '8px',
                   padding: '8px 14px',
                   fontSize: '13px',
@@ -1031,8 +1031,8 @@ export const VoiceAssistant: React.FC<VoiceAssistantProps> = ({ apiBaseUrl = '' 
                 onClick={handleSaveConversation}
                 disabled={!saveConsent || isSaving}
                 style={{
-                  background: !saveConsent ? 'rgba(142, 182, 155, 0.3)' : '#8EB69B',
-                  color: '#051F20',
+                  background: !saveConsent ? 'rgba(166, 196, 138, 0.3)' : '#A6C48A',
+                  color: '#102B20',
                   fontWeight: '700',
                   border: 'none',
                   borderRadius: '8px',

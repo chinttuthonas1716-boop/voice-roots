@@ -171,9 +171,9 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
           <button
             onClick={() => setShowModal(true)}
             style={{
-              background: 'linear-gradient(135deg, #235347, #0B2B26)',
-              border: '1px solid #8EB69B',
-              color: '#DAF1DE',
+              background: 'linear-gradient(135deg, #1F5138, #102B20)',
+              border: '1px solid #A6C48A',
+              color: '#F5F3E9',
               borderRadius: '24px',
               padding: '10px 18px',
               fontSize: '13px',
@@ -182,10 +182,10 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
               alignItems: 'center',
               gap: '8px',
               cursor: 'pointer',
-              boxShadow: '0 8px 24px rgba(5, 31, 32, 0.7)',
+              boxShadow: '0 8px 24px rgba(16, 43, 32, 0.7)',
             }}
           >
-            <CloudUpload size={16} color="#8EB69B" />
+            <CloudUpload size={16} color="#A6C48A" />
             <span>{unsyncedCount} Offline Item{unsyncedCount > 1 ? 's' : ''} Ready to Sync</span>
           </button>
         </div>
@@ -199,7 +199,7 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
           left: 0,
           right: 0,
           bottom: 0,
-          background: 'rgba(5, 31, 32, 0.85)',
+          background: 'rgba(16, 43, 32, 0.85)',
           backdropFilter: 'blur(8px)',
           display: 'flex',
           alignItems: 'center',
@@ -208,8 +208,8 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
           padding: '16px',
         }}>
           <div style={{
-            background: '#0B2B26',
-            border: '1px solid #235347',
+            background: '#102B20',
+            border: '1px solid #1F5138',
             borderRadius: '20px',
             maxWidth: '620px',
             width: '100%',
@@ -222,28 +222,28 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
             {/* Modal Header */}
             <div style={{
               padding: '20px 24px',
-              borderBottom: '1px solid rgba(142, 182, 155, 0.15)',
+              borderBottom: '1px solid rgba(166, 196, 138, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
             }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                <CloudUpload size={20} color="#8EB69B" />
-                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#DAF1DE', margin: 0 }}>
+                <CloudUpload size={20} color="#A6C48A" />
+                <h3 style={{ fontSize: '18px', fontWeight: '800', color: '#F5F3E9', margin: 0 }}>
                   Offline Storage & Synchronization
                 </h3>
               </div>
               <button
                 onClick={() => setShowModal(false)}
-                style={{ background: 'transparent', border: 'none', color: '#8EB69B', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: '#A6C48A', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Storage Meter & Disclaimer */}
-            <div style={{ padding: '16px 24px', background: 'rgba(5, 31, 32, 0.4)', borderBottom: '1px solid rgba(142, 182, 155, 0.1)' }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#8EB69B', marginBottom: '6px' }}>
+            <div style={{ padding: '16px 24px', background: 'rgba(16, 43, 32, 0.4)', borderBottom: '1px solid rgba(166, 196, 138, 0.1)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#A6C48A', marginBottom: '6px' }}>
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
                   <HardDrive size={14} /> Browser Storage Usage:
                 </span>
@@ -255,11 +255,11 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
                 <div style={{
                   height: '100%',
                   width: `${Math.min(100, Math.max(1, quota.usagePercent))}%`,
-                  background: quota.usagePercent > 80 ? '#EF4444' : '#8EB69B',
+                  background: quota.usagePercent > 80 ? '#EF4444' : '#A6C48A',
                 }} />
               </div>
 
-              <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)', marginTop: '10px', lineHeight: '1.4' }}>
+              <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.7)', marginTop: '10px', lineHeight: '1.4' }}>
                 <Info size={12} style={{ display: 'inline', marginRight: '4px' }} />
                 Offline recording preserves raw audio on your device. Transcription and translation require connecting to the Voice Roots server.
               </div>
@@ -268,8 +268,8 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
             {/* Items List */}
             <div style={{ padding: '20px 24px', overflowY: 'auto', flex: 1, display: 'flex', flexDirection: 'column', gap: '12px' }}>
               {pendingItems.length === 0 ? (
-                <div style={{ textAlign: 'center', padding: '32px 16px', color: 'rgba(218, 241, 222, 0.5)' }}>
-                  <CheckCircle2 size={32} color="#8EB69B" style={{ margin: '0 auto 8px auto' }} />
+                <div style={{ textAlign: 'center', padding: '32px 16px', color: 'rgba(245, 243, 233, 0.5)' }}>
+                  <CheckCircle2 size={32} color="#A6C48A" style={{ margin: '0 auto 8px auto' }} />
                   <p style={{ fontSize: '14px', margin: 0 }}>No pending offline recordings</p>
                   <p style={{ fontSize: '12px', margin: '4px 0 0 0' }}>All recordings are synchronized with the Voice Roots server.</p>
                 </div>
@@ -278,8 +278,8 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
                   <div
                     key={item.client_uuid}
                     style={{
-                      background: 'rgba(11, 43, 38, 0.5)',
-                      border: '1px solid rgba(142, 182, 155, 0.2)',
+                      background: 'rgba(16, 43, 32, 0.5)',
+                      border: '1px solid rgba(166, 196, 138, 0.2)',
                       borderRadius: '12px',
                       padding: '14px 16px',
                       display: 'flex',
@@ -289,10 +289,10 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
                     }}
                   >
                     <div>
-                      <div style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginBottom: '2px' }}>
+                      <div style={{ fontSize: '14px', fontWeight: '700', color: '#F5F3E9', marginBottom: '2px' }}>
                         {item.title}
                       </div>
-                      <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                      <div style={{ fontSize: '11px', color: '#A6C48A' }}>
                         Language: {item.language.toUpperCase()} • Size: {(item.file_size_bytes / 1024).toFixed(0)} KB • Recorded: {new Date(item.created_at).toLocaleTimeString()}
                       </div>
                       {item.error_message && (
@@ -313,9 +313,9 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
                           disabled={!isOnline || isSyncing}
                           title="Upload now"
                           style={{
-                            background: 'rgba(142, 182, 155, 0.2)',
-                            border: '1px solid #8EB69B',
-                            color: '#DAF1DE',
+                            background: 'rgba(166, 196, 138, 0.2)',
+                            border: '1px solid #A6C48A',
+                            color: '#F5F3E9',
                             borderRadius: '6px',
                             padding: '4px 10px',
                             fontSize: '11px',
@@ -352,11 +352,11 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
             {/* Modal Footer Actions */}
             <div style={{
               padding: '16px 24px',
-              borderTop: '1px solid rgba(142, 182, 155, 0.15)',
+              borderTop: '1px solid rgba(166, 196, 138, 0.15)',
               display: 'flex',
               alignItems: 'center',
               justifyContent: 'space-between',
-              background: 'rgba(5, 31, 32, 0.5)',
+              background: 'rgba(16, 43, 32, 0.5)',
             }}>
               <button
                 onClick={handleClearAll}
@@ -377,8 +377,8 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
                   onClick={() => setShowModal(false)}
                   style={{
                     background: 'transparent',
-                    border: '1px solid #235347',
-                    color: '#DAF1DE',
+                    border: '1px solid #1F5138',
+                    color: '#F5F3E9',
                     borderRadius: '8px',
                     padding: '8px 14px',
                     fontSize: '13px',
@@ -391,8 +391,8 @@ export const OfflineManager: React.FC<OfflineManagerProps> = ({
                   onClick={handleSyncAll}
                   disabled={!isOnline || unsyncedCount === 0 || isSyncing}
                   style={{
-                    background: !isOnline || unsyncedCount === 0 ? 'rgba(142, 182, 155, 0.3)' : '#8EB69B',
-                    color: '#051F20',
+                    background: !isOnline || unsyncedCount === 0 ? 'rgba(166, 196, 138, 0.3)' : '#A6C48A',
+                    color: '#102B20',
                     fontWeight: '700',
                     border: 'none',
                     borderRadius: '8px',

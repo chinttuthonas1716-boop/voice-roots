@@ -369,11 +369,11 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
   return (
     <div
       style={{
-        backgroundColor: '#0B2B26',
-        color: '#DAF1DE',
+        backgroundColor: '#102B20',
+        color: '#F5F3E9',
         borderRadius: '16px',
         padding: '28px',
-        border: '1px solid rgba(142, 182, 155, 0.25)',
+        border: '1px solid rgba(166, 196, 138, 0.25)',
         boxShadow: '0 8px 32px rgba(0, 0, 0, 0.4)',
         fontFamily: 'system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif',
       }}
@@ -386,19 +386,19 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
           justifyContent: 'space-between',
           alignItems: 'center',
           gap: '16px',
-          borderBottom: '1px solid rgba(142, 182, 155, 0.2)',
+          borderBottom: '1px solid rgba(166, 196, 138, 0.2)',
           paddingBottom: '20px',
           marginBottom: '24px',
         }}
       >
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <GraduationCap style={{ color: '#8EB69B', width: '28px', height: '28px' }} />
-            <h2 style={{ fontSize: '1.6rem', fontWeight: 700, margin: 0, color: '#DAF1DE' }}>
+            <GraduationCap style={{ color: '#A6C48A', width: '28px', height: '28px' }} />
+            <h2 style={{ fontSize: '1.6rem', fontWeight: 700, margin: 0, color: '#F5F3E9' }}>
               Advanced Oral Learning Studio & Formant Lab
             </h2>
           </div>
-          <p style={{ margin: '6px 0 0 0', color: 'rgba(218, 241, 222, 0.75)', fontSize: '0.92rem' }}>
+          <p style={{ margin: '6px 0 0 0', color: 'rgba(245, 243, 233, 0.75)', fontSize: '0.92rem' }}>
             SuperMemo SM-2 spaced repetition, acoustic formant analysis, Dravidian SOV syntax drills, and offline sync.
           </p>
         </div>
@@ -407,10 +407,10 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
         <div
           style={{
             display: 'flex',
-            backgroundColor: '#163832',
+            backgroundColor: '#163B2C',
             padding: '4px',
             borderRadius: '12px',
-            border: '1px solid rgba(142, 182, 155, 0.3)',
+            border: '1px solid rgba(166, 196, 138, 0.3)',
             gap: '4px',
             flexWrap: 'wrap',
           }}
@@ -427,8 +427,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               cursor: 'pointer',
               fontSize: '0.86rem',
               fontWeight: 600,
-              backgroundColor: activeTab === 'srs' ? '#235347' : 'transparent',
-              color: activeTab === 'srs' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              backgroundColor: activeTab === 'srs' ? '#1F5138' : 'transparent',
+              color: activeTab === 'srs' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
             }}
           >
             <RotateCw style={{ width: '15px', height: '15px' }} />
@@ -446,8 +446,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               cursor: 'pointer',
               fontSize: '0.86rem',
               fontWeight: 600,
-              backgroundColor: activeTab === 'formants' ? '#235347' : 'transparent',
-              color: activeTab === 'formants' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              backgroundColor: activeTab === 'formants' ? '#1F5138' : 'transparent',
+              color: activeTab === 'formants' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
             }}
           >
             <Mic style={{ width: '15px', height: '15px' }} />
@@ -465,8 +465,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               cursor: 'pointer',
               fontSize: '0.86rem',
               fontWeight: 600,
-              backgroundColor: activeTab === 'quizzes' ? '#235347' : 'transparent',
-              color: activeTab === 'quizzes' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              backgroundColor: activeTab === 'quizzes' ? '#1F5138' : 'transparent',
+              color: activeTab === 'quizzes' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
             }}
           >
             <Headphones style={{ width: '15px', height: '15px' }} />
@@ -484,8 +484,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               cursor: 'pointer',
               fontSize: '0.86rem',
               fontWeight: 600,
-              backgroundColor: activeTab === 'drills' ? '#235347' : 'transparent',
-              color: activeTab === 'drills' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              backgroundColor: activeTab === 'drills' ? '#1F5138' : 'transparent',
+              color: activeTab === 'drills' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
             }}
           >
             <Puzzle style={{ width: '15px', height: '15px' }} />
@@ -503,8 +503,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               cursor: 'pointer',
               fontSize: '0.86rem',
               fontWeight: 600,
-              backgroundColor: activeTab === 'analytics' ? '#235347' : 'transparent',
-              color: activeTab === 'analytics' ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+              backgroundColor: activeTab === 'analytics' ? '#1F5138' : 'transparent',
+              color: activeTab === 'analytics' ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
             }}
           >
             <Activity style={{ width: '15px', height: '15px' }} />
@@ -517,26 +517,26 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
       {syncStatusMessage && (
         <div
           style={{
-            backgroundColor: '#163832',
-            border: '1px solid #8EB69B',
+            backgroundColor: '#163B2C',
+            border: '1px solid #A6C48A',
             borderRadius: '8px',
             padding: '10px 16px',
             marginBottom: '16px',
             fontSize: '0.88rem',
-            color: '#DAF1DE',
+            color: '#F5F3E9',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
           }}
         >
-          <RefreshCw style={{ width: '16px', height: '16px', color: '#8EB69B' }} />
+          <RefreshCw style={{ width: '16px', height: '16px', color: '#A6C48A' }} />
           <span>{syncStatusMessage}</span>
         </div>
       )}
 
       {/* Loading & Error States */}
       {loading && (
-        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#8EB69B' }}>
+        <div style={{ textAlign: 'center', padding: '60px 20px', color: '#A6C48A' }}>
           <Sparkles style={{ width: '32px', height: '32px', animation: 'spin 2s linear infinite', marginBottom: '12px' }} />
           <p style={{ fontSize: '1rem', fontWeight: 500 }}>Initializing Spaced Repetition decks and acoustic formant lab...</p>
         </div>
@@ -582,15 +582,15 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                     style={{
                       fontSize: '0.75rem',
                       fontWeight: 700,
-                      backgroundColor: '#163832',
+                      backgroundColor: '#163B2C',
                       padding: '3px 8px',
                       borderRadius: '6px',
-                      color: '#8EB69B',
+                      color: '#A6C48A',
                     }}
                   >
                     {currentCard.language} • {currentCard.variety || 'Traditional'}
                   </span>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(218, 241, 222, 0.6)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(245, 243, 233, 0.6)' }}>
                     Card {currentCardIndex + 1} of {srsCards.length}
                   </span>
                 </div>
@@ -618,8 +618,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               <div
                 onClick={() => setIsFlipped(!isFlipped)}
                 style={{
-                  backgroundColor: '#163832',
-                  border: '2px solid rgba(142, 182, 155, 0.35)',
+                  backgroundColor: '#163B2C',
+                  border: '2px solid rgba(166, 196, 138, 0.35)',
                   borderRadius: '16px',
                   minHeight: '280px',
                   padding: '36px 24px',
@@ -636,10 +636,10 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               >
                 {!isFlipped ? (
                   <div>
-                    <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#DAF1DE', marginBottom: '12px' }}>
+                    <div style={{ fontSize: '2.4rem', fontWeight: 800, color: '#F5F3E9', marginBottom: '12px' }}>
                       {currentCard.front_prompt}
                     </div>
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#8EB69B', fontSize: '0.9rem' }}>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', color: '#A6C48A', fontSize: '0.9rem' }}>
                       <Volume2 style={{ width: '18px', height: '18px' }} />
                       <span>Click to flip & reveal meaning</span>
                     </div>
@@ -650,7 +650,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       {currentCard.back_meaning}
                     </div>
                     {currentCard.back_ipa && (
-                      <div style={{ fontFamily: 'monospace', fontSize: '1.05rem', color: '#8EB69B', marginBottom: '14px' }}>
+                      <div style={{ fontFamily: 'monospace', fontSize: '1.05rem', color: '#A6C48A', marginBottom: '14px' }}>
                         {currentCard.back_ipa}
                       </div>
                     )}
@@ -658,7 +658,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       <div
                         style={{
                           fontSize: '0.85rem',
-                          color: 'rgba(218, 241, 222, 0.85)',
+                          color: 'rgba(245, 243, 233, 0.85)',
                           maxWidth: '480px',
                           lineHeight: 1.5,
                           backgroundColor: 'rgba(0,0,0,0.2)',
@@ -679,7 +679,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                   style={{
                     backgroundColor: '#1B4332',
                     border: '1px solid #52B788',
-                    color: '#DAF1DE',
+                    color: '#F5F3E9',
                     padding: '8px 14px',
                     borderRadius: '8px',
                     textAlign: 'center',
@@ -694,7 +694,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               {/* SuperMemo Recall Rating Buttons (0 to 5) */}
               {isFlipped && (
                 <div style={{ marginTop: '20px' }}>
-                  <div style={{ fontSize: '0.8rem', color: '#8EB69B', textTransform: 'uppercase', fontWeight: 700, marginBottom: '8px', textAlign: 'center' }}>
+                  <div style={{ fontSize: '0.8rem', color: '#A6C48A', textTransform: 'uppercase', fontWeight: 700, marginBottom: '8px', textAlign: 'center' }}>
                     Rate Your Oral Recall (SuperMemo SM-2 Interval Calculation):
                   </div>
                   <div style={{ display: 'grid', gridTemplateColumns: 'repeat(6, 1fr)', gap: '6px' }}>
@@ -748,9 +748,9 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       style={{
                         padding: '10px 4px',
                         borderRadius: '8px',
-                        border: '1px solid #8EB69B',
-                        backgroundColor: '#163832',
-                        color: '#DAF1DE',
+                        border: '1px solid #A6C48A',
+                        backgroundColor: '#163B2C',
+                        color: '#F5F3E9',
                         fontSize: '0.8rem',
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -765,7 +765,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                         borderRadius: '8px',
                         border: '1px solid #52B788',
                         backgroundColor: '#1B4332',
-                        color: '#DAF1DE',
+                        color: '#F5F3E9',
                         fontSize: '0.8rem',
                         fontWeight: 700,
                         cursor: 'pointer',
@@ -779,7 +779,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                         padding: '10px 4px',
                         borderRadius: '8px',
                         border: '1px solid #52B788',
-                        backgroundColor: '#235347',
+                        backgroundColor: '#1F5138',
                         color: '#E9D8A6',
                         fontSize: '0.8rem',
                         fontWeight: 700,
@@ -802,22 +802,22 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               {/* Formant Inputs Panel */}
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   padding: '24px',
                   borderRadius: '12px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px' }}>
-                  <Sliders style={{ width: '20px', height: '20px', color: '#8EB69B' }} />
-                  <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#DAF1DE', fontWeight: 700 }}>
+                  <Sliders style={{ width: '20px', height: '20px', color: '#A6C48A' }} />
+                  <h3 style={{ margin: 0, fontSize: '1.2rem', color: '#F5F3E9', fontWeight: 700 }}>
                     Acoustic Articulatory Controls
                   </h3>
                 </div>
 
                 {/* Language & Target Phoneme */}
                 <div style={{ marginBottom: '14px' }}>
-                  <label style={{ display: 'block', fontSize: '0.82rem', color: '#8EB69B', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '0.82rem', color: '#A6C48A', marginBottom: '4px' }}>
                     Language & Target Phoneme:
                   </label>
                   <select
@@ -831,11 +831,11 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                     }}
                     style={{
                       width: '100%',
-                      backgroundColor: '#0B2B26',
-                      border: '1px solid rgba(142, 182, 155, 0.3)',
+                      backgroundColor: '#102B20',
+                      border: '1px solid rgba(166, 196, 138, 0.3)',
                       borderRadius: '8px',
                       padding: '8px 12px',
-                      color: '#DAF1DE',
+                      color: '#F5F3E9',
                       fontSize: '0.88rem',
                     }}
                   >
@@ -850,7 +850,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '2px' }}>
                     <span>Pitch Fundamental (F₀):</span>
-                    <strong style={{ color: '#8EB69B' }}>{studentF0} Hz</strong>
+                    <strong style={{ color: '#A6C48A' }}>{studentF0} Hz</strong>
                   </div>
                   <input
                     type="range"
@@ -865,7 +865,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                 <div style={{ marginBottom: '16px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '2px' }}>
                     <span>Vowel Aperture / Height (F₁):</span>
-                    <strong style={{ color: '#8EB69B' }}>{studentF1} Hz</strong>
+                    <strong style={{ color: '#A6C48A' }}>{studentF1} Hz</strong>
                   </div>
                   <input
                     type="range"
@@ -880,7 +880,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                 <div style={{ marginBottom: '20px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.82rem', marginBottom: '2px' }}>
                     <span>Tongue Backness / Frontness (F₂):</span>
-                    <strong style={{ color: '#8EB69B' }}>{studentF2} Hz</strong>
+                    <strong style={{ color: '#A6C48A' }}>{studentF2} Hz</strong>
                   </div>
                   <input
                     type="range"
@@ -900,8 +900,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                     padding: '12px',
                     borderRadius: '8px',
                     border: 'none',
-                    backgroundColor: '#235347',
-                    color: '#DAF1DE',
+                    backgroundColor: '#1F5138',
+                    color: '#F5F3E9',
                     fontSize: '0.92rem',
                     fontWeight: 700,
                     cursor: 'pointer',
@@ -919,17 +919,17 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               {/* Formant Results Panel */}
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   padding: '24px',
                   borderRadius: '12px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                   display: 'flex',
                   flexDirection: 'column',
                   justifyContent: 'space-between',
                 }}
               >
                 <div>
-                  <h3 style={{ margin: '0 0 14px 0', fontSize: '1.2rem', color: '#DAF1DE', fontWeight: 700 }}>
+                  <h3 style={{ margin: '0 0 14px 0', fontSize: '1.2rem', color: '#F5F3E9', fontWeight: 700 }}>
                     Elder Acoustic Benchmark Comparison
                   </h3>
 
@@ -948,7 +948,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                         }}
                       >
                         <div>
-                          <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                          <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                             Acoustic Match Score
                           </div>
                           <div style={{ fontSize: '2rem', fontWeight: 800, color: formantResult.is_verified_mastery ? '#52B788' : '#F4A261' }}>
@@ -972,35 +972,35 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       {/* Reference vs Measured Formants */}
                       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px', marginBottom: '16px', fontSize: '0.8rem' }}>
                         <div style={{ backgroundColor: '#1B4332', padding: '8px', borderRadius: '6px' }}>
-                          <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>F₀ Pitch:</span><br />
+                          <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>F₀ Pitch:</span><br />
                           <strong>{formantResult.measured_formants.f0_pitch_hz}</strong> / {formantResult.reference_formants.f0_pitch_hz} Hz
                         </div>
                         <div style={{ backgroundColor: '#1B4332', padding: '8px', borderRadius: '6px' }}>
-                          <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>F₁ Aperture:</span><br />
+                          <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>F₁ Aperture:</span><br />
                           <strong>{formantResult.measured_formants.f1_aperture_hz}</strong> / {formantResult.reference_formants.f1_aperture_hz} Hz
                         </div>
                         <div style={{ backgroundColor: '#1B4332', padding: '8px', borderRadius: '6px' }}>
-                          <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>F₂ Backness:</span><br />
+                          <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>F₂ Backness:</span><br />
                           <strong>{formantResult.measured_formants.f2_frontness_hz}</strong> / {formantResult.reference_formants.f2_frontness_hz} Hz
                         </div>
                       </div>
 
                       {/* Articulatory Guidance */}
                       <div style={{ marginBottom: '12px' }}>
-                        <div style={{ fontSize: '0.76rem', color: '#8EB69B', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
+                        <div style={{ fontSize: '0.76rem', color: '#A6C48A', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
                           Articulatory Guide:
                         </div>
-                        <div style={{ fontSize: '0.84rem', color: '#DAF1DE', fontStyle: 'italic' }}>
+                        <div style={{ fontSize: '0.84rem', color: '#F5F3E9', fontStyle: 'italic' }}>
                           "{formantResult.articulatory_guide}"
                         </div>
                       </div>
 
                       {/* Diagnostic Tips */}
                       <div>
-                        <div style={{ fontSize: '0.76rem', color: '#8EB69B', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
+                        <div style={{ fontSize: '0.76rem', color: '#A6C48A', textTransform: 'uppercase', fontWeight: 700, marginBottom: '4px' }}>
                           Diagnostic Feedback:
                         </div>
-                        <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.82rem', color: 'rgba(218, 241, 222, 0.85)' }}>
+                        <ul style={{ margin: 0, paddingLeft: '18px', fontSize: '0.82rem', color: 'rgba(245, 243, 233, 0.85)' }}>
                           {formantResult.diagnostic_feedback.map((tip: string, idx: number) => (
                             <li key={idx} style={{ marginBottom: '3px' }}>{tip}</li>
                           ))}
@@ -1008,7 +1008,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       </div>
                     </div>
                   ) : (
-                    <div style={{ textAlign: 'center', padding: '40px 10px', color: 'rgba(218, 241, 222, 0.5)' }}>
+                    <div style={{ textAlign: 'center', padding: '40px 10px', color: 'rgba(245, 243, 233, 0.5)' }}>
                       Adjust the acoustic sliders on the left and click "Evaluate Formant Alignment" to compare with elder recordings.
                     </div>
                   )}
@@ -1024,23 +1024,23 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
             <div style={{ maxWidth: '680px', margin: '0 auto' }}>
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   padding: '24px',
                   borderRadius: '16px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                 }}
               >
                 {/* Meta */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <span style={{ fontSize: '0.78rem', backgroundColor: '#0B2B26', color: '#8EB69B', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                  <span style={{ fontSize: '0.78rem', backgroundColor: '#102B20', color: '#A6C48A', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
                     {currentQuiz.language} Oral Quiz
                   </span>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(218, 241, 222, 0.6)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(245, 243, 233, 0.6)' }}>
                     Quiz {activeQuizIndex + 1} of {quizzes.length}
                   </span>
                 </div>
 
-                <h3 style={{ margin: '0 0 12px 0', fontSize: '1.25rem', color: '#DAF1DE', fontWeight: 700 }}>
+                <h3 style={{ margin: '0 0 12px 0', fontSize: '1.25rem', color: '#F5F3E9', fontWeight: 700 }}>
                   {currentQuiz.title}
                 </h3>
 
@@ -1063,7 +1063,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       borderRadius: '50%',
                       backgroundColor: '#52B788',
                       border: 'none',
-                      color: '#0B2B26',
+                      color: '#102B20',
                       display: 'flex',
                       alignItems: 'center',
                       justifyContent: 'center',
@@ -1073,17 +1073,17 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                     <Volume2 style={{ width: '20px', height: '20px' }} />
                   </button>
                   <div>
-                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#DAF1DE' }}>
+                    <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#F5F3E9' }}>
                       Native Elder Oral Utterance ({currentQuiz.audio_duration_seconds}s)
                     </div>
-                    <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.65)' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.65)' }}>
                       Listen carefully to the oral cadence and phrasing.
                     </div>
                   </div>
                 </div>
 
                 {/* Question */}
-                <p style={{ fontSize: '0.94rem', color: '#DAF1DE', lineHeight: 1.5, marginBottom: '16px' }}>
+                <p style={{ fontSize: '0.94rem', color: '#F5F3E9', lineHeight: 1.5, marginBottom: '16px' }}>
                   {currentQuiz.question_text}
                 </p>
 
@@ -1098,9 +1098,9 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                         style={{
                           padding: '12px 16px',
                           borderRadius: '8px',
-                          border: isSelected ? '1px solid #52B788' : '1px solid rgba(142, 182, 155, 0.25)',
+                          border: isSelected ? '1px solid #52B788' : '1px solid rgba(166, 196, 138, 0.25)',
                           backgroundColor: isSelected ? '#1B4332' : '#0E2924',
-                          color: '#DAF1DE',
+                          color: '#F5F3E9',
                           textAlign: 'left',
                           fontSize: '0.88rem',
                           cursor: 'pointer',
@@ -1121,8 +1121,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       padding: '10px 18px',
                       borderRadius: '8px',
                       border: 'none',
-                      backgroundColor: selectedOptionId ? '#235347' : 'rgba(255,255,255,0.1)',
-                      color: '#DAF1DE',
+                      backgroundColor: selectedOptionId ? '#1F5138' : 'rgba(255,255,255,0.1)',
+                      color: '#F5F3E9',
                       fontSize: '0.88rem',
                       fontWeight: 700,
                       cursor: selectedOptionId ? 'pointer' : 'not-allowed',
@@ -1141,9 +1141,9 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       style={{
                         padding: '10px 14px',
                         borderRadius: '8px',
-                        border: '1px solid rgba(142, 182, 155, 0.3)',
+                        border: '1px solid rgba(166, 196, 138, 0.3)',
                         backgroundColor: 'transparent',
-                        color: '#DAF1DE',
+                        color: '#F5F3E9',
                         fontSize: '0.84rem',
                         cursor: 'pointer',
                         display: 'flex',
@@ -1165,7 +1165,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       borderRadius: '8px',
                       backgroundColor: quizFeedback.is_correct ? 'rgba(82, 183, 136, 0.15)' : 'rgba(224, 122, 95, 0.15)',
                       border: quizFeedback.is_correct ? '1px solid #52B788' : '1px solid #E07A5F',
-                      color: '#DAF1DE',
+                      color: '#F5F3E9',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontWeight: 700 }}>
@@ -1197,26 +1197,26 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
             <div style={{ maxWidth: '680px', margin: '0 auto' }}>
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   padding: '24px',
                   borderRadius: '16px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                 }}
               >
                 {/* Meta */}
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px' }}>
-                  <span style={{ fontSize: '0.78rem', backgroundColor: '#0B2B26', color: '#8EB69B', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
+                  <span style={{ fontSize: '0.78rem', backgroundColor: '#102B20', color: '#A6C48A', padding: '3px 8px', borderRadius: '6px', fontWeight: 700 }}>
                     {currentDrill.language} Syntax Drill
                   </span>
-                  <span style={{ fontSize: '0.8rem', color: 'rgba(218, 241, 222, 0.6)' }}>
+                  <span style={{ fontSize: '0.8rem', color: 'rgba(245, 243, 233, 0.6)' }}>
                     Drill {activeDrillIndex + 1} of {drills.length}
                   </span>
                 </div>
 
-                <h3 style={{ margin: '0 0 6px 0', fontSize: '1.25rem', color: '#DAF1DE', fontWeight: 700 }}>
+                <h3 style={{ margin: '0 0 6px 0', fontSize: '1.25rem', color: '#F5F3E9', fontWeight: 700 }}>
                   {currentDrill.title}
                 </h3>
-                <div style={{ fontSize: '0.8rem', color: '#8EB69B', marginBottom: '16px' }}>
+                <div style={{ fontSize: '0.8rem', color: '#A6C48A', marginBottom: '16px' }}>
                   Pattern: {currentDrill.syntax_pattern}
                 </div>
 
@@ -1228,7 +1228,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                     borderRadius: '8px',
                     marginBottom: '18px',
                     fontSize: '0.9rem',
-                    color: '#DAF1DE',
+                    color: '#F5F3E9',
                   }}
                 >
                   <strong>Target Meaning:</strong> "{currentDrill.translation_english}"
@@ -1236,14 +1236,14 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
 
                 {/* Student Assembly Drop Area */}
                 <div style={{ marginBottom: '16px' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#8EB69B', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#A6C48A', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
                     Assembled Oral Sentence (Click to remove token):
                   </div>
                   <div
                     style={{
                       minHeight: '60px',
                       backgroundColor: '#0E2924',
-                      border: '2px dashed rgba(142, 182, 155, 0.35)',
+                      border: '2px dashed rgba(166, 196, 138, 0.35)',
                       borderRadius: '8px',
                       padding: '10px',
                       display: 'flex',
@@ -1253,7 +1253,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                     }}
                   >
                     {assembledTokens.length === 0 ? (
-                      <span style={{ color: 'rgba(218, 241, 222, 0.4)', fontSize: '0.84rem' }}>
+                      <span style={{ color: 'rgba(245, 243, 233, 0.4)', fontSize: '0.84rem' }}>
                         Click word tokens below in correct order...
                       </span>
                     ) : (
@@ -1264,9 +1264,9 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                           style={{
                             padding: '6px 12px',
                             borderRadius: '6px',
-                            backgroundColor: '#235347',
+                            backgroundColor: '#1F5138',
                             border: '1px solid #52B788',
-                            color: '#DAF1DE',
+                            color: '#F5F3E9',
                             fontSize: '0.88rem',
                             fontWeight: 600,
                             cursor: 'pointer',
@@ -1281,7 +1281,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
 
                 {/* Scrambled Word Bank */}
                 <div style={{ marginBottom: '20px' }}>
-                  <div style={{ fontSize: '0.78rem', color: '#8EB69B', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#A6C48A', textTransform: 'uppercase', fontWeight: 700, marginBottom: '6px' }}>
                     Scrambled Word Bank:
                   </div>
                   <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px' }}>
@@ -1293,8 +1293,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                           padding: '8px 14px',
                           borderRadius: '8px',
                           backgroundColor: '#1B4332',
-                          border: '1px solid rgba(142, 182, 155, 0.3)',
-                          color: '#DAF1DE',
+                          border: '1px solid rgba(166, 196, 138, 0.3)',
+                          color: '#F5F3E9',
                           fontSize: '0.88rem',
                           fontWeight: 600,
                           cursor: 'pointer',
@@ -1316,8 +1316,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                         padding: '10px 18px',
                         borderRadius: '8px',
                         border: 'none',
-                        backgroundColor: assembledTokens.length > 0 ? '#235347' : 'rgba(255,255,255,0.1)',
-                        color: '#DAF1DE',
+                        backgroundColor: assembledTokens.length > 0 ? '#1F5138' : 'rgba(255,255,255,0.1)',
+                        color: '#F5F3E9',
                         fontSize: '0.88rem',
                         fontWeight: 700,
                         cursor: assembledTokens.length > 0 ? 'pointer' : 'not-allowed',
@@ -1330,9 +1330,9 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       style={{
                         padding: '10px 14px',
                         borderRadius: '8px',
-                        border: '1px solid rgba(142, 182, 155, 0.3)',
+                        border: '1px solid rgba(166, 196, 138, 0.3)',
                         backgroundColor: 'transparent',
-                        color: '#DAF1DE',
+                        color: '#F5F3E9',
                         fontSize: '0.84rem',
                         cursor: 'pointer',
                       }}
@@ -1351,9 +1351,9 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       style={{
                         padding: '10px 14px',
                         borderRadius: '8px',
-                        border: '1px solid rgba(142, 182, 155, 0.3)',
+                        border: '1px solid rgba(166, 196, 138, 0.3)',
                         backgroundColor: 'transparent',
-                        color: '#DAF1DE',
+                        color: '#F5F3E9',
                         fontSize: '0.84rem',
                         cursor: 'pointer',
                         display: 'flex',
@@ -1375,7 +1375,7 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       borderRadius: '8px',
                       backgroundColor: drillFeedback.is_correct ? 'rgba(82, 183, 136, 0.15)' : 'rgba(224, 122, 95, 0.15)',
                       border: drillFeedback.is_correct ? '1px solid #52B788' : '1px solid #E07A5F',
-                      color: '#DAF1DE',
+                      color: '#F5F3E9',
                     }}
                   >
                     <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '6px', fontWeight: 700 }}>
@@ -1408,23 +1408,23 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
             <div>
               {/* Top Overview Cards */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-                <div style={{ backgroundColor: '#163832', padding: '18px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '18px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                     Oral Retention Rate
                   </div>
                   <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#52B788', marginTop: '4px' }}>
                     {analytics.retention_rate_pct}%
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#8EB69B', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#A6C48A', marginTop: '4px' }}>
                     {analytics.total_reviews_completed} reviews completed
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#163832', padding: '18px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '18px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                     Vocabulary Enrolled
                   </div>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
+                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#F5F3E9', marginTop: '4px' }}>
                     {analytics.total_cards_enrolled}
                   </div>
                   <div style={{ fontSize: '0.78rem', color: '#E9D8A6', marginTop: '4px' }}>
@@ -1432,25 +1432,25 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                   </div>
                 </div>
 
-                <div style={{ backgroundColor: '#163832', padding: '18px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)' }}>
-                  <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '18px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)' }}>
+                  <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                     Average Recall Score
                   </div>
-                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#DAF1DE', marginTop: '4px' }}>
+                  <div style={{ fontSize: '2.2rem', fontWeight: 800, color: '#F5F3E9', marginTop: '4px' }}>
                     {analytics.average_recall_grade} / 5
                   </div>
-                  <div style={{ fontSize: '0.78rem', color: '#8EB69B', marginTop: '4px' }}>
+                  <div style={{ fontSize: '0.78rem', color: '#A6C48A', marginTop: '4px' }}>
                     Tier: {analytics.oral_proficiency_tier}
                   </div>
                 </div>
 
                 {/* Offline Actions Sync Card */}
-                <div style={{ backgroundColor: '#163832', padding: '18px', borderRadius: '12px', border: '1px solid rgba(142, 182, 155, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
+                <div style={{ backgroundColor: '#163B2C', padding: '18px', borderRadius: '12px', border: '1px solid rgba(166, 196, 138, 0.25)', display: 'flex', flexDirection: 'column', justifyContent: 'space-between' }}>
                   <div>
-                    <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.65)', textTransform: 'uppercase' }}>
+                    <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.65)', textTransform: 'uppercase' }}>
                       Offline Queue Sync
                     </div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#DAF1DE', marginTop: '4px' }}>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 700, color: '#F5F3E9', marginTop: '4px' }}>
                       {offlineQueue.length} Pending Actions
                     </div>
                   </div>
@@ -1460,8 +1460,8 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
                       padding: '8px 12px',
                       borderRadius: '8px',
                       border: 'none',
-                      backgroundColor: '#235347',
-                      color: '#DAF1DE',
+                      backgroundColor: '#1F5138',
+                      color: '#F5F3E9',
                       fontSize: '0.82rem',
                       fontWeight: 600,
                       cursor: 'pointer',
@@ -1481,37 +1481,37 @@ export const LearningStudio: React.FC<LearningStudioProps> = ({
               {/* Leitner Box Distribution */}
               <div
                 style={{
-                  backgroundColor: '#163832',
+                  backgroundColor: '#163B2C',
                   padding: '24px',
                   borderRadius: '12px',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                 }}
               >
-                <div style={{ fontSize: '0.82rem', color: '#8EB69B', textTransform: 'uppercase', fontWeight: 700, marginBottom: '14px' }}>
+                <div style={{ fontSize: '0.82rem', color: '#A6C48A', textTransform: 'uppercase', fontWeight: 700, marginBottom: '14px' }}>
                   Leitner Spaced Repetition Distribution (Card Mastery Progress):
                 </div>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(5, 1fr)', gap: '10px' }}>
                   <div style={{ backgroundColor: '#0E2924', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.74rem', color: 'rgba(218, 241, 222, 0.6)' }}>Box 1 (Daily)</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#DAF1DE', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'rgba(245, 243, 233, 0.6)' }}>Box 1 (Daily)</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F5F3E9', marginTop: '2px' }}>
                       {analytics.leitner_box_distribution.box_1_daily}
                     </div>
                   </div>
                   <div style={{ backgroundColor: '#0E2924', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.74rem', color: 'rgba(218, 241, 222, 0.6)' }}>Box 2 (3 Days)</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#DAF1DE', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'rgba(245, 243, 233, 0.6)' }}>Box 2 (3 Days)</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F5F3E9', marginTop: '2px' }}>
                       {analytics.leitner_box_distribution.box_2_semiweekly}
                     </div>
                   </div>
                   <div style={{ backgroundColor: '#0E2924', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.74rem', color: 'rgba(218, 241, 222, 0.6)' }}>Box 3 (Weekly)</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#DAF1DE', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'rgba(245, 243, 233, 0.6)' }}>Box 3 (Weekly)</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F5F3E9', marginTop: '2px' }}>
                       {analytics.leitner_box_distribution.box_3_weekly}
                     </div>
                   </div>
                   <div style={{ backgroundColor: '#0E2924', padding: '12px', borderRadius: '8px', textAlign: 'center' }}>
-                    <div style={{ fontSize: '0.74rem', color: 'rgba(218, 241, 222, 0.6)' }}>Box 4 (Biweekly)</div>
-                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#DAF1DE', marginTop: '2px' }}>
+                    <div style={{ fontSize: '0.74rem', color: 'rgba(245, 243, 233, 0.6)' }}>Box 4 (Biweekly)</div>
+                    <div style={{ fontSize: '1.4rem', fontWeight: 800, color: '#F5F3E9', marginTop: '2px' }}>
                       {analytics.leitner_box_distribution.box_4_biweekly}
                     </div>
                   </div>

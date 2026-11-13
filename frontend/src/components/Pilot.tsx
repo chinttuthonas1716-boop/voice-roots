@@ -486,7 +486,7 @@ export function Pilot() {
   const renderStatusBadge = (status: VerificationStatus) => {
     switch (status) {
       case 'draft':
-        return <span className="badge" style={{ background: 'rgba(255,255,255,0.08)', color: '#DAF1DE', border: '1px solid rgba(255,255,255,0.2)' }}>Draft</span>;
+        return <span className="badge" style={{ background: 'rgba(255,255,255,0.08)', color: '#F5F3E9', border: '1px solid rgba(255,255,255,0.2)' }}>Draft</span>;
       case 'submitted':
         return <span className="badge badge-teal">Submitted</span>;
       case 'awaiting_review':
@@ -815,14 +815,14 @@ export function Pilot() {
       {activeSubTab === 'portal' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Banner: OCAP Consent Protocol */}
-          <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B' }}>
+          <div className="glass-card" style={{ borderLeft: '4px solid #A6C48A' }}>
             <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
-              <ShieldCheck size={24} color="#8EB69B" style={{ flexShrink: 0, marginTop: '2px' }} />
+              <ShieldCheck size={24} color="#A6C48A" style={{ flexShrink: 0, marginTop: '2px' }} />
               <div>
-                <h3 style={{ fontSize: '17px', fontWeight: '700', marginBottom: '4px', color: '#DAF1DE' }}>
+                <h3 style={{ fontSize: '17px', fontWeight: '700', marginBottom: '4px', color: '#F5F3E9' }}>
                   Community Contributor Portal (OCAP Sovereign Archival)
                 </h3>
-                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.75)', lineHeight: '1.6' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.75)', lineHeight: '1.6' }}>
                   Submit oral stories, historical chants, and dialectal lore. Your voice master is cryptographically preserved unchanged. 
                   Choose multi-tier consent levels, save drafts anytime, or withdraw your records at will under Indigenous Data Sovereignty protocols.
                 </p>
@@ -837,8 +837,8 @@ export function Pilot() {
 
           {/* Oral Story Submission Form */}
           <section className="glass-card">
-            <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px', color: '#DAF1DE' }}>
-              <FileText size={20} color="#8EB69B" />
+            <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '18px', color: '#F5F3E9' }}>
+              <FileText size={20} color="#A6C48A" />
               <span>Submit Oral Speech Recording</span>
             </h3>
 
@@ -850,15 +850,15 @@ export function Pilot() {
             )}
 
             {portalMessage && (
-              <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', color: '#DAF1DE', fontSize: '13px', border: '1px solid #235347' }}>
-                <CheckCircle2 size={16} color="#8EB69B" />
+              <div style={{ marginBottom: '14px', display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(166, 196, 138, 0.15)', color: '#F5F3E9', fontSize: '13px', border: '1px solid #1F5138' }}>
+                <CheckCircle2 size={16} color="#A6C48A" />
                 <span>{portalMessage}</span>
               </div>
             )}
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
                   STORY TITLE / DESCRIPTION *
                 </label>
                 <input
@@ -872,7 +872,7 @@ export function Pilot() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
                   VERIFIED LANGUAGE REGISTRY *
                 </label>
                 <select
@@ -889,7 +889,7 @@ export function Pilot() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
                   LOCAL DIALECT / REGIONAL VARIANT (OPTIONAL)
                 </label>
                 <input
@@ -902,7 +902,7 @@ export function Pilot() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
                   CONTRIBUTOR NAME & ROLE
                 </label>
                 <div style={{ display: 'flex', gap: '8px' }}>
@@ -933,15 +933,15 @@ export function Pilot() {
 
             {/* Anonymous attribution toggle */}
             <div style={{ marginBottom: '16px' }}>
-              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#DAF1DE' }}>
+              <label style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', cursor: 'pointer', fontSize: '13px', color: '#F5F3E9' }}>
                 <input
                   type="checkbox"
                   checked={isAnonymous}
                   onChange={e => setIsAnonymous(e.target.checked)}
-                  style={{ width: '16px', height: '16px', accentColor: '#8EB69B' }}
+                  style={{ width: '16px', height: '16px', accentColor: '#A6C48A' }}
                 />
                 <span style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                  {isAnonymous ? <EyeOff size={15} color="#8EB69B" /> : <Eye size={15} color="#8EB69B" />}
+                  {isAnonymous ? <EyeOff size={15} color="#A6C48A" /> : <Eye size={15} color="#A6C48A" />}
                   <strong>Preserve Anonymity:</strong> List public record as 'Anonymous Contributor'
                 </span>
               </label>
@@ -949,7 +949,7 @@ export function Pilot() {
 
             {/* Contextual Notes */}
             <div style={{ marginBottom: '18px' }}>
-              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+              <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
                 CONTEXTUAL NOTES & CULTURAL BACKGROUND (OPTIONAL)
               </label>
               <textarea
@@ -962,7 +962,7 @@ export function Pilot() {
             </div>
 
             {/* Audio Source Input Mode Switcher */}
-            <div style={{ background: 'rgba(5, 31, 32, 0.6)', border: '1px solid #235347', borderRadius: '12px', padding: '16px', marginBottom: '18px' }}>
+            <div style={{ background: 'rgba(16, 43, 32, 0.6)', border: '1px solid #1F5138', borderRadius: '12px', padding: '16px', marginBottom: '18px' }}>
               <div style={{ display: 'flex', gap: '12px', marginBottom: '14px' }}>
                 <button
                   type="button"
@@ -990,9 +990,9 @@ export function Pilot() {
                     type="file"
                     accept="audio/wav,audio/mp3,audio/m4a,audio/ogg,audio/flac,audio/webm"
                     onChange={handleFileChange}
-                    style={{ fontSize: '13px', color: '#DAF1DE' }}
+                    style={{ fontSize: '13px', color: '#F5F3E9' }}
                   />
-                  <p style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', marginTop: '6px' }}>
+                  <p style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', marginTop: '6px' }}>
                     Supported audio masters: WAV, MP3, FLAC, M4A, OGG, WebM (up to 25 MB).
                   </p>
                 </div>
@@ -1030,7 +1030,7 @@ export function Pilot() {
               {/* Audio Preview */}
               {previewAudioUrl && (
                 <div style={{ marginTop: '14px', display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '600' }}>Master Preview:</span>
+                  <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '600' }}>Master Preview:</span>
                   <audio controls src={previewAudioUrl} style={{ height: '36px', maxWidth: '340px' }} />
                 </div>
               )}
@@ -1038,17 +1038,17 @@ export function Pilot() {
 
             {/* Multi-Tier Explicit Consent Checkbox Cards */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginBottom: '20px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B', letterSpacing: '0.05em' }}>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#A6C48A', letterSpacing: '0.05em' }}>
                 OCAP MULTI-TIER EXPLICIT CONSENT AGREEMENT
               </span>
 
-              <div style={{ background: 'rgba(142, 182, 155, 0.08)', border: '1px solid #235347', borderRadius: '10px', padding: '12px 14px' }}>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#DAF1DE' }}>
+              <div style={{ background: 'rgba(166, 196, 138, 0.08)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px 14px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#F5F3E9' }}>
                   <input
                     type="checkbox"
                     checked={consentPrivateStorage}
                     onChange={e => setConsentPrivateStorage(e.target.checked)}
-                    style={{ width: '16px', height: '16px', accentColor: '#8EB69B', marginTop: '2px' }}
+                    style={{ width: '16px', height: '16px', accentColor: '#A6C48A', marginTop: '2px' }}
                   />
                   <div>
                     <strong>1. Private Storage Consent (Mandatory):</strong> I consent to storing this master audio recording safely within the Voice Roots private cultural archive.
@@ -1056,13 +1056,13 @@ export function Pilot() {
                 </label>
               </div>
 
-              <div style={{ background: 'rgba(142, 182, 155, 0.08)', border: '1px solid #235347', borderRadius: '10px', padding: '12px 14px' }}>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#DAF1DE' }}>
+              <div style={{ background: 'rgba(166, 196, 138, 0.08)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px 14px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#F5F3E9' }}>
                   <input
                     type="checkbox"
                     checked={consentCommunityAccess}
                     onChange={e => setConsentCommunityAccess(e.target.checked)}
-                    style={{ width: '16px', height: '16px', accentColor: '#8EB69B', marginTop: '2px' }}
+                    style={{ width: '16px', height: '16px', accentColor: '#A6C48A', marginTop: '2px' }}
                   />
                   <div>
                     <strong>2. Community Access & Elder Verification:</strong> I authorize community elders and native-speaker linguists to listen to the audio and verify/correct transcriptions.
@@ -1070,13 +1070,13 @@ export function Pilot() {
                 </label>
               </div>
 
-              <div style={{ background: 'rgba(142, 182, 155, 0.08)', border: '1px solid #235347', borderRadius: '10px', padding: '12px 14px' }}>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#DAF1DE' }}>
+              <div style={{ background: 'rgba(166, 196, 138, 0.08)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px 14px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#F5F3E9' }}>
                   <input
                     type="checkbox"
                     checked={consentPublicPublication}
                     onChange={e => setConsentPublicPublication(e.target.checked)}
-                    style={{ width: '16px', height: '16px', accentColor: '#8EB69B', marginTop: '2px' }}
+                    style={{ width: '16px', height: '16px', accentColor: '#A6C48A', marginTop: '2px' }}
                   />
                   <div>
                     <strong>3. Public Cultural Corpus Publication (Opt-in):</strong> Once verified by elders, publish this recording and transcript to the open searchable cultural corpus.
@@ -1084,13 +1084,13 @@ export function Pilot() {
                 </label>
               </div>
 
-              <div style={{ background: 'rgba(142, 182, 155, 0.08)', border: '1px solid #235347', borderRadius: '10px', padding: '12px 14px' }}>
-                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#DAF1DE' }}>
+              <div style={{ background: 'rgba(166, 196, 138, 0.08)', border: '1px solid #1F5138', borderRadius: '10px', padding: '12px 14px' }}>
+                <label style={{ display: 'flex', alignItems: 'flex-start', gap: '10px', cursor: 'pointer', fontSize: '13px', color: '#F5F3E9' }}>
                   <input
                     type="checkbox"
                     checked={consentAiTraining}
                     onChange={e => setConsentAiTraining(e.target.checked)}
-                    style={{ width: '16px', height: '16px', accentColor: '#8EB69B', marginTop: '2px' }}
+                    style={{ width: '16px', height: '16px', accentColor: '#A6C48A', marginTop: '2px' }}
                   />
                   <div>
                     <strong>4. AI Acoustic & Translation Fine-tuning (Opt-in):</strong> Permit using this recording to fine-tune open-source speech models strictly for preserving this tongue.
@@ -1129,10 +1129,10 @@ export function Pilot() {
           <section className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE' }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#F5F3E9' }}>
                   My Submissions & Draft Status Tracker
                 </h3>
-                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.72)' }}>
                   Monitor progress across 9 verification lifecycle states or withdraw data under OCAP protocols.
                 </p>
               </div>
@@ -1148,19 +1148,19 @@ export function Pilot() {
             </div>
 
             {isLoadingMySubmissions ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(218, 241, 222, 0.72)' }}>
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(245, 243, 233, 0.72)' }}>
                 <Loader2 size={18} className="spin-animate" style={{ display: 'inline', marginRight: '8px' }} />
                 Loading submissions...
               </div>
             ) : mySubmissions.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
                 No oral recordings submitted yet. Submit an oral story above to view progress.
               </p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(218, 241, 222, 0.72)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(245, 243, 233, 0.72)' }}>
                       <th style={{ padding: '10px 8px' }}>ID</th>
                       <th style={{ padding: '10px 8px' }}>Title & Language</th>
                       <th style={{ padding: '10px 8px' }}>Contributor</th>
@@ -1172,15 +1172,15 @@ export function Pilot() {
                   </thead>
                   <tbody>
                     {mySubmissions.map(s => (
-                      <tr key={s.id} style={{ borderBottom: '1px solid rgba(35, 83, 71, 0.35)' }}>
-                        <td style={{ padding: '10px 8px', color: 'rgba(218, 241, 222, 0.72)' }}>#{s.id}</td>
+                      <tr key={s.id} style={{ borderBottom: '1px solid rgba(31, 81, 56, 0.35)' }}>
+                        <td style={{ padding: '10px 8px', color: 'rgba(245, 243, 233, 0.72)' }}>#{s.id}</td>
                         <td style={{ padding: '10px 8px' }}>
-                          <span style={{ fontWeight: '600', color: '#DAF1DE', display: 'block' }}>{s.title}</span>
-                          <span style={{ fontSize: '11px', color: '#8EB69B' }}>
+                          <span style={{ fontWeight: '600', color: '#F5F3E9', display: 'block' }}>{s.title}</span>
+                          <span style={{ fontSize: '11px', color: '#A6C48A' }}>
                             {s.language} {s.dialect ? `• ${s.dialect}` : ''}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 8px', color: 'rgba(218, 241, 222, 0.85)' }}>
+                        <td style={{ padding: '10px 8px', color: 'rgba(245, 243, 233, 0.85)' }}>
                           {s.is_anonymous ? 'Anonymous Contributor' : s.contributor_name}
                         </td>
                         <td style={{ padding: '10px 8px' }}>
@@ -1191,7 +1191,7 @@ export function Pilot() {
                             {s.consent_public_publication ? 'Opted-In' : 'Private'}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 8px', color: '#8EB69B' }}>
+                        <td style={{ padding: '10px 8px', color: '#A6C48A' }}>
                           {s.verified_by || 'Awaiting'}
                         </td>
                         <td style={{ padding: '10px 8px' }}>
@@ -1242,7 +1242,7 @@ export function Pilot() {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(5, 31, 32, 0.85)',
+              background: 'rgba(16, 43, 32, 0.85)',
               backdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
@@ -1252,13 +1252,13 @@ export function Pilot() {
             }}>
               <div className="glass-card" style={{ maxWidth: '600px', width: '100%', maxHeight: '90vh', overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h4 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#DAF1DE' }}>
+                  <h4 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#F5F3E9' }}>
                     Edit Draft #{editingDraft.id}: {editingDraft.title}
                   </h4>
                   <button
                     type="button"
                     onClick={() => setEditingDraft(null)}
-                    style={{ background: 'transparent', border: 'none', color: '#DAF1DE', cursor: 'pointer' }}
+                    style={{ background: 'transparent', border: 'none', color: '#F5F3E9', cursor: 'pointer' }}
                   >
                     <X size={20} />
                   </button>
@@ -1266,7 +1266,7 @@ export function Pilot() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', gap: '14px', marginBottom: '18px' }}>
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '4px' }}>
                       TITLE
                     </label>
                     <input
@@ -1278,7 +1278,7 @@ export function Pilot() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '4px' }}>
                       DIALECT VARIANT
                     </label>
                     <input
@@ -1290,7 +1290,7 @@ export function Pilot() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '4px' }}>
                       CONTEXTUAL / CULTURAL NOTES
                     </label>
                     <textarea
@@ -1302,7 +1302,7 @@ export function Pilot() {
                   </div>
 
                   <div>
-                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '4px' }}>
+                    <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '4px' }}>
                       DRAFT TRANSCRIPT (OPTIONAL FIELD NOTES)
                     </label>
                     <textarea
@@ -1355,18 +1355,18 @@ export function Pilot() {
           {/* Reviewer Role Bar */}
           <div className="glass-card" style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '14px' }}>
             <div>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ShieldCheck size={20} color="#8EB69B" />
+              <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={20} color="#A6C48A" />
                 <span>Human Transcript Verification Queue</span>
               </h3>
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.72)' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.72)' }}>
                 Compare audio against AI generated baselines. Correct errors, mark acoustic uncertainty, and record verified elder attestations.
               </p>
             </div>
 
             <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
               <div>
-                <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', fontWeight: '600', marginBottom: '2px' }}>
+                <label style={{ fontSize: '11px', color: '#A6C48A', display: 'block', fontWeight: '600', marginBottom: '2px' }}>
                   REVIEWER NAME
                 </label>
                 <input
@@ -1380,7 +1380,7 @@ export function Pilot() {
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', fontWeight: '600', marginBottom: '2px' }}>
+                <label style={{ fontSize: '11px', color: '#A6C48A', display: 'block', fontWeight: '600', marginBottom: '2px' }}>
                   AUTHORIZATION ROLE
                 </label>
                 <select
@@ -1407,24 +1407,24 @@ export function Pilot() {
           )}
 
           {queueMessage && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(142, 182, 155, 0.15)', color: '#DAF1DE', fontSize: '13px', border: '1px solid #235347' }}>
-              <CheckCircle2 size={16} color="#8EB69B" />
+            <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '10px 14px', borderRadius: '8px', background: 'rgba(166, 196, 138, 0.15)', color: '#F5F3E9', fontSize: '13px', border: '1px solid #1F5138' }}>
+              <CheckCircle2 size={16} color="#A6C48A" />
               <span>{queueMessage}</span>
             </div>
           )}
 
           {/* Active Review Workspace */}
           {activeReviewItem ? (
-            <div className="glass-card" style={{ border: '2px solid #8EB69B' }}>
+            <div className="glass-card" style={{ border: '2px solid #A6C48A' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '16px', flexWrap: 'wrap', gap: '10px' }}>
                 <div>
                   <span className="badge badge-teal" style={{ marginBottom: '6px', display: 'inline-block' }}>
                     Active Review: Item #{activeReviewItem.id}
                   </span>
-                  <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#DAF1DE' }}>
+                  <h4 style={{ margin: 0, fontSize: '18px', fontWeight: '700', color: '#F5F3E9' }}>
                     {activeReviewItem.title}
                   </h4>
-                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#8EB69B' }}>
+                  <p style={{ margin: '4px 0 0', fontSize: '12px', color: '#A6C48A' }}>
                     Language: {activeReviewItem.language} {activeReviewItem.dialect ? `• Dialect: ${activeReviewItem.dialect}` : ''} • Contributor: {activeReviewItem.contributor_name}
                   </p>
                 </div>
@@ -1440,8 +1440,8 @@ export function Pilot() {
               </div>
 
               {/* Master Audio Stream */}
-              <div style={{ background: 'rgba(5, 31, 32, 0.8)', border: '1px solid #235347', borderRadius: '10px', padding: '14px', marginBottom: '18px' }}>
-                <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B', display: 'block', marginBottom: '8px' }}>
+              <div style={{ background: 'rgba(16, 43, 32, 0.8)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px', marginBottom: '18px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '700', color: '#A6C48A', display: 'block', marginBottom: '8px' }}>
                   🔊 ORIGINAL MASTER AUDIO (IMMUTABLE SINGLE SOURCE OF TRUTH)
                 </span>
                 <audio
@@ -1455,17 +1455,17 @@ export function Pilot() {
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '16px', marginBottom: '18px' }}>
                 {/* AI Machine Baseline */}
                 <div style={{ background: 'rgba(255,255,255,0.02)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '10px', padding: '14px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(218, 241, 222, 0.7)', display: 'block', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: 'rgba(245, 243, 233, 0.7)', display: 'block', marginBottom: '6px' }}>
                     🤖 RAW AI MACHINE TRANSCRIPT (READ-ONLY BASELINE)
                   </span>
-                  <p style={{ fontSize: '13px', color: '#DAF1DE', lineHeight: '1.6', margin: 0, fontStyle: activeReviewItem.machine_transcript_text ? 'normal' : 'italic' }}>
+                  <p style={{ fontSize: '13px', color: '#F5F3E9', lineHeight: '1.6', margin: 0, fontStyle: activeReviewItem.machine_transcript_text ? 'normal' : 'italic' }}>
                     {activeReviewItem.machine_transcript_text || activeReviewItem.transcript_text || 'No AI transcript generated yet.'}
                   </p>
                 </div>
 
                 {/* Human Verified Transcript Editor */}
-                <div style={{ background: 'rgba(142, 182, 155, 0.06)', border: '1px solid #235347', borderRadius: '10px', padding: '14px' }}>
-                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B', display: 'block', marginBottom: '6px' }}>
+                <div style={{ background: 'rgba(166, 196, 138, 0.06)', border: '1px solid #1F5138', borderRadius: '10px', padding: '14px' }}>
+                  <span style={{ fontSize: '12px', fontWeight: '700', color: '#A6C48A', display: 'block', marginBottom: '6px' }}>
                     ✍️ HUMAN VERIFIED TRANSCRIPT (ACTIVE CORRECTION LAYER)
                   </span>
                   <textarea
@@ -1481,7 +1481,7 @@ export function Pilot() {
               {/* Uncertainty Marking & Notes */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(240px, 1fr))', gap: '14px', marginBottom: '18px' }}>
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '4px' }}>
                     REVIEWER UNCERTAINTY MARKER *
                   </label>
                   <select
@@ -1498,7 +1498,7 @@ export function Pilot() {
                 </div>
 
                 <div>
-                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '4px' }}>
+                  <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '4px' }}>
                     REVIEWER NOTES / LINGUISTIC CONTEXT
                   </label>
                   <input
@@ -1529,7 +1529,7 @@ export function Pilot() {
                   disabled={isSubmittingReview}
                   onClick={() => handleReviewDecision('corrected')}
                   className="btn-secondary"
-                  style={{ color: '#8EB69B', borderColor: '#235347' }}
+                  style={{ color: '#A6C48A', borderColor: '#1F5138' }}
                 >
                   Save Correction
                 </button>
@@ -1558,7 +1558,7 @@ export function Pilot() {
                     type="button"
                     onClick={() => handlePublishVerified(activeReviewItem.id)}
                     className="btn-primary"
-                    style={{ background: '#22C55E', color: '#051F20', marginLeft: 'auto' }}
+                    style={{ background: '#22C55E', color: '#102B20', marginLeft: 'auto' }}
                     title="Publish to public corpus (enforces contributor consent)"
                   >
                     <Globe size={15} />
@@ -1571,7 +1571,7 @@ export function Pilot() {
 
           {/* Queue Filter Bar */}
           <div style={{ display: 'flex', gap: '12px', alignItems: 'center', flexWrap: 'wrap' }}>
-            <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '600' }}>Filter Queue:</span>
+            <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '600' }}>Filter Queue:</span>
             <select
               className="select-field"
               style={{ width: '160px', padding: '6px 10px', fontSize: '12px', minHeight: '32px' }}
@@ -1614,19 +1614,19 @@ export function Pilot() {
           {/* Verification Queue Table */}
           <section className="glass-card">
             {isLoadingQueue ? (
-              <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(218, 241, 222, 0.72)' }}>
+              <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(245, 243, 233, 0.72)' }}>
                 <Loader2 size={18} className="spin-animate" style={{ display: 'inline', marginRight: '8px' }} />
                 Loading review queue...
               </div>
             ) : verificationQueue.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
                 No recordings currently pending verification for role '{reviewerRoleInput}'.
               </p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(218, 241, 222, 0.72)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(245, 243, 233, 0.72)' }}>
                       <th style={{ padding: '10px 8px' }}>ID</th>
                       <th style={{ padding: '10px 8px' }}>Title & Language</th>
                       <th style={{ padding: '10px 8px' }}>Contributor</th>
@@ -1638,21 +1638,21 @@ export function Pilot() {
                   </thead>
                   <tbody>
                     {verificationQueue.map(item => (
-                      <tr key={item.id} style={{ borderBottom: '1px solid rgba(35, 83, 71, 0.35)' }}>
-                        <td style={{ padding: '10px 8px', color: 'rgba(218, 241, 222, 0.72)' }}>#{item.id}</td>
+                      <tr key={item.id} style={{ borderBottom: '1px solid rgba(31, 81, 56, 0.35)' }}>
+                        <td style={{ padding: '10px 8px', color: 'rgba(245, 243, 233, 0.72)' }}>#{item.id}</td>
                         <td style={{ padding: '10px 8px' }}>
-                          <span style={{ fontWeight: '600', color: '#DAF1DE', display: 'block' }}>{item.title}</span>
-                          <span style={{ fontSize: '11px', color: '#8EB69B' }}>
+                          <span style={{ fontWeight: '600', color: '#F5F3E9', display: 'block' }}>{item.title}</span>
+                          <span style={{ fontSize: '11px', color: '#A6C48A' }}>
                             {item.language} {item.dialect ? `• ${item.dialect}` : ''}
                           </span>
                         </td>
-                        <td style={{ padding: '10px 8px', color: 'rgba(218, 241, 222, 0.85)' }}>
+                        <td style={{ padding: '10px 8px', color: 'rgba(245, 243, 233, 0.85)' }}>
                           {item.is_anonymous ? 'Anonymous Contributor' : item.contributor_name}
                         </td>
                         <td style={{ padding: '10px 8px' }}>
                           {renderStatusBadge(item.verification_status)}
                         </td>
-                        <td style={{ padding: '10px 8px', color: '#8EB69B' }}>
+                        <td style={{ padding: '10px 8px', color: '#A6C48A' }}>
                           {item.reviewer_uncertainty || '-'}
                         </td>
                         <td style={{ padding: '10px 8px' }}>
@@ -1698,7 +1698,7 @@ export function Pilot() {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(5, 31, 32, 0.85)',
+              background: 'rgba(16, 43, 32, 0.85)',
               backdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
@@ -1708,8 +1708,8 @@ export function Pilot() {
             }}>
               <div className="glass-card" style={{ maxWidth: '640px', width: '100%', maxHeight: '85vh', overflowY: 'auto' }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-                  <h4 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                    <History size={18} color="#8EB69B" />
+                  <h4 style={{ margin: 0, fontSize: '17px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                    <History size={18} color="#A6C48A" />
                     <span>Audit & Revision Trail: Record #{historyTargetId}</span>
                   </h4>
                   <button
@@ -1718,58 +1718,58 @@ export function Pilot() {
                       setHistoryTargetId(null);
                       setAuditHistory(null);
                     }}
-                    style={{ background: 'transparent', border: 'none', color: '#DAF1DE', cursor: 'pointer' }}
+                    style={{ background: 'transparent', border: 'none', color: '#F5F3E9', cursor: 'pointer' }}
                   >
                     <X size={20} />
                   </button>
                 </div>
 
                 {isLoadingHistory ? (
-                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(218, 241, 222, 0.72)' }}>
+                  <div style={{ textAlign: 'center', padding: '24px 0', color: 'rgba(245, 243, 233, 0.72)' }}>
                     <Loader2 size={18} className="spin-animate" style={{ display: 'inline', marginRight: '8px' }} />
                     Loading revision history...
                   </div>
                 ) : auditHistory ? (
                   <div style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
-                    <div style={{ background: 'rgba(5, 31, 32, 0.7)', padding: '12px', borderRadius: '8px', border: '1px solid #235347' }}>
-                      <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                    <div style={{ background: 'rgba(16, 43, 32, 0.7)', padding: '12px', borderRadius: '8px', border: '1px solid #1F5138' }}>
+                      <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
                         RAW MACHINE TRANSCRIPT BASELINE:
                       </span>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#DAF1DE' }}>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#F5F3E9' }}>
                         {auditHistory.machine_transcript_text || 'No AI baseline.'}
                       </p>
                     </div>
 
-                    <div style={{ background: 'rgba(142, 182, 155, 0.08)', padding: '12px', borderRadius: '8px', border: '1px solid #235347' }}>
-                      <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
+                    <div style={{ background: 'rgba(166, 196, 138, 0.08)', padding: '12px', borderRadius: '8px', border: '1px solid #1F5138' }}>
+                      <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '4px' }}>
                         CURRENT ACTIVE VERIFIED TEXT:
                       </span>
-                      <p style={{ margin: 0, fontSize: '13px', color: '#DAF1DE' }}>
+                      <p style={{ margin: 0, fontSize: '13px', color: '#F5F3E9' }}>
                         {auditHistory.current_transcript_text}
                       </p>
                     </div>
 
                     <div>
-                      <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '8px' }}>
+                      <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '8px' }}>
                         REVISION HISTORY LOG ({auditHistory.revisions.length} entries):
                       </span>
                       {auditHistory.revisions.length === 0 ? (
-                        <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.5)', fontStyle: 'italic' }}>
+                        <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.5)', fontStyle: 'italic' }}>
                           No text corrections recorded yet. Verified directly against oral master.
                         </p>
                       ) : (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
                           {auditHistory.revisions.map(r => (
                             <div key={r.id} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '8px', padding: '10px' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#8EB69B', marginBottom: '4px' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '11px', color: '#A6C48A', marginBottom: '4px' }}>
                                 <span>Revision #{r.id} by {r.contributor_name} ({r.contributor_role})</span>
                                 <span>{r.created_at.slice(0, 10)}</span>
                               </div>
-                              <p style={{ margin: '4px 0', fontSize: '13px', color: '#DAF1DE' }}>
+                              <p style={{ margin: '4px 0', fontSize: '13px', color: '#F5F3E9' }}>
                                 <strong>Suggested Text:</strong> "{r.suggested_text}"
                               </p>
                               {r.review_notes && (
-                                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)' }}>
+                                <p style={{ margin: 0, fontSize: '11px', color: 'rgba(245, 243, 233, 0.7)' }}>
                                   Notes: {r.review_notes}
                                 </p>
                               )}
@@ -1793,20 +1793,20 @@ export function Pilot() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Pilot Field Submissions */}
           <section className="glass-card">
-            <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#DAF1DE' }}>
-              <FileText size={20} color="#8EB69B" />
+            <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#F5F3E9' }}>
+              <FileText size={20} color="#A6C48A" />
               <span>Pilot Field Submissions</span>
             </h3>
 
             {pilotSubmissions.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
                 No pilot evaluations recorded yet.
               </p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(218, 241, 222, 0.72)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(245, 243, 233, 0.72)' }}>
                       <th style={{ padding: '8px' }}>ID</th>
                       <th style={{ padding: '8px' }}>Recording</th>
                       <th style={{ padding: '8px' }}>Tester</th>
@@ -1816,10 +1816,10 @@ export function Pilot() {
                   </thead>
                   <tbody>
                     {pilotSubmissions.map(s => (
-                      <tr key={s.id} style={{ borderBottom: '1px solid rgba(35, 83, 71, 0.35)' }}>
-                        <td style={{ padding: '8px', color: 'rgba(218, 241, 222, 0.72)' }}>#{s.id}</td>
-                        <td style={{ padding: '8px', color: '#8EB69B' }}>Recording #{s.transcript_id}</td>
-                        <td style={{ padding: '8px', color: '#DAF1DE' }}>{s.tester_name}</td>
+                      <tr key={s.id} style={{ borderBottom: '1px solid rgba(31, 81, 56, 0.35)' }}>
+                        <td style={{ padding: '8px', color: 'rgba(245, 243, 233, 0.72)' }}>#{s.id}</td>
+                        <td style={{ padding: '8px', color: '#A6C48A' }}>Recording #{s.transcript_id}</td>
+                        <td style={{ padding: '8px', color: '#F5F3E9' }}>{s.tester_name}</td>
                         <td style={{ padding: '8px' }}>
                           <span className={s.consent ? 'badge badge-green' : 'badge badge-red'}>
                             {s.consent ? '✓ Given' : 'No'}
@@ -1840,20 +1840,20 @@ export function Pilot() {
 
           {/* Metrics Table */}
           <section className="glass-card">
-            <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#DAF1DE' }}>
-              <Award size={20} color="#8EB69B" />
+            <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '16px', color: '#F5F3E9' }}>
+              <Award size={20} color="#A6C48A" />
               <span>Pilot Evaluation Metrics</span>
             </h3>
 
             {pilotMetrics.length === 0 ? (
-              <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
+              <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.5)', fontStyle: 'italic', padding: '16px 0' }}>
                 No evaluation metrics recorded yet. Metrics are populated as models are evaluated against verified community recordings.
               </p>
             ) : (
               <div style={{ overflowX: 'auto' }}>
                 <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '13px' }}>
                   <thead>
-                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(218, 241, 222, 0.72)' }}>
+                    <tr style={{ borderBottom: '1px solid var(--card-border)', textAlign: 'left', color: 'rgba(245, 243, 233, 0.72)' }}>
                       <th style={{ padding: '10px 8px' }}>ID</th>
                       <th style={{ padding: '10px 8px' }}>Language</th>
                       <th style={{ padding: '10px 8px' }}>Model</th>
@@ -1866,21 +1866,21 @@ export function Pilot() {
                   </thead>
                   <tbody>
                     {pilotMetrics.map(m => (
-                      <tr key={m.id} style={{ borderBottom: '1px solid rgba(35, 83, 71, 0.35)' }}>
-                        <td style={{ padding: '10px 8px', color: 'rgba(218, 241, 222, 0.72)' }}>#{m.id}</td>
-                        <td style={{ padding: '10px 8px', color: '#8EB69B', fontWeight: '600' }}>{m.language}</td>
-                        <td style={{ padding: '10px 8px', color: '#DAF1DE' }}>{m.model}</td>
+                      <tr key={m.id} style={{ borderBottom: '1px solid rgba(31, 81, 56, 0.35)' }}>
+                        <td style={{ padding: '10px 8px', color: 'rgba(245, 243, 233, 0.72)' }}>#{m.id}</td>
+                        <td style={{ padding: '10px 8px', color: '#A6C48A', fontWeight: '600' }}>{m.language}</td>
+                        <td style={{ padding: '10px 8px', color: '#F5F3E9' }}>{m.model}</td>
                         <td style={{ padding: '10px 8px' }}>{m.sample_size}</td>
-                        <td style={{ padding: '10px 8px', color: m.wer !== undefined && m.wer !== null ? '#8EB69B' : 'rgba(218, 241, 222, 0.5)' }}>
+                        <td style={{ padding: '10px 8px', color: m.wer !== undefined && m.wer !== null ? '#A6C48A' : 'rgba(245, 243, 233, 0.5)' }}>
                           {m.wer !== undefined && m.wer !== null ? `${(m.wer * 100).toFixed(1)}%` : '-'}
                         </td>
-                        <td style={{ padding: '10px 8px', color: m.cer !== undefined && m.cer !== null ? '#8EB69B' : 'rgba(218, 241, 222, 0.5)' }}>
+                        <td style={{ padding: '10px 8px', color: m.cer !== undefined && m.cer !== null ? '#A6C48A' : 'rgba(245, 243, 233, 0.5)' }}>
                           {m.cer !== undefined && m.cer !== null ? `${(m.cer * 100).toFixed(1)}%` : '-'}
                         </td>
-                        <td style={{ padding: '10px 8px', color: m.bleu !== undefined && m.bleu !== null ? '#8EB69B' : 'rgba(218, 241, 222, 0.5)' }}>
+                        <td style={{ padding: '10px 8px', color: m.bleu !== undefined && m.bleu !== null ? '#A6C48A' : 'rgba(245, 243, 233, 0.5)' }}>
                           {m.bleu !== undefined && m.bleu !== null ? m.bleu.toFixed(2) : '-'}
                         </td>
-                        <td style={{ padding: '10px 8px', color: 'rgba(218, 241, 222, 0.72)' }}>{m.evaluation_date}</td>
+                        <td style={{ padding: '10px 8px', color: 'rgba(245, 243, 233, 0.72)' }}>{m.evaluation_date}</td>
                       </tr>
                     ))}
                   </tbody>
@@ -1890,10 +1890,10 @@ export function Pilot() {
           </section>
 
           {/* Live Linguistic Benchmark Calculator */}
-          <section className="glass-card" style={{ border: '1px solid #235347' }}>
+          <section className="glass-card" style={{ border: '1px solid #1F5138' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '8px' }}>
-              <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#DAF1DE' }}>
-                <Calculator size={20} color="#8EB69B" />
+              <h3 style={{ fontSize: '18px', fontWeight: '700', display: 'flex', alignItems: 'center', gap: '8px', margin: 0, color: '#F5F3E9' }}>
+                <Calculator size={20} color="#A6C48A" />
                 <span>Deterministic WER & CER Benchmark Calculator</span>
               </h3>
               <span className="badge badge-green" style={{ fontSize: '11px' }}>
@@ -1903,7 +1903,7 @@ export function Pilot() {
 
             {/* Presets */}
             <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', marginBottom: '16px' }}>
-              <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '600', alignSelf: 'center' }}>Presets:</span>
+              <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '600', alignSelf: 'center' }}>Presets:</span>
               <button
                 type="button"
                 className="btn-secondary"
@@ -1945,7 +1945,7 @@ export function Pilot() {
             {/* Inputs */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', marginBottom: '16px' }}>
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
                   Reference Text (Ground Truth Approved by Elders)
                 </label>
                 <textarea
@@ -1957,7 +1957,7 @@ export function Pilot() {
               </div>
 
               <div>
-                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#8EB69B', marginBottom: '6px' }}>
+                <label style={{ display: 'block', fontSize: '12px', fontWeight: '600', color: '#A6C48A', marginBottom: '6px' }}>
                   Hypothesis Text (Raw AI Model Transcription)
                 </label>
                 <textarea
@@ -1982,22 +1982,22 @@ export function Pilot() {
 
             {/* Results display */}
             {calcResult && (
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', background: 'rgba(5, 31, 32, 0.7)', padding: '16px', borderRadius: '12px', border: '1px solid #235347' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', background: 'rgba(16, 43, 32, 0.7)', padding: '16px', borderRadius: '12px', border: '1px solid #1F5138' }}>
                 <div>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>WORD ERROR RATE (WER)</span>
-                  <span style={{ fontSize: '20px', fontWeight: '800', color: calcResult.wer === 0 ? '#22C55E' : '#DAF1DE' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>WORD ERROR RATE (WER)</span>
+                  <span style={{ fontSize: '20px', fontWeight: '800', color: calcResult.wer === 0 ? '#22C55E' : '#F5F3E9' }}>
                     {calcResult.wer_percent.toFixed(1)}%
                   </span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>CHARACTER ERROR RATE (CER)</span>
-                  <span style={{ fontSize: '20px', fontWeight: '800', color: calcResult.cer === 0 ? '#22C55E' : '#DAF1DE' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>CHARACTER ERROR RATE (CER)</span>
+                  <span style={{ fontSize: '20px', fontWeight: '800', color: calcResult.cer === 0 ? '#22C55E' : '#F5F3E9' }}>
                     {calcResult.cer_percent.toFixed(1)}%
                   </span>
                 </div>
                 <div>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>CHRF F-SCORE</span>
-                  <span style={{ fontSize: '20px', fontWeight: '800', color: '#8EB69B' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>CHRF F-SCORE</span>
+                  <span style={{ fontSize: '20px', fontWeight: '800', color: '#A6C48A' }}>
                     {calcResult.chrf_percent.toFixed(1)}%
                   </span>
                 </div>
@@ -2013,21 +2013,21 @@ export function Pilot() {
       {activeSubTab === 'research' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '28px' }}>
           {/* Banner: Research Governance & W3C DCAT Standards */}
-          <div className="glass-card" style={{ borderLeft: '4px solid #8EB69B' }}>
+          <div className="glass-card" style={{ borderLeft: '4px solid #A6C48A' }}>
             <div style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '8px' }}>
-              <div style={{ background: 'rgba(142, 182, 155, 0.2)', padding: '8px', borderRadius: '8px' }}>
-                <Database size={24} color="#8EB69B" />
+              <div style={{ background: 'rgba(166, 196, 138, 0.2)', padding: '8px', borderRadius: '8px' }}>
+                <Database size={24} color="#A6C48A" />
               </div>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE', margin: 0 }}>
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#F5F3E9', margin: 0 }}>
                   Research-Grade Dataset Registry & Digital Preservation
                 </h3>
-                <span style={{ fontSize: '12px', color: '#8EB69B' }}>
+                <span style={{ fontSize: '12px', color: '#A6C48A' }}>
                   W3C DCAT Metadata • SHA-256 Bit-Level Integrity • Deterministic Splits • OCAP Data Sovereignty
                 </span>
               </div>
             </div>
-            <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.8)', margin: 0, lineHeight: '1.5' }}>
+            <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.8)', margin: 0, lineHeight: '1.5' }}>
               Voice Roots ensures research reproducibility through stable semantic versioning, immutable master recordings,
               hash-based deterministic evaluation splits (zero data leakage), and strict consent boundaries.
               Private recordings, contributor drafts, and withdrawn materials are strictly excluded from public research packages.
@@ -2038,10 +2038,10 @@ export function Pilot() {
           <section className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '18px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 4px 0' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', margin: '0 0 4px 0' }}>
                   Official Research Datasets ({datasetsList.length})
                 </h4>
-                <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.7)', margin: 0 }}>
+                <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.7)', margin: 0 }}>
                   Cataloged research corpora with Frictionless Data Package specifications and license attribution.
                 </p>
               </div>
@@ -2066,7 +2066,7 @@ export function Pilot() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: '16px' }}>
               {datasetsList.map(ds => (
                 <div key={ds.id} style={{
-                  background: 'rgba(5, 31, 32, 0.7)',
+                  background: 'rgba(16, 43, 32, 0.7)',
                   border: '1px solid var(--border-green)',
                   borderRadius: '14px',
                   padding: '20px',
@@ -2079,41 +2079,41 @@ export function Pilot() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
                       <span style={{
                         fontSize: '11px',
-                        background: 'rgba(142, 182, 155, 0.2)',
-                        color: '#8EB69B',
+                        background: 'rgba(166, 196, 138, 0.2)',
+                        color: '#A6C48A',
                         padding: '3px 8px',
                         borderRadius: '6px',
                         fontWeight: '700'
                       }}>
                         {ds.version}
                       </span>
-                      <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)' }}>
+                      <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)' }}>
                         {new Date(ds.release_date).toLocaleDateString()}
                       </span>
                     </div>
 
-                    <h5 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 6px 0' }}>
+                    <h5 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', margin: '0 0 6px 0' }}>
                       {ds.name}
                     </h5>
-                    <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.8)', margin: '0 0 12px 0', lineHeight: '1.4' }}>
+                    <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.8)', margin: '0 0 12px 0', lineHeight: '1.4' }}>
                       {ds.title}
                     </p>
 
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '12px' }}>
-                      <span style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(35, 83, 71, 0.5)', borderRadius: '4px', color: '#DAF1DE' }}>
+                      <span style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(31, 81, 56, 0.5)', borderRadius: '4px', color: '#F5F3E9' }}>
                         {ds.languages_count} Languages
                       </span>
                       {ds.total_records !== undefined && (
-                        <span style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(35, 83, 71, 0.5)', borderRadius: '4px', color: '#DAF1DE' }}>
+                        <span style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(31, 81, 56, 0.5)', borderRadius: '4px', color: '#F5F3E9' }}>
                           {ds.total_records} Records
                         </span>
                       )}
-                      <span style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '4px', color: '#8EB69B' }}>
+                      <span style={{ fontSize: '11px', padding: '2px 8px', background: 'rgba(255, 255, 255, 0.05)', borderRadius: '4px', color: '#A6C48A' }}>
                         {ds.license}
                       </span>
                     </div>
 
-                    <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)' }}>
+                    <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)' }}>
                       <strong>Maintainer:</strong> {ds.maintainer}
                     </div>
                   </div>
@@ -2156,10 +2156,10 @@ export function Pilot() {
           <section className="glass-card">
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 4px 0' }}>
+                <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', margin: '0 0 4px 0' }}>
                   Bit-Level File Integrity Verification (SHA-256)
                 </h4>
-                <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.7)', margin: 0 }}>
+                <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.7)', margin: 0 }}>
                   Audits disk-stored audio master recordings against their recorded cryptographic digests to detect bit rot or alterations.
                 </p>
               </div>
@@ -2177,34 +2177,34 @@ export function Pilot() {
 
             {integrityReport && (
               <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
-                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', background: 'rgba(5, 31, 32, 0.7)', padding: '16px', borderRadius: '12px', border: '1px solid #235347' }}>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', background: 'rgba(16, 43, 32, 0.7)', padding: '16px', borderRadius: '12px', border: '1px solid #1F5138' }}>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>BIT-LEVEL HEALTH</span>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>BIT-LEVEL HEALTH</span>
                     <span style={{ fontSize: '24px', fontWeight: '800', color: integrityReport.bit_level_health_percent === 100 ? '#22C55E' : '#EF4444' }}>
                       {integrityReport.bit_level_health_percent.toFixed(1)}%
                     </span>
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>INTACT MASTER FILES</span>
-                    <span style={{ fontSize: '24px', fontWeight: '800', color: '#DAF1DE' }}>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>INTACT MASTER FILES</span>
+                    <span style={{ fontSize: '24px', fontWeight: '800', color: '#F5F3E9' }}>
                       {integrityReport.intact_items} / {integrityReport.total_items_checked}
                     </span>
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>CORRUPT / MISSING</span>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>CORRUPT / MISSING</span>
                     <span style={{ fontSize: '24px', fontWeight: '800', color: (integrityReport.corrupt_items === 0 && integrityReport.missing_items === 0) ? '#22C55E' : '#EF4444' }}>
                       {integrityReport.corrupt_items + integrityReport.missing_items}
                     </span>
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>SCAN DURATION</span>
-                    <span style={{ fontSize: '24px', fontWeight: '800', color: '#DAF1DE' }}>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>SCAN DURATION</span>
+                    <span style={{ fontSize: '24px', fontWeight: '800', color: '#F5F3E9' }}>
                       {integrityReport.scan_duration_ms} ms
                     </span>
                   </div>
                 </div>
 
-                <div style={{ fontSize: '12px', color: '#8EB69B', background: 'rgba(34, 197, 94, 0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
+                <div style={{ fontSize: '12px', color: '#A6C48A', background: 'rgba(34, 197, 94, 0.1)', padding: '10px 14px', borderRadius: '8px', border: '1px solid rgba(34, 197, 94, 0.2)' }}>
                   ✅ {integrityReport.integrity_summary} (Audited at {new Date(integrityReport.timestamp).toLocaleTimeString()})
                 </div>
               </div>
@@ -2216,8 +2216,8 @@ export function Pilot() {
             <section className="glass-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '14px', flexWrap: 'wrap', gap: '10px' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-                  <HardDrive size={20} color="#8EB69B" />
-                  <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', margin: 0 }}>
+                  <HardDrive size={20} color="#A6C48A" />
+                  <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', margin: 0 }}>
                     Long-Term Digital Preservation & Restoration Status
                   </h4>
                 </div>
@@ -2234,23 +2234,23 @@ export function Pilot() {
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '14px', marginBottom: '16px' }}>
-                <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid #235347' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '4px' }}>MASTER AUDIO PRESERVATION</span>
-                  <p style={{ fontSize: '12px', color: '#DAF1DE', margin: 0, lineHeight: '1.4' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid #1F5138' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '4px' }}>MASTER AUDIO PRESERVATION</span>
+                  <p style={{ fontSize: '12px', color: '#F5F3E9', margin: 0, lineHeight: '1.4' }}>
                     {preservationStatus.preservation_architecture.master_recording_policy}
                   </p>
-                  <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', display: 'block', marginTop: '6px' }}>
+                  <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', display: 'block', marginTop: '6px' }}>
                     Format: {preservationStatus.preservation_architecture.preservation_format}
                   </span>
                 </div>
 
-                <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid #235347' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '4px' }}>BACKUP & RECOVERY TELEMETRY</span>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#DAF1DE', marginBottom: '4px' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid #1F5138' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '4px' }}>BACKUP & RECOVERY TELEMETRY</span>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#F5F3E9', marginBottom: '4px' }}>
                     <span>Snapshots Created:</span>
                     <strong>{preservationStatus.backup_telemetry.total_backup_snapshots}</strong>
                   </div>
-                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#DAF1DE', marginBottom: '4px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '12px', color: '#F5F3E9', marginBottom: '4px' }}>
                     <span>Latest Snapshot:</span>
                     <span style={{ fontFamily: 'monospace', fontSize: '11px' }}>{preservationStatus.backup_telemetry.latest_snapshot_file || 'None'}</span>
                   </div>
@@ -2260,12 +2260,12 @@ export function Pilot() {
                   </div>
                 </div>
 
-                <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid #235347' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '4px' }}>OPERATING COST & EFFICIENCY</span>
+                <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '14px', borderRadius: '10px', border: '1px solid #1F5138' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '4px' }}>OPERATING COST & EFFICIENCY</span>
                   <div style={{ fontSize: '18px', fontWeight: '800', color: '#22C55E', marginBottom: '4px' }}>
                     $0.00 / month
                   </div>
-                  <p style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.7)', margin: 0 }}>
+                  <p style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.7)', margin: 0 }}>
                     100% offline self-hosted execution. Zero external paid API charges.
                   </p>
                 </div>
@@ -2278,10 +2278,10 @@ export function Pilot() {
             <section className="glass-card">
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px', flexWrap: 'wrap', gap: '12px' }}>
                 <div>
-                  <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 4px 0' }}>
+                  <h4 style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9', margin: '0 0 4px 0' }}>
                     Empirical Model Evaluation Dashboard
                   </h4>
-                  <p style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.7)', margin: 0 }}>
+                  <p style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.7)', margin: 0 }}>
                     Deterministic evaluation across Speech Recognition (ASR), Translation Guardrails, and Discovery Search.
                   </p>
                 </div>
@@ -2300,43 +2300,43 @@ export function Pilot() {
               {/* 3 Pillars Summary */}
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '14px', marginBottom: '20px' }}>
                 {/* Pillar 1: ASR */}
-                <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid #235347' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '6px' }}>SPEECH RECOGNITION (ASR)</span>
-                  <div style={{ fontSize: '20px', fontWeight: '800', color: '#DAF1DE', marginBottom: '4px' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid #1F5138' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '6px' }}>SPEECH RECOGNITION (ASR)</span>
+                  <div style={{ fontSize: '20px', fontWeight: '800', color: '#F5F3E9', marginBottom: '4px' }}>
                     {researchEvalReport.speech_recognition.evaluated_sample_size} Evaluated Samples
                   </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.8)', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.8)', marginBottom: '4px' }}>
                     Failed Rate: {(researchEvalReport.speech_recognition.failed_rate * 100).toFixed(1)}% • Empty Rate: {(researchEvalReport.speech_recognition.empty_rate * 100).toFixed(1)}%
                   </div>
-                  <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                  <div style={{ fontSize: '11px', color: '#A6C48A' }}>
                     Primary Model: {researchEvalReport.speech_recognition.primary_model}
                   </div>
                 </div>
 
                 {/* Pillar 2: Translation Guardrails */}
-                <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid #235347' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '6px' }}>TRANSLATION ELDER GUARDRAIL</span>
+                <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid #1F5138' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '6px' }}>TRANSLATION ELDER GUARDRAIL</span>
                   <div style={{ fontSize: '20px', fontWeight: '800', color: '#22C55E', marginBottom: '4px' }}>
                     {researchEvalReport.translation_guardrails.elder_review_guardrail_status.compliance_percent.toFixed(1)}% Compliance
                   </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.8)', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.8)', marginBottom: '4px' }}>
                     Violations: {researchEvalReport.translation_guardrails.elder_review_guardrail_status.guardrail_violations} • Tested Oral Cases: {researchEvalReport.translation_guardrails.elder_review_guardrail_status.tested_oral_cases}
                   </div>
-                  <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                  <div style={{ fontSize: '11px', color: '#A6C48A' }}>
                     Protected Tongues: Gondi, Koya, Santhali, Lambadi
                   </div>
                 </div>
 
                 {/* Pillar 3: Search Retrieval */}
-                <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid #235347' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '6px' }}>DISCOVERY RETRIEVAL</span>
-                  <div style={{ fontSize: '20px', fontWeight: '800', color: '#DAF1DE', marginBottom: '4px' }}>
+                <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '16px', borderRadius: '12px', border: '1px solid #1F5138' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '6px' }}>DISCOVERY RETRIEVAL</span>
+                  <div style={{ fontSize: '20px', fontWeight: '800', color: '#F5F3E9', marginBottom: '4px' }}>
                     MRR: {researchEvalReport.search_and_discovery.mean_reciprocal_rank.toFixed(2)}
                   </div>
-                  <div style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.8)', marginBottom: '4px' }}>
+                  <div style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.8)', marginBottom: '4px' }}>
                     Precision@1: {(researchEvalReport.search_and_discovery.precision_at_1 * 100).toFixed(0)}% • Precision@3: {(researchEvalReport.search_and_discovery.precision_at_3 * 100).toFixed(0)}%
                   </div>
-                  <div style={{ fontSize: '11px', color: '#8EB69B' }}>
+                  <div style={{ fontSize: '11px', color: '#A6C48A' }}>
                     Avg Latency: {researchEvalReport.search_and_discovery.avg_latency_ms.toFixed(1)} ms
                   </div>
                 </div>
@@ -2344,13 +2344,13 @@ export function Pilot() {
 
               {/* Language Breakdown Table */}
               <div>
-                <h5 style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE', marginBottom: '10px' }}>
+                <h5 style={{ fontSize: '14px', fontWeight: '700', color: '#F5F3E9', marginBottom: '10px' }}>
                   Speech Recognition by Language & Oral Status
                 </h5>
                 <div style={{ overflowX: 'auto' }}>
                   <table style={{ width: '100%', borderCollapse: 'collapse', fontSize: '12px' }}>
                     <thead>
-                      <tr style={{ borderBottom: '1px solid #235347', color: '#8EB69B', textAlign: 'left' }}>
+                      <tr style={{ borderBottom: '1px solid #1F5138', color: '#A6C48A', textAlign: 'left' }}>
                         <th style={{ padding: '8px 10px' }}>Language</th>
                         <th style={{ padding: '8px 10px' }}>Samples</th>
                         <th style={{ padding: '8px 10px' }}>Avg WER</th>
@@ -2362,17 +2362,17 @@ export function Pilot() {
                     <tbody>
                       {Object.entries(researchEvalReport.speech_recognition.languages).map(([langName, langData]) => (
                         <tr key={langName} style={{ borderBottom: '1px solid rgba(255,255,255,0.04)' }}>
-                          <td style={{ padding: '10px', color: '#DAF1DE', fontWeight: '600' }}>{langName}</td>
+                          <td style={{ padding: '10px', color: '#F5F3E9', fontWeight: '600' }}>{langName}</td>
                           <td style={{ padding: '10px', color: 'rgba(218,241,222,0.8)' }}>{langData.sample_size}</td>
-                          <td style={{ padding: '10px', color: '#DAF1DE' }}>{(langData.average_wer * 100).toFixed(1)}%</td>
-                          <td style={{ padding: '10px', color: '#DAF1DE' }}>{(langData.average_cer * 100).toFixed(1)}%</td>
+                          <td style={{ padding: '10px', color: '#F5F3E9' }}>{(langData.average_wer * 100).toFixed(1)}%</td>
+                          <td style={{ padding: '10px', color: '#F5F3E9' }}>{(langData.average_cer * 100).toFixed(1)}%</td>
                           <td style={{ padding: '10px' }}>
                             <span style={{
                               padding: '2px 8px',
                               borderRadius: '4px',
                               fontSize: '11px',
-                              background: langData.is_oral_language ? 'rgba(142, 182, 155, 0.2)' : 'rgba(35, 83, 71, 0.4)',
-                              color: langData.is_oral_language ? '#8EB69B' : '#DAF1DE'
+                              background: langData.is_oral_language ? 'rgba(166, 196, 138, 0.2)' : 'rgba(31, 81, 56, 0.4)',
+                              color: langData.is_oral_language ? '#A6C48A' : '#F5F3E9'
                             }}>
                               {langData.is_oral_language ? 'Oral Indigenous' : 'Standard Orthography'}
                             </span>
@@ -2397,7 +2397,7 @@ export function Pilot() {
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(5, 31, 32, 0.85)',
+              background: 'rgba(16, 43, 32, 0.85)',
               backdropFilter: 'blur(8px)',
               display: 'flex',
               alignItems: 'center',
@@ -2406,8 +2406,8 @@ export function Pilot() {
               padding: '20px'
             }}>
               <div style={{
-                background: '#0B2B26',
-                border: '1px solid #235347',
+                background: '#102B20',
+                border: '1px solid #1F5138',
                 borderRadius: '16px',
                 maxWidth: '720px',
                 width: '100%',
@@ -2420,39 +2420,39 @@ export function Pilot() {
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', textTransform: 'uppercase' }}>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', textTransform: 'uppercase' }}>
                       DATASET METADATA CARD • {selectedDatasetCard.version}
                     </span>
-                    <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#DAF1DE', margin: '4px 0 0 0' }}>
+                    <h3 style={{ fontSize: '20px', fontWeight: '800', color: '#F5F3E9', margin: '4px 0 0 0' }}>
                       {selectedDatasetCard.name}
                     </h3>
                   </div>
                   <button
                     type="button"
                     onClick={() => setSelectedDatasetCard(null)}
-                    style={{ background: 'transparent', border: 'none', color: '#DAF1DE', cursor: 'pointer', padding: '4px' }}
+                    style={{ background: 'transparent', border: 'none', color: '#F5F3E9', cursor: 'pointer', padding: '4px' }}
                   >
                     <X size={20} />
                   </button>
                 </div>
 
-                <p style={{ fontSize: '13px', color: 'rgba(218, 241, 222, 0.85)', margin: 0, lineHeight: '1.5' }}>
+                <p style={{ fontSize: '13px', color: 'rgba(245, 243, 233, 0.85)', margin: 0, lineHeight: '1.5' }}>
                   {selectedDatasetCard.description}
                 </p>
 
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
-                  <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '12px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>LICENSE</span>
-                    <span style={{ fontSize: '13px', color: '#DAF1DE' }}>{selectedDatasetCard.license}</span>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '12px', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>LICENSE</span>
+                    <span style={{ fontSize: '13px', color: '#F5F3E9' }}>{selectedDatasetCard.license}</span>
                   </div>
-                  <div style={{ background: 'rgba(5, 31, 32, 0.6)', padding: '12px', borderRadius: '8px' }}>
-                    <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>CONSENT PROTOCOL</span>
-                    <span style={{ fontSize: '13px', color: '#DAF1DE' }}>{selectedDatasetCard.provenance.consent_protocol}</span>
+                  <div style={{ background: 'rgba(16, 43, 32, 0.6)', padding: '12px', borderRadius: '8px' }}>
+                    <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>CONSENT PROTOCOL</span>
+                    <span style={{ fontSize: '13px', color: '#F5F3E9' }}>{selectedDatasetCard.provenance.consent_protocol}</span>
                   </div>
                 </div>
 
                 <div>
-                  <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
                     PRIMARY SOURCES & CITATIONS
                   </span>
                   <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: 'rgba(218,241,222,0.85)', lineHeight: '1.6' }}>
@@ -2460,14 +2460,14 @@ export function Pilot() {
                       <li key={idx}>
                         <strong>{s.name}</strong> {s.license && `(${s.license})`}
                         {s.url && ` — `}
-                        {s.url && <a href={s.url} target="_blank" rel="noreferrer" style={{ color: '#8EB69B' }}>{s.url}</a>}
+                        {s.url && <a href={s.url} target="_blank" rel="noreferrer" style={{ color: '#A6C48A' }}>{s.url}</a>}
                       </li>
                     ))}
                   </ul>
                 </div>
 
                 <div>
-                  <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
                     PREPROCESSING STEPS
                   </span>
                   <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: 'rgba(218,241,222,0.85)', lineHeight: '1.5' }}>
@@ -2478,7 +2478,7 @@ export function Pilot() {
                 </div>
 
                 <div>
-                  <span style={{ fontSize: '12px', color: '#8EB69B', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
+                  <span style={{ fontSize: '12px', color: '#A6C48A', fontWeight: '700', display: 'block', marginBottom: '6px' }}>
                     KNOWN GAPS, BIASES & LIMITATIONS
                   </span>
                   <ul style={{ margin: 0, paddingLeft: '20px', fontSize: '12px', color: 'rgba(218,241,222,0.85)', lineHeight: '1.5' }}>
@@ -2510,11 +2510,11 @@ export function Pilot() {
       {activeSubTab === 'governance' && (
         <div style={{ display: 'flex', flexDirection: 'column', gap: '24px' }}>
           {/* Header & Ethics Banner */}
-          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '4px solid #8EB69B' }}>
+          <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '14px', borderLeft: '4px solid #A6C48A' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '12px' }}>
               <div>
-                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#DAF1DE', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                  <Scale size={20} color="#8EB69B" />
+                <h3 style={{ fontSize: '18px', fontWeight: '700', color: '#F5F3E9', margin: '0 0 6px 0', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <Scale size={20} color="#A6C48A" />
                   <span>Community Partnerships & Language Governance</span>
                 </h3>
                 <p style={{ margin: 0, fontSize: '13px', color: 'rgba(218,241,222,0.8)', maxWidth: '780px', lineHeight: '1.5' }}>
@@ -2537,25 +2537,25 @@ export function Pilot() {
             {governanceTelemetry && (
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(170px, 1fr))', gap: '12px', marginTop: '12px', paddingTop: '16px', borderTop: '1px solid rgba(255,255,255,0.08)' }}>
                 <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>VERIFIED PARTNERS</span>
-                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#DAF1DE' }}>{governanceTelemetry.partnerships_summary.verified_partner_organizations}</span>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>VERIFIED PARTNERS</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#F5F3E9' }}>{governanceTelemetry.partnerships_summary.verified_partner_organizations}</span>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>ACTIVE WORKSPACES</span>
-                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#DAF1DE' }}>{governanceTelemetry.partnerships_summary.active_partnership_projects}</span>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>ACTIVE WORKSPACES</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#F5F3E9' }}>{governanceTelemetry.partnerships_summary.active_partnership_projects}</span>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>ACCREDITED REVIEWERS</span>
-                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#DAF1DE' }}>{governanceTelemetry.partnerships_summary.accredited_expert_reviewers}</span>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>ACCREDITED REVIEWERS</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: '#F5F3E9' }}>{governanceTelemetry.partnerships_summary.accredited_expert_reviewers}</span>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>OPEN DISPUTES</span>
-                  <span style={{ fontSize: '22px', fontWeight: '700', color: governanceTelemetry.disputes_and_appeals.open_disputes > 0 ? '#F39C12' : '#DAF1DE' }}>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>OPEN DISPUTES</span>
+                  <span style={{ fontSize: '22px', fontWeight: '700', color: governanceTelemetry.disputes_and_appeals.open_disputes > 0 ? '#F39C12' : '#F5F3E9' }}>
                     {governanceTelemetry.disputes_and_appeals.open_disputes}
                   </span>
                 </div>
                 <div style={{ background: 'rgba(0,0,0,0.25)', padding: '12px 14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)' }}>
-                  <span style={{ fontSize: '11px', color: '#8EB69B', fontWeight: '700', display: 'block' }}>RESOLVED APPEALS</span>
+                  <span style={{ fontSize: '11px', color: '#A6C48A', fontWeight: '700', display: 'block' }}>RESOLVED APPEALS</span>
                   <span style={{ fontSize: '22px', fontWeight: '700', color: '#27AE60' }}>{governanceTelemetry.disputes_and_appeals.resolved_disputes}</span>
                 </div>
               </div>
@@ -2565,11 +2565,11 @@ export function Pilot() {
           {/* Section 1: Verified Partner Organizations & Projects */}
           <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
-              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Building size={18} color="#8EB69B" />
+              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Building size={18} color="#A6C48A" />
                 <span>Accredited Partner Organizations & Community Workspaces</span>
               </h4>
-              <span style={{ fontSize: '12px', color: '#8EB69B' }}>{organizations.length} Organizations Registered</span>
+              <span style={{ fontSize: '12px', color: '#A6C48A' }}>{organizations.length} Organizations Registered</span>
             </div>
 
             {organizations.length === 0 ? (
@@ -2581,7 +2581,7 @@ export function Pilot() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '8px' }}>
                       <div>
                         <div style={{ display: 'flex', alignItems: 'center', gap: '8px', flexWrap: 'wrap' }}>
-                          <span style={{ fontSize: '16px', fontWeight: '700', color: '#DAF1DE' }}>{org.name}</span>
+                          <span style={{ fontSize: '16px', fontWeight: '700', color: '#F5F3E9' }}>{org.name}</span>
                           <span style={{
                             padding: '2px 8px',
                             borderRadius: '4px',
@@ -2599,14 +2599,14 @@ export function Pilot() {
                           {org.description || 'Community language preservation partner.'}
                         </p>
                       </div>
-                      <div style={{ textAlign: 'right', fontSize: '12px', color: '#8EB69B' }}>
+                      <div style={{ textAlign: 'right', fontSize: '12px', color: '#A6C48A' }}>
                         <div>Lead: <strong>{org.lead_coordinator_name}</strong></div>
                         <div>Contact: {org.contact_email}</div>
                       </div>
                     </div>
 
                     {org.accreditation_notes && (
-                      <div style={{ fontSize: '12px', fontStyle: 'italic', color: '#8EB69B', background: 'rgba(142,182,155,0.06)', padding: '6px 10px', borderRadius: '4px' }}>
+                      <div style={{ fontSize: '12px', fontStyle: 'italic', color: '#A6C48A', background: 'rgba(142,182,155,0.06)', padding: '6px 10px', borderRadius: '4px' }}>
                         Accreditation: {org.accreditation_notes}
                       </div>
                     )}
@@ -2614,15 +2614,15 @@ export function Pilot() {
                     {/* Scoped Workspaces / Projects */}
                     {projects.filter(p => p.org_id === org.id).length > 0 && (
                       <div style={{ marginTop: '8px', paddingTop: '10px', borderTop: '1px solid rgba(255,255,255,0.06)' }}>
-                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B', display: 'block', marginBottom: '8px' }}>
+                        <span style={{ fontSize: '12px', fontWeight: '700', color: '#A6C48A', display: 'block', marginBottom: '8px' }}>
                           AFFILIATED WORKSPACES:
                         </span>
                         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '10px' }}>
                           {projects.filter(p => p.org_id === org.id).map(proj => (
                             <div key={proj.id} style={{ background: 'rgba(255,255,255,0.03)', padding: '10px 12px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.08)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                                <strong style={{ fontSize: '13px', color: '#DAF1DE' }}>{proj.project_name}</strong>
-                                <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: 'rgba(142,182,155,0.15)', color: '#8EB69B' }}>
+                                <strong style={{ fontSize: '13px', color: '#F5F3E9' }}>{proj.project_name}</strong>
+                                <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: 'rgba(142,182,155,0.15)', color: '#A6C48A' }}>
                                   {proj.license_policy}
                                 </span>
                               </div>
@@ -2654,23 +2654,23 @@ export function Pilot() {
           {/* Section 2: Accredited Reviewers & Elders */}
           <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
-              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Users size={18} color="#8EB69B" />
+              <h4 style={{ margin: 0, fontSize: '16px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <Users size={18} color="#A6C48A" />
                 <span>Accredited Expert & Elder Reviewers</span>
               </h4>
-              <span style={{ fontSize: '12px', color: '#8EB69B' }}>{reviewers.length} Reviewers Accredited</span>
+              <span style={{ fontSize: '12px', color: '#A6C48A' }}>{reviewers.length} Reviewers Accredited</span>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '12px' }}>
               {reviewers.map(r => (
                 <div key={r.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '14px', borderRadius: '8px', border: '1px solid rgba(142,182,155,0.2)', display: 'flex', flexDirection: 'column', gap: '6px' }}>
                   <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#DAF1DE' }}>{r.reviewer_name}</span>
+                    <span style={{ fontSize: '14px', fontWeight: '700', color: '#F5F3E9' }}>{r.reviewer_name}</span>
                     <span style={{ fontSize: '11px', padding: '1px 6px', borderRadius: '3px', background: r.accreditation_status === 'accredited' ? 'rgba(39, 174, 96, 0.2)' : 'rgba(243, 156, 18, 0.2)', color: r.accreditation_status === 'accredited' ? '#2ECC71' : '#F39C12' }}>
                       {r.accreditation_status}
                     </span>
                   </div>
-                  <div style={{ fontSize: '12px', color: '#8EB69B' }}>Role: <strong>{r.reviewer_role.replace('_', ' ')}</strong></div>
+                  <div style={{ fontSize: '12px', color: '#A6C48A' }}>Role: <strong>{r.reviewer_role.replace('_', ' ')}</strong></div>
                   <div style={{ fontSize: '12px', color: 'rgba(218,241,222,0.8)' }}>
                     Qualified Tongues: <strong>{(r.languages_qualified || []).join(', ').toUpperCase()}</strong>
                   </div>
@@ -2685,8 +2685,8 @@ export function Pilot() {
           {/* Section 3: Community Disputes, Sacred Leaks & Elder Appeals */}
           <div className="card" style={{ padding: '24px', display: 'flex', flexDirection: 'column', gap: '20px' }}>
             <div style={{ borderBottom: '1px solid rgba(255,255,255,0.08)', paddingBottom: '12px' }}>
-              <h4 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#DAF1DE', display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <ShieldCheck size={18} color="#8EB69B" />
+              <h4 style={{ margin: '0 0 6px 0', fontSize: '16px', fontWeight: '700', color: '#F5F3E9', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                <ShieldCheck size={18} color="#A6C48A" />
                 <span>Linguistic Disputes, Sacred Knowledge & Elder Appeals</span>
               </h4>
               <p style={{ margin: 0, fontSize: '13px', color: 'rgba(218,241,222,0.75)' }}>
@@ -2711,11 +2711,11 @@ export function Pilot() {
 
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '12px' }}>
                 <div>
-                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Target Entity Type</label>
+                  <label style={{ fontSize: '11px', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>Target Entity Type</label>
                   <select
                     value={newDisputeTargetType}
                     onChange={e => setNewDisputeTargetType(e.target.value)}
-                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F3E9', borderRadius: '4px', fontSize: '13px' }}
                   >
                     <option value="transcript">Oral Transcript</option>
                     <option value="translation">Translation</option>
@@ -2725,22 +2725,22 @@ export function Pilot() {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Target ID #</label>
+                  <label style={{ fontSize: '11px', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>Target ID #</label>
                   <input
                     type="number"
                     placeholder="e.g. 656"
                     value={newDisputeTargetId}
                     onChange={e => setNewDisputeTargetId(e.target.value)}
-                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F3E9', borderRadius: '4px', fontSize: '13px' }}
                   />
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Dispute Category</label>
+                  <label style={{ fontSize: '11px', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>Dispute Category</label>
                   <select
                     value={newDisputeType}
                     onChange={e => setNewDisputeType(e.target.value)}
-                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                    style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F3E9', borderRadius: '4px', fontSize: '13px' }}
                   >
                     <option value="misattribution">Clan / Individual Misattribution</option>
                     <option value="sacred_knowledge_leak">Sacred / Ritual Knowledge Leak</option>
@@ -2751,19 +2751,19 @@ export function Pilot() {
                 </div>
 
                 <div>
-                  <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Filer Name & Role</label>
+                  <label style={{ fontSize: '11px', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>Filer Name & Role</label>
                   <div style={{ display: 'flex', gap: '6px' }}>
                     <input
                       type="text"
                       placeholder="Your name / Elder"
                       value={newDisputeFilerName}
                       onChange={e => setNewDisputeFilerName(e.target.value)}
-                      style={{ flex: 1, padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px' }}
+                      style={{ flex: 1, padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F3E9', borderRadius: '4px', fontSize: '13px' }}
                     />
                     <select
                       value={newDisputeFilerRole}
                       onChange={e => setNewDisputeFilerRole(e.target.value)}
-                      style={{ padding: '6px 8px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '12px' }}
+                      style={{ padding: '6px 8px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F3E9', borderRadius: '4px', fontSize: '12px' }}
                     >
                       <option value="community_elder">Elder</option>
                       <option value="linguist">Linguist</option>
@@ -2775,13 +2775,13 @@ export function Pilot() {
               </div>
 
               <div>
-                <label style={{ fontSize: '11px', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>Description of Concern</label>
+                <label style={{ fontSize: '11px', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>Description of Concern</label>
                 <textarea
                   rows={2}
                   placeholder="Describe why this recording, transcript, or attribution violates community conventions..."
                   value={newDisputeDesc}
                   onChange={e => setNewDisputeDesc(e.target.value)}
-                  style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#DAF1DE', borderRadius: '4px', fontSize: '13px', resize: 'vertical' }}
+                  style={{ width: '100%', padding: '6px 10px', background: '#0D2B24', border: '1px solid rgba(255,255,255,0.1)', color: '#F5F3E9', borderRadius: '4px', fontSize: '13px', resize: 'vertical' }}
                 />
               </div>
 
@@ -2800,7 +2800,7 @@ export function Pilot() {
 
             {/* List of Filed Disputes */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <span style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B' }}>DISPUTE & APPEAL AUDIT TRAIL:</span>
+              <span style={{ fontSize: '12px', fontWeight: '700', color: '#A6C48A' }}>DISPUTE & APPEAL AUDIT TRAIL:</span>
               {disputes.length === 0 ? (
                 <p style={{ fontSize: '12px', color: 'rgba(218,241,222,0.6)', margin: 0 }}>No active or historical disputes recorded.</p>
               ) : (
@@ -2808,7 +2808,7 @@ export function Pilot() {
                   <div key={d.id} style={{ background: 'rgba(0,0,0,0.2)', padding: '10px 14px', borderRadius: '6px', border: '1px solid rgba(255,255,255,0.06)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '8px' }}>
                     <div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                        <strong style={{ fontSize: '13px', color: '#DAF1DE' }}>#{d.id}: {d.dispute_type.replace('_', ' ').toUpperCase()}</strong>
+                        <strong style={{ fontSize: '13px', color: '#F5F3E9' }}>#{d.id}: {d.dispute_type.replace('_', ' ').toUpperCase()}</strong>
                         <span style={{ fontSize: '10px', padding: '1px 6px', borderRadius: '3px', background: d.status === 'resolved' ? 'rgba(39, 174, 96, 0.2)' : 'rgba(243, 156, 18, 0.2)', color: d.status === 'resolved' ? '#2ECC71' : '#F39C12' }}>
                           {d.status}
                         </span>
@@ -2816,7 +2816,7 @@ export function Pilot() {
                       </div>
                       <p style={{ margin: '4px 0 0 0', fontSize: '12px', color: 'rgba(218,241,222,0.8)' }}>{d.description}</p>
                       {d.resolution_notes && (
-                        <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#8EB69B', fontStyle: 'italic' }}>
+                        <p style={{ margin: '4px 0 0 0', fontSize: '11px', color: '#A6C48A', fontStyle: 'italic' }}>
                           Resolution by {d.resolved_by}: {d.resolution_notes}
                         </p>
                       )}

@@ -4,16 +4,16 @@
 
 :root {
   color-scheme: dark;
-  --bg-gradient-from: #080A12;
-  --bg-gradient-to: #0E121A;
-  --text-primary: #F8FAFC;
-  --text-muted: #94A3B8;
-  --accent-amber: #F59E0B;
-  --accent-amber-hover: #D97706;
-  --accent-teal: #14B8A6;
-  --glass-bg: rgba(255, 255, 255, 0.06);
-  --glass-bg-hover: rgba(255, 255, 255, 0.12);
-  --glass-border: rgba(255, 255, 255, 0.15);
+  --bg-gradient-from: #102B20;
+  --bg-gradient-to: #0B1E16;
+  --text-primary: #F5F3E9;
+  --text-muted: #A6C48A;
+  --accent-amber: #1F5138;
+  --accent-amber-hover: #163B29;
+  --accent-teal: #A6C48A;
+  --glass-bg: rgba(22, 59, 44, 0.45);
+  --glass-bg-hover: rgba(31, 81, 56, 0.6);
+  --glass-border: rgba(166, 196, 138, 0.22);
 }
 
 html {
@@ -24,8 +24,8 @@ html {
 body {
   min-height: 100vh;
   overflow-x: hidden;
-  background: linear-gradient(180deg, #080A12 0%, #0E121A 100%);
-  color: #F8FAFC;
+  background: linear-gradient(180deg, #102B20 0%, #0B1E16 100%);
+  color: #F5F3E9;
   font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1rem;
   line-height: 1.5;
@@ -33,32 +33,32 @@ body {
 }
 
 ::selection {
-  background: rgba(245, 158, 11, 0.35);
+  background: rgba(166, 196, 138, 0.35);
   color: #ffffff;
 }
 
 /* Glassmorphic Single-Level Card */
 .glass-card {
-  background-color: rgba(255, 255, 255, 0.06);
+  background-color: rgba(22, 59, 44, 0.45);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(166, 196, 138, 0.2);
   border-radius: 1rem;
-  box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 10px 30px -10px rgba(16, 43, 32, 0.5);
   transition: transform 180ms ease-out, border-color 180ms ease-out, background-color 180ms ease-out;
 }
 .glass-card:hover {
-  background-color: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.25);
+  background-color: rgba(31, 81, 56, 0.55);
+  border-color: rgba(166, 196, 138, 0.35);
   transform: translateY(-2px);
 }
 
-/* Primary Accent Button (Amber) */
+/* Primary Accent Button (Forest Green) */
 .btn-primary {
   min-height: 48px;
   padding: 0.75rem 1.5rem;
-  background-color: #F59E0B;
-  color: #000000;
+  background-color: #1F5138;
+  color: #F5F3E9;
   font-weight: 700;
   border-radius: 0.75rem;
   display: inline-flex;
@@ -68,21 +68,21 @@ body {
   transition: all 180ms ease-out;
 }
 .btn-primary:hover {
-  background-color: #D97706;
+  background-color: #163B29;
   transform: translateY(-1px);
 }
 .btn-primary:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.5);
+  box-shadow: 0 0 0 3px rgba(166, 196, 138, 0.5);
 }
 
 /* Secondary Glass Button */
 .btn-glass {
   min-height: 48px;
   padding: 0.75rem 1.5rem;
-  background-color: rgba(255, 255, 255, 0.06);
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  color: #F8FAFC;
+  background-color: rgba(232, 239, 225, 0.08);
+  border: 1px solid rgba(166, 196, 138, 0.25);
+  color: #F5F3E9;
   font-weight: 600;
   border-radius: 0.75rem;
   display: inline-flex;
@@ -92,37 +92,37 @@ body {
   transition: all 180ms ease-out;
 }
 .btn-glass:hover {
-  background-color: rgba(255, 255, 255, 0.12);
-  border-color: rgba(255, 255, 255, 0.3);
+  background-color: rgba(31, 81, 56, 0.45);
+  border-color: rgba(166, 196, 138, 0.4);
   transform: translateY(-1px);
 }
 .btn-glass:focus-visible {
   outline: none;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 0 3px rgba(166, 196, 138, 0.4);
 }
 
 .glass-button {
-  border: 1px solid rgba(245, 158, 11, .4);
-  background: rgba(245, 158, 11, .15);
-  color: #FBBF24;
+  border: 1px solid rgba(166, 196, 138, 0.4);
+  background: rgba(31, 81, 56, 0.25);
+  color: #A6C48A;
   transition: all .2s ease;
 }
 .glass-button:hover {
-  background: rgba(245, 158, 11, .25);
-  border-color: rgba(245, 158, 11, .7);
+  background: rgba(31, 81, 56, 0.45);
+  border-color: rgba(166, 196, 138, 0.7);
   transform: translateY(-1px);
 }
 
 .shadow-amber-glow {
-  box-shadow: 0 0 35px -5px rgba(245, 158, 11, 0.35);
+  box-shadow: 0 0 35px -5px rgba(31, 81, 56, 0.45);
 }
 
 .shadow-violet-glow {
-  box-shadow: 0 0 35px -5px rgba(139, 92, 246, 0.35);
+  box-shadow: 0 0 35px -5px rgba(71, 122, 80, 0.4);
 }
 
 .shadow-teal-glow {
-  box-shadow: 0 0 35px -5px rgba(20, 184, 166, 0.35);
+  box-shadow: 0 0 35px -5px rgba(166, 196, 138, 0.4);
 }
 
 .lift-hover {

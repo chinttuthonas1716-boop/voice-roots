@@ -195,30 +195,30 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
       {/* ─── Mode Switcher Header ─── */}
       <div
         style={{
-          background: 'linear-gradient(135deg, rgba(11, 43, 38, 0.95), rgba(22, 56, 50, 0.95))',
+          background: 'linear-gradient(135deg, rgba(16, 43, 32, 0.95), rgba(22, 59, 44, 0.95))',
           borderRadius: '16px',
           padding: '1.75rem 2rem',
-          border: '1px solid #235347',
+          border: '1px solid #1F5138',
           boxShadow: '0 8px 32px rgba(0,0,0,0.3)',
           marginBottom: '1.5rem',
         }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '1rem' }}>
           <div>
-            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(142, 182, 155, 0.15)', border: '1px solid #8EB69B', padding: '0.25rem 0.75rem', borderRadius: '9999px', color: '#DAF1DE', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-              <Sparkles size={14} color="#8EB69B" />
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(166, 196, 138, 0.15)', border: '1px solid #A6C48A', padding: '0.25rem 0.75rem', borderRadius: '9999px', color: '#F5F3E9', fontSize: '0.8rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+              <Sparkles size={14} color="#A6C48A" />
               <span>Module 3 · Grounded Linguistic Intelligence & Archive RAG</span>
             </div>
-            <h1 style={{ fontSize: '2.1rem', fontWeight: 800, color: '#DAF1DE', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
+            <h1 style={{ fontSize: '2.1rem', fontWeight: 800, color: '#F5F3E9', margin: '0 0 0.4rem 0', letterSpacing: '-0.02em' }}>
               Voice Roots AI Assistant
             </h1>
-            <p style={{ color: 'rgba(218, 241, 222, 0.75)', maxWidth: '720px', margin: 0, fontSize: '0.92rem', lineHeight: 1.5 }}>
+            <p style={{ color: 'rgba(245, 243, 233, 0.75)', maxWidth: '720px', margin: 0, fontSize: '0.92rem', lineHeight: 1.5 }}>
               Answers are retrieved offline over verified community recordings and elder-approved lexicons with clickable citation pills and strict epistemic demarcation ($0.00 cloud API spend).
             </p>
           </div>
 
           {/* Mode Toggle Buttons */}
-          <div style={{ display: 'inline-flex', background: 'rgba(0,0,0,0.3)', padding: '0.35rem', borderRadius: '12px', border: '1px solid #235347' }}>
+          <div style={{ display: 'inline-flex', background: 'rgba(0,0,0,0.3)', padding: '0.35rem', borderRadius: '12px', border: '1px solid #1F5138' }}>
             <button
               onClick={() => setActiveMode('rag')}
               style={{
@@ -228,8 +228,8 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                 padding: '0.6rem 1rem',
                 borderRadius: '8px',
                 border: 'none',
-                background: activeMode === 'rag' ? '#8EB69B' : 'transparent',
-                color: activeMode === 'rag' ? '#0B2B26' : 'rgba(218, 241, 222, 0.75)',
+                background: activeMode === 'rag' ? '#A6C48A' : 'transparent',
+                color: activeMode === 'rag' ? '#102B20' : 'rgba(245, 243, 233, 0.75)',
                 fontWeight: activeMode === 'rag' ? 700 : 500,
                 fontSize: '0.85rem',
                 cursor: 'pointer',
@@ -248,8 +248,8 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                 padding: '0.6rem 1rem',
                 borderRadius: '8px',
                 border: 'none',
-                background: activeMode === 'voice_turn' ? '#8EB69B' : 'transparent',
-                color: activeMode === 'voice_turn' ? '#0B2B26' : 'rgba(218, 241, 222, 0.75)',
+                background: activeMode === 'voice_turn' ? '#A6C48A' : 'transparent',
+                color: activeMode === 'voice_turn' ? '#102B20' : 'rgba(245, 243, 233, 0.75)',
                 fontWeight: activeMode === 'voice_turn' ? 700 : 500,
                 fontSize: '0.85rem',
                 cursor: 'pointer',
@@ -271,24 +271,24 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
               gap: '0.75rem',
               marginTop: '1.5rem',
               paddingTop: '1.25rem',
-              borderTop: '1px solid rgba(142, 182, 155, 0.15)',
+              borderTop: '1px solid rgba(166, 196, 138, 0.15)',
             }}
           >
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(142, 182, 155, 0.1)' }}>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Vector Index Records</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#DAF1DE' }}>{ragStats.total_vector_records} vectors</div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(166, 196, 138, 0.1)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Vector Index Records</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F5F3E9' }}>{ragStats.total_vector_records} vectors</div>
             </div>
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(142, 182, 155, 0.1)' }}>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Cloud API Spend</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#8EB69B' }}>{ragStats.cloud_spend} (Offline)</div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(166, 196, 138, 0.1)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Cloud API Spend</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#A6C48A' }}>{ragStats.cloud_spend} (Offline)</div>
             </div>
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(142, 182, 155, 0.1)' }}>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Verified Lexicon Terms</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#DAF1DE' }}>{ragStats.database_counts.approved_dictionary_entries} entries</div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(166, 196, 138, 0.1)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Verified Lexicon Terms</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F5F3E9' }}>{ragStats.database_counts.approved_dictionary_entries} entries</div>
             </div>
-            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(142, 182, 155, 0.1)' }}>
-              <div style={{ fontSize: '0.7rem', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Oral Histories & Lore</div>
-              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#DAF1DE' }}>{ragStats.database_counts.approved_cultural_stories} stories</div>
+            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '0.65rem 0.85rem', borderRadius: '8px', border: '1px solid rgba(166, 196, 138, 0.1)' }}>
+              <div style={{ fontSize: '0.7rem', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', fontWeight: 600 }}>Oral Histories & Lore</div>
+              <div style={{ fontSize: '1.25rem', fontWeight: 800, color: '#F5F3E9' }}>{ragStats.database_counts.approved_cultural_stories} stories</div>
             </div>
           </div>
         )}
@@ -307,7 +307,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
           {/* Curated Suggestion Chips */}
           {suggestions.length > 0 && (
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-              <span style={{ fontSize: '0.75rem', color: '#8EB69B', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
+              <span style={{ fontSize: '0.75rem', color: '#A6C48A', fontWeight: 600, display: 'inline-flex', alignItems: 'center', gap: '0.3rem' }}>
                 <Compass size={13} />
                 <span>Explore:</span>
               </span>
@@ -316,9 +316,9 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                   key={idx}
                   onClick={() => handleSendQuery(s.query)}
                   style={{
-                    background: 'rgba(11, 43, 38, 0.7)',
-                    border: '1px solid #235347',
-                    color: '#DAF1DE',
+                    background: 'rgba(16, 43, 32, 0.7)',
+                    border: '1px solid #1F5138',
+                    color: '#F5F3E9',
                     borderRadius: '20px',
                     padding: '0.35rem 0.75rem',
                     fontSize: '0.75rem',
@@ -328,10 +328,10 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                     alignItems: 'center',
                     gap: '0.35rem',
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#8EB69B')}
-                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#235347')}
+                  onMouseEnter={(e) => (e.currentTarget.style.borderColor = '#A6C48A')}
+                  onMouseLeave={(e) => (e.currentTarget.style.borderColor = '#1F5138')}
                 >
-                  <span style={{ color: '#8EB69B', fontWeight: 700 }}>{s.language}:</span>
+                  <span style={{ color: '#A6C48A', fontWeight: 700 }}>{s.language}:</span>
                   <span>{s.query.length > 55 ? `${s.query.substring(0, 52)}...` : s.query}</span>
                 </button>
               ))}
@@ -341,9 +341,9 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
           {/* Chat Messages Container */}
           <div
             style={{
-              background: 'rgba(11, 43, 38, 0.6)',
+              background: 'rgba(16, 43, 32, 0.6)',
               backdropFilter: 'blur(10px)',
-              border: '1px solid #235347',
+              border: '1px solid #1F5138',
               borderRadius: '16px',
               padding: '1.5rem',
               minHeight: '440px',
@@ -365,7 +365,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                 }}
               >
                 {/* Sender badge & timestamp */}
-                <div style={{ fontSize: '0.72rem', color: 'rgba(218, 241, 222, 0.55)', display: 'flex', gap: '0.5rem' }}>
+                <div style={{ fontSize: '0.72rem', color: 'rgba(245, 243, 233, 0.55)', display: 'flex', gap: '0.5rem' }}>
                   <span>{msg.sender === 'user' ? (currentUser?.full_name || 'You') : 'Voice Roots AI Assistant'}</span>
                   <span>·</span>
                   <span>{msg.timestamp}</span>
@@ -377,12 +377,12 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                     maxWidth: '85%',
                     background:
                       msg.sender === 'user'
-                        ? 'linear-gradient(135deg, #163832, #235347)'
+                        ? 'linear-gradient(135deg, #163B2C, #1F5138)'
                         : 'rgba(2, 20, 16, 0.85)',
-                    border: msg.sender === 'user' ? '1px solid #8EB69B' : '1px solid #235347',
+                    border: msg.sender === 'user' ? '1px solid #A6C48A' : '1px solid #1F5138',
                     borderRadius: msg.sender === 'user' ? '14px 14px 2px 14px' : '14px 14px 14px 2px',
                     padding: '1.2rem',
-                    color: '#DAF1DE',
+                    color: '#F5F3E9',
                     boxShadow: '0 4px 16px rgba(0,0,0,0.2)',
                   }}
                 >
@@ -393,7 +393,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
 
                   {/* Grounded RAG Metadata: Citations & Epistemic Guardrail */}
                   {msg.ragResponse && (
-                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(142, 182, 155, 0.15)' }}>
+                    <div style={{ marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(166, 196, 138, 0.15)' }}>
                       {/* Epistemic Demarcation Box */}
                       <div
                         style={{
@@ -442,8 +442,8 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
 
                         {/* Verified Knowledge vs AI Hypothesis Breakdown */}
                         {msg.ragResponse.verified_knowledge?.length > 0 && (
-                          <div style={{ fontSize: '0.8rem', color: '#DAF1DE', marginBottom: '0.4rem' }}>
-                            <strong style={{ color: '#8EB69B' }}>Verified Community Lore: </strong>
+                          <div style={{ fontSize: '0.8rem', color: '#F5F3E9', marginBottom: '0.4rem' }}>
+                            <strong style={{ color: '#A6C48A' }}>Verified Community Lore: </strong>
                             {msg.ragResponse.verified_knowledge.map((vk, i) => (
                               <div key={i} style={{ marginTop: '0.2rem', paddingLeft: '0.5rem' }}>
                                 • {vk}
@@ -453,7 +453,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                         )}
 
                         {msg.ragResponse.ai_hypothesis?.length > 0 && (
-                          <div style={{ fontSize: '0.78rem', color: 'rgba(218, 241, 222, 0.8)' }}>
+                          <div style={{ fontSize: '0.78rem', color: 'rgba(245, 243, 233, 0.8)' }}>
                             <strong style={{ color: '#facc15' }}>AI Linguistic Hypothesis: </strong>
                             {msg.ragResponse.ai_hypothesis.map((ah, i) => (
                               <div key={i} style={{ marginTop: '0.2rem', paddingLeft: '0.5rem' }}>
@@ -467,7 +467,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                       {/* Clickable Citation Pills */}
                       {msg.ragResponse.citations && msg.ragResponse.citations.length > 0 && (
                         <div>
-                          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 700, color: '#8EB69B', marginBottom: '0.4rem' }}>
+                          <div style={{ fontSize: '0.72rem', textTransform: 'uppercase', fontWeight: 700, color: '#A6C48A', marginBottom: '0.4rem' }}>
                             Attested Source Citations (Click to Inspect):
                           </div>
                           <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem' }}>
@@ -476,9 +476,9 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                                 key={cite.citation_id}
                                 onClick={() => setSelectedCitation(cite)}
                                 style={{
-                                  background: 'rgba(142, 182, 155, 0.15)',
-                                  border: '1px solid #8EB69B',
-                                  color: '#DAF1DE',
+                                  background: 'rgba(166, 196, 138, 0.15)',
+                                  border: '1px solid #A6C48A',
+                                  color: '#F5F3E9',
                                   borderRadius: '6px',
                                   padding: '0.25rem 0.55rem',
                                   fontSize: '0.72rem',
@@ -488,8 +488,8 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                                   gap: '0.3rem',
                                   transition: 'all 0.15s ease',
                                 }}
-                                onMouseEnter={(e) => (e.currentTarget.style.background = '#8EB69B', e.currentTarget.style.color = '#0B2B26')}
-                                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(142, 182, 155, 0.15)', e.currentTarget.style.color = '#DAF1DE')}
+                                onMouseEnter={(e) => (e.currentTarget.style.background = '#A6C48A', e.currentTarget.style.color = '#102B20')}
+                                onMouseLeave={(e) => (e.currentTarget.style.background = 'rgba(166, 196, 138, 0.15)', e.currentTarget.style.color = '#F5F3E9')}
                               >
                                 <strong style={{ color: 'inherit' }}>[{cite.citation_id}]</strong>
                                 <span>{cite.title}</span>
@@ -508,14 +508,14 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                       <button
                         onClick={() => handleCopyText(msg.text, msg.id)}
                         title="Copy answer"
-                        style={{ background: 'transparent', border: 'none', color: '#8EB69B', cursor: 'pointer', padding: '0.2rem' }}
+                        style={{ background: 'transparent', border: 'none', color: '#A6C48A', cursor: 'pointer', padding: '0.2rem' }}
                       >
                         {copiedId === msg.id ? <Check size={14} color="#4ade80" /> : <Copy size={14} />}
                       </button>
                       <button
                         onClick={() => handleSpeakText(msg.text, msg.id)}
                         title="Read aloud (TTS)"
-                        style={{ background: 'transparent', border: 'none', color: activeSpeakingId === msg.id ? '#4ade80' : '#8EB69B', cursor: 'pointer', padding: '0.2rem' }}
+                        style={{ background: 'transparent', border: 'none', color: activeSpeakingId === msg.id ? '#4ade80' : '#A6C48A', cursor: 'pointer', padding: '0.2rem' }}
                       >
                         <Volume2 size={14} />
                       </button>
@@ -527,7 +527,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
 
             {/* Loading Indicator */}
             {isLoading && (
-              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#8EB69B', fontSize: '0.85rem' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#A6C48A', fontSize: '0.85rem' }}>
                 <Loader2 size={16} className="animate-spin" />
                 <span>Searching ChromaDB vector store & verified community archives...</span>
               </div>
@@ -546,8 +546,8 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
           {/* ─── Query Input & Filter Toolbar ─── */}
           <div
             style={{
-              background: 'rgba(11, 43, 38, 0.85)',
-              border: '1px solid #235347',
+              background: 'rgba(16, 43, 32, 0.85)',
+              border: '1px solid #1F5138',
               borderRadius: '14px',
               padding: '0.75rem 1rem',
               display: 'flex',
@@ -570,10 +570,10 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                 style={{
                   flex: 1,
                   background: 'rgba(2, 20, 16, 0.7)',
-                  border: '1px solid #235347',
+                  border: '1px solid #1F5138',
                   borderRadius: '10px',
                   padding: '0.85rem 1rem',
-                  color: '#DAF1DE',
+                  color: '#F5F3E9',
                   fontSize: '0.92rem',
                   outline: 'none',
                 }}
@@ -583,8 +583,8 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                 onClick={() => handleSendQuery()}
                 disabled={isLoading || !inputQuery.trim()}
                 style={{
-                  background: '#8EB69B',
-                  color: '#0B2B26',
+                  background: '#A6C48A',
+                  color: '#102B20',
                   fontWeight: 700,
                   border: 'none',
                   borderRadius: '10px',
@@ -603,7 +603,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
 
             {/* Language Filter Pills */}
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap' }}>
-              <span style={{ fontSize: '0.75rem', color: 'rgba(218, 241, 222, 0.6)', fontWeight: 600 }}>Filter Language:</span>
+              <span style={{ fontSize: '0.75rem', color: 'rgba(245, 243, 233, 0.6)', fontWeight: 600 }}>Filter Language:</span>
               {[
                 { code: 'all', label: 'All Tongues' },
                 { code: 'Gondi', label: 'Gondi' },
@@ -619,9 +619,9 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
                     borderRadius: '6px',
                     fontSize: '0.72rem',
                     fontWeight: languageFilter === lang.code ? 700 : 500,
-                    border: languageFilter === lang.code ? '1px solid #8EB69B' : '1px solid rgba(142, 182, 155, 0.2)',
-                    background: languageFilter === lang.code ? 'rgba(142, 182, 155, 0.2)' : 'transparent',
-                    color: languageFilter === lang.code ? '#DAF1DE' : 'rgba(218, 241, 222, 0.65)',
+                    border: languageFilter === lang.code ? '1px solid #A6C48A' : '1px solid rgba(166, 196, 138, 0.2)',
+                    background: languageFilter === lang.code ? 'rgba(166, 196, 138, 0.2)' : 'transparent',
+                    color: languageFilter === lang.code ? '#F5F3E9' : 'rgba(245, 243, 233, 0.65)',
                     cursor: 'pointer',
                   }}
                 >
@@ -651,71 +651,71 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
         >
           <div
             style={{
-              background: '#0B2B26',
-              border: '1px solid #235347',
+              background: '#102B20',
+              border: '1px solid #1F5138',
               borderRadius: '16px',
               maxWidth: '620px',
               width: '100%',
               maxHeight: '90vh',
               overflowY: 'auto',
               padding: '2rem',
-              color: '#DAF1DE',
+              color: '#F5F3E9',
               boxShadow: '0 16px 48px rgba(0,0,0,0.5)',
             }}
             onClick={(e) => e.stopPropagation()}
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.25rem' }}>
               <div>
-                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#8EB69B', textTransform: 'uppercase' }}>
+                <span style={{ fontSize: '0.75rem', fontWeight: 700, color: '#A6C48A', textTransform: 'uppercase' }}>
                   Citation [{selectedCitation.citation_id}] · {selectedCitation.source_type.replace('_', ' ')}
                 </span>
-                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#DAF1DE', margin: '0.25rem 0 0 0' }}>
+                <h2 style={{ fontSize: '1.5rem', fontWeight: 800, color: '#F5F3E9', margin: '0.25rem 0 0 0' }}>
                   {selectedCitation.title}
                 </h2>
-                <div style={{ fontSize: '0.85rem', color: 'rgba(218, 241, 222, 0.75)', marginTop: '0.25rem' }}>
+                <div style={{ fontSize: '0.85rem', color: 'rgba(245, 243, 233, 0.75)', marginTop: '0.25rem' }}>
                   Language: <strong>{selectedCitation.language}</strong> {selectedCitation.dialect && `(${selectedCitation.dialect})`}
                 </div>
               </div>
               <button
                 onClick={() => setSelectedCitation(null)}
-                style={{ background: 'transparent', border: 'none', color: '#DAF1DE', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: '#F5F3E9', cursor: 'pointer' }}
               >
                 <X size={20} />
               </button>
             </div>
 
             {/* Archive Excerpt */}
-            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(142, 182, 155, 0.15)', marginBottom: '1.25rem' }}>
-              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#8EB69B', fontWeight: 700, marginBottom: '0.4rem' }}>
+            <div style={{ background: 'rgba(0,0,0,0.25)', padding: '1rem', borderRadius: '10px', border: '1px solid rgba(166, 196, 138, 0.15)', marginBottom: '1.25rem' }}>
+              <div style={{ fontSize: '0.75rem', textTransform: 'uppercase', color: '#A6C48A', fontWeight: 700, marginBottom: '0.4rem' }}>
                 Attested Archive Excerpt
               </div>
-              <p style={{ margin: 0, fontSize: '0.92rem', lineHeight: 1.6, color: '#DAF1DE' }}>
+              <p style={{ margin: 0, fontSize: '0.92rem', lineHeight: 1.6, color: '#F5F3E9' }}>
                 {selectedCitation.excerpt}
               </p>
             </div>
 
             {/* Provenance & Custodianship */}
-            <div style={{ fontSize: '0.82rem', color: 'rgba(218, 241, 222, 0.8)', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.25rem' }}>
+            <div style={{ fontSize: '0.82rem', color: 'rgba(245, 243, 233, 0.8)', display: 'flex', flexDirection: 'column', gap: '0.4rem', marginBottom: '1.25rem' }}>
               <div>
-                <strong style={{ color: '#8EB69B' }}>Attribution:</strong> {selectedCitation.attribution}
+                <strong style={{ color: '#A6C48A' }}>Attribution:</strong> {selectedCitation.attribution}
               </div>
               <div>
-                <strong style={{ color: '#8EB69B' }}>Access Classification:</strong> {selectedCitation.access_classification}
+                <strong style={{ color: '#A6C48A' }}>Access Classification:</strong> {selectedCitation.access_classification}
               </div>
               <div>
-                <strong style={{ color: '#8EB69B' }}>Sovereignty:</strong> Consented community archive (OCAP compliant).
+                <strong style={{ color: '#A6C48A' }}>Sovereignty:</strong> Consented community archive (OCAP compliant).
               </div>
             </div>
 
             {/* Audio Playback reference */}
             {selectedCitation.audio_url && (
-              <div style={{ background: 'rgba(142, 182, 155, 0.1)', padding: '0.75rem', borderRadius: '8px', border: '1px solid #8EB69B', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
-                <span style={{ fontSize: '0.82rem', color: '#DAF1DE' }}>Oral Recording Snippet Available</span>
+              <div style={{ background: 'rgba(166, 196, 138, 0.1)', padding: '0.75rem', borderRadius: '8px', border: '1px solid #A6C48A', display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '1.25rem' }}>
+                <span style={{ fontSize: '0.82rem', color: '#F5F3E9' }}>Oral Recording Snippet Available</span>
                 <button
                   onClick={() => handleSpeakText(selectedCitation.excerpt, selectedCitation.citation_id)}
                   style={{
-                    background: '#8EB69B',
-                    color: '#0B2B26',
+                    background: '#A6C48A',
+                    color: '#102B20',
                     border: 'none',
                     borderRadius: '6px',
                     padding: '0.35rem 0.75rem',
@@ -736,7 +736,7 @@ export const GroundedAssistant: React.FC<GroundedAssistantProps> = ({
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
               <button
                 onClick={() => setSelectedCitation(null)}
-                style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: '1px solid #235347', background: 'transparent', color: '#DAF1DE', cursor: 'pointer' }}
+                style={{ padding: '0.55rem 1.25rem', borderRadius: '8px', border: '1px solid #1F5138', background: 'transparent', color: '#F5F3E9', cursor: 'pointer' }}
               >
                 Close
               </button>
