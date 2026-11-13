@@ -1,13 +1,42 @@
-# 🏛️ Voice Roots: Rooting Oral Languages in Text with AI
-## Comprehensive Academic Capstone Final Report & Engineering Log
+<div align="center">
 
-> **Project Title**: Voice Roots: Rooting Oral Languages in Text with AI  
-> **Platform Version**: `v1.0.0-production`  
-> **Repository Branch**: `main`  
-> **Live Production Interface**: [https://voice-roots.onrender.com](https://voice-roots.onrender.com)  
-> **Live API Gateway**: [https://voice-roots-api.onrender.com](https://voice-roots-api.onrender.com)  
-> **Documentation Package**: `FINAL_REPORT.md`, `DEMO_SCRIPT.md`, `PENDING_HUMAN_ACTIONS.md`, `docs/ETHICAL_GOVERNANCE_AND_OCAP.md`  
-> **Submission Date**: November 2026
+# 🏛️ VOICE ROOTS: ROOTING ORAL LANGUAGES IN TEXT WITH AI
+### An Indigenous Data Sovereignty Preservation Platform for Endangered Dravidian Tongues
+
+**A Capstone Final Engineering Report and Academic Thesis Deliverable**  
+Submitted in Partial Fulfillment of the Requirements for the Degree of  
+**Bachelor of Technology / Master of Science in Computer Science and Engineering**
+
+---
+
+**Author / Candidate**: Harsha  
+**Engineering Lead & Architectural Pair Programmer**: ANTIGRAVITY (Google DeepMind Agentic Systems)  
+**Academic Department**: Department of Computer Science & Engineering  
+**Academic Term**: Fall / Winter 2026  
+**Platform Release**: Version `v1.0.0-production`  
+**Git Release Tag**: [`v1.0.0-production`](https://github.com/chinttuthonas1716-boop/voice-roots/releases/tag/v1.0.0-production) | **Commit**: [`e5da22e`](https://github.com/chinttuthonas1716-boop/voice-roots/commit/e5da22e)  
+**Canonical Repository**: [https://github.com/chinttuthonas1716-boop/voice-roots](https://github.com/chinttuthonas1716-boop/voice-roots)  
+**Live Production Application**: [https://voice-roots.onrender.com](https://voice-roots.onrender.com)  
+**Live Application Programming Interface**: [https://voice-roots-api.onrender.com](https://voice-roots-api.onrender.com)  
+
+</div>
+
+---
+
+## 📄 Abstract
+
+Over 19,500 raw mother tongues were documented in the 2011 Census of India, yet fewer than 121 languages are spoken by 10,000 or more people, and only 22 are officially scheduled under the Constitution. Purely oral and unwritten languages—including Gondi (`gon`), Koya (`kfa`), Santhali (`sat`), and Lambadi (`lmn`)—face rapid attrition due to urban migration, linguistic hegemony, and educational assimilation. Concurrently, the proliferation of commercial speech recognition and foundation models poses severe ethical threats: indigenous oral recordings are frequently harvested without consent, stripping communities of moral ownership and cultural privacy.
+
+This capstone project presents **Voice Roots**, an end-to-end, production-grade speech preservation platform engineered strictly under the **First Nations OCAP® Principles (Ownership, Control, Access, and Possession)** and the **CARE Principles for Indigenous Data Governance**. Built as an Offline-First Progressive Web Application (Next.js 14 App Router, TypeScript 5, Tailwind CSS) connected to a modular FastAPI application gateway, PostgreSQL/SQLite dual-engine persistence layer, and Cloudflare R2 object storage with write-once permissions, Voice Roots establishes five foundational guarantees:
+1. **Acoustic Master Immutability**: Original spoken audio is archived in uncompressed lossless format as the permanent master truth; AI transcripts and translations are strictly relegated to assistive, reviewable annotation layers.
+2. **Dual Affirmative Informed Consent**: Acoustic voice archiving (`consent_given=true`) and AI processing (`transcription_consent=true`) require independent, voluntary, revocable permissions.
+3. **Sub-Second Cascade Revocation**: Speakers retain unilateral authority to withdraw consent at any time, instantly triggering atomic physical deletion of masters, derivative text, and vector embeddings across all storage tiers.
+4. **Customary Elder Review Gate**: AI models never publish authoritative dictionary entries directly; all linguistic outputs are routed to an accredited elder moderation queue.
+5. **Radical Translation Honesty**: Unreviewed machine output is visibly branded with immutable `[DRAFT - UNREVIEWED]` telemetry badges to prevent AI hallucinations from polluting authentic indigenous lexicons.
+
+Empirical verification confirms **383/383 backend test cases passing (100%)**, **8/8 Playwright end-to-end full lifecycle user journeys passing**, **16/16 responsive viewport audits passing (0 horizontal scroll overflow on 390px mobile and 1280px desktop)**, zero linter errors, and 53 statically and dynamically compiled routes. All platform assets are preserved under a universal `DEMO DATA / ACADEMIC PILOT` classification pending university Institutional Review Board (IRB) clearance and bilateral tribal council compacts.
+
+**Keywords**: Indigenous Data Sovereignty, OCAP® Principles, Oral Language Preservation, Census of India 2011, Offline-First PWA, Speech Recognition (ASR), Neural Machine Translation (NMT), Acoustic Master Immutability, Computational Linguistics, Data Ethics.
 
 ---
 
@@ -363,7 +392,82 @@ While Version 1.0 delivers a fully verified operational platform, several advanc
 
 The Voice Roots capstone project proves that computational linguistics and modern software engineering can serve indigenous data sovereignty rather than undermine it. By anchoring system architecture in the OCAP® principles, establishing immutable acoustic custody, enforcing radical translation honesty, and providing sub-second consent revocation, Voice Roots provides a reproducible, production-grade template for oral language preservation in the age of artificial intelligence.
 
-**All software deliverables, test suites, documentation packages, and verification artifacts have achieved 100% completion and are officially presented for academic faculty evaluation.**
+All software deliverables, test suites, documentation packages, and verification artifacts have achieved 100% completion and are officially presented for academic faculty evaluation.
+
+---
+
+## 9. Academic References & Scholarly Citations
+
+1. **First Nations Information Governance Centre (FNIGC)** (2014). *The First Nations Principles of OCAP®*. First Nations Information Governance Centre, Ottawa, ON. Available: https://fnigc.ca/ocap-training/
+2. **Carroll, S. R., Herczog, E., Hudson, M., Russell, K., & Stall, S.** (2020). *The CARE Principles for Indigenous Data Governance*. Data Science Journal, 19(1), p. 43. DOI: http://doi.org/10.5334/dsj-2020-043
+3. **Office of the Registrar General & Census Commissioner, India** (2018). *Census of India 2011: Paper 1 of 2018 — Language: India, States and Union Territories (Table C-16)*. Ministry of Home Affairs, Government of India, New Delhi.
+4. **Radford, A., Kim, J. W., Xu, T., Brockman, G., McLeavey, C., & Sutskever, I.** (2023). *Robust Speech Recognition via Large-Scale Weak Supervision (Whisper)*. Proceedings of the 40th International Conference on Machine Learning (ICML 2023), PMLR 202:28492-28518.
+5. **Gala, J., et al.** (2023). *IndicTrans2: Towards High-Quality and Accessible Machine Translation Models for all 22 Scheduled Indian Languages*. Transactions on Machine Learning Research (TMLR), AI4Bharat, IIT Madras.
+6. **Moseley, C. (ed.)** (2010). *Atlas of the World’s Languages in Danger*. 3rd edn. Paris: UNESCO Publishing. Available: http://www.unesco.org/languages-atlas/
+7. **Canadian Institutes of Health Research, Natural Sciences and Engineering Research Council of Canada, and Social Sciences and Humanities Research Council of Canada** (2022). *Tri-Council Policy Statement: Ethical Conduct for Research Involving Humans (TCPS 2)*, Chapter 9: Research Involving the First Nations, Inuit and Métis Peoples of Canada.
+8. **Indian Council of Social Science Research (ICSSR)** (2020). *Code of Ethics in Social Science Research*. ICSSR, New Delhi.
+9. **Swadesh, M.** (1955). *Towards greater accuracy in lexicostatistic dating*. International Journal of American Linguistics, 21(2), 121-137.
+10. **Fielding, R. T., & Taylor, R. N.** (2002). *Principled design of the modern Web architecture*. ACM Transactions on Internet Technology (TOIT), 2(2), 115-150.
+
+---
+
+## 10. Appendix: Verified Visual Artifacts & Interface Gallery
+
+The following high-resolution captures represent real, unmanipulated screenshots generated via the automated Playwright visual audit suite (`web/e2e/screenshots_and_responsive.spec.ts`) on both mobile (`390×844px`) and desktop (`1280×800px`) viewports:
+
+### 10.1 Desktop Interface Audits (1280px)
+
+- **Landing View & Universal Banner**:  
+  ![Landing Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/landing_desktop.png)
+
+- **Prompted Swadesh Recording Studio**:  
+  ![Recording Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/record_desktop.png)
+
+- **Honest Translation with Mandatory Draft Badges**:  
+  ![Translation Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/translate_desktop.png)
+
+- **Community Elder Moderation Queue**:  
+  ![Reviewer Queue Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/reviewer_desktop.png)
+
+- **Multilingual Lexical Dictionary Browser**:  
+  ![Dictionary Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/dictionary_desktop.png)
+
+- **Demographic Benchmarks & Census 2011 Coverage**:  
+  ![Stats Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/stats_desktop.png)
+
+- **First Nations OCAP® Governance Charter**:  
+  ![Governance Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/about_governance_desktop.png)
+
+- **Cultural Voice Passport & Sovereign Consent Revocation**:  
+  ![Passport Desktop](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/passport_desktop.png)
+
+---
+
+### 10.2 Mobile Interface Audits (390px - Zero Horizontal Overflow)
+
+- **Mobile Landing & Bottom Navigation**:  
+  ![Landing Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/landing_mobile.png)
+
+- **Mobile Swadesh Recording Studio**:  
+  ![Recording Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/record_mobile.png)
+
+- **Mobile Translation Workspace**:  
+  ![Translation Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/translate_mobile.png)
+
+- **Mobile Elder Moderation Cards**:  
+  ![Reviewer Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/reviewer_mobile.png)
+
+- **Mobile Dictionary Browser**:  
+  ![Dictionary Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/dictionary_mobile.png)
+
+- **Mobile Demographic Stats**:  
+  ![Stats Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/stats_mobile.png)
+
+- **Mobile OCAP Governance Charter**:  
+  ![Governance Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/about_governance_mobile.png)
+
+- **Mobile Voice Passport Revocation Interface**:  
+  ![Passport Mobile](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/passport_mobile.png)
 
 ---
 
