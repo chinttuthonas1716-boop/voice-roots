@@ -31,7 +31,7 @@ export function QRCodeModal({
 
   if (!isOpen) return null;
 
-  const publicBase = "https://farming-proposition-love-showcase.trycloudflare.com";
+  const publicBase = "https://voice-roots.onrender.com";
   const localBase = typeof window !== "undefined" ? window.location.origin : "http://localhost:3000";
   const currentBase = networkMode === "public" ? publicBase : localBase;
 

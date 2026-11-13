@@ -152,6 +152,7 @@ def upsert_resources(resources: list[dict[str, Any]]) -> int:
             "attribution": item.get("attribution", "Voice Roots Preserved Heritage"),
             "consent_status": item.get("consent_status", "Consented Community Archive"),
             "verification_status": item.get("verification_status", "Human Verified"),
+            "access_classification": item.get("access_classification", "PUBLIC"),
             "checksum": item.get("checksum", ""),
             "created_at": item.get("created_at", ""),
         }

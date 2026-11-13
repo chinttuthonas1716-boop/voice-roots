@@ -169,10 +169,52 @@ def init_auth_tables(conn: sqlite3.Connection) -> None:
 
 
 def seed_default_accounts(conn: sqlite3.Connection) -> None:
-    """Seed foundational demo/evaluation accounts if the users table is empty."""
+    """Seed foundational demo/evaluation accounts if the users table is empty.
+    
+    PRODUCTION HARDENING:
+    Pre-seeded demo accounts with fixed passwords are strictly disabled in production
+    (VOICE_ROOTS_ENV=production). On first production boot, an admin account is created
+    with a strong cryptographically random password printed to server logs, or reads
+    from INITIAL_ADMIN_PASSWORD.
+    """
     cursor = conn.cursor()
     count = cursor.execute("SELECT COUNT(*) FROM users").fetchone()[0]
     if count > 0:
+        return
+
+    is_production = os.environ.get("VOICE_ROOTS_ENV", "").lower() == "production"
+    if is_production:
+        import secrets
+        admin_password = os.environ.get("INITIAL_ADMIN_PASSWORD") or secrets.token_urlsafe(20)
+        now = datetime.datetime.now(datetime.timezone.utc).isoformat()
+        salt, pw_hash = hash_password(admin_password)
+        cursor.execute(
+            """
+            INSERT INTO users (
+                id, username, email, password_hash, salt, full_name,
+                role, is_verified, bio, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 1, ?, ?, ?)
+            """,
+            (
+                "usr_admin_init",
+                "admin",
+                os.environ.get("INITIAL_ADMIN_EMAIL", "admin@voiceroots.ai"),
+                pw_hash,
+                salt,
+                "System Administrator",
+                "admin",
+                "Voice Roots System Administrator",
+                now,
+                now,
+            ),
+        )
+        conn.commit()
+        logger.warning("==================================================================")
+        logger.warning("PRODUCTION FIRST-BOOT INITIAL ADMIN ACCOUNT CREATED")
+        logger.warning("Username: admin")
+        logger.warning("Generated Initial Admin Password: %s", admin_password)
+        logger.warning("Please save this password securely and change it immediately!")
+        logger.warning("==================================================================")
         return
 
     now = datetime.datetime.now(datetime.timezone.utc).isoformat()

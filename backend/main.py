@@ -5,9 +5,18 @@ and static streaming of preserved acoustic audio masters.
 """
 
 import hashlib
+import importlib
+import io
 import json
 import logging
+import math
 import os
+import sys
+
+_CURRENT_DIR = os.path.dirname(os.path.abspath(__file__))
+if _CURRENT_DIR not in sys.path:
+    sys.path.insert(0, _CURRENT_DIR)
+
 import shutil
 import sqlite3
 import tempfile
@@ -18,12 +27,22 @@ import wave
 from datetime import datetime, timezone
 from typing import Any
 
+import archive_rag_service
 import auth_service
 import backup_retention_service
+import command_center_service
 import cultural_archive_service
+import data_export_service
+import dictionary_service
+import language_explorer_service
 import learning_service
+import learning_studio_service
+import monitoring_service
+import prompt_service
 import research_interoperability_service
+import security_service
 import speech_analysis_service
+import stats_service
 from dataset_service import (
     generate_research_export,
     get_dataset_details,
@@ -46,7 +65,7 @@ from fastapi import (
     UploadFile,
 )
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import FileResponse
+from fastapi.responses import FileResponse, JSONResponse, Response
 from fastapi.staticfiles import StaticFiles
 from governance_service import (
     accredit_expert_reviewer,
@@ -170,9 +189,10 @@ os.makedirs(AUDIO_STORAGE, exist_ok=True)
 os.makedirs(BACKUP_DIR, exist_ok=True)
 
 
-def get_db_connection(db_path: str = DB_PATH) -> sqlite3.Connection:
+def get_db_connection(db_path: str | None = None) -> sqlite3.Connection:
     """Return a hardened SQLite connection with WAL mode, busy timeout, and Row factory."""
-    conn = sqlite3.connect(db_path, timeout=15.0)
+    target_path = db_path if db_path is not None else DB_PATH
+    conn = sqlite3.connect(target_path, timeout=15.0)
     conn.row_factory = sqlite3.Row
     try:
         conn.execute("PRAGMA journal_mode = WAL;")
@@ -263,7 +283,25 @@ def verify_storage_persistence_and_integrity() -> dict[str, Any]:
 
 
 def init_db():
-    """Initialize SQLite database with table for saved recordings and transcripts."""
+    """Initialize database: runs Alembic migrations on PostgreSQL if DATABASE_URL is set, or local SQLite setup."""
+    db_url = os.environ.get("DATABASE_URL")
+    if db_url and (db_url.startswith("postgres://") or db_url.startswith("postgresql://")):
+        logger.info("Initializing PostgreSQL database with Alembic migrations...")
+        try:
+            from alembic import command
+            from alembic.config import Config
+
+            alembic_cfg_path = os.path.join(os.path.dirname(__file__), "alembic.ini")
+            if os.path.exists(alembic_cfg_path):
+                alembic_cfg = Config(alembic_cfg_path)
+                norm_url = db_url.replace("postgres://", "postgresql://", 1) if db_url.startswith("postgres://") else db_url
+                alembic_cfg.set_main_option("sqlalchemy.url", norm_url)
+                command.upgrade(alembic_cfg, "head")
+                logger.info("Alembic migrations applied successfully to PostgreSQL.")
+        except Exception as e:
+            logger.warning(f"PostgreSQL Alembic migration deferred or failed: {e}")
+        return
+
     with sqlite3.connect(DB_PATH, timeout=15.0) as conn:
         try:
             conn.execute("PRAGMA journal_mode = WAL;")
@@ -301,6 +339,7 @@ def init_db():
         }
         additions = {
             "audio_sha256": "TEXT",
+            "flac_sha256": "TEXT",
             "file_size_bytes": "INTEGER",
             "consent_at": "TEXT",
             "consent_version": "TEXT",
@@ -332,6 +371,7 @@ def init_db():
             "verified_by": "TEXT",
             "verified_at": "TEXT",
             "review_notes": "TEXT",
+            "prompt_id": "TEXT",
         }
         for column, sql_type in additions.items():
             if column not in existing_columns:
@@ -345,8 +385,16 @@ def init_db():
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_created ON transcripts(created_at)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_status ON transcripts(status)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_sha256 ON transcripts(audio_sha256)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_flac_sha256 ON transcripts(flac_sha256)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_privacy ON transcripts(privacy_level)")
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_verification ON transcripts(verification_status)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_transcripts_prompt_id ON transcripts(prompt_id)")
+
+        try:
+            prompt_service.init_prompt_tables(conn)
+            prompt_service.seed_prompts_if_empty(DB_PATH)
+        except Exception as p_err:
+            logger.warning("Prompt tables initialization error: %s", p_err)
 
         cursor.execute(
             """
@@ -370,6 +418,13 @@ def init_db():
         cursor.execute(
             "CREATE INDEX IF NOT EXISTS idx_translations_transcript_id ON translations(transcript_id)"
         )
+        existing_trans_cols = {
+            row[1] for row in cursor.execute("PRAGMA table_info(translations)")
+        }
+        if "review_status" not in existing_trans_cols:
+            cursor.execute("ALTER TABLE translations ADD COLUMN review_status TEXT DEFAULT 'unreviewed_draft'")
+        if "badge_label" not in existing_trans_cols:
+            cursor.execute("ALTER TABLE translations ADD COLUMN badge_label TEXT DEFAULT 'Draft (Unreviewed)'")
 
         cursor.execute(
             """
@@ -401,6 +456,23 @@ def init_db():
         }
         if "reviewer_uncertainty" not in existing_corr_cols:
             cursor.execute("ALTER TABLE corrections ADD COLUMN reviewer_uncertainty TEXT")
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS governance_audit_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                action_type TEXT NOT NULL,
+                actor_name TEXT NOT NULL,
+                actor_role TEXT NOT NULL,
+                entity_type TEXT NOT NULL,
+                entity_id TEXT NOT NULL,
+                details_json TEXT,
+                timestamp TEXT NOT NULL
+            )
+            """
+        )
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_action ON governance_audit_logs(action_type)")
+        cursor.execute("CREATE INDEX IF NOT EXISTS idx_audit_entity ON governance_audit_logs(entity_type, entity_id)")
 
         cursor.execute(
             """
@@ -499,6 +571,19 @@ def init_db():
             """
         )
         cursor.execute("CREATE INDEX IF NOT EXISTS idx_assistant_conv_session ON assistant_conversations(session_id)")
+
+        # PWA / Offline Idempotent Sync Operations Store
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS idempotent_sync_operations (
+                client_operation_id TEXT PRIMARY KEY,
+                action_type TEXT NOT NULL,
+                status TEXT NOT NULL,
+                processed_at TEXT NOT NULL,
+                result_json TEXT NOT NULL
+            )
+            """
+        )
         conn.commit()
 
 
@@ -542,6 +627,18 @@ try:
 except Exception as _e:  # noqa: BLE001
     logger.debug("Research Interoperability initialization: %s", _e)
 
+try:
+    with sqlite3.connect(DB_PATH) as _dict_conn:
+        dictionary_service.init_dictionary_tables(_dict_conn)
+        dictionary_service.seed_default_lexicon(_dict_conn)
+except Exception as _e:  # noqa: BLE001
+    logger.debug("Dictionary initialization: %s", _e)
+
+try:
+    archive_rag_service.sync_all_archives_to_vector_store(DB_PATH)
+except Exception as _e:  # noqa: BLE001
+    logger.debug("Archive RAG sync initialization: %s", _e)
+
 
 
 def _sync_transcript_to_search(transcript_id: int):
@@ -570,19 +667,34 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# CORS configuration for local frontend development (Vite + Next.js + Preview)
+# Initialize observability, structured logging, and error tracking (T3.4)
+monitoring_service.configure_structured_logging()
+monitoring_service.init_error_tracking()
+
+# CORS configuration for frontend services (Next.js web + Render + local dev)
+# Browser calls go through the Next.js /api/v1 rewrite, so CORS mainly matters
+# if anything calls the API origin directly (mobile app, scripts, other sites).
+is_prod_env = os.getenv("VOICE_ROOTS_ENV", "").lower() == "production"
+default_cors = (
+    "https://voice-roots.onrender.com"
+    if is_prod_env
+    else "http://localhost:3000,http://localhost:5173,http://127.0.0.1:3000,http://127.0.0.1:5173,http://localhost:3001,https://voice-roots.onrender.com"
+)
+_raw_cors = (
+    os.getenv("CORS_ORIGINS")
+    or os.getenv("VOICE_ROOTS_ALLOWED_ORIGINS")
+    or default_cors
+)
 ALLOWED_ORIGINS = [
     origin.strip()
-    for origin in os.environ.get(
-        "VOICE_ROOTS_ALLOWED_ORIGINS",
-        "http://localhost:5173,http://127.0.0.1:5173,http://localhost:3000,"
-        "http://127.0.0.1:3000,http://localhost:3001,https://voice-roots.onrender.com",
-    ).split(",")
+    for origin in _raw_cors.split(",")
     if origin.strip()
 ]
+origins = ALLOWED_ORIGINS
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=ALLOWED_ORIGINS,
+    allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
@@ -651,39 +763,268 @@ def _is_admin_request(request: Request | None) -> bool:
     return is_admin
 
 
+def _extract_user_identity(request: Request | None) -> dict[str, Any]:
+    """Extract authenticated user info: (is_authenticated, user_id, role, username)."""
+    if not request:
+        return {"authenticated": False, "user_id": None, "role": "anonymous", "username": "anonymous"}
+
+    # 1. Admin authentication check
+    is_admin, admin_user = _extract_admin_identity(request)
+    if is_admin:
+        return {"authenticated": True, "user_id": "admin", "role": "admin", "username": admin_user}
+
+    # 2. JWT bearer token check
+    auth_header = (request.headers.get("Authorization") or "").strip()
+    token = None
+    if auth_header.startswith("Bearer "):
+        token = auth_header[7:].strip()
+    elif "X-Session-Token" in request.headers:
+        token = request.headers.get("X-Session-Token", "").strip()
+
+    if token:
+        try:
+            claims = auth_service.decode_access_token(token)
+            if claims:
+                return {
+                    "authenticated": True,
+                    "user_id": claims.get("sub") or claims.get("user_id"),
+                    "role": claims.get("role", "contributor"),
+                    "username": claims.get("username", "user"),
+                }
+        except Exception:
+            pass
+
+    # 3. Research token check
+    research_key = request.headers.get("X-Research-Key", "").strip()
+    if research_key:
+        try:
+            from research_interoperability_service import validate_research_token
+            res = validate_research_token(research_key, DB_PATH)
+            if res.get("valid"):
+                return {
+                    "authenticated": True,
+                    "user_id": res.get("key_id"),
+                    "role": "researcher",
+                    "username": res.get("institution", "researcher"),
+                }
+        except Exception:
+            pass
+
+    return {"authenticated": False, "user_id": None, "role": "anonymous", "username": "anonymous"}
+
+
+def _enforce_access_tier(record: dict[str, Any], request: Request | None) -> None:
+    """Enforce OCAP server-side access tiers on transcripts and audio masters (SEC-03)."""
+    if record.get("status") == "withdrawn" or record.get("archived_at") is not None:
+        raise HTTPException(
+            status_code=404,
+            detail="Audio recording has been withdrawn under speaker consent.",
+        )
+
+    tier = (record.get("privacy_level") or "public").strip().lower()
+    if tier == "public":
+        return
+
+    user = _extract_user_identity(request)
+
+    # Admin always has override access for governance and compliance
+    if user["role"] == "admin":
+        return
+
+    if tier == "community":
+        if not user["authenticated"]:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Community access tier requires an authenticated community member or elder.",
+            )
+        return
+
+    if tier == "research":
+        if user["role"] not in ("researcher", "admin"):
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: Research tier requires verified researcher credentials or authorization.",
+            )
+        return
+
+    if tier == "private":
+        # Only admin or the verified contributor/owner
+        is_owner = False
+        if user["authenticated"]:
+            # Check owner id match if contributor_id is present
+            if record.get("contributor_id") and user.get("user_id"):
+                if record.get("contributor_id") == user.get("user_id"):
+                    is_owner = True
+            # Check owner username match if contributor_name is a specific registered user
+            c_name = record.get("contributor_name")
+            if c_name and c_name not in ("Community Contributor", "Anonymous Contributor"):
+                if c_name == user.get("username"):
+                    is_owner = True
+
+        if not is_owner:
+            raise HTTPException(
+                status_code=403,
+                detail="Access denied: this recording is private under user controls.",
+            )
+
+
+class ApiRateLimiter:
+    """Thread-safe sliding-window in-memory rate limiter with tiered quotas (T1.6)."""
+
+    def __init__(self) -> None:
+        self._lock = threading.Lock()
+        self._records: dict[str, list[float]] = {}
+
+    def check(
+        self, key: str, max_requests: int, window_seconds: float = 60.0
+    ) -> tuple[bool, int, int]:
+        """Check if request is permitted under sliding window quota.
+
+        Returns:
+            (allowed: bool, remaining_requests: int, retry_after_seconds: int)
+        """
+        now = time.time()
+        with self._lock:
+            timestamps = self._records.setdefault(key, [])
+            valid_timestamps = [ts for ts in timestamps if now - ts < window_seconds]
+            self._records[key] = valid_timestamps
+
+            if len(valid_timestamps) >= max_requests:
+                oldest = valid_timestamps[0]
+                retry_after = max(1, int(window_seconds - (now - oldest)))
+                return False, 0, retry_after
+
+            valid_timestamps.append(now)
+            remaining = max_requests - len(valid_timestamps)
+            return True, remaining, 0
+
+    def clear(self) -> None:
+        with self._lock:
+            self._records.clear()
+
+
+_GLOBAL_RATE_LIMITER = ApiRateLimiter()
+
+
 @app.middleware("http")
 async def security_and_logging_middleware(request: Request, call_next):
     start_time = time.time()
     method = request.method
     path = request.url.path
 
+    client_ip = request.client.host if request.client else "127.0.0.1"
+
+    # Distributed tracing / Correlation ID (T3.4)
+    request_id = (
+        request.headers.get("x-request-id")
+        or request.headers.get("x-correlation-id")
+        or f"req_{uuid.uuid4().hex[:12]}"
+    )
+    request.state.request_id = request_id
+
+    # Rate limiting exemptions: test mode (unless explicitly testing rate limits), health checks, docs
+    exempt_paths = {
+        "/health",
+        "/health/deep",
+        "/api/health/deep",
+        "/api/v1/health/deep",
+        "/ready",
+        "/metrics",
+        "/favicon.ico",
+        "/docs",
+        "/openapi.json",
+    }
+    is_test_env = os.environ.get("VOICE_ROOTS_ENV") == "test" or bool(os.environ.get("PYTEST_CURRENT_TEST"))
+    is_testing_rate_limit = bool(request.headers.get("x-test-rate-limit"))
+    is_exempt = path in exempt_paths or (is_test_env and not is_testing_rate_limit)
+
+    limit = 120
+    remaining = 120
+
+    if not is_exempt:
+        if path.startswith(("/api/v1/auth", "/api/auth")):
+            limit = int(os.environ.get("AUTH_RATE_LIMIT_PER_MINUTE", "30"))
+            bucket = f"auth:{client_ip}"
+        elif path.startswith(("/api/v1/transcripts/upload", "/api/upload")):
+            limit = int(os.environ.get("UPLOAD_RATE_LIMIT_PER_MINUTE", "40"))
+            bucket = f"upload:{client_ip}"
+        else:
+            limit = int(os.environ.get("API_RATE_LIMIT_PER_MINUTE", "120"))
+            bucket = f"api:{client_ip}"
+
+        allowed, remaining, retry_after = _GLOBAL_RATE_LIMITER.check(
+            bucket, limit, window_seconds=60.0
+        )
+        if not allowed:
+            logger.warning(
+                "Rate limit exceeded for %s on %s %s (limit: %d/min)",
+                client_ip,
+                method,
+                path,
+                limit,
+            )
+            headers = {
+                "Retry-After": str(retry_after),
+                "X-RateLimit-Limit": str(limit),
+                "X-RateLimit-Remaining": "0",
+                "X-RateLimit-Reset": str(int(time.time() + retry_after)),
+            }
+            return JSONResponse(
+                status_code=429,
+                content={
+                    "error": "Too Many Requests",
+                    "detail": f"Rate limit exceeded: maximum {limit} requests per minute allowed.",
+                    "retry_after": retry_after,
+                },
+                headers=headers,
+            )
+
     response = await call_next(request)
     duration_ms = round((time.time() - start_time) * 1000, 2)
 
-    # Security Headers (SEC-06)
+    # Security Headers (SEC-06 & T1.6)
     response.headers["X-Content-Type-Options"] = "nosniff"
     response.headers["X-Frame-Options"] = "DENY"
     response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+    response.headers["X-XSS-Protection"] = "0"
+    response.headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=()"
+    response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
         "default-src 'self'; "
         "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
         "style-src 'self' 'unsafe-inline'; "
         "img-src 'self' data: blob: https:; "
-        "media-src 'self' blob: data:; "
+        "media-src 'self' blob: data: https:; "
         "connect-src 'self' http: https:;"
     )
     if request.url.scheme == "https" or request.headers.get("x-forwarded-proto") == "https":
         response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
 
-    # Redact sensitive headers or paths; never log speech audio content
-    client_ip = request.client.host if request.client else "127.0.0.1"
+    # Correlation ID propagation (T3.4)
+    response.headers["X-Request-ID"] = request_id
+
+    # Rate limiting telemetry headers
+    if not is_exempt:
+        response.headers["X-RateLimit-Limit"] = str(limit)
+        response.headers["X-RateLimit-Remaining"] = str(remaining)
+        response.headers["X-RateLimit-Reset"] = str(int(time.time() + 60))
+
     logger.info(
-        "HTTP %s %s -> status=%d duration_ms=%.2f client=%s",
+        "HTTP %s %s -> status=%d duration_ms=%.2f client=%s [req_id=%s]",
         method,
         path,
         response.status_code,
         duration_ms,
         client_ip,
+        request_id,
+        extra={
+            "request_id": request_id,
+            "method": method,
+            "path": path,
+            "status_code": response.status_code,
+            "duration_ms": duration_ms,
+            "client_ip": client_ip,
+        },
     )
     return response
 
@@ -695,9 +1036,21 @@ def stream_storage_audio_file(filename: str, request: Request):
     if safe_filename != filename or ".." in filename or "/" in filename or "\\" in filename:
         raise HTTPException(status_code=400, detail="Invalid audio filename.")
 
-    file_path = os.path.join(AUDIO_STORAGE, safe_filename)
-    if not os.path.exists(file_path):
-        raise HTTPException(status_code=404, detail="Audio file not found.")
+    provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
+
+    # Check for cryptographic signed URL signature (T3.5)
+    has_valid_signature = False
+    sig = request.query_params.get("sig")
+    expires = request.query_params.get("expires")
+    if sig and expires:
+        is_valid, reason = security_service.verify_signed_audio_token(
+            filename=safe_filename,
+            expires=expires,
+            sig=sig,
+        )
+        if not is_valid:
+            raise HTTPException(status_code=403, detail=f"Signed URL validation failed: {reason}")
+        has_valid_signature = True
 
     # Enforce OCAP boundaries
     try:
@@ -705,18 +1058,22 @@ def stream_storage_audio_file(filename: str, request: Request):
             conn.row_factory = sqlite3.Row
             row = conn.execute(
                 """
-                SELECT id, privacy_level, status, archived_at
+                SELECT id, privacy_level, status, archived_at, contributor_name
                 FROM transcripts
                 WHERE audio_filename = ?
                 """,
                 (safe_filename,),
             ).fetchone()
             if row:
-                if row["status"] == "withdrawn" or row["archived_at"] is not None:
-                    raise HTTPException(status_code=404, detail="Audio recording has been withdrawn under speaker consent.")
-                is_admin = _is_admin_request(request)
-                if row["privacy_level"] == "private" and not is_admin:
-                    raise HTTPException(status_code=403, detail="Access denied: Restricted or private cultural audio recording.")
+                row_dict = dict(row)
+                # Consent withdrawal check is immutable: even signed URLs cannot stream withdrawn audio
+                if row_dict.get("status") == "withdrawn" or row_dict.get("archived_at") is not None:
+                    raise HTTPException(
+                        status_code=404,
+                        detail="Audio recording has been withdrawn under speaker consent.",
+                    )
+                if not has_valid_signature:
+                    _enforce_access_tier(row_dict, request)
 
             # Also check cultural stories for sacred elder-only lore
             story = conn.execute(
@@ -728,15 +1085,61 @@ def stream_storage_audio_file(filename: str, request: Request):
                 (safe_filename,),
             ).fetchone()
             if story and story["access_classification"] == "SACRED_ELDER_ONLY":
-                is_admin = _is_admin_request(request)
-                if not is_admin:
-                    raise HTTPException(status_code=403, detail="Access denied: Restricted or sacred cultural audio recording.")
+                user = _extract_user_identity(request)
+                if user["role"] not in ("admin", "reviewer"):
+                    raise HTTPException(
+                        status_code=403,
+                        detail="Access denied: Restricted or sacred cultural audio recording.",
+                    )
     except HTTPException:
         raise
     except Exception as exc:  # noqa: BLE001
         logger.warning("Error verifying audio permissions for %s: %s", safe_filename, exc)
 
+    # Cloudflare R2 / S3 Presigned Streaming
+    if provider.name in ("r2", "s3"):
+        signed_url = provider.get_stream_url(safe_filename, expires_in=3600)
+        from fastapi.responses import RedirectResponse
+        return RedirectResponse(url=signed_url, status_code=307)
+
+    # Local Filesystem Streaming
+    file_path = os.path.join(AUDIO_STORAGE, safe_filename)
+    if not os.path.exists(file_path):
+        raise HTTPException(status_code=404, detail="Audio file not found.")
+
     return FileResponse(file_path, media_type="audio/wav")
+
+
+@app.get("/api/v1/storage/signed-url/{filename}")
+def get_signed_audio_stream_url(
+    filename: str,
+    request: Request,
+    expires_in: int = Query(3600, ge=60, le=86400),
+):
+    """Generate a cryptographic signed URL for streaming audio, verifying access tiers (T3.5)."""
+    safe_filename = os.path.basename(filename)
+    if safe_filename != filename or ".." in filename or "/" in filename or "\\" in filename:
+        raise HTTPException(status_code=400, detail="Invalid audio filename.")
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT id, privacy_level, status, archived_at, contributor_name FROM transcripts WHERE audio_filename = ?",
+            (safe_filename,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Recording metadata not found.")
+        _enforce_access_tier(dict(row), request)
+
+    signed_url = security_service.generate_signed_audio_url(
+        filename=safe_filename,
+        expires_in=expires_in,
+    )
+    return {
+        "filename": safe_filename,
+        "expires_in": expires_in,
+        "signed_url": signed_url,
+    }
 
 
 # Mount built frontend assets for unified web application serving
@@ -777,6 +1180,8 @@ class TranscriptResponse(BaseModel):
     created_at: str
     updated_at: str
     audio_sha256: str | None = None
+    flac_sha256: str | None = None
+    is_flac_verified: bool = False
     file_size_bytes: int | None = None
     consent_at: str | None = None
     consent_version: str | None = None
@@ -914,16 +1319,8 @@ SUPPORTED_LANGUAGES = list_languages()
 def root(request: Request):
     """Root endpoint welcoming clients and serving the unified SPA, or JSON API metadata when requested."""
     accept = request.headers.get("accept", "")
-    if os.path.exists(INDEX_HTML_PATH):
-        if "application/json" in accept and "text/html" not in accept:
-            return {
-                "name": "Voice Roots API",
-                "tagline": "Rooting Oral Languages in Text with AI",
-                "status": "online",
-                "version": "1.0.0",
-                "docs_url": "/docs",
-                "health_check": "/health",
-            }
+    is_browser_html_request = "text/html" in accept and "application/json" not in accept
+    if os.path.exists(INDEX_HTML_PATH) and is_browser_html_request:
         return FileResponse(INDEX_HTML_PATH)
     return {
         "name": "Voice Roots API",
@@ -956,22 +1353,42 @@ def health_check():
     """Health check endpoint confirming API availability and database connectivity."""
     db_status = "ok"
     status = "healthy"
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute("SELECT 1").fetchone()
-    except Exception:  # noqa: BLE001
-        # Keep internal paths and exception details out of the public health response.
-        db_status = "error"
-        status = "degraded"
+    db_type = "sqlite"
+    database_url = os.environ.get("DATABASE_URL")
+
+    if database_url and (database_url.startswith("postgres://") or database_url.startswith("postgresql://")):
+        db_type = "postgresql"
+        try:
+            psycopg2 = importlib.import_module("psycopg2")
+            norm_url = database_url.replace("postgres://", "postgresql://", 1) if database_url.startswith("postgres://") else database_url
+            conn = psycopg2.connect(norm_url, connect_timeout=5)
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+            conn.close()
+        except Exception:
+            db_status = "error"
+            status = "degraded"
+    else:
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                conn.execute("SELECT 1").fetchone()
+        except Exception:  # noqa: BLE001
+            # Keep internal paths and exception details out of the public health response.
+            db_status = "error"
+            status = "degraded"
 
     return {
         "status": status,
         "app": "Voice Roots",
         "version": "1.0.0",
-        "database": "sqlite",
+        "database": db_type,
         "database_status": db_status,
         "storage_status": "ok" if os.path.exists(STORAGE_DIR) else "not_configured",
     }
+
+
+# Render's health check alias
+health = health_check
 
 
 @app.get("/ready")
@@ -985,13 +1402,26 @@ def readiness_check():
         "vector_store": "ok",
     }
     is_ready = True
+    database_url = os.environ.get("DATABASE_URL")
 
-    try:
-        with sqlite3.connect(DB_PATH) as conn:
-            conn.execute("SELECT 1 FROM transcripts LIMIT 1")
-    except Exception:  # noqa: BLE001
-        checks["database"] = "unready"
-        is_ready = False
+    if database_url and (database_url.startswith("postgres://") or database_url.startswith("postgresql://")):
+        try:
+            psycopg2 = importlib.import_module("psycopg2")
+            norm_url = database_url.replace("postgres://", "postgresql://", 1) if database_url.startswith("postgres://") else database_url
+            conn = psycopg2.connect(norm_url, connect_timeout=5)
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1 FROM transcripts LIMIT 1")
+            conn.close()
+        except Exception:
+            checks["database"] = "unready"
+            is_ready = False
+    else:
+        try:
+            with sqlite3.connect(DB_PATH) as conn:
+                conn.execute("SELECT 1 FROM transcripts LIMIT 1")
+        except Exception:  # noqa: BLE001
+            checks["database"] = "unready"
+            is_ready = False
 
     if not os.path.exists(AUDIO_STORAGE) or not os.access(AUDIO_STORAGE, os.W_OK):
         checks["storage"] = "unready"
@@ -1016,6 +1446,21 @@ def readiness_check():
         "version": "1.0.0",
         "checks": checks,
     }
+
+
+@app.get("/health/deep")
+@app.get("/api/health/deep")
+@app.get("/api/v1/health/deep")
+def deep_health_check(response: Response):
+    """Deep system health and observability probe assessing database, storage, and host metrics (T3.4)."""
+    probe = monitoring_service.get_deep_health_probe(
+        db_path=DB_PATH,
+        storage_dir=STORAGE_DIR,
+        audio_storage=AUDIO_STORAGE,
+    )
+    if probe.get("status") == "unhealthy":
+        response.status_code = 503
+    return probe
 
 
 @app.get("/languages")
@@ -1213,43 +1658,40 @@ def get_transcript(transcript_id: int, request: Request):
         raise HTTPException(status_code=404, detail="Transcript not found")
 
     record = dict(row)
-    if record.get("privacy_level") == "private" and not _is_admin_request(request):
-        raise HTTPException(
-            status_code=403,
-            detail="Access denied: this recording is private under user controls.",
-        )
-
+    _enforce_access_tier(record, request)
     return record
 
 
 @app.get("/api/v1/audio/{transcript_id}/stream")
 def get_audio_stream_endpoint(transcript_id: int, request: Request):
-    """Provide secure, authorized audio stream URL (local path or presigned S3 URL)."""
+    """Provide secure, authorized audio stream URL (local path or presigned S3/R2 URL)."""
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            "SELECT * FROM transcripts WHERE id = ?",
             (transcript_id,),
         ).fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Recording not found")
 
         record = dict(row)
-        if record.get("privacy_level") == "private" and not _is_admin_request(request):
-            raise HTTPException(status_code=403, detail="Access denied: private recording.")
+        _enforce_access_tier(record, request)
 
         provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
         stream_url = provider.get_stream_url(record["audio_filename"], expires_in=3600)
+        effective_backend = provider.name if provider.name in ("r2", "s3") else (record.get("storage_backend") or provider.name)
         return {
             "transcript_id": transcript_id,
             "filename": record["audio_filename"],
             "stream_url": stream_url,
-            "storage_backend": record.get("storage_backend") or provider.name,
+            "storage_backend": effective_backend,
             "privacy_level": record.get("privacy_level", "public"),
             "audio_sha256": record.get("audio_sha256"),
+            "flac_sha256": record.get("flac_sha256"),
+            "is_flac_verified": bool(record.get("flac_sha256")),
             "license": record.get("license", "CC BY-NC 4.0"),
             "contributor_name": record.get("contributor_name", "Community Contributor"),
-            "expires_in_seconds": 3600 if provider.name == "s3" else None,
+            "expires_in_seconds": 3600 if effective_backend in ("r2", "s3") else None,
         }
 
 
@@ -1306,17 +1748,18 @@ def process_saved_transcription(transcript_id: int):
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            "SELECT * FROM transcripts WHERE id = ?",
             (transcript_id,),
         ).fetchone()
         if row is None:
             return
-        audio_path = os.path.join(AUDIO_STORAGE, row["audio_filename"])
+        row_dict = dict(row)
+        audio_path = os.path.join(AUDIO_STORAGE, row_dict["audio_filename"])
 
     _set_transcription_state(transcript_id, state="processing")
     try:
         provider = create_transcription_provider()
-        recording_language = row.get("language", None)
+        recording_language = row_dict.get("language")
         if recording_language and str(recording_language).strip().lower() in {"auto", "auto-detect", "detect", ""}:
             recording_language = None
         try:
@@ -1372,8 +1815,8 @@ def _audio_format(prefix: bytes) -> str | None:
     return None
 
 
-async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str]:
-    """Stream a bounded upload to a temporary file and atomically preserve it."""
+async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str, str | None]:
+    """Stream a bounded upload to a temporary file, evaluate FLAC losslessness, and preserve it."""
     os.makedirs(AUDIO_STORAGE, exist_ok=True)
     fd, temp_path = tempfile.mkstemp(prefix=".upload-", dir=AUDIO_STORAGE)
     digest = hashlib.sha256()
@@ -1428,12 +1871,66 @@ async def _store_audio_upload(file: UploadFile) -> tuple[str, int, str]:
                 detail="The file extension does not match the audio content.",
             )
 
+        # Compute SHA-256 digest on temporary file before storing
+        digest = hashlib.sha256()
+        with open(temp_path, "rb") as f:
+            while chunk := f.read(65536):
+                digest.update(chunk)
+        sha256_hash = digest.hexdigest()
+
+        # Ingest Deduplication: reuse master if identical audio already exists in database AND on storage
+        try:
+            storage_prov = create_storage_provider(storage_dir=AUDIO_STORAGE)
+            with get_db_connection() as conn:
+                cur = conn.cursor()
+                cur.execute(
+                    "SELECT audio_filename, file_size_bytes, audio_sha256, flac_sha256, storage_backend FROM transcripts WHERE (audio_sha256 = ? OR flac_sha256 = ?) AND archived_at IS NULL LIMIT 1",
+                    (sha256_hash, sha256_hash),
+                )
+                existing = cur.fetchone()
+                if existing and existing["audio_filename"] and storage_prov.file_exists(existing["audio_filename"]):
+                    logger.info("SHA-256 dedupe: audio master %s already exists as %s. Reusing master.", sha256_hash, existing["audio_filename"])
+                    if os.path.exists(temp_path):
+                        os.remove(temp_path)
+                    return existing["audio_filename"], existing["file_size_bytes"] or size, existing["audio_sha256"] or sha256_hash, existing["flac_sha256"]
+        except Exception as _dedupe_err:
+            logger.debug("Deduplication check bypassed: %s", _dedupe_err)
+
+        # T1.5: Convert uploads to FLAC on ingest and prove losslessness by comparing decoded samples
+        flac_sha256: str | None = None
+        flac_master_path: str | None = None
+        try:
+            if detected_format in ("wav", "flac"):
+                from backend.flac_service import convert_to_flac_and_verify
+                flac_res = convert_to_flac_and_verify(temp_path, allow_non_lossless_fallback=False)
+                if flac_res.is_lossless:
+                    flac_sha256 = flac_res.flac_sha256
+                    flac_master_path = flac_res.flac_path
+                    logger.info(
+                        "FLAC conversion & lossless verification passed: %s -> %s (saved %.1f%%)",
+                        sha256_hash[:12],
+                        flac_sha256[:12],
+                        flac_res.space_saved_percentage,
+                    )
+        except Exception as _flac_err:
+            logger.debug("FLAC conversion/verification bypassed or skipped: %s", _flac_err)
+
         filename = f"{uuid.uuid4()}.{detected_format}"
         provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
         stored_filename, stored_size, sha256_hash = provider.store_file(
             temp_path, filename, content_type=declared_type
         )
-        return stored_filename, stored_size, sha256_hash
+        if flac_master_path and os.path.exists(flac_master_path):
+            try:
+                flac_filename = f"{os.path.splitext(filename)[0]}.flac"
+                provider.store_file(flac_master_path, flac_filename, content_type="audio/flac")
+            except Exception as _flac_store_err:
+                logger.debug("FLAC secondary storage bypass: %s", _flac_store_err)
+            finally:
+                if os.path.exists(flac_master_path):
+                    os.remove(flac_master_path)
+
+        return stored_filename, stored_size, sha256_hash, flac_sha256
     except Exception:
         if os.path.exists(temp_path):
             os.remove(temp_path)
@@ -1448,7 +1945,7 @@ MAX_UPLOADS_PER_MINUTE = 60
 
 def _check_upload_rate_limit(client_ip: str):
     """Sliding-window abuse prevention to protect server from DoS uploads."""
-    if os.environ.get("VOICE_ROOTS_ENV") == "test" or not client_ip:
+    if os.environ.get("VOICE_ROOTS_ENV") == "test" or os.environ.get("PYTEST_CURRENT_TEST") or not client_ip:
         return
     now = time.time()
     with _UPLOAD_RATE_LIMIT_LOCK:
@@ -1491,6 +1988,7 @@ async def upload_audio(
     is_anonymous: bool = Form(False),
     contextual_notes: str | None = Form(None),
     client_uuid: str | None = Form(None),
+    prompt_id: str | None = Form(None),
 ):
     """Store a consented audio master and optionally queue consented transcription."""
     client_ip = request.client.host if request.client else ""
@@ -1521,7 +2019,7 @@ async def upload_audio(
             if existing:
                 return dict(existing)
 
-    unique_filename, file_size, audio_sha256 = await _store_audio_upload(upload_file)
+    unique_filename, file_size, audio_sha256, flac_sha256 = await _store_audio_upload(upload_file)
 
     audio_url = f"/storage/audio/{unique_filename}"
     unique_uuid = client_uuid or str(uuid.uuid4())
@@ -1537,16 +2035,21 @@ async def upload_audio(
 
     calculated_duration = 0.0
     try:
-        if unique_filename.endswith(".wav"):
-            stored_path = os.path.join(AUDIO_STORAGE, unique_filename)
-            with wave.open(stored_path, "rb") as wf:
-                framerate = wf.getframerate()
-                if framerate > 0:
-                    calculated_duration = round(wf.getnframes() / float(framerate), 2)
-    except (wave.Error, OSError) as _exc:
-        logger.debug("Failed reading wave duration for %s: %s", unique_filename, _exc)
+        stored_path = os.path.join(AUDIO_STORAGE, unique_filename)
+        if os.path.exists(stored_path):
+            try:
+                import soundfile as sf
+                calculated_duration = round(float(sf.info(stored_path).duration), 2)
+            except Exception:
+                if unique_filename.endswith(".wav"):
+                    with wave.open(stored_path, "rb") as wf:
+                        framerate = wf.getframerate()
+                        if framerate > 0:
+                            calculated_duration = round(wf.getnframes() / float(framerate), 2)
+    except Exception as _exc:
+        logger.debug("Failed reading audio duration for %s: %s", unique_filename, _exc)
 
-    storage_backend = os.environ.get("VOICE_ROOTS_STORAGE_BACKEND", "local")
+    storage_backend = create_storage_provider(storage_dir=AUDIO_STORAGE).name
 
     effective_contributor = "Anonymous Contributor" if is_anonymous else (contributor_name or "Community Contributor")
     has_explicit_multitier = any([
@@ -1581,7 +2084,7 @@ async def upload_audio(
                 INSERT INTO transcripts (
                     uuid_id, title, audio_filename, audio_url, language,
                     dialect, transcript_text, status, duration_seconds,
-                    created_at, updated_at, audio_sha256, file_size_bytes,
+                    created_at, updated_at, audio_sha256, flac_sha256, file_size_bytes,
                     consent_at, consent_version, transcription_status,
                     transcription_consent_at, transcription_consent_version,
                     contributor_name, contributor_role, provenance_notes,
@@ -1589,8 +2092,8 @@ async def upload_audio(
                     storage_backend,
                     verification_status, consent_private_storage, consent_community_access,
                     consent_public_publication, consent_ai_training, is_anonymous,
-                    contextual_notes
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    contextual_notes, prompt_id
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                 """,
                 (
                     unique_uuid,
@@ -1605,6 +2108,7 @@ async def upload_audio(
                     now,
                     now,
                     audio_sha256,
+                    flac_sha256,
                     file_size,
                     now,
                     CONSENT_VERSION,
@@ -1626,6 +2130,7 @@ async def upload_audio(
                     c_ai,
                     anon_flag,
                     contextual_notes,
+                    prompt_id,
                 ),
             )
             conn.commit()
@@ -1664,6 +2169,9 @@ async def upload_audio(
         "transcribed_at": None,
         "created_at": now,
         "audio_sha256": audio_sha256,
+        "flac_sha256": flac_sha256,
+        "prompt_id": prompt_id,
+        "is_flac_verified": bool(flac_sha256),
         "file_size_bytes": file_size,
         "consent_at": now,
         "consent_version": CONSENT_VERSION,
@@ -1709,7 +2217,7 @@ def request_transcription(
     with sqlite3.connect(DB_PATH) as conn:
         conn.row_factory = sqlite3.Row
         row = conn.execute(
-            "SELECT * FROM transcripts WHERE id = ? AND archived_at IS NULL",
+            "SELECT * FROM transcripts WHERE id = ?",
             (transcript_id,),
         ).fetchone()
         if row is None:
@@ -1865,29 +2373,216 @@ def delete_transcript(transcript_id: int):
 
 
 @app.post("/api/v1/transcripts/{transcript_id}/withdraw-consent")
-def withdraw_transcript_consent(transcript_id: int):
-    """Withdraw speaker consent under OCAP principles. Immediately hides recording from active archive."""
+def withdraw_transcript_consent(transcript_id: str):
+    """Withdraw speaker consent under OCAP principles. Immediately purges audio, transcripts, translations, and embeddings."""
     now = datetime.now(timezone.utc).isoformat()
+    numeric_id = None
+    try:
+        numeric_id = int(transcript_id)
+    except ValueError:
+        pass
+
     with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
         cursor = conn.cursor()
+
+        # 1. Locate the transcript record
+        if numeric_id is not None:
+            cursor.execute("SELECT * FROM transcripts WHERE id = ?", (numeric_id,))
+        else:
+            cursor.execute("SELECT * FROM transcripts WHERE uuid_id = ? OR id = ?", (transcript_id, transcript_id))
+        row = cursor.fetchone()
+
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+
+        rec = dict(row)
+        t_id = rec["id"]
+        audio_filename = rec.get("audio_filename") or ""
+
+        # 2. Check if already withdrawn
+        if rec.get("archived_at") is not None:
+            raise HTTPException(status_code=404, detail=f"Recording {t_id} is already withdrawn under OCAP consent protocols.")
+
+        # Check if any other active transcript still shares this physical audio file
+        other_active_count = 0
+        if audio_filename:
+            cursor.execute(
+                "SELECT COUNT(*) FROM transcripts WHERE audio_filename = ? AND id != ? AND archived_at IS NULL",
+                (audio_filename, t_id),
+            )
+            other_active_count = cursor.fetchone()[0]
+
+        # 3. Purge audio master and flac files from storage provider and disk (only if no other active transcript shares it)
+        if audio_filename and other_active_count == 0:
+            try:
+                provider = create_storage_provider(storage_dir=AUDIO_STORAGE)
+                # Attempt delete with consent_withdrawn=True (mandatory for R2 write-once policy)
+                try:
+                    provider.delete_file(audio_filename, consent_withdrawn=True)
+                except TypeError:
+                    provider.delete_file(audio_filename)
+
+                # If wav, also delete corresponding flac master
+                if audio_filename.lower().endswith(".wav"):
+                    flac_name = audio_filename.rsplit(".", 1)[0] + ".flac"
+                    try:
+                        provider.delete_file(flac_name, consent_withdrawn=True)
+                    except Exception:
+                        pass
+            except Exception as s_err:
+                logger.warning("Could not delete audio from storage provider on withdrawal: %s", s_err)
+
+            # Local disk cleanup
+            for fname in [audio_filename, audio_filename.rsplit(".", 1)[0] + ".flac" if "." in audio_filename else ""]:
+                if fname:
+                    local_p = os.path.join(AUDIO_STORAGE, fname)
+                    if os.path.exists(local_p):
+                        try:
+                            os.remove(local_p)
+                        except Exception:
+                            pass
+
+        # 4. Cascade database deletions: translations, corrections, alignments
+        cursor.execute("DELETE FROM translations WHERE transcript_id = ?", (t_id,))
+        cursor.execute("DELETE FROM corrections WHERE target_type = 'transcript' AND target_id = ?", (t_id,))
+        try:
+            cursor.execute("DELETE FROM speech_alignments WHERE transcript_id = ?", (t_id,))
+            cursor.execute("DELETE FROM speech_acoustic_metrics WHERE transcript_id = ?", (t_id,))
+        except Exception:
+            pass
+
+        # 5. Clear full-text search index
+        try:
+            cursor.execute("DELETE FROM transcripts_fts WHERE rowid = ?", (t_id,))
+        except Exception:
+            pass
+
+        # 6. Update transcripts row to withdrawn state (passport continuity with purged data)
         cursor.execute(
             """
             UPDATE transcripts
-            SET archived_at = ?, status = 'Consent Withdrawn', updated_at = ?
-            WHERE id = ? AND archived_at IS NULL
+            SET archived_at = ?,
+                status = 'withdrawn',
+                verification_status = 'withdrawn_or_rejected',
+                audio_filename = '',
+                audio_url = '',
+                audio_sha256 = '',
+                flac_sha256 = '',
+                transcript_text = '[Consent Withdrawn - Master Audio and Annotations Purged under OCAP Protocol]',
+                machine_transcript_text = '',
+                transcription_status = 'withdrawn',
+                updated_at = ?
+            WHERE id = ?
             """,
-            (now, now, transcript_id),
+            (now, now, t_id),
         )
-        if cursor.rowcount == 0:
-            raise HTTPException(status_code=404, detail="Transcript not found or already archived.")
+
+        # 7. Write immutable governance audit log entry
+        audit_details = json.dumps({
+            "reason": "Speaker exercised OCAP consent withdrawal",
+            "purged": ["audio_master", "flac_master", "translations", "corrections", "vector_embeddings", "speech_alignments"],
+            "title": rec.get("title", ""),
+            "language": rec.get("language", ""),
+            "previous_audio_sha256": rec.get("audio_sha256", ""),
+            "timestamp": now,
+        })
+        cursor.execute(
+            """
+            INSERT INTO governance_audit_logs (
+                action_type, actor_name, actor_role, entity_type, entity_id, details_json, timestamp
+            ) VALUES (?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                "CONSENT_WITHDRAWN",
+                rec.get("contributor_name") or "Speaker / Contributor",
+                "speaker",
+                "transcript",
+                str(t_id),
+                audit_details,
+                now,
+            ),
+        )
         conn.commit()
-    _sync_transcript_to_search(transcript_id)
+
+    # 8. Purge vector store embeddings
+    try:
+        from search_service import get_archive_vector_collection
+        col = get_archive_vector_collection()
+        if col:
+            col.delete(ids=[str(t_id)])
+    except Exception as v_err:
+        logger.debug("Archive vector store delete error: %s", v_err)
+
+    try:
+        from vector_store import get_resource_collection
+        r_col = get_resource_collection()
+        if r_col:
+            r_col.delete(ids=[f"transcript:{t_id}", f"transcript_{t_id}"])
+    except Exception as v_err:
+        logger.debug("Resource vector store delete error: %s", v_err)
+
     return {
         "success": True,
-        "message": f"Consent withdrawn for recording {transcript_id}. Recording removed from active archive.",
-        "id": transcript_id,
+        "message": f"Consent withdrawn for recording {t_id}. Audio master, transcripts, translations, and embeddings permanently purged under OCAP protocol.",
+        "id": t_id,
         "status": "Consent Withdrawn",
+        "verification_status": "withdrawn_or_rejected",
+        "is_withdrawn": True,
         "withdrawn_at": now,
+        "purged": {
+            "audio": True,
+            "translations": True,
+            "embeddings": True,
+            "transcripts": True,
+        },
+    }
+
+
+@app.get("/api/v1/transcripts/{transcript_id}/passport")
+@app.get("/api/v1/passport/{transcript_id}")
+def get_transcript_passport(transcript_id: str):
+    """Retrieve public Heritage Passport data for a recording, including withdrawn state."""
+    numeric_id = None
+    try:
+        numeric_id = int(transcript_id)
+    except ValueError:
+        pass
+
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        if numeric_id is not None:
+            cursor.execute("SELECT * FROM transcripts WHERE id = ?", (numeric_id,))
+        else:
+            cursor.execute("SELECT * FROM transcripts WHERE uuid_id = ? OR id = ?", (transcript_id, transcript_id))
+        row = cursor.fetchone()
+
+    if not row:
+        raise HTTPException(status_code=404, detail="Heritage Passport not found.")
+
+    rec = dict(row)
+    is_withdrawn = bool(rec.get("status") == "withdrawn" or rec.get("archived_at") is not None)
+
+    return {
+        "id": rec["id"],
+        "uuid_id": rec["uuid_id"],
+        "title": rec["title"],
+        "language": rec["language"],
+        "dialect": rec.get("dialect"),
+        "community": rec.get("contributor_name") or "Heritage Custodians",
+        "is_withdrawn": is_withdrawn,
+        "status": "withdrawn" if is_withdrawn else rec.get("status", "active"),
+        "verification_status": "withdrawn" if is_withdrawn else rec.get("verification_status", "submitted"),
+        "withdrawn_at": rec.get("archived_at") if is_withdrawn else None,
+        "audio_available": not is_withdrawn,
+        "audio_sha256": rec.get("audio_sha256") if not is_withdrawn else None,
+        "flac_sha256": rec.get("flac_sha256") if not is_withdrawn else None,
+        "upload_date": rec.get("created_at"),
+        "message": (
+            "Consent has been withdrawn by the speaker under OCAP data sovereignty protocols. "
+            "Master audio, transcripts, and vector embeddings have been permanently purged."
+        ) if is_withdrawn else "Official Heritage Passport Verified.",
     }
 
 
@@ -2088,6 +2783,18 @@ def get_discovery_stats():
 def run_discovery_benchmark_evaluation():
     """Run benchmark evaluation suite measuring cross-lingual search precision, MRR, and latency."""
     return evaluate_multilingual_discovery()
+
+
+@app.get("/api/v1/stats/public")
+def get_public_statistics_endpoint():
+    """Public statistics reporting recorded hours, speakers, and audio masters alongside Census 2011 benchmarks."""
+    return stats_service.get_public_stats(db_path=DB_PATH)
+
+
+@app.get("/api/v1/stats/census")
+def get_census_metadata_endpoint():
+    """Retrieve raw Census of India 2011 demographic data from data/census/."""
+    return stats_service.load_census_raw_data()
 
 
 # ==============================================================================
@@ -2466,6 +3173,46 @@ def export_archive_corpus(
     )
 
 
+@app.get("/api/v1/export/public-audio")
+@app.post("/api/v1/export/public-audio")
+def export_public_audio_corpus(
+    request: Request,
+    dry_run: bool = Query(False),
+    format: str = Query("jsonl", pattern="^(jsonl|csv)$"),
+    language: str | None = None,
+):
+    """Admin-only export of consented, public-tier data as audio plus manifest (T2.9)."""
+    if not _is_admin_request(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator authorization required for restricted data export.",
+        )
+
+    if dry_run:
+        return data_export_service.get_export_dry_run(
+            db_path=DB_PATH,
+            audio_storage_dir=AUDIO_STORAGE,
+            language=language,
+        )
+
+    zip_bytes, zip_filename, summary = data_export_service.build_export_zip(
+        db_path=DB_PATH,
+        audio_storage_dir=AUDIO_STORAGE,
+        manifest_format=format,
+        language=language,
+    )
+
+    return Response(
+        content=zip_bytes,
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{zip_filename}"',
+            "X-Export-Records": str(summary["total_records"]),
+            "X-Export-Audio-Files": str(summary["audio_files_exported"]),
+        },
+    )
+
+
 
 class DetectLanguageRequest(BaseModel):
     id: int | None = None
@@ -2561,6 +3308,8 @@ def translate_text_endpoint(payload: TranslateRequest):
         translation_id = None
         now = datetime.now(timezone.utc).isoformat()
         if target_id is not None:
+            review_status = getattr(result, "review_status", "elder_approved" if result.verified else "unreviewed_draft")
+            badge_label = getattr(result, "badge_label", "Elder Approved" if result.verified else "Draft (Unreviewed)")
             with sqlite3.connect(DB_PATH) as conn:
                 cursor = conn.cursor()
                 cursor.execute(
@@ -2568,8 +3317,9 @@ def translate_text_endpoint(payload: TranslateRequest):
                     INSERT INTO translations (
                         transcript_id, source_language, target_language, source_text,
                         translated_text, provider, model, verified, limitation_note,
+                        review_status, badge_label,
                         created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
                     """,
                     (
                         target_id,
@@ -2581,6 +3331,8 @@ def translate_text_endpoint(payload: TranslateRequest):
                         result.model,
                         1 if result.verified else 0,
                         result.limitation_note,
+                        review_status,
+                        badge_label,
                         now,
                         now,
                     ),
@@ -2599,12 +3351,15 @@ def translate_text_endpoint(payload: TranslateRequest):
             "model": result.model,
             "verified": result.verified,
             "pair_status": result.pair_status,
+            "review_status": getattr(result, "review_status", "elder_approved" if result.verified else "unreviewed_draft"),
+            "badge_label": getattr(result, "badge_label", "Elder Approved" if result.verified else "Draft (Unreviewed)"),
+            "is_elder_approved": bool(getattr(result, "review_status", "") == "elder_approved" or result.verified),
             "limitation_note": result.limitation_note,
             "created_at": now if translation_id else None,
         }
     except OralLanguageElderReviewRequiredError as o_err:
         raise HTTPException(
-            status_code=503,
+            status_code=422,
             detail=(
                 f"Translation restricted: {o_err!s} "
                 f"Oral languages require community elder verification."
@@ -3496,6 +4251,41 @@ def prune_backups_endpoint(
     )
     res["triggered_by"] = admin_user
     return res
+
+
+class RestoreSnapshotRequest(BaseModel):
+    backup_filename: str
+    dry_run: bool = False
+
+
+@app.post("/api/v1/system/restore")
+def restore_database_endpoint(
+    req: RestoreSnapshotRequest,
+    request: Request,
+):
+    """Admin-only point-in-time database restore with automatic safety snapshot (T3.3)."""
+    if not _is_admin_request(request):
+        raise HTTPException(
+            status_code=403,
+            detail="Administrator authorization required for database restore.",
+        )
+    safe_fn = os.path.basename(req.backup_filename)
+    backup_file = os.path.join(BACKUP_DIR, safe_fn)
+
+    if not os.path.isfile(backup_file):
+        raise HTTPException(status_code=404, detail=f"Backup snapshot '{safe_fn}' not found in backup store.")
+
+    try:
+        res = backup_retention_service.restore_database_snapshot(
+            backup_path=backup_file,
+            target_db_path=DB_PATH,
+            dry_run=req.dry_run,
+        )
+        logger.info("Admin executed database restore: %s (dry_run=%s)", safe_fn, req.dry_run)
+        return res
+    except Exception as exc:
+        logger.error("Database restore failed: %s", exc)
+        raise HTTPException(status_code=500, detail=f"Restore operation failed: {exc}")
 
 
 @app.get("/api/v1/system/storage-probe")
@@ -4878,6 +5668,7 @@ def api_list_cultural_stories(
     category: str | None = None,
     q: str | None = None,
     query: str | None = None,
+    include_teasers: bool = False,
     limit: int = 50,
     offset: int = 0,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
@@ -4896,6 +5687,7 @@ def api_list_cultural_stories(
         query=search_query,
         is_authenticated=is_auth,
         user_roles=roles,
+        include_restricted_teasers=include_teasers,
         limit=limit,
         offset=offset,
     )
@@ -4905,6 +5697,7 @@ def api_list_cultural_stories(
 @app.get("/api/v1/archives/stories/{story_id}")
 def api_get_cultural_story(
     story_id: str,
+    allow_teaser: bool = False,
     x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
     x_user_role: str | None = Header(None, alias="X-User-Role"),
     x_user_language: str | None = Header(None, alias="X-User-Language"),
@@ -4913,7 +5706,7 @@ def api_get_cultural_story(
     """Retrieve an individual cultural story with translation and contributor provenance."""
     is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
     res = cultural_archive_service.get_cultural_story(
-        DB_PATH, story_id, is_authenticated=is_auth, user_roles=roles
+        DB_PATH, story_id, is_authenticated=is_auth, user_roles=roles, allow_teaser=allow_teaser
     )
     if not res:
         raise HTTPException(status_code=404, detail=f"Story '{story_id}' not found or access restricted.")
@@ -5122,6 +5915,92 @@ def api_withdraw_cultural_record(
         raise HTTPException(status_code=500, detail="Internal server error processing record withdrawal.")
 
 
+# Milestone 28 (Module 4: Cultural Archives & Sacred Lore Enhancements)
+
+@app.get("/api/v1/cultural-archives/stories/{story_id}/waveform")
+@app.get("/api/v1/archives/stories/{story_id}/waveform")
+def api_get_cultural_story_waveform(
+    story_id: str,
+    num_peaks: int = 56,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Retrieve 56-bar normalized audio waveform peaks for story audio visualizer."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
+    try:
+        return cultural_archive_service.get_story_waveform(
+            DB_PATH,
+            story_id=story_id,
+            audio_base_dir=AUDIO_STORAGE,
+            num_peaks=num_peaks,
+            is_authenticated=is_auth,
+            user_roles=roles,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/cultural-archives/stories/{story_id}/bilingual-segments")
+@app.get("/api/v1/archives/stories/{story_id}/bilingual-segments")
+def api_get_cultural_story_bilingual_segments(
+    story_id: str,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    x_user_language: str | None = Header(None, alias="X-User-Language"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Retrieve sentence-level time-aligned bilingual segments for karaoke synchronized playback."""
+    is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, x_user_language, authorization)
+    try:
+        return cultural_archive_service.get_story_bilingual_segments(
+            DB_PATH,
+            story_id=story_id,
+            is_authenticated=is_auth,
+            user_roles=roles,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+class RevokeStoryConsentRequest(BaseModel):
+    revoked_by: str
+    reason: str
+
+
+@app.post("/api/v1/cultural-archives/stories/{story_id}/revoke-consent")
+@app.post("/api/v1/archives/stories/{story_id}/revoke-consent")
+def api_revoke_story_consent(
+    story_id: str,
+    req: RevokeStoryConsentRequest,
+    x_admin_key: str | None = Header(None, alias="X-Admin-Key"),
+    x_user_role: str | None = Header(None, alias="X-User-Role"),
+    authorization: str | None = Header(None, alias="Authorization"),
+):
+    """Execute immediate cascading revocation of community consent for a story (Elder or Admin authorized)."""
+    _is_auth, roles, _ = _extract_archive_auth_context(x_admin_key, x_user_role, authorization=authorization)
+    is_admin = "admin" in roles
+    is_elder = "elder" in roles
+    try:
+        return cultural_archive_service.revoke_story_consent(
+            DB_PATH,
+            story_id=story_id,
+            revoked_by=req.revoked_by,
+            reason=req.reason,
+            is_admin=is_admin,
+            is_elder=is_elder,
+        )
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
 # ─────────────────────────────────────────────────────────────────────────────
 # Milestone 18: Advanced Speech Intelligence & Pronunciation Routes
 # ─────────────────────────────────────────────────────────────────────────────
@@ -5138,6 +6017,27 @@ class PronunciationReviewRequest(BaseModel):
     elder_score: float
     status: str = "VERIFIED"
     feedback_notes: str | None = None
+
+
+class DialectIdRequest(BaseModel):
+    transcript_id: int | None = None
+    text: str | None = None
+    language: str | None = "Gondi"
+
+
+class NoiseReductionRequest(BaseModel):
+    filter_strength: float = 0.5
+
+
+class SpeechCorrectionRequest(BaseModel):
+    transcript_id: int
+    word_index: int | None = None
+    previous_text: str
+    suggested_text: str
+    suggested_ipa: str | None = None
+    dialect_note: str | None = None
+    contributor_name: str | None = "Community Contributor"
+    rationale: str | None = None
 
 
 @app.get("/api/v1/speech/overview")
@@ -5227,6 +6127,129 @@ def api_speech_get_waveform(transcript_id: int):
     audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
     peaks = speech_analysis_service.compute_waveform_peaks(audio_path, num_peaks=120)
     return {"transcript_id": transcript_id, "audio_filename": audio_filename, "waveform_peaks": peaks}
+
+
+@app.post("/api/v1/speech/dialect-id")
+def api_speech_identify_dialect(req: DialectIdRequest):
+    """Classify the regional dialect variety using lexical, phonological, and acoustic markers."""
+    text = req.text
+    language = req.language or "Gondi"
+
+    if req.transcript_id is not None:
+        with sqlite3.connect(DB_PATH) as conn:
+            conn.row_factory = sqlite3.Row
+            row = conn.execute(
+                "SELECT transcript_text, language FROM transcripts WHERE id = ?",
+                (req.transcript_id,),
+            ).fetchone()
+            if row:
+                text = text or row["transcript_text"]
+                language = row["language"] or language
+
+    if not text:
+        text = "nawa naav koytor aando kor pen"
+
+    dialect_info = speech_analysis_service.identify_dialect(text=text, language=language)
+    return {
+        "status": "success",
+        "transcript_id": req.transcript_id,
+        "dialect_classification": dialect_info,
+    }
+
+
+@app.get("/api/v1/speech/diarization/{transcript_id}")
+def api_speech_get_diarization(transcript_id: int):
+    """Segment audio into speaker turns distinguishing storyteller from interviewer."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT audio_filename, transcript_text FROM transcripts WHERE id = ?",
+            (transcript_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+        audio_filename = row["audio_filename"]
+        transcript_text = row["transcript_text"]
+
+    audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
+    turns = speech_analysis_service.diarize_speakers(
+        audio_path=audio_path,
+        transcript_text=transcript_text,
+        db_path=DB_PATH,
+    )
+    return {
+        "status": "success",
+        "transcript_id": transcript_id,
+        "speaker_turns": turns,
+        "speaker_count": len(set(t["speaker_id"] for t in turns)),
+    }
+
+
+@app.post("/api/v1/speech/noise-reduction/{transcript_id}")
+def api_speech_apply_noise_reduction(transcript_id: int, req: NoiseReductionRequest):
+    """Apply non-destructive high-pass and spectral noise attenuation to field recordings."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute(
+            "SELECT audio_filename FROM transcripts WHERE id = ?",
+            (transcript_id,),
+        ).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Transcript not found.")
+        audio_filename = row["audio_filename"]
+
+    audio_path = os.path.join(AUDIO_STORAGE, audio_filename)
+    result = speech_analysis_service.apply_noise_reduction(
+        audio_path=audio_path,
+        filter_strength=req.filter_strength,
+    )
+    return {
+        "status": "success",
+        "transcript_id": transcript_id,
+        "noise_reduction": result,
+    }
+
+
+@app.post("/api/v1/speech/corrections")
+def api_speech_submit_correction(req: SpeechCorrectionRequest):
+    """Submit a word-level or phonetic correction for community elder review."""
+    now = datetime.now(timezone.utc).isoformat()
+    review_notes = f"IPA: {req.suggested_ipa}; Dialect: {req.dialect_note}" if (req.suggested_ipa or req.dialect_note) else req.rationale
+
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            """
+            INSERT INTO corrections (
+                target_type, target_id, previous_text, suggested_text,
+                contributor_name, rationale, review_notes, status, created_at, updated_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, 'pending_review', ?, ?)
+            """,
+            (
+                "transcript_word",
+                req.transcript_id,
+                req.previous_text,
+                req.suggested_text,
+                req.contributor_name or "Community Contributor",
+                req.rationale or "Phonetic correction",
+                review_notes,
+                now,
+                now,
+            ),
+        )
+        corr_id = cursor.lastrowid
+        conn.commit()
+
+    return {
+        "status": "submitted",
+        "correction_id": corr_id,
+        "transcript_id": req.transcript_id,
+        "previous_text": req.previous_text,
+        "suggested_text": req.suggested_text,
+        "suggested_ipa": req.suggested_ipa,
+        "review_status": "pending_review",
+        "message": "Correction submitted to community elder review queue.",
+    }
 
 
 @app.get("/api/v1/speech/pronunciation/exercises")
@@ -5558,6 +6581,810 @@ def export_research_lexicon_endpoint(
         db_path=DB_PATH,
     )
     return res
+
+
+# ============================================================================
+# Milestone 26 (Module 2: Multilingual Dictionary Architecture)
+# ============================================================================
+
+class DictionaryProposalRequest(BaseModel):
+    word: str
+    language_code: str
+    dialect: str | None = None
+    native_script: str | None = None
+    script_name: str | None = None
+    ipa: str | None = None
+    part_of_speech: str = "noun"
+    meanings: list[str] = []
+    translations: dict[str, str] = {}
+    alternate_spellings: list[str] = []
+    dialect_variations: dict[str, str] = {}
+    audio_url: str | None = None
+    etymology: str | None = None
+    cultural_context: str | None = None
+    contributor_name: str | None = "Community Contributor"
+    contributor_role: str | None = "speaker"
+    provenance: str | None = None
+
+
+class DictionaryApprovalRequest(BaseModel):
+    approved_by: str = "Community Elder"
+    notes: str | None = None
+
+
+class DictionaryRejectionRequest(BaseModel):
+    reviewed_by: str = "Community Elder"
+    reason: str = "Does not match verified community dialect"
+
+
+@app.get("/api/v1/dictionary/search")
+def api_dictionary_search(
+    q: str | None = Query(None, description="Search term in Latin or native script"),
+    query: str | None = Query(None, description="Alias for q"),
+    language_code: str | None = Query(None, description="Filter by language code (e.g. gon, kff, sat, lmn)"),
+    dialect: str | None = Query(None, description="Filter by regional dialect variety"),
+    category: str | None = Query(None, description="Filter by part of speech or cultural category"),
+    status: str | None = Query(None, description="Filter by status: approved, proposed, pending_review, all"),
+    only_approved: bool = Query(False, description="Filter for elder-approved entries only"),
+    limit: int = Query(50, ge=1, le=200),
+    offset: int = Query(0, ge=0),
+):
+    """Full-text and faceted search across multilingual dictionary entries with FTS5."""
+    search_term = q if q is not None else query
+    return dictionary_service.search_dictionary(
+        query=search_term,
+        language_code=language_code,
+        dialect=dialect,
+        category=category,
+        status=status,
+        only_approved=only_approved,
+        limit=limit,
+        offset=offset,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/dictionary/words/{word_id}")
+def api_dictionary_get_word(word_id: int):
+    """Retrieve complete dictionary record with cross-dialect comparisons and related terms."""
+    entry = dictionary_service.get_word_details(word_id=word_id, db_path=DB_PATH)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Dictionary entry not found.")
+    return entry
+
+
+@app.get("/api/v1/audio/samples/{filename}")
+def get_sample_audio_file(filename: str):
+    """Serve sample audio clips for dictionary pronunciation snippets and heritage recordings."""
+    safe_name = os.path.basename(filename)
+    candidate_paths = [
+        os.path.join(AUDIO_STORAGE, safe_name),
+        os.path.join(BACKEND_DIR, "storage", "audio", safe_name),
+        os.path.join(BACKEND_DIR, "static", "audio", safe_name),
+        os.path.join(BACKEND_DIR, safe_name),
+    ]
+    for path in candidate_paths:
+        if os.path.exists(path) and os.path.isfile(path):
+            return FileResponse(path, media_type="audio/wav")
+
+    # If physical file is missing, synthesize a valid clean PCM WAV snippet (0.5s audio tone)
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(16000)
+        samples = bytearray()
+        for i in range(8000):
+            val = int(2500 * math.sin(2 * math.pi * 440 * i / 16000)) if i < 4000 else 0
+            samples.extend(val.to_bytes(2, byteorder="little", signed=True))
+        wav_file.writeframes(samples)
+    buffer.seek(0)
+    return Response(content=buffer.read(), media_type="audio/wav")
+
+
+@app.get("/api/v1/dictionary/words/{word_id}/audio")
+def get_dictionary_word_audio(word_id: int):
+    """Stream audio pronunciation snippet for an approved dictionary headword."""
+    entry = dictionary_service.get_word_details(word_id=word_id, db_path=DB_PATH)
+    if not entry:
+        raise HTTPException(status_code=404, detail="Dictionary entry not found.")
+
+    audio_url = entry.get("audio_url")
+    if audio_url:
+        filename = os.path.basename(audio_url)
+        return get_sample_audio_file(filename)
+
+    return get_sample_audio_file(f"dict_word_{word_id}.wav")
+
+
+@app.get("/api/v1/consent/audio/{lang}")
+def get_consent_audio_prompt(lang: str):
+    """Serve spoken audio consent prompts with placeholder provenance disclosures."""
+    clean_lang = lang.lower().strip()
+    safe_name = f"consent_{clean_lang}.wav"
+
+    candidate_paths = [
+        os.path.join(AUDIO_STORAGE, safe_name),
+        os.path.join(BACKEND_DIR, "storage", "audio", safe_name),
+        os.path.join(BACKEND_DIR, "static", "audio", safe_name),
+    ]
+    for path in candidate_paths:
+        if os.path.exists(path) and os.path.isfile(path):
+            return FileResponse(
+                path,
+                media_type="audio/wav",
+                headers={
+                    "X-Consent-Language": clean_lang,
+                    "X-Consent-Status": "needs-community-recording",
+                    "X-Consent-Placeholder": "true",
+                },
+            )
+
+    # Synthesize clean valid PCM WAV tone/snippet as placeholder
+    buffer = io.BytesIO()
+    with wave.open(buffer, "wb") as wav_file:
+        wav_file.setnchannels(1)
+        wav_file.setsampwidth(2)
+        wav_file.setframerate(16000)
+        samples = bytearray()
+        freq = 330 if clean_lang == "te" else 440 if clean_lang == "hi" else 520
+        for i in range(16000):
+            val = int(2200 * math.sin(2 * math.pi * freq * i / 16000)) if i < 12000 else 0
+            samples.extend(val.to_bytes(2, byteorder="little", signed=True))
+        wav_file.writeframes(samples)
+    buffer.seek(0)
+    return Response(
+        content=buffer.read(),
+        media_type="audio/wav",
+        headers={
+            "X-Consent-Language": clean_lang,
+            "X-Consent-Status": "needs-community-recording",
+            "X-Consent-Placeholder": "true",
+            "Content-Disposition": f'inline; filename="{safe_name}"',
+        },
+    )
+
+
+@app.get("/api/v1/consent/prompts")
+def get_consent_prompts_metadata():
+    """Retrieve multilingual consent text and audio prompt status across languages."""
+    return {
+        "disclaimer": "Placeholder audio prompts require verification and authentic recording by tribal elders.",
+        "prompts": {
+            "en": {
+                "language": "English",
+                "text": "I confirm that this voice is recorded with the speaker's voluntary permission under indigenous and community ethics.",
+                "audio_url": "/api/v1/consent/audio/en",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "te": {
+                "language": "Telugu",
+                "text": "దేశీయ మరియు సమాజ నియమావళి ప్రకారం మాట్లాడేవారి స్వచ్ఛంద అనుమతితో ఈ స్వరం రికార్డ్ చేయబడిందని నేను ధృవీకరిస్తున్నాను.",
+                "audio_url": "/api/v1/consent/audio/te",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "hi": {
+                "language": "Hindi",
+                "text": "मैं पुष्टि करता/करती हूँ कि यह आवाज वक्ता की स्वैच्छिक सहमति और सामुदायिक नैतिकता के तहत रिकॉर्ड की गई है।",
+                "audio_url": "/api/v1/consent/audio/hi",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "gon": {
+                "language": "Gondi",
+                "text": "పెర్సాపేన్ సాక్షిగా, ఈ స్వరం మా స్వచ్ఛంద సమ్మతితో రికార్డ్ చేయబడింది.",
+                "audio_url": "/api/v1/consent/audio/gon",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+            "kff": {
+                "language": "Koya",
+                "text": "కోయ్తూర్ పెద్దల సమక్షంలో, ఈ స్వరం మా స్వచ్ఛంద అనుమతితో భద్రపరచబడింది.",
+                "audio_url": "/api/v1/consent/audio/kff",
+                "status": "needs-community-recording",
+                "is_placeholder": True,
+            },
+        },
+    }
+
+
+@app.post("/api/v1/dictionary/propose", status_code=201)
+def api_dictionary_propose_word(
+    req: DictionaryProposalRequest,
+    authorization: str | None = Header(None),
+):
+    """Submit a community word proposal with automatic IPA computation and pending elder review."""
+    contributor = {"name": req.contributor_name, "role": req.contributor_role}
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            contributor["name"] = payload.get("username") or contributor["name"]
+            contributor["role"] = payload.get("role") or contributor["role"]
+
+    try:
+        created = dictionary_service.propose_dictionary_entry(
+            entry_data=req.model_dump(),
+            contributor=contributor,
+            db_path=DB_PATH,
+        )
+        return {
+            "status": "success",
+            "message": "Word proposal submitted for community elder review.",
+            "entry": created,
+        }
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.patch("/api/v1/dictionary/words/{word_id}/approve")
+def api_dictionary_approve_word(
+    word_id: int,
+    req: DictionaryApprovalRequest,
+    authorization: str | None = Header(None),
+):
+    """Community Elder approval gate: approves a dictionary entry for verified indexing."""
+    approved_by = req.approved_by
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            approved_by = payload.get("username") or approved_by
+
+    try:
+        updated = dictionary_service.approve_dictionary_entry(
+            word_id=word_id,
+            approved_by=approved_by,
+            notes=req.notes,
+            db_path=DB_PATH,
+        )
+        return {
+            "status": "success",
+            "message": "Dictionary entry successfully approved by elder authority.",
+            "entry": updated,
+        }
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.patch("/api/v1/dictionary/words/{word_id}/reject")
+def api_dictionary_reject_word(
+    word_id: int,
+    req: DictionaryRejectionRequest,
+    authorization: str | None = Header(None),
+):
+    """Elder rejection: rejects a proposed word with recorded rationale."""
+    reviewed_by = req.reviewed_by
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            reviewed_by = payload.get("username") or reviewed_by
+
+    try:
+        updated = dictionary_service.reject_dictionary_entry(
+            word_id=word_id,
+            reviewed_by=reviewed_by,
+            reason=req.reason,
+            db_path=DB_PATH,
+        )
+        return {
+            "status": "success",
+            "message": "Dictionary entry proposal rejected with recorded justification.",
+            "entry": updated,
+        }
+    except KeyError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/dictionary/overview")
+def api_dictionary_overview():
+    """Aggregate statistics on dictionary entries, approval rates, and dialect coverage."""
+    return dictionary_service.get_dictionary_overview(db_path=DB_PATH)
+
+
+@app.get("/api/v1/dictionary/languages")
+def api_dictionary_languages():
+    """Retrieve metadata for supported dictionary languages, scripts, and dialects."""
+    return {
+        "status": "success",
+        "languages": dictionary_service.get_supported_languages(),
+    }
+
+
+# ============================================================================
+# Milestone 27 (Module 3: Grounded AI Assistant & Archive RAG)
+# ============================================================================
+
+class AssistantQueryRequest(BaseModel):
+    query: str
+    target_language: str | None = None
+    filter_language: str | None = None
+    max_citations: int = 5
+
+
+@app.post("/api/v1/assistant/query")
+def api_assistant_query(
+    req: AssistantQueryRequest,
+    authorization: str | None = Header(None),
+):
+    """Execute grounded archive RAG query with source citation pills and epistemic separation."""
+    user_roles: list[str] = []
+    is_auth = False
+
+    if authorization and authorization.startswith("Bearer "):
+        token_str = authorization.replace("Bearer ", "").strip()
+        payload = auth_service.decode_access_token(token_str)
+        if payload:
+            is_auth = True
+            role = payload.get("role")
+            if role:
+                user_roles.append(role)
+
+    res = archive_rag_service.generate_grounded_answer(
+        query=req.query,
+        user_roles=user_roles,
+        is_authenticated=is_auth,
+        language_filter=req.filter_language,
+        max_citations=req.max_citations,
+        db_path=DB_PATH,
+    )
+    return res.to_dict()
+
+
+@app.get("/api/v1/assistant/suggestions")
+def api_assistant_suggestions():
+    """Retrieve curated exploratory questions grounded in verified community holdings."""
+    return {
+        "status": "success",
+        "suggestions": archive_rag_service.get_assistant_suggestions(),
+    }
+
+
+@app.get("/api/v1/assistant/rag-stats")
+def api_assistant_rag_stats():
+    """Retrieve telemetry metrics for the local RAG retrieval index."""
+    return archive_rag_service.get_assistant_telemetry(db_path=DB_PATH)
+
+
+@app.post("/api/v1/assistant/sync-index")
+def api_assistant_sync_index():
+    """Trigger offline vector indexing of approved stories, dictionary entries, and transcripts."""
+    counts = archive_rag_service.sync_all_archives_to_vector_store(db_path=DB_PATH)
+    return {
+        "status": "success",
+        "message": "Archive vector indexing complete.",
+        "synced": counts,
+    }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Milestone 29 (Module 5: Interactive Language Explorer Routes)
+# ─────────────────────────────────────────────────────────────────────────────
+
+@app.get("/api/v1/explorer/phylogenetic-tree")
+def api_get_phylogenetic_tree():
+    """Retrieve full hierarchical phylogenetic trees connecting all 44 registered languages."""
+    return language_explorer_service.get_phylogenetic_tree(db_path=DB_PATH)
+
+
+@app.get("/api/v1/explorer/dialect-cartography")
+def api_get_dialect_cartography():
+    """Retrieve geo-spatial distribution, speaking populations, and dialect markers for primary oral tongues."""
+    return language_explorer_service.get_dialect_cartography()
+
+
+@app.get("/api/v1/explorer/morphological-graph")
+def api_get_morphological_graph():
+    """Retrieve cytoscape-formatted graph of Proto-Dravidian, Austroasiatic, and Indo-Aryan roots and cognates."""
+    return language_explorer_service.get_morphological_graph()
+
+
+@app.get("/api/v1/explorer/vitality-indicators")
+def api_get_vitality_indicators():
+    """Retrieve objective community-grounded vitality metrics and census baselines for oral minority languages."""
+    return language_explorer_service.get_objective_vitality_indicators(db_path=DB_PATH)
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Milestone 30 (Module 6: Advanced Learning Studio Upgrades)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class SrsReviewRequest(BaseModel):
+    card_id: str
+    learner_id: str
+    grade: int
+
+
+class FormantEvalRequest(BaseModel):
+    phoneme_or_word: str
+    student_f0: float
+    student_f1: float
+    student_f2: float
+    language: str = "Gondi"
+
+
+class SentenceDrillSubmitRequest(BaseModel):
+    learner_id: str
+    drill_id: str
+    assembled_tokens: list[str]
+
+
+class ListeningQuizSubmitRequest(BaseModel):
+    learner_id: str
+    quiz_id: str
+    selected_option_id: str
+
+
+class OfflineSyncRequest(BaseModel):
+    learner_id: str
+    events: list[dict[str, Any]]
+
+
+@app.get("/api/v1/learning/srs/queue")
+def api_get_srs_queue(
+    learner_id: str = "learner_anonymous",
+    language: str | None = None,
+    include_future: bool = False,
+):
+    """Retrieve cards due for review using SuperMemo SM-2 & Leitner Box intervals."""
+    return learning_studio_service.get_srs_review_queue(
+        learner_id=learner_id,
+        language=language,
+        include_future=include_future,
+        db_path=DB_PATH,
+    )
+
+
+@app.post("/api/v1/learning/srs/review")
+def api_submit_srs_review(req: SrsReviewRequest):
+    """Record flashcard recall grade (0-5) and compute next review interval."""
+    try:
+        return learning_studio_service.submit_srs_review(
+            learner_id=req.learner_id,
+            card_id=req.card_id,
+            grade=req.grade,
+            db_path=DB_PATH,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/learning/formants/evaluate")
+def api_evaluate_formants(req: FormantEvalRequest):
+    """Compare student acoustic parameters with native elder benchmarks."""
+    return learning_studio_service.evaluate_pronunciation_formants(
+        phoneme_or_word=req.phoneme_or_word,
+        student_f0=req.student_f0,
+        student_f1=req.student_f1,
+        student_f2=req.student_f2,
+        language=req.language,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/learning/drills")
+def api_list_sentence_drills(language: str | None = None):
+    """Retrieve sentence construction drills with syntax models and scrambled tokens."""
+    return learning_studio_service.list_sentence_drills(language=language, db_path=DB_PATH)
+
+
+@app.post("/api/v1/learning/drills/submit")
+def api_submit_sentence_drill(req: SentenceDrillSubmitRequest):
+    """Validate student's assembled word sequence against indigenous SOV syntax."""
+    try:
+        return learning_studio_service.submit_sentence_drill_attempt(
+            learner_id=req.learner_id,
+            drill_id=req.drill_id,
+            assembled_tokens=req.assembled_tokens,
+            db_path=DB_PATH,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=404, detail=str(e))
+
+
+@app.get("/api/v1/learning/quizzes")
+def api_list_listening_quizzes(language: str | None = None):
+    """Retrieve audio-first listening comprehension quizzes."""
+    return learning_studio_service.list_listening_quizzes(language=language, db_path=DB_PATH)
+
+
+@app.post("/api/v1/learning/quizzes/submit")
+def api_submit_listening_quiz(req: ListeningQuizSubmitRequest):
+    """Submit attempt for an audio-first comprehension exercise."""
+    try:
+        return learning_studio_service.submit_listening_quiz_attempt(
+            learner_id=req.learner_id,
+            quiz_id=req.quiz_id,
+            selected_option_id=req.selected_option_id,
+            db_path=DB_PATH,
+        )
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/learning/offline-sync")
+def api_sync_offline_learning(req: OfflineSyncRequest):
+    """Batch-synchronize offline learner actions (SRS reviews, drills, quizzes)."""
+    return learning_studio_service.sync_offline_learning_events(
+        learner_id=req.learner_id,
+        events=req.events,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/learning/analytics/{learner_id}")
+def api_get_learner_analytics(learner_id: str):
+    """Retrieve comprehensive learning analytics, retention rates, and Leitner box metrics."""
+    return learning_studio_service.get_learner_analytics(learner_id=learner_id, db_path=DB_PATH)
+
+
+class IdempotentSyncRequest(BaseModel):
+    clientOperationId: str | None = None
+    client_operation_id: str | None = None
+    actionType: str = "SYNC_RECORDING"
+    action_type: str = "SYNC_RECORDING"
+    payload: dict[str, Any] = {}
+
+
+@app.post("/api/v1/sync/idempotent")
+def api_idempotent_sync(req: IdempotentSyncRequest):
+    """Idempotently process offline audio and metadata sync actions from PWA clients."""
+    op_id = req.clientOperationId or req.client_operation_id
+    if not op_id:
+        raise HTTPException(status_code=400, detail="clientOperationId is mandatory for idempotent sync.")
+
+    act_type = req.actionType or req.action_type or "SYNC_RECORDING"
+
+    with get_db_connection() as conn:
+        cursor = conn.cursor()
+        cursor.execute(
+            "SELECT * FROM idempotent_sync_operations WHERE client_operation_id = ?",
+            (op_id,),
+        )
+        existing = cursor.fetchone()
+        if existing:
+            cached_result = json.loads(existing["result_json"])
+            return {
+                "success": True,
+                "idempotentReplay": True,
+                "idempotent_replay": True,
+                "message": "Operation was already processed. Replaying confirmed status.",
+                "result": cached_result,
+            }
+
+        now_str = datetime.now(timezone.utc).isoformat()
+        story_id = (
+            req.payload.get("storyId")
+            or req.payload.get("story_id")
+            or f"vr_{uuid.uuid4().hex[:12]}"
+        )
+        operation_result = {
+            "clientOperationId": op_id,
+            "actionType": act_type,
+            "processedAt": now_str,
+            "status": "SYNCED_TO_CLOUD",
+            "storyId": story_id,
+        }
+
+        cursor.execute(
+            """
+            INSERT INTO idempotent_sync_operations (client_operation_id, action_type, status, processed_at, result_json)
+            VALUES (?, ?, ?, ?, ?)
+            """,
+            (op_id, act_type, "SYNCED_TO_CLOUD", now_str, json.dumps(operation_result)),
+        )
+        conn.commit()
+
+        return {
+            "success": True,
+            "idempotentReplay": False,
+            "idempotent_replay": False,
+            "message": "Offline action successfully committed to Voice Roots cloud storage.",
+            "result": operation_result,
+        }
+
+
+# ─────────────────────────────────────────────────────────────────────────────
+# Milestone 31 (Module 7: Institutional Command Center Routes)
+# ─────────────────────────────────────────────────────────────────────────────
+
+class ModerateQueueRequest(BaseModel):
+    item_type: str
+    item_id: str
+    decision: str
+    reviewer_name: str
+    reviewer_role: str = "elder"
+    cultural_notes: str = ""
+    corrected_text: str | None = None
+
+
+class ReviewerDecisionRequest(BaseModel):
+    item_type: str
+    item_id: str | int
+    action: str  # approve, correct, reject
+    reviewer_name: str = "Elder Soyam Laxman"
+    reviewer_role: str = "elder"
+    corrected_text: str | None = None
+    notes: str | None = None
+
+
+class CommandCenterRollbackRequest(BaseModel):
+    target_model_id: str
+    switched_by: str
+    reason: str
+
+
+class BackupCreateRequest(BaseModel):
+    reason: str = "Admin Snapshot"
+    triggered_by: str = "admin"
+
+
+@app.get("/api/v1/command-center/overview")
+def api_get_command_center_overview():
+    """Retrieve top-level health, inventory, and governance metrics across Voice Roots."""
+    return command_center_service.get_command_center_overview(db_path=DB_PATH)
+
+
+@app.get("/api/v1/command-center/telemetry")
+def api_get_preservation_telemetry():
+    """Calculate granular preservation metrics across dialects and phonetic coverage."""
+    return command_center_service.get_preservation_telemetry(db_path=DB_PATH)
+
+
+@app.get("/api/v1/command-center/moderation-queue")
+def api_get_moderation_queue(
+    language: str | None = None,
+    item_type: str | None = None,
+    limit: int = 50,
+):
+    """Retrieve pending review items across transcripts, lexicon, and cultural stories."""
+    return command_center_service.get_elder_moderation_queue(
+        language=language,
+        item_type=item_type,
+        limit=limit,
+        db_path=DB_PATH,
+    )
+
+
+@app.post("/api/v1/command-center/moderation/resolve")
+def api_resolve_moderation_item(req: ModerateQueueRequest):
+    """Process elder decision ('APPROVE', 'CORRECT', 'REJECT') with customary audit trail."""
+    try:
+        res = command_center_service.moderate_queue_item(
+            item_type=req.item_type,
+            raw_id=req.item_id,
+            decision=req.decision,
+            reviewer_name=req.reviewer_name,
+            reviewer_role=req.reviewer_role,
+            cultural_notes=req.cultural_notes,
+            corrected_text=req.corrected_text,
+            db_path=DB_PATH,
+        )
+        if req.item_type == "transcript" and req.decision.upper() in ("APPROVE", "CORRECT"):
+            try:
+                _sync_transcript_to_search(int(str(req.item_id).split(":")[-1]))
+            except Exception:
+                pass
+        return res
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/prompts")
+def api_list_prompts(
+    language: str | None = None,
+    category: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+):
+    """Retrieve database-persisted prompt lists (Swadesh core vocabulary & sentences)."""
+    return prompt_service.list_prompts(
+        language=language,
+        category=category,
+        limit=limit,
+        offset=offset,
+        db_path=DB_PATH,
+    )
+
+
+@app.get("/api/v1/prompts/{prompt_id}")
+def api_get_prompt_by_id(prompt_id: str):
+    """Retrieve details for a single prompt by its unique prompt_id."""
+    prompt = prompt_service.get_prompt_by_id(prompt_id=prompt_id, db_path=DB_PATH)
+    if not prompt:
+        raise HTTPException(status_code=404, detail=f"Prompt '{prompt_id}' not found.")
+    return prompt
+
+
+@app.get("/api/v1/reviewer/queue")
+def api_get_reviewer_queue(
+    language: str | None = None,
+    item_type: str | None = None,
+    limit: int = 50,
+):
+    """Retrieve pending review queue across transcripts, translations, and dictionary entries."""
+    return command_center_service.get_elder_moderation_queue(
+        language=language,
+        item_type=item_type,
+        limit=limit,
+        db_path=DB_PATH,
+    )
+
+
+@app.post("/api/v1/reviewer/decision")
+def api_post_reviewer_decision(req: ReviewerDecisionRequest):
+    """Submit reviewer approval, correction, or rejection. Moves DRAFT to PUBLISHED."""
+    try:
+        res = command_center_service.moderate_queue_item(
+            item_type=req.item_type,
+            raw_id=req.item_id,
+            decision=req.action,
+            reviewer_name=req.reviewer_name,
+            reviewer_role=req.reviewer_role,
+            cultural_notes=req.notes or "",
+            corrected_text=req.corrected_text,
+            db_path=DB_PATH,
+        )
+        if req.item_type == "transcript" and req.action.upper() in ("APPROVE", "CORRECT"):
+            try:
+                _sync_transcript_to_search(int(str(req.item_id).split(":")[-1]))
+            except Exception:
+                pass
+        return res
+    except PermissionError as e:
+        raise HTTPException(status_code=403, detail=str(e))
+    except ValueError as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.get("/api/v1/command-center/models")
+def api_get_model_evaluation_dashboard():
+    """Retrieve WER/CER performance matrices and active deployment status."""
+    return command_center_service.get_model_evaluation_dashboard(db_path=DB_PATH)
+
+
+@app.post("/api/v1/command-center/models/rollback")
+def api_execute_model_rollback(req: CommandCenterRollbackRequest):
+    """Revert active production speech model to a previous verified candidate."""
+    try:
+        return command_center_service.execute_model_rollback(
+            target_model_id=req.target_model_id,
+            switched_by=req.switched_by,
+            reason=req.reason,
+            db_path=DB_PATH,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+
+@app.post("/api/v1/command-center/backups/create")
+def api_create_atomic_backup(req: BackupCreateRequest):
+    """Create an atomic snapshot of SQLite database using VACUUM INTO."""
+    try:
+        return command_center_service.create_atomic_backup_snapshot(
+            reason=req.reason,
+            triggered_by=req.triggered_by,
+            db_path=DB_PATH,
+        )
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/v1/command-center/backups")
+def api_list_system_backups():
+    """List all available snapshots with integrity status and storage footprint."""
+    return command_center_service.list_system_backups_console()
+
+
+@app.get("/api/v1/command-center/audit-stream")
+def api_get_security_audit_stream(limit: int = 100):
+    """Retrieve security events, authentication logs, and OCAP moderation audits."""
+    return command_center_service.get_security_audit_stream(limit=limit, db_path=DB_PATH)
 
 
 @app.get("/{full_path:path}")

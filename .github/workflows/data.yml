@@ -1,0 +1,32 @@
+name: Voice Roots dataset checks
+
+on:
+  schedule:
+    - cron: "17 2 * * 1"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  export-and-check:
+    runs-on: ubuntu-latest
+    env:
+      DATABASE_URL: ${{ secrets.DATASET_DATABASE_URL }}
+      JWT_SECRET: ${{ secrets.PRODUCTION_JWT_SECRET }}
+      DATASET_SALT: ${{ secrets.DATASET_SALT }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_DATASET_REPO: ${{ vars.HF_DATASET_REPO }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -r requirements-dev.txt
+      - run: python -m pip install -r requirements-ai.txt datasets huggingface_hub
+      - name: Export only opted-in human corrections and check quality
+        run: python backend/scripts/export_dataset.py --output data/export --checks-only
+      - name: Publish a private dataset revision when configured
+        if: env.HF_DATASET_REPO != '' && env.HF_TOKEN != ''
+        run: python backend/scripts/export_dataset.py --output data/export --push

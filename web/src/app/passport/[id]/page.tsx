@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
 import { useParams } from "next/navigation";
-import { Play, Pause, Printer, ArrowLeft, ShieldCheck } from "lucide-react";
+import { Play, Pause, Printer, ArrowLeft, ShieldCheck, ShieldAlert } from "lucide-react";
 import Image from "next/image";
 import { Navbar } from "@/components/ui/Navbar";
 import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
@@ -19,14 +19,61 @@ export default function HeritagePassportPage() {
   useEffect(() => {
     if (!id) return;
     const all = getUserRecordings();
-    const found = all.find((item) => item.id.toLowerCase() === id.toLowerCase()) || all[0];
+    const found = all.find((item) => item.id.toLowerCase() === id.toLowerCase());
     if (found) {
       setRecord(found);
     }
+
+    // Also verify against server passport endpoint for remote/withdrawn state
+    fetch(`/api/v1/passport/${id}`)
+      .then((res) => (res.ok ? res.json() : null))
+      .then((data) => {
+        if (data && data.is_withdrawn) {
+          setRecord((prev) => ({
+            ...(prev || {
+              id: data.id ? String(data.id) : id,
+              title: data.title || "Voice Roots Recording",
+              language: data.language || "Indigenous Tongue",
+              duration: "0:00",
+              durationSeconds: 0,
+              type: "Oral Archive",
+              audioFileName: "",
+              audioFileSize: 0,
+              audioMimeType: "audio/wav",
+              uploadDate: data.upload_date || new Date().toISOString(),
+              sourceType: "field_recording",
+              originalTranscript: "[Consent Withdrawn]",
+            }),
+            isWithdrawn: true,
+            status: "withdrawn",
+            withdrawnAt: data.withdrawn_at,
+          }));
+        } else if (data && !found) {
+          setRecord({
+            id: String(data.id),
+            title: data.title,
+            language: data.language,
+            dialect: data.dialect,
+            community: data.community,
+            duration: "0:00",
+            durationSeconds: 0,
+            type: "Oral Archive",
+            audioFileName: "",
+            audioFileSize: 0,
+            audioMimeType: "audio/wav",
+            uploadDate: data.upload_date,
+            sourceType: "field_recording",
+            originalTranscript: "",
+            isWithdrawn: false,
+            status: data.status,
+          });
+        }
+      })
+      .catch(() => {});
   }, [id]);
 
   const togglePlay = () => {
-    if (!record) return;
+    if (!record || record.isWithdrawn || record.status === "withdrawn") return;
     const src = record.audioUrl || `/audio/${record.audioFileName}`;
 
     if (!audioRef.current) {
@@ -66,6 +113,8 @@ export default function HeritagePassportPage() {
       </div>
     );
   }
+
+  const isWithdrawn = Boolean(record.isWithdrawn || record.status === "withdrawn" || record.status === "Consent Withdrawn");
 
   const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=160x160&data=${encodeURIComponent(
     typeof window !== "undefined" ? window.location.href : `https://voice-roots.onrender.com/passport/${record.id}`
@@ -126,10 +175,37 @@ export default function HeritagePassportPage() {
               </div>
             </div>
 
-            <span className="text-xs font-mono font-bold text-[#94A3B8] print:text-black">
-              {record.id.toUpperCase()}
-            </span>
+            <div className="flex items-center gap-2">
+              {isWithdrawn && (
+                <span className="text-[10px] uppercase font-bold tracking-wider px-2 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-500/40">
+                  Withdrawn
+                </span>
+              )}
+              <span className="text-xs font-mono font-bold text-[#94A3B8] print:text-black">
+                {String(record.id).toUpperCase()}
+              </span>
+            </div>
           </div>
+
+          {/* Withdrawn Notice Banner */}
+          {isWithdrawn && (
+            <div className="rounded-xl border border-rose-500/30 bg-rose-500/10 p-4 text-xs text-rose-200 space-y-2 leading-relaxed">
+              <div className="flex items-center gap-2 font-bold text-rose-200">
+                <ShieldAlert className="h-4 w-4 text-rose-400 shrink-0" />
+                <span>Recording Purged under Indigenous Data Sovereignty</span>
+              </div>
+              <p className="text-rose-300/90">
+                The speaker or community has exercised their inalienable right to withdraw consent.
+                Under OCAP protocols, the audio master recording, machine transcripts, translations,
+                and vector embeddings have been permanently purged from all storage and indexes.
+              </p>
+              {record.withdrawnAt && (
+                <p className="font-mono text-[11px] text-rose-400">
+                  Withdrawal timestamp: {formatDate(record.withdrawnAt)}
+                </p>
+              )}
+            </div>
+          )}
 
           {/* Details */}
           <div className="space-y-4">
@@ -164,34 +240,54 @@ export default function HeritagePassportPage() {
 
               <div>
                 <p className="text-xs font-medium text-[#94A3B8] print:text-gray-600">Verification Status</p>
-                <div className="inline-flex items-center gap-1.5 mt-0.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-300 print:text-black print:border-black">
-                  <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 print:text-black" />
-                  <span>{record.isUserUploaded ? "Waiting for review" : "Community Verified"}</span>
-                </div>
+                {isWithdrawn ? (
+                  <div className="inline-flex items-center gap-1.5 mt-0.5 px-2.5 py-1 rounded-full border border-rose-500/30 bg-rose-500/10 text-xs font-bold text-rose-300 print:text-black print:border-black">
+                    <ShieldAlert className="h-3.5 w-3.5 text-rose-400 print:text-black" />
+                    <span>Consent Withdrawn (OCAP)</span>
+                  </div>
+                ) : (
+                  <div className="inline-flex items-center gap-1.5 mt-0.5 px-2.5 py-1 rounded-full border border-emerald-500/30 bg-emerald-500/10 text-xs font-bold text-emerald-300 print:text-black print:border-black">
+                    <ShieldCheck className="h-3.5 w-3.5 text-emerald-400 print:text-black" />
+                    <span>{record.isUserUploaded ? "Waiting for review" : "Community Verified"}</span>
+                  </div>
+                )}
               </div>
             </div>
           </div>
 
-          {/* Audio Play Button */}
+          {/* Audio Play Button or Purged Status */}
           <div className="pt-2 print:hidden">
-            <button
-              type="button"
-              onClick={togglePlay}
-              className="btn-primary w-full"
-            >
-              {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
-              <span>{isPlaying ? "Pause voice recording" : "Listen to original voice recording"}</span>
-            </button>
+            {isWithdrawn ? (
+              <button
+                type="button"
+                disabled
+                className="btn-glass w-full opacity-60 cursor-not-allowed text-rose-300 border-rose-500/30"
+              >
+                <ShieldAlert className="h-5 w-5 text-rose-400" />
+                <span>Master Audio Permanently Purged</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={togglePlay}
+                className="btn-primary w-full"
+              >
+                {isPlaying ? <Pause className="h-5 w-5" /> : <Play className="h-5 w-5 fill-current" />}
+                <span>{isPlaying ? "Pause voice recording" : "Listen to original voice recording"}</span>
+              </button>
+            )}
           </div>
 
           {/* QR Code Section */}
           <div className="pt-4 border-t border-white/15 flex flex-col sm:flex-row items-center justify-between gap-4 print:border-black">
             <div>
               <p className="text-sm font-semibold text-[#F8FAFC] print:text-black">
-                Scan to verify and listen
+                {isWithdrawn ? "Public Provenance Record" : "Scan to verify and listen"}
               </p>
               <p className="text-xs text-[#94A3B8] print:text-gray-600 mt-0.5">
-                Public digital record of oral heritage
+                {isWithdrawn
+                  ? "Verifiable proof of consent withdrawal and data purging"
+                  : "Public digital record of oral heritage"}
               </p>
             </div>
 

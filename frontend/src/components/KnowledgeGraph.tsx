@@ -33,7 +33,7 @@ export interface KnowledgeGraphProps {
 }
 
 const ENTITY_COLORS: Record<string, { bg: string; border: string; text: string; fill: string }> = {
-  language: { bg: 'rgba(142, 182, 155, 0.15)', border: '#8EB69B', text: '#DAF1DE', fill: '#8EB69B' },
+  language: { bg: 'rgba(166, 196, 138, 0.15)', border: '#A6C48A', text: '#F5F3E9', fill: '#A6C48A' },
   variety: { bg: 'rgba(45, 212, 191, 0.15)', border: '#2DD4BF', text: '#99F6E4', fill: '#2DD4BF' },
   script: { bg: 'rgba(167, 139, 250, 0.15)', border: '#A78BFA', text: '#DDD6FE', fill: '#A78BFA' },
   vocabulary: { bg: 'rgba(245, 158, 11, 0.15)', border: '#F59E0B', text: '#FDE68A', fill: '#F59E0B' },
@@ -368,12 +368,12 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
   };
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', color: '#DAF1DE' }}>
+    <div style={{ display: 'flex', flexDirection: 'column', gap: '24px', paddingBottom: '48px', color: '#F5F3E9' }}>
       {/* ─── Header & Metrics Overview Bar ─── */}
       <section
         style={{
-          background: 'linear-gradient(135deg, rgba(11, 43, 38, 0.95), rgba(5, 31, 32, 0.95))',
-          border: '1px solid rgba(142, 182, 155, 0.25)',
+          background: 'linear-gradient(135deg, rgba(16, 43, 32, 0.95), rgba(16, 43, 32, 0.95))',
+          border: '1px solid rgba(166, 196, 138, 0.25)',
           borderRadius: '16px',
           padding: '24px',
           boxShadow: '0 8px 32px rgba(0, 0, 0, 0.35)',
@@ -382,7 +382,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
         <div style={{ display: 'flex', flexWrap: 'wrap', justifyContent: 'space-between', alignItems: 'center', gap: '16px', marginBottom: '20px' }}>
           <div>
             <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '6px' }}>
-              <div style={{ background: 'rgba(142, 182, 155, 0.2)', padding: '8px', borderRadius: '10px', color: '#8EB69B' }}>
+              <div style={{ background: 'rgba(166, 196, 138, 0.2)', padding: '8px', borderRadius: '10px', color: '#A6C48A' }}>
                 <Network size={24} />
               </div>
               <h1 style={{ fontSize: '26px', fontWeight: '800', color: '#FFFFFF', margin: 0, letterSpacing: '-0.02em' }}>
@@ -390,9 +390,9 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
               </h1>
               <span
                 style={{
-                  background: 'rgba(142, 182, 155, 0.15)',
-                  border: '1px solid rgba(142, 182, 155, 0.4)',
-                  color: '#8EB69B',
+                  background: 'rgba(166, 196, 138, 0.15)',
+                  border: '1px solid rgba(166, 196, 138, 0.4)',
+                  color: '#A6C48A',
                   fontSize: '11px',
                   fontWeight: '700',
                   padding: '3px 8px',
@@ -404,7 +404,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 Milestone 16
               </span>
             </div>
-            <p style={{ margin: 0, fontSize: '14px', color: 'rgba(218, 241, 222, 0.75)', maxWidth: '640px' }}>
+            <p style={{ margin: 0, fontSize: '14px', color: 'rgba(245, 243, 233, 0.75)', maxWidth: '640px' }}>
               Explore structured semantic relationships between indigenous languages, regional varieties, scripts, and community-verified oral vocabulary.
             </p>
           </div>
@@ -416,18 +416,18 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   display: 'flex',
                   alignItems: 'center',
                   gap: '6px',
-                  background: 'rgba(142, 182, 155, 0.15)',
-                  border: '1px solid #8EB69B',
+                  background: 'rgba(166, 196, 138, 0.15)',
+                  border: '1px solid #A6C48A',
                   borderRadius: '8px',
                   padding: '7px 12px',
                   fontSize: '12px',
-                  color: '#DAF1DE',
+                  color: '#F5F3E9',
                   fontWeight: '600'
                 }}
               >
-                <CheckCircle2 size={14} color="#8EB69B" />
+                <CheckCircle2 size={14} color="#A6C48A" />
                 <span>
-                  <strong style={{ color: '#8EB69B', textTransform: 'uppercase' }}>{currentUser.role}</strong>: {currentUser.full_name || currentUser.username}
+                  <strong style={{ color: '#A6C48A', textTransform: 'uppercase' }}>{currentUser.role}</strong>: {currentUser.full_name || currentUser.username}
                 </span>
               </div>
             )}
@@ -437,8 +437,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 display: 'flex',
                 alignItems: 'center',
                 gap: '6px',
-                background: '#8EB69B',
-                color: '#051F20',
+                background: '#A6C48A',
+                color: '#102B20',
                 border: 'none',
                 padding: '9px 16px',
                 borderRadius: '8px',
@@ -454,9 +454,9 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
               onClick={() => { fetchOverview(); fetchSubgraph(centerNodeId, selectedLanguage, selectedEntityType); }}
               title="Refresh Graph Data"
               style={{
-                background: 'rgba(218, 241, 222, 0.08)',
-                border: '1px solid rgba(142, 182, 155, 0.2)',
-                color: '#DAF1DE',
+                background: 'rgba(245, 243, 233, 0.08)',
+                border: '1px solid rgba(166, 196, 138, 0.2)',
+                color: '#F5F3E9',
                 padding: '9px 12px',
                 borderRadius: '8px',
                 cursor: 'pointer'
@@ -469,26 +469,26 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
 
         {/* Telemetry Stat Pills */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: '12px' }}>
-          <div style={{ background: 'rgba(5, 31, 32, 0.6)', border: '1px solid rgba(142, 182, 155, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
-            <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Nodes</span>
-            <div style={{ fontSize: '22px', fontWeight: '800', color: '#DAF1DE', marginTop: '2px' }}>
+          <div style={{ background: 'rgba(16, 43, 32, 0.6)', border: '1px solid rgba(166, 196, 138, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Total Nodes</span>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: '#F5F3E9', marginTop: '2px' }}>
               {overview?.total_nodes ?? '—'}
             </div>
           </div>
-          <div style={{ background: 'rgba(5, 31, 32, 0.6)', border: '1px solid rgba(142, 182, 155, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
-            <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Semantic Edges</span>
-            <div style={{ fontSize: '22px', fontWeight: '800', color: '#8EB69B', marginTop: '2px' }}>
+          <div style={{ background: 'rgba(16, 43, 32, 0.6)', border: '1px solid rgba(166, 196, 138, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Semantic Edges</span>
+            <div style={{ fontSize: '22px', fontWeight: '800', color: '#A6C48A', marginTop: '2px' }}>
               {overview?.total_relationships ?? '—'}
             </div>
           </div>
-          <div style={{ background: 'rgba(5, 31, 32, 0.6)', border: '1px solid rgba(142, 182, 155, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
-            <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Languages</span>
+          <div style={{ background: 'rgba(16, 43, 32, 0.6)', border: '1px solid rgba(166, 196, 138, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Languages</span>
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#2DD4BF', marginTop: '2px' }}>
               {overview?.languages_represented ?? '—'}
             </div>
           </div>
-          <div style={{ background: 'rgba(5, 31, 32, 0.6)', border: '1px solid rgba(142, 182, 155, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
-            <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Verified Ratio</span>
+          <div style={{ background: 'rgba(16, 43, 32, 0.6)', border: '1px solid rgba(166, 196, 138, 0.15)', borderRadius: '10px', padding: '12px 16px' }}>
+            <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Verified Ratio</span>
             <div style={{ fontSize: '22px', fontWeight: '800', color: '#34D399', marginTop: '2px' }}>
               {overview ? `${Math.round(overview.verified_ratio * 100)}%` : '—'}
             </div>
@@ -500,7 +500,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
       <div style={{ display: 'flex', flexWrap: 'wrap', gap: '12px', alignItems: 'center', justifyContent: 'space-between' }}>
         {/* Indic Unicode Search Box */}
         <div style={{ position: 'relative', flex: '1', minWidth: '260px', maxWidth: '440px' }}>
-          <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'rgba(218, 241, 222, 0.5)' }} />
+          <Search size={16} style={{ position: 'absolute', left: '12px', top: '12px', color: 'rgba(245, 243, 233, 0.5)' }} />
           <input
             type="text"
             placeholder="Search language, script, or Indic vocabulary (e.g. Gondi, పెన్, baha)..."
@@ -508,8 +508,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
             onChange={(e) => setSearchQuery(e.target.value)}
             style={{
               width: '100%',
-              background: 'rgba(11, 43, 38, 0.7)',
-              border: '1px solid rgba(142, 182, 155, 0.3)',
+              background: 'rgba(16, 43, 32, 0.7)',
+              border: '1px solid rgba(166, 196, 138, 0.3)',
               borderRadius: '8px',
               padding: '9px 14px 9px 36px',
               color: '#FFFFFF',
@@ -521,7 +521,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
           {searchQuery && (
             <button
               onClick={() => setSearchQuery('')}
-              style={{ position: 'absolute', right: '10px', top: '10px', background: 'transparent', border: 'none', color: '#8EB69B', cursor: 'pointer' }}
+              style={{ position: 'absolute', right: '10px', top: '10px', background: 'transparent', border: 'none', color: '#A6C48A', cursor: 'pointer' }}
             >
               <X size={14} />
             </button>
@@ -535,8 +535,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 top: '42px',
                 left: 0,
                 right: 0,
-                background: '#0B2B26',
-                border: '1px solid #8EB69B',
+                background: '#102B20',
+                border: '1px solid #A6C48A',
                 borderRadius: '8px',
                 zIndex: 40,
                 maxHeight: '280px',
@@ -554,19 +554,19 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   }}
                   style={{
                     padding: '10px 14px',
-                    borderBottom: '1px solid rgba(142, 182, 155, 0.1)',
+                    borderBottom: '1px solid rgba(166, 196, 138, 0.1)',
                     cursor: 'pointer',
                     display: 'flex',
                     justifyContent: 'space-between',
                     alignItems: 'center',
                     transition: 'background 0.12s ease'
                   }}
-                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(142, 182, 155, 0.15)')}
+                  onMouseEnter={(e) => (e.currentTarget.style.background = 'rgba(166, 196, 138, 0.15)')}
                   onMouseLeave={(e) => (e.currentTarget.style.background = 'transparent')}
                 >
                   <div>
-                    <div style={{ fontWeight: '700', fontSize: '13px', color: '#DAF1DE' }}>{n.name}</div>
-                    {n.native_name && <div style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.65)' }}>{n.native_name}</div>}
+                    <div style={{ fontWeight: '700', fontSize: '13px', color: '#F5F3E9' }}>{n.name}</div>
+                    {n.native_name && <div style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.65)' }}>{n.native_name}</div>}
                   </div>
                   <span
                     style={{
@@ -594,11 +594,11 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
             value={selectedLanguage}
             onChange={(e) => handleFilterChange(e.target.value, selectedEntityType)}
             style={{
-              background: 'rgba(11, 43, 38, 0.7)',
-              border: '1px solid rgba(142, 182, 155, 0.3)',
+              background: 'rgba(16, 43, 32, 0.7)',
+              border: '1px solid rgba(166, 196, 138, 0.3)',
               borderRadius: '8px',
               padding: '8px 12px',
-              color: '#DAF1DE',
+              color: '#F5F3E9',
               fontSize: '12px',
               outline: 'none',
               cursor: 'pointer'
@@ -618,11 +618,11 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
             value={selectedEntityType}
             onChange={(e) => handleFilterChange(selectedLanguage, e.target.value)}
             style={{
-              background: 'rgba(11, 43, 38, 0.7)',
-              border: '1px solid rgba(142, 182, 155, 0.3)',
+              background: 'rgba(16, 43, 32, 0.7)',
+              border: '1px solid rgba(166, 196, 138, 0.3)',
               borderRadius: '8px',
               padding: '8px 12px',
-              color: '#DAF1DE',
+              color: '#F5F3E9',
               fontSize: '12px',
               outline: 'none',
               cursor: 'pointer'
@@ -637,7 +637,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
           </select>
 
           {/* Dual Mode Switcher: Visual Graph vs Accessible Tree */}
-          <div style={{ display: 'flex', background: 'rgba(11, 43, 38, 0.8)', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '8px', padding: '2px' }}>
+          <div style={{ display: 'flex', background: 'rgba(16, 43, 32, 0.8)', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '8px', padding: '2px' }}>
             <button
               type="button"
               onClick={() => setViewMode('visual')}
@@ -648,8 +648,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 padding: '6px 12px',
                 borderRadius: '6px',
                 border: 'none',
-                background: viewMode === 'visual' ? '#8EB69B' : 'transparent',
-                color: viewMode === 'visual' ? '#051F20' : '#DAF1DE',
+                background: viewMode === 'visual' ? '#A6C48A' : 'transparent',
+                color: viewMode === 'visual' ? '#102B20' : '#F5F3E9',
                 fontWeight: viewMode === 'visual' ? '700' : '500',
                 fontSize: '12px',
                 cursor: 'pointer'
@@ -667,8 +667,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 padding: '6px 12px',
                 borderRadius: '6px',
                 border: 'none',
-                background: viewMode === 'tree' ? '#8EB69B' : 'transparent',
-                color: viewMode === 'tree' ? '#051F20' : '#DAF1DE',
+                background: viewMode === 'tree' ? '#A6C48A' : 'transparent',
+                color: viewMode === 'tree' ? '#102B20' : '#F5F3E9',
                 fontWeight: viewMode === 'tree' ? '700' : '500',
                 fontSize: '12px',
                 cursor: 'pointer'
@@ -685,8 +685,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
         {/* Left Panel: Visual Force Graph OR Accessible Tree View */}
         <div
           style={{
-            background: 'rgba(11, 43, 38, 0.75)',
-            border: '1px solid rgba(142, 182, 155, 0.25)',
+            background: 'rgba(16, 43, 32, 0.75)',
+            border: '1px solid rgba(166, 196, 138, 0.25)',
             borderRadius: '14px',
             overflow: 'hidden',
             position: 'relative',
@@ -708,8 +708,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   flexDirection: 'column',
                   gap: '6px',
                   zIndex: 10,
-                  background: 'rgba(5, 31, 32, 0.85)',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  background: 'rgba(16, 43, 32, 0.85)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                   borderRadius: '8px',
                   padding: '4px'
                 }}
@@ -718,7 +718,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   type="button"
                   title="Zoom In"
                   onClick={() => setZoomLevel((z) => Math.min(z + 0.2, 2.5))}
-                  style={{ background: 'transparent', border: 'none', color: '#DAF1DE', padding: '6px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: '#F5F3E9', padding: '6px', cursor: 'pointer' }}
                 >
                   <ZoomIn size={16} />
                 </button>
@@ -726,7 +726,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   type="button"
                   title="Zoom Out"
                   onClick={() => setZoomLevel((z) => Math.max(z - 0.2, 0.5))}
-                  style={{ background: 'transparent', border: 'none', color: '#DAF1DE', padding: '6px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: '#F5F3E9', padding: '6px', cursor: 'pointer' }}
                 >
                   <ZoomOut size={16} />
                 </button>
@@ -734,7 +734,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   type="button"
                   title="Reset View"
                   onClick={handleResetZoom}
-                  style={{ background: 'transparent', border: 'none', color: '#8EB69B', padding: '6px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: 'none', color: '#A6C48A', padding: '6px', cursor: 'pointer' }}
                 >
                   <Maximize2 size={16} />
                 </button>
@@ -747,8 +747,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   bottom: '12px',
                   left: '12px',
                   zIndex: 10,
-                  background: 'rgba(5, 31, 32, 0.85)',
-                  border: '1px solid rgba(142, 182, 155, 0.25)',
+                  background: 'rgba(16, 43, 32, 0.85)',
+                  border: '1px solid rgba(166, 196, 138, 0.25)',
                   borderRadius: '8px',
                   padding: '8px 12px',
                   display: 'flex',
@@ -758,7 +758,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 }}
               >
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
-                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#8EB69B' }} /> Language
+                  <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#A6C48A' }} /> Language
                 </div>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <span style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#2DD4BF' }} /> Variety
@@ -795,7 +795,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                     refY="3"
                     orient="auto"
                   >
-                    <polygon points="0 0, 8 3, 0 6" fill="rgba(142, 182, 155, 0.6)" />
+                    <polygon points="0 0, 8 3, 0 6" fill="rgba(166, 196, 138, 0.6)" />
                   </marker>
                 </defs>
 
@@ -815,7 +815,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                           y1={sourcePos.y}
                           x2={targetPos.x}
                           y2={targetPos.y}
-                          stroke={isHighlighted ? '#8EB69B' : 'rgba(142, 182, 155, 0.25)'}
+                          stroke={isHighlighted ? '#A6C48A' : 'rgba(166, 196, 138, 0.25)'}
                           strokeWidth={isHighlighted ? 2 : 1}
                           strokeDasharray={edge.relationship_type.includes('TRANSLAT') ? '4 2' : undefined}
                           markerEnd="url(#arrowhead)"
@@ -849,7 +849,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                           <circle
                             r={radius + 6}
                             fill="none"
-                            stroke="#DAF1DE"
+                            stroke="#F5F3E9"
                             strokeWidth="2"
                             strokeDasharray="3 3"
                             opacity="0.8"
@@ -859,7 +859,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                         <circle
                           r={radius}
                           fill={colorScheme.fill}
-                          stroke="#051F20"
+                          stroke="#102B20"
                           strokeWidth="2"
                           opacity={isSelected ? 1 : 0.85}
                         />
@@ -881,7 +881,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                           <text
                             y={radius + 26}
                             textAnchor="middle"
-                            fill="#8EB69B"
+                            fill="#A6C48A"
                             fontSize="9px"
                             fontWeight="500"
                             style={{ textShadow: '0 1px 3px rgba(0,0,0,0.9)' }}
@@ -902,7 +902,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
               aria-label="Language Knowledge Graph Hierarchy"
               style={{ padding: '20px', overflowY: 'auto', maxHeight: '560px' }}
             >
-              <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#8EB69B', marginBottom: '14px' }}>
+              <h3 style={{ fontSize: '15px', fontWeight: '700', color: '#A6C48A', marginBottom: '14px' }}>
                 Linguistic Hierarchy & Ontology
               </h3>
 
@@ -926,7 +926,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                       key={langNode.node_id}
                       role="treeitem"
                       aria-expanded={isExpanded}
-                      style={{ marginBottom: '12px', borderLeft: '2px solid rgba(142, 182, 155, 0.3)', paddingLeft: '12px' }}
+                      style={{ marginBottom: '12px', borderLeft: '2px solid rgba(166, 196, 138, 0.3)', paddingLeft: '12px' }}
                     >
                       <div
                         onClick={() => {
@@ -939,7 +939,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                           gap: '8px',
                           cursor: 'pointer',
                           padding: '6px 0',
-                          color: activeNodeId === langNode.node_id ? '#8EB69B' : '#DAF1DE',
+                          color: activeNodeId === langNode.node_id ? '#A6C48A' : '#F5F3E9',
                           fontWeight: '700',
                           fontSize: '14px'
                         }}
@@ -947,17 +947,17 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                         {isExpanded ? <ChevronDown size={16} /> : <ChevronRight size={16} />}
                         <span>{langNode.name}</span>
                         {langNode.native_name && (
-                          <span style={{ fontSize: '12px', color: 'rgba(218, 241, 222, 0.65)' }}>
+                          <span style={{ fontSize: '12px', color: 'rgba(245, 243, 233, 0.65)' }}>
                             ({langNode.native_name})
                           </span>
                         )}
                         <span
                           style={{
                             fontSize: '10px',
-                            background: 'rgba(142, 182, 155, 0.2)',
+                            background: 'rgba(166, 196, 138, 0.2)',
                             padding: '2px 6px',
                             borderRadius: '4px',
-                            color: '#8EB69B'
+                            color: '#A6C48A'
                           }}
                         >
                           {langCode}
@@ -1033,8 +1033,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
         {/* Right Panel: Selected Entity Details & Provenance Drawer */}
         <div
           style={{
-            background: 'rgba(11, 43, 38, 0.85)',
-            border: '1px solid rgba(142, 182, 155, 0.3)',
+            background: 'rgba(16, 43, 32, 0.85)',
+            border: '1px solid rgba(166, 196, 138, 0.3)',
             borderRadius: '14px',
             padding: '20px',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
@@ -1058,8 +1058,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                       letterSpacing: '0.06em',
                       padding: '3px 8px',
                       borderRadius: '4px',
-                      background: ENTITY_COLORS[nodeDetails.node.entity_type]?.bg || 'rgba(142, 182, 155, 0.15)',
-                      color: ENTITY_COLORS[nodeDetails.node.entity_type]?.border || '#8EB69B'
+                      background: ENTITY_COLORS[nodeDetails.node.entity_type]?.bg || 'rgba(166, 196, 138, 0.15)',
+                      color: ENTITY_COLORS[nodeDetails.node.entity_type]?.border || '#A6C48A'
                     }}
                   >
                     {nodeDetails.node.entity_type}
@@ -1089,12 +1089,12 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   {nodeDetails.node.name}
                 </h2>
                 {nodeDetails.node.native_name && (
-                  <div style={{ fontSize: '15px', color: '#8EB69B', fontWeight: '600', marginBottom: '8px' }}>
+                  <div style={{ fontSize: '15px', color: '#A6C48A', fontWeight: '600', marginBottom: '8px' }}>
                     {nodeDetails.node.native_name}
                   </div>
                 )}
                 {nodeDetails.node.summary && (
-                  <p style={{ margin: 0, fontSize: '13px', color: 'rgba(218, 241, 222, 0.85)', lineHeight: '1.4' }}>
+                  <p style={{ margin: 0, fontSize: '13px', color: 'rgba(245, 243, 233, 0.85)', lineHeight: '1.4' }}>
                     {nodeDetails.node.summary}
                   </p>
                 )}
@@ -1104,7 +1104,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
               {nodeDetails.vocabulary_details && (
                 <div
                   style={{
-                    background: 'rgba(5, 31, 32, 0.7)',
+                    background: 'rgba(16, 43, 32, 0.7)',
                     border: '1px solid rgba(245, 158, 11, 0.25)',
                     borderRadius: '10px',
                     padding: '12px',
@@ -1117,14 +1117,14 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                     Linguistic & Cultural Annotation
                   </div>
                   <div>
-                    <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)' }}>Meaning / English Gloss:</span>
+                    <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)' }}>Meaning / English Gloss:</span>
                     <div style={{ fontSize: '13px', fontWeight: '600', color: '#FFFFFF' }}>
                       {nodeDetails.vocabulary_details.meaning}
                     </div>
                   </div>
                   {nodeDetails.vocabulary_details.transliteration && (
                     <div>
-                      <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)' }}>Transliteration:</span>
+                      <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)' }}>Transliteration:</span>
                       <div style={{ fontSize: '12px', fontFamily: 'monospace', color: '#99F6E4' }}>
                         {nodeDetails.vocabulary_details.transliteration}
                       </div>
@@ -1132,8 +1132,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   )}
                   {nodeDetails.vocabulary_details.cultural_context && (
                     <div>
-                      <span style={{ fontSize: '11px', color: 'rgba(218, 241, 222, 0.6)' }}>Cultural Context:</span>
-                      <div style={{ fontSize: '12px', color: '#DAF1DE', fontStyle: 'italic' }}>
+                      <span style={{ fontSize: '11px', color: 'rgba(245, 243, 233, 0.6)' }}>Cultural Context:</span>
+                      <div style={{ fontSize: '12px', color: '#F5F3E9', fontStyle: 'italic' }}>
                         "{nodeDetails.vocabulary_details.cultural_context}"
                       </div>
                     </div>
@@ -1150,8 +1150,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
               {nodeDetails.node.entity_type === 'language' && nodeDetails.node.metadata && (
                 <div
                   style={{
-                    background: 'rgba(5, 31, 32, 0.7)',
-                    border: '1px solid rgba(142, 182, 155, 0.2)',
+                    background: 'rgba(16, 43, 32, 0.7)',
+                    border: '1px solid rgba(166, 196, 138, 0.2)',
                     borderRadius: '10px',
                     padding: '12px',
                     display: 'flex',
@@ -1161,12 +1161,12 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   }}
                 >
                   <div>
-                    <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>Family: </span>
-                    <strong style={{ color: '#DAF1DE' }}>{nodeDetails.node.metadata.family || 'Dravidian'}</strong>
+                    <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>Family: </span>
+                    <strong style={{ color: '#F5F3E9' }}>{nodeDetails.node.metadata.family || 'Dravidian'}</strong>
                   </div>
                   <div>
-                    <span style={{ color: 'rgba(218, 241, 222, 0.6)' }}>Region: </span>
-                    <span style={{ color: '#DAF1DE' }}>{nodeDetails.node.metadata.region || 'Central India'}</span>
+                    <span style={{ color: 'rgba(245, 243, 233, 0.6)' }}>Region: </span>
+                    <span style={{ color: '#F5F3E9' }}>{nodeDetails.node.metadata.region || 'Central India'}</span>
                   </div>
                   {nodeDetails.node.metadata.known_limitations && (
                     <div style={{ marginTop: '4px', padding: '6px 8px', borderRadius: '6px', background: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.25)', color: '#FDE68A', fontSize: '11px' }}>
@@ -1178,7 +1178,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
 
               {/* Connected Semantic Links */}
               <div>
-                <div style={{ fontSize: '12px', fontWeight: '700', color: '#8EB69B', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ fontSize: '12px', fontWeight: '700', color: '#A6C48A', marginBottom: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}>
                   <Compass size={14} /> Connected Knowledge ({nodeDetails.outgoing_relationships.length + nodeDetails.incoming_relationships.length})
                 </div>
 
@@ -1190,8 +1190,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                       style={{
                         padding: '6px 10px',
                         borderRadius: '6px',
-                        background: 'rgba(5, 31, 32, 0.5)',
-                        border: '1px solid rgba(142, 182, 155, 0.15)',
+                        background: 'rgba(16, 43, 32, 0.5)',
+                        border: '1px solid rgba(166, 196, 138, 0.15)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -1200,10 +1200,10 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                       }}
                     >
                       <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
-                        <ArrowRight size={12} color="#8EB69B" />
+                        <ArrowRight size={12} color="#A6C48A" />
                         <span style={{ color: '#FFFFFF', fontWeight: '600' }}>{rel.target_name || rel.target_id}</span>
                       </div>
-                      <span style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.5)', textTransform: 'lowercase' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(245, 243, 233, 0.5)', textTransform: 'lowercase' }}>
                         {rel.relationship_type.replace(/_/g, ' ')}
                       </span>
                     </div>
@@ -1216,8 +1216,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                       style={{
                         padding: '6px 10px',
                         borderRadius: '6px',
-                        background: 'rgba(5, 31, 32, 0.5)',
-                        border: '1px solid rgba(142, 182, 155, 0.15)',
+                        background: 'rgba(16, 43, 32, 0.5)',
+                        border: '1px solid rgba(166, 196, 138, 0.15)',
                         display: 'flex',
                         alignItems: 'center',
                         justifyContent: 'space-between',
@@ -1229,7 +1229,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                         <ChevronRight size={12} color="#A78BFA" />
                         <span style={{ color: '#FFFFFF', fontWeight: '600' }}>{rel.source_name || rel.source_id}</span>
                       </div>
-                      <span style={{ fontSize: '10px', color: 'rgba(218, 241, 222, 0.5)', textTransform: 'lowercase' }}>
+                      <span style={{ fontSize: '10px', color: 'rgba(245, 243, 233, 0.5)', textTransform: 'lowercase' }}>
                         {rel.relationship_type.replace(/_/g, ' ')}
                       </span>
                     </div>
@@ -1242,9 +1242,9 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 style={{
                   marginTop: 'auto',
                   paddingTop: '12px',
-                  borderTop: '1px solid rgba(142, 182, 155, 0.2)',
+                  borderTop: '1px solid rgba(166, 196, 138, 0.2)',
                   fontSize: '11px',
-                  color: 'rgba(218, 241, 222, 0.65)',
+                  color: 'rgba(245, 243, 233, 0.65)',
                   display: 'flex',
                   flexDirection: 'column',
                   gap: '4px'
@@ -1274,7 +1274,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                     style={{
                       marginTop: '8px',
                       background: '#10B981',
-                      color: '#051F20',
+                      color: '#102B20',
                       border: 'none',
                       borderRadius: '6px',
                       padding: '6px 10px',
@@ -1292,7 +1292,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
               </div>
             </>
           ) : (
-            <div style={{ textAlign: 'center', padding: '48px 16px', color: 'rgba(218, 241, 222, 0.5)' }}>
+            <div style={{ textAlign: 'center', padding: '48px 16px', color: 'rgba(245, 243, 233, 0.5)' }}>
               <Compass size={32} style={{ marginBottom: '8px', opacity: 0.5 }} />
               <div>Select any node on the graph to view complete provenance and linguistic details.</div>
             </div>
@@ -1316,8 +1316,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
         >
           <div
             style={{
-              background: '#0B2B26',
-              border: '1px solid #8EB69B',
+              background: '#102B20',
+              border: '1px solid #A6C48A',
               borderRadius: '16px',
               padding: '24px',
               maxWidth: '520px',
@@ -1329,20 +1329,20 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-                <Plus size={20} color="#8EB69B" />
+                <Plus size={20} color="#A6C48A" />
                 <h3 style={{ margin: 0, fontSize: '18px', fontWeight: '800', color: '#FFFFFF' }}>
                   Propose Knowledge Node
                 </h3>
               </div>
               <button
                 onClick={() => setIsProposeModalOpen(false)}
-                style={{ background: 'transparent', border: 'none', color: '#DAF1DE', cursor: 'pointer' }}
+                style={{ background: 'transparent', border: 'none', color: '#F5F3E9', cursor: 'pointer' }}
               >
                 <X size={18} />
               </button>
             </div>
 
-            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'rgba(218, 241, 222, 0.75)' }}>
+            <p style={{ margin: '0 0 16px 0', fontSize: '13px', color: 'rgba(245, 243, 233, 0.75)' }}>
               Contributions are submitted under Community Governance. Public contributions enter as <strong>PROPOSED</strong> for accredited elder review.
             </p>
 
@@ -1360,13 +1360,13 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
 
             <form onSubmit={handleProposeNode} style={{ display: 'flex', flexDirection: 'column', gap: '14px' }}>
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                   Entity Type
                 </label>
                 <select
                   value={proposeType}
                   onChange={(e) => setProposeType(e.target.value as KGEntityType)}
-                  style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF' }}
+                  style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF' }}
                 >
                   <option value="vocabulary">Vocabulary Word</option>
                   <option value="variety">Dialect / Variety</option>
@@ -1377,7 +1377,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                     Title / Word (English / Latin) *
                   </label>
                   <input
@@ -1386,11 +1386,11 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                     placeholder="e.g. marra"
                     value={proposeName}
                     onChange={(e) => setProposeName(e.target.value)}
-                    style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
+                    style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
                   />
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                     Native Script Form
                   </label>
                   <input
@@ -1398,20 +1398,20 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                     placeholder="e.g. మర్ర / मर्रा"
                     value={proposeNative}
                     onChange={(e) => setProposeNative(e.target.value)}
-                    style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
+                    style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
 
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '10px' }}>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                     Primary Language
                   </label>
                   <select
                     value={proposeLang}
                     onChange={(e) => setProposeLang(e.target.value)}
-                    style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF' }}
+                    style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF' }}
                   >
                     <option value="gon">Gondi (gon)</option>
                     <option value="kff">Koya (kff)</option>
@@ -1421,7 +1421,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   </select>
                 </div>
                 <div>
-                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                  <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                     Script Orthography
                   </label>
                   <input
@@ -1429,7 +1429,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                     placeholder="Telugu / Devanagari / Ol Chiki"
                     value={proposeScript}
                     onChange={(e) => setProposeScript(e.target.value)}
-                    style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
+                    style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
                   />
                 </div>
               </div>
@@ -1437,7 +1437,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
               {proposeType === 'vocabulary' && (
                 <>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                       English Meaning / Gloss *
                     </label>
                     <input
@@ -1446,11 +1446,11 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                       placeholder="e.g. Tree / Forest sacred timber"
                       value={proposeMeaning}
                       onChange={(e) => setProposeMeaning(e.target.value)}
-                      style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
+                      style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
                     />
                   </div>
                   <div>
-                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                    <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                       Cultural Context / Traditional Usage
                     </label>
                     <textarea
@@ -1458,14 +1458,14 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                       value={proposeContext}
                       onChange={(e) => setProposeContext(e.target.value)}
                       rows={2}
-                      style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
+                      style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
                     />
                   </div>
                 </>
               )}
 
               <div>
-                <label style={{ fontSize: '12px', fontWeight: '600', color: '#8EB69B', display: 'block', marginBottom: '4px' }}>
+                <label style={{ fontSize: '12px', fontWeight: '600', color: '#A6C48A', display: 'block', marginBottom: '4px' }}>
                   Source Reference / Citation
                 </label>
                 <input
@@ -1473,7 +1473,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   placeholder="e.g. Gondi Ethnobotanical Lexicon (2024)"
                   value={proposeSourceRef}
                   onChange={(e) => setProposeSourceRef(e.target.value)}
-                  style={{ width: '100%', background: '#051F20', border: '1px solid rgba(142, 182, 155, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
+                  style={{ width: '100%', background: '#102B20', border: '1px solid rgba(166, 196, 138, 0.3)', borderRadius: '6px', padding: '8px', color: '#FFFFFF', boxSizing: 'border-box' }}
                 />
               </div>
 
@@ -1481,7 +1481,7 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                 <button
                   type="button"
                   onClick={() => setIsProposeModalOpen(false)}
-                  style={{ background: 'transparent', border: '1px solid rgba(142, 182, 155, 0.3)', color: '#DAF1DE', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer' }}
+                  style={{ background: 'transparent', border: '1px solid rgba(166, 196, 138, 0.3)', color: '#F5F3E9', padding: '8px 14px', borderRadius: '6px', cursor: 'pointer' }}
                 >
                   Cancel
                 </button>
@@ -1489,8 +1489,8 @@ export function KnowledgeGraph({ apiUrl, adminKey, currentUser }: KnowledgeGraph
                   type="submit"
                   disabled={isSubmittingProposal}
                   style={{
-                    background: '#8EB69B',
-                    color: '#051F20',
+                    background: '#A6C48A',
+                    color: '#102B20',
                     border: 'none',
                     padding: '8px 18px',
                     borderRadius: '6px',

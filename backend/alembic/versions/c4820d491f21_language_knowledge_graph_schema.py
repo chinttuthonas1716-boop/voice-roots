@@ -20,8 +20,12 @@ depends_on: str | Sequence[str] | None = None
 def upgrade() -> None:
     """Create Language Knowledge Graph tables, indexes, and full-text search."""
     bind = op.get_bind()
-    inspector = sa.inspect(bind)
-    existing_tables = set(inspector.get_table_names())
+    try:
+        inspector = sa.inspect(bind)
+        existing_tables = set(inspector.get_table_names())
+    except Exception:
+        inspector = None
+        existing_tables = set()
 
     if "kg_nodes" not in existing_tables:
         op.create_table(
@@ -88,27 +92,29 @@ def upgrade() -> None:
         )
         op.create_index("idx_kg_vocab_lang", "kg_vocabulary_details", ["language_code"])
 
-    # FTS5 Virtual Table for Unicode search across entities and vocabulary
+    # FTS5 Virtual Table for Unicode search across entities and vocabulary (SQLite only)
     conn = op.get_bind()
-    conn.execute(sa.text("""
-        CREATE VIRTUAL TABLE IF NOT EXISTS kg_search_fts USING fts5(
-            node_id UNINDEXED,
-            name,
-            native_name,
-            summary,
-            transliteration,
-            cultural_context,
-            primary_language,
-            entity_type,
-            tokenize='unicode61 remove_diacritics 0'
-        );
-    """))
+    if conn.dialect.name == "sqlite":
+        conn.execute(sa.text("""
+            CREATE VIRTUAL TABLE IF NOT EXISTS kg_search_fts USING fts5(
+                node_id UNINDEXED,
+                name,
+                native_name,
+                summary,
+                transliteration,
+                cultural_context,
+                primary_language,
+                entity_type,
+                tokenize='unicode61 remove_diacritics 0'
+            );
+        """))
 
 
 def downgrade() -> None:
     """Drop Knowledge Graph tables, indexes, and full-text search."""
     conn = op.get_bind()
-    conn.execute(sa.text("DROP TABLE IF EXISTS kg_search_fts;"))
+    if conn.dialect.name == "sqlite":
+        conn.execute(sa.text("DROP TABLE IF EXISTS kg_search_fts;"))
     op.drop_table("kg_vocabulary_details")
     op.drop_table("kg_relationships")
     op.drop_table("kg_nodes")

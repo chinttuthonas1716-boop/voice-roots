@@ -1,0 +1,149 @@
+[
+  {
+    "id": "sub_utnoor",
+    "districtId": "dist_ts_adilabad",
+    "name": "Utnoor",
+    "officialCode": "4301",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_indervelly",
+    "districtId": "dist_ts_adilabad",
+    "name": "Indervelly",
+    "officialCode": "4302",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_asifabad",
+    "districtId": "dist_ts_asifabad",
+    "name": "Asifabad",
+    "officialCode": "4303",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_bhadradri",
+    "districtId": "dist_ts_bhadradri",
+    "name": "Bhadrachalam",
+    "officialCode": "4304",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_kaleshwaram",
+    "districtId": "dist_ts_jayashankar",
+    "name": "Mahadevpur",
+    "officialCode": "4305",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_eturnagaram",
+    "districtId": "dist_ts_mulugu",
+    "name": "Eturnagaram",
+    "officialCode": "4306",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_tenali",
+    "districtId": "dist_ap_guntur",
+    "name": "Tenali",
+    "officialCode": "4801",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_maredumilli",
+    "districtId": "dist_ap_alluri",
+    "name": "Maredumilli",
+    "officialCode": "4802",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_rampachodavaram",
+    "districtId": "dist_ap_alluri",
+    "name": "Rampachodavaram",
+    "officialCode": "4803",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_rajahmundry_rural",
+    "districtId": "dist_ap_east_godavari",
+    "name": "Rajahmundry Rural",
+    "officialCode": "4804",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_guntur_urban",
+    "districtId": "dist_ap_guntur",
+    "name": "Guntur Urban",
+    "officialCode": "4805",
+    "type": "MANDAL"
+  },
+  {
+    "id": "sub_mangalore",
+    "districtId": "dist_ka_dakshina_kannada",
+    "name": "Mangaluru",
+    "officialCode": "5201",
+    "type": "TALUK"
+  },
+  {
+    "id": "sub_udupi",
+    "districtId": "dist_ka_udupi",
+    "name": "Udupi",
+    "officialCode": "5202",
+    "type": "TALUK"
+  },
+  {
+    "id": "sub_karkala",
+    "districtId": "dist_ka_udupi",
+    "name": "Karkala",
+    "officialCode": "5203",
+    "type": "TALUK"
+  },
+  {
+    "id": "sub_madikeri",
+    "districtId": "dist_ka_kodagu",
+    "name": "Madikeri",
+    "officialCode": "5204",
+    "type": "TALUK"
+  },
+  {
+    "id": "sub_bhamragad",
+    "districtId": "dist_mh_gadchiroli",
+    "name": "Bhamragad",
+    "officialCode": "4401",
+    "type": "TEHSIL"
+  },
+  {
+    "id": "sub_dahanu",
+    "districtId": "dist_mh_palghar",
+    "name": "Dahanu",
+    "officialCode": "4402",
+    "type": "TALUK"
+  },
+  {
+    "id": "sub_jagdalpur",
+    "districtId": "dist_cg_bastar",
+    "name": "Jagdalpur",
+    "officialCode": "3201",
+    "type": "TEHSIL"
+  },
+  {
+    "id": "sub_kontaa",
+    "districtId": "dist_cg_sukma",
+    "name": "Konta",
+    "officialCode": "3202",
+    "type": "TEHSIL"
+  },
+  {
+    "id": "sub_potangi",
+    "districtId": "dist_od_koraput",
+    "name": "Pottangi",
+    "officialCode": "3701",
+    "type": "BLOCK"
+  },
+  {
+    "id": "sub_karanjia",
+    "districtId": "dist_od_mayurbhanj",
+    "name": "Karanjia",
+    "officialCode": "3702",
+    "type": "BLOCK"
+  }
+]

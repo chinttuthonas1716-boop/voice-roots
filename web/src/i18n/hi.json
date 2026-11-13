@@ -34,5 +34,20 @@
   "language.detectedPrompt": "आपके डिवाइस के अनुसार हिन्दी का सुझाव दिया गया है।",
   "language.keepEnglish": "अंग्रेजी में रखें",
   "language.useDetected": "हिन्दी चुनें",
-  "language.chooseAnother": "दूसरी भाषा चुनें"
+  "language.chooseAnother": "दूसरी भाषा चुनें",
+  "nav.record": "रिकॉर्ड",
+  "nav.dictionary": "शब्दकोश",
+  "nav.dashboard": "मेरी रिकॉर्डिंग्स",
+  "nav.reviewer": "समीक्षक कतार",
+  "action.record": "आवाज रिकॉर्ड करें",
+  "action.upload": "फ़ाइल अपलोड करें",
+  "action.translate": "अनुवाद करें",
+  "action.save": "कहानी सहेजें",
+  "consent.step": "चरण 1: वक्ता की सहमति",
+  "consent.desc": "हम वक्ता के अधिकारों का सम्मान करते हैं। रिकॉर्डिंग या अपलोड करने से पहले कृपया अनुमति की पुष्टि करें।",
+  "consent.statement": "मैं पुष्टि करता/करती हूँ कि यह आवाज वक्ता की स्वैच्छिक सहमति और सामुदायिक नैतिकता के तहत रिकॉर्ड की गई है।",
+  "consent.audioTitle": "स्थानीय भाषा में ऑडियो सहमति",
+  "consent.listenBtn": "मौखिक सहमति सुनें",
+  "consent.playing": "मौखिक सहमति चल रही है...",
+  "consent.placeholderDisclaimer": "डेमो प्लेसहोल्डर ऑडियो — स्थानीय बुजुर्गों द्वारा सामुदायिक रिकॉर्डिंग आवश्यक"
 }

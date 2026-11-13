@@ -3,7 +3,7 @@
 import React, { useEffect, useState } from "react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, Mic, Languages, HardDrive, User } from "lucide-react";
+import { Home, Mic, Languages, HardDrive, User, ShieldCheck } from "lucide-react";
 import { getCurrentUser, type UserProfile } from "@/lib/auth";
 
 export function MobileBottomNav() {
@@ -14,13 +14,22 @@ export function MobileBottomNav() {
     setUser(getCurrentUser());
   }, [pathname]);
 
-  const navItems = [
-    { label: "Home", href: "/", icon: Home },
-    { label: "Record", href: "/record", icon: Mic },
-    { label: "Translate", href: "/translate", icon: Languages },
-    { label: "My recordings", href: "/dashboard", icon: HardDrive },
-    { label: user ? "Profile" : "Log in", href: "/login", icon: User },
-  ];
+  const isReviewer = user?.role === "reviewer" || user?.role === "admin" || user?.verifiedElder;
+  const navItems = isReviewer
+    ? [
+        { label: "Home", href: "/", icon: Home },
+        { label: "Record", href: "/record", icon: Mic },
+        { label: "Review", href: "/reviewer", icon: ShieldCheck },
+        { label: "Recordings", href: "/dashboard", icon: HardDrive },
+        { label: "Profile", href: "/login", icon: User },
+      ]
+    : [
+        { label: "Home", href: "/", icon: Home },
+        { label: "Record", href: "/record", icon: Mic },
+        { label: "Translate", href: "/translate", icon: Languages },
+        { label: "Recordings", href: "/dashboard", icon: HardDrive },
+        { label: user ? "Profile" : "Log in", href: "/login", icon: User },
+      ];
 
   return (
     <nav

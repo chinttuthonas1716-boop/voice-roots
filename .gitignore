@@ -18,8 +18,9 @@ dist/
 downloads/
 eggs/
 .eggs/
-lib/
-lib64/
+/lib/
+/lib64/
+*.tsbuildinfo
 parts/
 sdist/
 var/
@@ -70,6 +71,10 @@ backend/voice_roots.db-wal
 .coverage
 htmlcov/
 coverage/
+test-results/
+playwright-report/
+web/test-results/
+web/playwright-report/
 
 # Local Model weights & caches
 models/

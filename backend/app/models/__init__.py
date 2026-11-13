@@ -1,6 +1,21 @@
 """Voice Roots models package — imports all ORM models."""
 from app.models.user import User, UserRole
-from app.models.language import Language, Dialect, LanguageStatus
+from app.models.language import (
+    Language,
+    Dialect,
+    MotherTongue,
+    LanguageAlias,
+    LanguageIdentification,
+    LanguageIdentificationCandidate,
+    LanguageVerification,
+    LanguageStatus,
+    IdentificationStatus,
+)
+from app.models.dataset_version import (
+    DatasetVersion,
+    DataUpdateAuditLog,
+    DatasetUpdateStatus,
+)
 from app.models.community import Community
 from app.models.recording import Recording, RecordingType, RecordingStatus, PrivacyLevel
 from app.models.speaker import Speaker, AgeGroup
@@ -13,7 +28,10 @@ from app.models.review import Review, VocabularyEntry, ReviewType, ReviewStatus
 
 __all__ = [
     "User", "UserRole",
-    "Language", "Dialect", "LanguageStatus",
+    "Language", "Dialect", "MotherTongue", "LanguageAlias",
+    "LanguageIdentification", "LanguageIdentificationCandidate", "LanguageVerification",
+    "LanguageStatus", "IdentificationStatus",
+    "DatasetVersion", "DataUpdateAuditLog", "DatasetUpdateStatus",
     "Community",
     "Recording", "RecordingType", "RecordingStatus", "PrivacyLevel",
     "Speaker", "AgeGroup",

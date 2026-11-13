@@ -2,15 +2,17 @@
 
 import { useEffect, useState, useRef } from "react";
 import Link from "next/link";
-import { Search, Play, Pause, Mic, ArrowRight } from "lucide-react";
+import { Search, Play, Pause, Mic, ArrowRight, RefreshCw, CheckCircle2, Clock, AlertCircle, Trash2 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
+import { useOfflineSync } from "@/lib/offlineQueue";
 
 export default function DashboardPage() {
   const [recordings, setRecordings] = useState<StoredVoiceRecord[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [playingId, setPlayingId] = useState<string | null>(null);
   const audioRef = useRef<HTMLAudioElement | null>(null);
+  const { queue, pendingCount, syncedCount, isSyncing, triggerSync, clearSynced } = useOfflineSync();
 
   useEffect(() => {
     setRecordings(getUserRecordings());
@@ -103,6 +105,85 @@ export default function DashboardPage() {
             className="w-full min-h-[48px] rounded-xl border border-white/15 bg-white/5 pl-11 pr-4 text-base text-[#F8FAFC] placeholder-[#94A3B8] focus:border-[#F59E0B] focus:outline-none focus:ring-1 focus:ring-[#F59E0B]"
           />
         </div>
+
+        {/* Offline Sync Queue Section */}
+        {queue.length > 0 && (
+          <div className="glass-card p-4 sm:p-5 space-y-3 border-amber-500/20">
+            <div className="flex items-center justify-between flex-wrap gap-2">
+              <div className="flex items-center gap-2">
+                <RefreshCw className={`h-4 w-4 text-amber-400 ${isSyncing ? "animate-spin" : ""}`} />
+                <h2 className="text-sm font-bold text-white">
+                  Offline Recording Queue ({pendingCount} pending, {syncedCount} synced)
+                </h2>
+              </div>
+
+              <div className="flex items-center gap-2">
+                {pendingCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => triggerSync()}
+                    disabled={isSyncing}
+                    className="px-3 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-semibold transition"
+                  >
+                    {isSyncing ? "Syncing..." : "Sync All Now"}
+                  </button>
+                )}
+                {syncedCount > 0 && (
+                  <button
+                    type="button"
+                    onClick={() => clearSynced()}
+                    className="px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 text-[#94A3B8] hover:text-white text-xs font-medium transition"
+                  >
+                    Clear Synced
+                  </button>
+                )}
+              </div>
+            </div>
+
+            <div className="space-y-2 pt-1">
+              {queue.map((item) => (
+                <div
+                  key={item.clientOperationId}
+                  className="p-3 rounded-xl bg-black/30 border border-white/5 flex items-center justify-between gap-3 text-xs"
+                >
+                  <div className="min-w-0 flex-1">
+                    <span className="font-semibold text-white truncate block">{item.title}</span>
+                    <span className="text-[#94A3B8] text-[11px]">
+                      {item.language} · {item.durationSeconds}s · {new Date(item.createdAt).toLocaleTimeString()}
+                    </span>
+                  </div>
+
+                  <div>
+                    {item.status === "synced" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-emerald-300 font-semibold text-[11px]">
+                        <CheckCircle2 className="h-3 w-3 text-emerald-400" />
+                        <span>Synced to Cloud</span>
+                      </span>
+                    )}
+                    {item.status === "pending" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-300 font-semibold text-[11px]">
+                        <Clock className="h-3 w-3 text-amber-400" />
+                        <span>Queued for Sync</span>
+                      </span>
+                    )}
+                    {item.status === "syncing" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-cyan-500/15 border border-cyan-500/30 text-cyan-300 font-semibold text-[11px]">
+                        <RefreshCw className="h-3 w-3 text-cyan-400 animate-spin" />
+                        <span>Syncing...</span>
+                      </span>
+                    )}
+                    {item.status === "failed" && (
+                      <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-rose-500/15 border border-rose-500/30 text-rose-300 font-semibold text-[11px]">
+                        <AlertCircle className="h-3 w-3 text-rose-400" />
+                        <span>Sync Failed</span>
+                      </span>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
 
         {/* Simple List */}
         {filtered.length === 0 ? (

@@ -204,3 +204,141 @@ def prune_old_backups(
         "retained_bytes": retained_bytes,
         "message": f"Pruned {len(pruned_files)} backup snapshots ({round(pruned_bytes / (1024 * 1024), 2)} MB). Retained {len(retained)} snapshots.",
     }
+
+
+def create_atomic_backup(
+    db_path: Path | str,
+    backup_dir: Path | str,
+    prefix: str = "voice_roots_backup",
+) -> dict[str, Any]:
+    """Create a point-in-time atomic SQLite backup using sqlite3.connect().backup()."""
+    import sqlite3
+
+    db_file = Path(db_path)
+    if not db_file.exists():
+        raise FileNotFoundError(f"Source database '{db_path}' not found.")
+
+    b_dir = Path(backup_dir)
+    b_dir.mkdir(parents=True, exist_ok=True)
+    timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+    backup_file = b_dir / f"{prefix}_{timestamp}.db"
+
+    with sqlite3.connect(db_file) as src, sqlite3.connect(backup_file) as dst:
+        src.backup(dst)
+
+    size = backup_file.stat().st_size
+    prune_res = prune_old_backups(backup_dir=b_dir, retain_days=14, max_backups=50)
+
+    return {
+        "success": True,
+        "backup_path": str(backup_file),
+        "backup_filename": backup_file.name,
+        "size_bytes": size,
+        "timestamp": timestamp,
+        "retention_status": prune_res.get("message"),
+    }
+
+
+def verify_database_integrity(db_path: Path | str) -> dict[str, Any]:
+    """Verify SQLite database integrity via PRAGMA integrity_check and table count."""
+    import sqlite3
+
+    path = Path(db_path)
+    if not path.exists():
+        return {"valid": False, "error": f"File '{db_path}' does not exist."}
+
+    try:
+        with sqlite3.connect(path) as conn:
+            cursor = conn.cursor()
+            cursor.execute("PRAGMA integrity_check")
+            check_result = cursor.fetchone()[0]
+            if check_result != "ok":
+                return {"valid": False, "error": f"Integrity check failed: {check_result}"}
+
+            cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table'")
+            table_count = cursor.fetchone()[0]
+
+            # Get row count in transcripts if table exists
+            cursor.execute("SELECT count(*) FROM sqlite_master WHERE type='table' AND name='transcripts'")
+            has_transcripts = bool(cursor.fetchone()[0])
+            record_count = 0
+            if has_transcripts:
+                cursor.execute("SELECT count(*) FROM transcripts")
+                record_count = cursor.fetchone()[0]
+
+            return {
+                "valid": True,
+                "integrity_check": "ok",
+                "table_count": table_count,
+                "record_count": record_count,
+                "size_bytes": path.stat().st_size,
+            }
+    except Exception as exc:  # noqa: BLE001
+        return {"valid": False, "error": str(exc)}
+
+
+def restore_database_snapshot(
+    backup_path: Path | str,
+    target_db_path: Path | str,
+    dry_run: bool = False,
+) -> dict[str, Any]:
+    """Safely restore a point-in-time database backup snapshot with integrity validation."""
+    import shutil
+    import sqlite3
+
+    src_backup = Path(backup_path)
+    if not src_backup.exists() or not src_backup.is_file():
+        raise FileNotFoundError(f"Backup snapshot '{backup_path}' does not exist or is not a file.")
+
+    # 1. Validate backup integrity before restoring
+    backup_check = verify_database_integrity(src_backup)
+    if not backup_check.get("valid"):
+        raise ValueError(f"Cannot restore corrupt backup snapshot: {backup_check.get('error')}")
+
+    target = Path(target_db_path)
+    pre_restore_integrity = verify_database_integrity(target) if target.exists() else None
+
+    if dry_run:
+        return {
+            "dry_run": True,
+            "status": "validated_ready_to_restore",
+            "backup_file": str(src_backup),
+            "target_db": str(target),
+            "backup_tables": backup_check.get("table_count"),
+            "backup_records": backup_check.get("record_count"),
+            "current_target_records": pre_restore_integrity.get("record_count") if pre_restore_integrity else 0,
+        }
+
+    # 2. Safety copy of current target before replacing
+    safety_copy = None
+    if target.exists():
+        timestamp = datetime.now(timezone.utc).strftime("%Y%m%d_%H%M%S")
+        safety_copy = target.parent / f"pre_restore_safety_{timestamp}.db"
+        shutil.copy2(target, safety_copy)
+
+    try:
+        # 3. Perform atomic restore using sqlite3 backup API
+        with sqlite3.connect(src_backup) as src, sqlite3.connect(target) as dst:
+            src.backup(dst)
+
+        # 4. Verify post-restore target integrity
+        post_restore = verify_database_integrity(target)
+        if not post_restore.get("valid"):
+            # Rollback to safety copy
+            if safety_copy and safety_copy.exists():
+                shutil.copy2(safety_copy, target)
+            raise RuntimeError(f"Post-restore integrity check failed: {post_restore.get('error')}")
+
+        return {
+            "success": True,
+            "restored_from": str(src_backup),
+            "target_db": str(target),
+            "safety_copy": str(safety_copy) if safety_copy else None,
+            "table_count": post_restore.get("table_count"),
+            "record_count": post_restore.get("record_count"),
+            "restored_at": datetime.now(timezone.utc).isoformat(),
+        }
+    except Exception:
+        if safety_copy and safety_copy.exists():
+            shutil.copy2(safety_copy, target)
+        raise

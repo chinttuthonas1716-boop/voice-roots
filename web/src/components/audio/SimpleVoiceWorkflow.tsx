@@ -2,8 +2,9 @@
 
 import { useState, useRef, useEffect } from "react";
 import Link from "next/link";
-import { Mic, Square, Upload, Play, Pause, Check, ArrowRight, RotateCcw, AlertCircle } from "lucide-react";
+import { Mic, Square, Upload, Play, Pause, Check, ArrowRight, RotateCcw, AlertCircle, Volume2 } from "lucide-react";
 import { saveUserRecording, type StoredVoiceRecord } from "@/lib/storage";
+import { useAppLanguage } from "@/lib/languageContext";
 
 interface SimpleVoiceWorkflowProps {
   initialMode: "record" | "upload";
@@ -26,11 +27,35 @@ const LANGUAGES = [
 ];
 
 export function SimpleVoiceWorkflow({ initialMode }: SimpleVoiceWorkflowProps) {
+  const { t, appLanguage } = useAppLanguage();
   const [mode, setMode] = useState<"record" | "upload">(initialMode);
   const [step, setStep] = useState<1 | 2 | 3 | 4>(1);
 
   // Step 1: Consent
   const [hasConsent, setHasConsent] = useState(false);
+  const [consentAudioLang, setConsentAudioLang] = useState<"te" | "hi" | "en" | "gon" | "kff">("te");
+  const [isPlayingConsent, setIsPlayingConsent] = useState(false);
+  const consentAudioRef = useRef<HTMLAudioElement | null>(null);
+
+  const playConsentAudio = (lang: string) => {
+    if (consentAudioRef.current) {
+      consentAudioRef.current.pause();
+    }
+
+    if (isPlayingConsent) {
+      setIsPlayingConsent(false);
+      return;
+    }
+
+    const audio = new Audio(`/api/v1/consent/audio/${lang}`);
+    consentAudioRef.current = audio;
+    setIsPlayingConsent(true);
+
+    audio.onended = () => setIsPlayingConsent(false);
+    audio.onerror = () => setIsPlayingConsent(false);
+
+    audio.play().catch(() => setIsPlayingConsent(false));
+  };
 
   // Step 2: Audio Capture
   const [audioBlob, setAudioBlob] = useState<Blob | null>(null);
@@ -308,10 +333,75 @@ export function SimpleVoiceWorkflow({ initialMode }: SimpleVoiceWorkflowProps) {
           {step === 1 && (
             <div className="space-y-5">
               <div>
-                <h2 className="text-lg font-bold text-[#F8FAFC]">Step 1: Speaker consent</h2>
+                <h2 className="text-lg font-bold text-[#F8FAFC]">{t("consent.step")}</h2>
                 <p className="text-sm text-[#94A3B8] mt-1">
-                  We honor speaker rights. Please confirm permission before recording or uploading.
+                  {t("consent.desc")}
                 </p>
+              </div>
+
+              {/* Spoken Audio Consent Player */}
+              <div className="p-4 rounded-xl border border-amber-500/25 bg-amber-500/5 space-y-3">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="flex items-center gap-2">
+                    <Volume2 className="h-4 w-4 text-amber-400" />
+                    <span className="text-xs font-bold text-[#F8FAFC]">
+                      {t("consent.audioTitle")}
+                    </span>
+                  </div>
+                  {/* Language Selector */}
+                  <div className="flex items-center gap-1">
+                    {[
+                      { code: "te", label: "తెలుగు" },
+                      { code: "hi", label: "हिन्दी" },
+                      { code: "en", label: "English" },
+                      { code: "gon", label: "Gondi" },
+                      { code: "kff", label: "Koya" },
+                    ].map((l) => (
+                      <button
+                        key={l.code}
+                        type="button"
+                        onClick={() => {
+                          setConsentAudioLang(l.code as any);
+                          if (isPlayingConsent && consentAudioRef.current) {
+                            consentAudioRef.current.pause();
+                            setIsPlayingConsent(false);
+                          }
+                        }}
+                        className={`px-2 py-0.5 rounded text-[11px] font-semibold transition ${
+                          consentAudioLang === l.code
+                            ? "bg-amber-500 text-black font-bold"
+                            : "bg-white/5 text-[#94A3B8] hover:text-white"
+                        }`}
+                      >
+                        {l.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div className="flex items-center justify-between gap-3 pt-1 flex-wrap">
+                  <button
+                    type="button"
+                    onClick={() => playConsentAudio(consentAudioLang)}
+                    className="flex items-center gap-2 px-3 py-1.5 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 border border-amber-500/40 text-amber-300 text-xs font-semibold transition"
+                  >
+                    {isPlayingConsent ? (
+                      <>
+                        <Pause className="h-3.5 w-3.5" />
+                        <span>{t("consent.playing")}</span>
+                      </>
+                    ) : (
+                      <>
+                        <Play className="h-3.5 w-3.5 fill-current" />
+                        <span>{t("consent.listenBtn")}</span>
+                      </>
+                    )}
+                  </button>
+
+                  <span className="text-[10px] text-amber-400/90 font-mono">
+                    ⚠️ {t("consent.placeholderDisclaimer")}
+                  </span>
+                </div>
               </div>
 
               <label className="flex items-start gap-3 p-4 rounded-xl border border-white/15 bg-white/5 cursor-pointer hover:bg-white/[0.08] transition">
@@ -322,7 +412,7 @@ export function SimpleVoiceWorkflow({ initialMode }: SimpleVoiceWorkflowProps) {
                   className="mt-1 h-5 w-5 rounded border-white/30 bg-white/10 text-[#F59E0B] focus:ring-[#F59E0B]"
                 />
                 <span className="text-sm text-[#F8FAFC] leading-relaxed">
-                  I confirm that this voice is recorded with the speaker&apos;s voluntary permission under indigenous and community ethics.
+                  {t("consent.statement")}
                 </span>
               </label>
 

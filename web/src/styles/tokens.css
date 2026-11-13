@@ -1,0 +1,81 @@
+:root {
+  /* =========================================
+     VOICE ROOTS — REFERENCE PALETTE
+     ========================================= */
+  --vr-white: #ffffff;
+  --vr-bg: #2d3250;
+  --vr-bg-deep: #242942;
+  --vr-indigo: #42476c;
+  --vr-periwinkle: #6f76a0;
+  --vr-peach: #f9b17a;
+  --vr-peach-soft: #f6a875;
+  --vr-text: #ffffff;
+  --vr-text-secondary: #d9d9e2;
+  --vr-text-muted: #a9aec5;
+
+  /* Light surfaces */
+  --vr-light-bg: #f5f5f2;
+  --vr-light-surface: #ffffff;
+  --vr-light-border: #e8e8e4;
+  --vr-light-text: #242942;
+
+  /* Glass */
+  --vr-glass: rgba(255, 255, 255, 0.08);
+  --vr-glass-strong: rgba(255, 255, 255, 0.14);
+  --vr-glass-border: rgba(255, 255, 255, 0.12);
+
+  /* Shadows */
+  --vr-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  --vr-shadow-soft: 0 10px 35px rgba(0, 0, 0, 0.12);
+
+  /* Radius */
+  --vr-radius-sm: 12px;
+  --vr-radius-md: 16px;
+  --vr-radius-lg: 24px;
+  --vr-radius-xl: 32px;
+  --vr-radius-pill: 999px;
+
+  /* Spacing */
+  --vr-space-1: 4px;
+  --vr-space-2: 8px;
+  --vr-space-3: 12px;
+  --vr-space-4: 16px;
+  --vr-space-5: 20px;
+  --vr-space-6: 24px;
+  --vr-space-7: 32px;
+  --vr-space-8: 40px;
+  --vr-space-9: 48px;
+  --vr-space-10: 64px;
+
+  /* Motion */
+  --vr-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --vr-transition: 200ms var(--vr-ease);
+
+  /* Legacy mappings */
+  --vr-accent: var(--vr-peach);
+  --vr-accent-soft: var(--vr-peach-soft);
+  --vr-surface: var(--vr-light-bg);
+  --vr-border: var(--vr-glass-border);
+  --vr-input-bg: var(--vr-indigo);
+  --vr-input-border: rgba(255, 255, 255, 0.10);
+  --vr-shadow-card: var(--vr-shadow);
+  --vr-gold: var(--vr-peach);
+  --vr-amber: var(--vr-peach);
+  --vr-violet: var(--vr-periwinkle);
+  --vr-teal: var(--vr-peach-soft);
+  --vr-heritage: var(--vr-peach);
+  --vr-sage: var(--vr-periwinkle);
+  --bg-midnight: var(--vr-bg-deep);
+  --bg-surface: var(--vr-indigo);
+  --text-primary: var(--vr-text);
+  --text-secondary: var(--vr-text-secondary);
+  --heritage-amber: var(--vr-peach);
+  --heritage-gold: var(--vr-peach);
+  --soft-violet: var(--vr-periwinkle);
+  --heritage-teal: var(--vr-periwinkle);
+  --warm-ivory: var(--vr-bg);
+  --bg-obsidian: var(--vr-bg);
+  --root-green: var(--vr-periwinkle);
+  --leaf-green: var(--vr-periwinkle);
+}
+

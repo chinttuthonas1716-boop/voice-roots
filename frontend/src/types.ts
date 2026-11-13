@@ -671,6 +671,9 @@ export interface CulturalStory {
   collection_title?: string | null;
   collection_category?: string | null;
   traditional_knowledge_label?: string | null;
+  is_redacted?: boolean;
+  is_accessible?: boolean;
+  custodianship_advisory?: string | null;
 }
 
 // User Authentication & Role-Based Access Control
@@ -760,6 +763,40 @@ export interface SpeechAlignment {
   end_time: number;
   confidence: number;
   phonetic_tokens: string;
+  is_uncertain?: boolean;
+  uncertainty_label?: string;
+}
+
+export interface DialectClassification {
+  language: string;
+  language_code: string;
+  detected_dialect: string;
+  confidence: number;
+  phonological_markers: string[];
+  regional_distribution: string;
+  vitality_status: string;
+  analyzed_token_count: number;
+}
+
+export interface SpeakerTurn {
+  speaker_id: string;
+  speaker_label: string;
+  start_time: number;
+  end_time: number;
+  duration: number;
+  token_count: number;
+  text_preview: string;
+  confidence: number;
+}
+
+export interface NoiseReductionResult {
+  status: string;
+  original_file: string;
+  enhanced_file: string;
+  filter_applied: string;
+  snr_improvement_db: number;
+  is_derivative?: boolean;
+  master_preserved?: boolean;
 }
 
 export interface SpeechAcousticMetrics {
@@ -880,5 +917,152 @@ export interface ResearchCorpusManifest {
     variety_count: number;
   }>;
 }
+
+// Milestone 26: Module 2 — Multilingual Dictionary
+export interface DictionaryEntry {
+  id: number;
+  word: string;
+  language_code: string;
+  dialect?: string | null;
+  native_script?: string | null;
+  script_name?: string | null;
+  ipa?: string | null;
+  part_of_speech: string;
+  meanings: string[];
+  translations: Record<string, string>;
+  alternate_spellings: string[];
+  dialect_variations: Record<string, string>;
+  audio_url?: string | null;
+  audio_sha256?: string | null;
+  etymology?: string | null;
+  cultural_context?: string | null;
+  is_elder_approved: boolean;
+  status: 'approved' | 'pending_review' | 'rejected';
+  approved_by?: string | null;
+  approved_at?: string | null;
+  contributor_name: string;
+  contributor_role: string;
+  provenance?: string | null;
+  created_at: string;
+  updated_at: string;
+  related_words?: Array<{
+    id: number;
+    word: string;
+    native_script?: string;
+    ipa?: string;
+    part_of_speech: string;
+    primary_meaning: string;
+    is_elder_approved: boolean;
+  }>;
+}
+
+export interface DictionaryOverview {
+  total_words: number;
+  approved_words: number;
+  pending_words: number;
+  rejected_words: number;
+  approval_rate_pct: number;
+  words_with_audio: number;
+  audio_coverage_pct: number;
+  dialects_represented: number;
+  by_language: Array<{
+    language_code: string;
+    total: number;
+    approved: number;
+  }>;
+  by_part_of_speech: Record<string, number>;
+}
+
+export interface DictionaryLanguageMeta {
+  code: string;
+  name: string;
+  native_name: string;
+  family: string;
+  primary_scripts: string[];
+  dialects: string[];
+  regions: string[];
+}
+
+// Milestone 27: Module 3 — Grounded AI Assistant & Archive RAG
+export interface CitationPillData {
+  citation_id: string;
+  source_id: string;
+  source_type: 'cultural_story' | 'dictionary_entry' | 'transcript' | string;
+  title: string;
+  language: string;
+  dialect?: string | null;
+  attribution: string;
+  excerpt: string;
+  audio_url?: string | null;
+  transcript_id?: number | null;
+  access_classification: string;
+}
+
+export interface GroundedAssistantResponse {
+  query: string;
+  answer: string;
+  epistemic_status: 'VERIFIED_ARCHIVE_GROUNDED' | 'PARTIALLY_GROUNDED' | 'UNATTESTED' | string;
+  confidence_score: number;
+  verified_knowledge: string[];
+  ai_hypothesis: string[];
+  citations: CitationPillData[];
+  sources_count: number;
+  latency_ms: number;
+  epistemic_disclaimer: string;
+}
+
+export interface AssistantSuggestion {
+  query: string;
+  language: string;
+  category: string;
+}
+
+export interface AssistantRagStats {
+  status: string;
+  chroma_collection: string;
+  total_vector_records: number;
+  embedding_dimensions: number;
+  embedding_model: string;
+  cloud_spend: string;
+  database_counts: {
+    approved_cultural_stories: number;
+    approved_dictionary_entries: number;
+    approved_transcripts: number;
+  };
+  supported_languages: string[];
+}
+
+// Milestone 28: Module 4 — Cultural Archives & Sacred Lore Shielding
+export interface StoryWaveformEnvelope {
+  story_id: string;
+  title: string;
+  primary_language: string;
+  num_peaks: number;
+  peaks: number[];
+  duration_seconds: number;
+}
+
+export interface StoryBilingualSegmentItem {
+  segment_id: number;
+  start_time: number;
+  end_time: number;
+  vernacular_text: string;
+  native_script?: string | null;
+  translated_text: string;
+  language?: string | null;
+  dialect?: string | null;
+}
+
+export interface StoryBilingualSegmentsResponse {
+  story_id: string;
+  title: string;
+  primary_language: string;
+  dialect_variety?: string | null;
+  total_duration: number;
+  segment_count: number;
+  segments: StoryBilingualSegmentItem[];
+}
+
+
 
 

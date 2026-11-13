@@ -1,0 +1,67 @@
+services:
+  redis:
+    image: redis:7.4-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--appendonly", "yes"]
+    volumes:
+      - voice-roots-redis:/data
+
+  backend:
+    image: ${IMAGE_REPOSITORY:?}/backend:${IMAGE_TAG:?}
+    restart: unless-stopped
+    env_file: .env
+    environment:
+      APP_ENV: production
+      REDIS_URL: redis://redis:6379/0
+      AUDIO_STORAGE_DIR: /app/data/audio
+      TRANSCRIPT_STORAGE_DIR: /app/data/transcripts
+      AI_ENABLED: ${AI_ENABLED:-false}
+      WHISPER_MODEL: ${WHISPER_MODEL:-base}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
+      FRONTEND_ORIGIN: ${FRONTEND_ORIGIN:?Set FRONTEND_ORIGIN in .env}
+      S3_BUCKET: ${S3_BUCKET:-voice-roots-audio}
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - voice-roots-audio:/app/data/audio
+      - voice-roots-transcripts:/app/data/transcripts
+    depends_on:
+      - redis
+    ports:
+      - "127.0.0.1:8000:8000"
+
+  worker:
+    image: ${IMAGE_REPOSITORY:?}/backend:${IMAGE_TAG:?}
+    restart: unless-stopped
+    command: ["rq", "worker", "--url", "redis://redis:6379/0", "voice-roots"]
+    env_file: .env
+    environment:
+      APP_ENV: production
+      REDIS_URL: redis://redis:6379/0
+      AUDIO_STORAGE_DIR: /app/data/audio
+      TRANSCRIPT_STORAGE_DIR: /app/data/transcripts
+      AI_ENABLED: ${AI_ENABLED:-false}
+      WHISPER_MODEL: ${WHISPER_MODEL:-base}
+      WHISPER_DEVICE: ${WHISPER_DEVICE:-cpu}
+      WHISPER_COMPUTE_TYPE: ${WHISPER_COMPUTE_TYPE:-int8}
+      S3_BUCKET: ${S3_BUCKET:-voice-roots-audio}
+      HF_TOKEN: ${HF_TOKEN:-}
+    volumes:
+      - voice-roots-audio:/app/data/audio
+      - voice-roots-transcripts:/app/data/transcripts
+    depends_on:
+      - redis
+      - backend
+
+  frontend:
+    image: ${IMAGE_REPOSITORY:?}/frontend:${IMAGE_TAG:?}
+    restart: unless-stopped
+    depends_on:
+      - backend
+    ports:
+      - "127.0.0.1:8080:80"
+
+volumes:
+  voice-roots-redis:
+  voice-roots-audio:
+  voice-roots-transcripts:

@@ -1,0 +1,50 @@
+[
+  {
+    "id": "comm_gond",
+    "name": "Gond Community",
+    "nativeName": "కోయతూర్ / गोंड",
+    "stateId": "TS",
+    "districtId": "dist_ts_adilabad",
+    "description": "Indigenous Koyatur clan lineage custodians of Ghotul tradition and Mahua lore."
+  },
+  {
+    "id": "comm_koya",
+    "name": "Koya Community",
+    "nativeName": "కోయ దొర",
+    "stateId": "AP",
+    "districtId": "dist_ap_alluri",
+    "description": "River basin forest custodians practicing ethnobotanical healing."
+  },
+  {
+    "id": "comm_lambani",
+    "name": "Lambani / Banjara Community",
+    "nativeName": "గోర్ బంజారా",
+    "stateId": "TS",
+    "districtId": "dist_ts_mahabubnagar",
+    "description": "Nomadic pastoral community known for vibrant embroidery and oral migration songs."
+  },
+  {
+    "id": "comm_chenchu",
+    "name": "Chenchu Community",
+    "nativeName": "చెంచు",
+    "stateId": "AP",
+    "districtId": "dist_ap_kurnool",
+    "description": "Particularly Vulnerable Tribal Group (PVTG) of Nallamala forests."
+  },
+  {
+    "id": "comm_santhal",
+    "name": "Santhal Community",
+    "nativeName": "ᱥᱟᱱᱛᱟᱲ",
+    "stateId": "OD",
+    "districtId": "dist_od_mayurbhanj",
+    "description": "Major indigenous community guarding the sacred Jaher Than groves."
+  },
+  {
+    "id": "comm_tuluva",
+    "name": "Tuluva Coastal Fisherfolk",
+    "nativeName": "ತುಳುವೆರ್",
+    "stateId": "KA",
+    "districtId": "dist_ka_udupi",
+    "description": "Coastal fisher and agrarian community custodians of Siri Paddana."
+  }
+]

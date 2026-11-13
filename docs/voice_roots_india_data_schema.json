@@ -1,0 +1,233 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "VoiceRootsIndiaMasterDataSchema",
+  "description": "JSON Schema defining normalized India Geographic, Linguistic, Census C-16, and Audio Track master data",
+  "type": "object",
+  "definitions": {
+    "Country": {
+      "type": "object",
+      "required": ["id", "name", "iso2", "iso3"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "officialName": { "type": "string" },
+        "iso2": { "type": "string", "pattern": "^[A-Z]{2}$" },
+        "iso3": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "capital": { "type": "string" },
+        "sourceId": { "type": "string" }
+      }
+    },
+    "StateUT": {
+      "type": "object",
+      "required": ["id", "countryId", "name", "officialCode", "type"],
+      "properties": {
+        "id": { "type": "string" },
+        "countryId": { "type": "string" },
+        "name": { "type": "string" },
+        "officialCode": { "type": "string" },
+        "type": { "type": "string", "enum": ["STATE", "UNION_TERRITORY"] },
+        "capital": { "type": "string" }
+      }
+    },
+    "District": {
+      "type": "object",
+      "required": ["id", "stateId", "name", "officialCode"],
+      "properties": {
+        "id": { "type": "string" },
+        "stateId": { "type": "string" },
+        "name": { "type": "string" },
+        "officialCode": { "type": "string" }
+      }
+    },
+    "Subdistrict": {
+      "type": "object",
+      "required": ["id", "districtId", "name", "officialCode", "type"],
+      "properties": {
+        "id": { "type": "string" },
+        "districtId": { "type": "string" },
+        "name": { "type": "string" },
+        "officialCode": { "type": "string" },
+        "type": { "type": "string", "enum": ["MANDAL", "TALUK", "TEHSIL", "BLOCK", "SUBDIVISION", "OTHER"] }
+      }
+    },
+    "Locality": {
+      "type": "object",
+      "required": ["id", "countryId", "stateId", "districtId", "subdistrictId", "name", "officialCode", "type"],
+      "properties": {
+        "id": { "type": "string" },
+        "countryId": { "type": "string" },
+        "stateId": { "type": "string" },
+        "districtId": { "type": "string" },
+        "subdistrictId": { "type": "string" },
+        "name": { "type": "string" },
+        "officialCode": { "type": "string" },
+        "type": { "type": "string", "enum": ["VILLAGE", "HAMLET", "TOWN", "CITY", "LOCALITY", "OTHER"] },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "sourceId": { "type": "string" },
+        "sourceYear": { "type": "integer" }
+      }
+    },
+    "Language": {
+      "type": "object",
+      "required": ["id", "name", "nativeName", "iso639_3", "languageFamily", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "nativeName": { "type": "string" },
+        "iso639_1": { "type": ["string", "null"] },
+        "iso639_3": { "type": "string" },
+        "languageFamily": { "type": "string" },
+        "languageGroup": { "type": "string" },
+        "censusCode": { "type": "string" },
+        "censusName": { "type": "string" },
+        "description": { "type": "string" },
+        "sourceId": { "type": "string" },
+        "sourceYear": { "type": "integer" },
+        "status": { "type": "string", "enum": ["OFFICIAL", "COMMUNITY_ADDED", "PENDING_REVIEW"] }
+      }
+    },
+    "LanguageVariety": {
+      "type": "object",
+      "required": ["id", "languageId", "name"],
+      "properties": {
+        "id": { "type": "string" },
+        "languageId": { "type": "string" },
+        "name": { "type": "string" },
+        "nativeName": { "type": "string" },
+        "censusName": { "type": "string" },
+        "censusCode": { "type": "string" },
+        "description": { "type": "string" },
+        "sourceId": { "type": "string" },
+        "sourceYear": { "type": "integer" },
+        "status": { "type": "string" }
+      }
+    },
+    "Dialect": {
+      "type": "object",
+      "required": ["id", "languageId", "name", "verificationStatus"],
+      "properties": {
+        "id": { "type": "string" },
+        "languageId": { "type": "string" },
+        "name": { "type": "string" },
+        "nativeName": { "type": "string" },
+        "region": { "type": "string" },
+        "description": { "type": "string" },
+        "verificationStatus": { "type": "string" }
+      }
+    },
+    "Community": {
+      "type": "object",
+      "required": ["id", "name", "stateId"],
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "nativeName": { "type": "string" },
+        "description": { "type": "string" },
+        "countryId": { "type": "string" },
+        "stateId": { "type": "string" },
+        "districtId": { "type": "string" },
+        "localityId": { "type": "string" },
+        "verificationStatus": { "type": "string" },
+        "sourceId": { "type": "string" }
+      }
+    },
+    "LanguageLocation": {
+      "type": "object",
+      "required": ["id", "languageId", "status", "sourceId"],
+      "properties": {
+        "id": { "type": "string" },
+        "languageId": { "type": "string" },
+        "countryId": { "type": "string" },
+        "stateId": { "type": "string" },
+        "districtId": { "type": "string" },
+        "subdistrictId": { "type": "string" },
+        "localityId": { "type": "string" },
+        "communityId": { "type": ["string", "null"] },
+        "status": {
+          "type": "string",
+          "enum": ["OFFICIAL", "CENSUS_REPORTED", "COMMUNITY_REPORTED", "FIELD_VERIFIED", "AI_SUGGESTED", "UNVERIFIED"]
+        },
+        "sourceId": { "type": "string" },
+        "sourceYear": { "type": "integer" },
+        "sourceReference": { "type": "string" },
+        "verificationStatus": { "type": "string" }
+      }
+    },
+    "CensusLanguageObservation": {
+      "type": "object",
+      "required": ["id", "languageId", "areaName", "censusYear", "sourceId"],
+      "properties": {
+        "id": { "type": "string" },
+        "languageId": { "type": "string" },
+        "censusLanguageCode": { "type": "string" },
+        "motherTongueName": { "type": "string" },
+        "stateCode": { "type": "string" },
+        "districtCode": { "type": "string" },
+        "subdistrictCode": { "type": "string" },
+        "townCode": { "type": "string" },
+        "areaName": { "type": "string" },
+        "areaType": { "type": "string" },
+        "totalPersons": { "type": "integer" },
+        "totalMale": { "type": "integer" },
+        "totalFemale": { "type": "integer" },
+        "ruralPersons": { "type": "integer" },
+        "ruralMale": { "type": "integer" },
+        "ruralFemale": { "type": "integer" },
+        "urbanPersons": { "type": "integer" },
+        "urbanMale": { "type": "integer" },
+        "urbanFemale": { "type": "integer" },
+        "censusYear": { "type": "integer" },
+        "sourceId": { "type": "string" }
+      }
+    },
+    "DataSource": {
+      "type": "object",
+      "required": ["id", "organization", "datasetName", "sourceYear"],
+      "properties": {
+        "id": { "type": "string" },
+        "organization": { "type": "string" },
+        "datasetName": { "type": "string" },
+        "datasetVersion": { "type": "string" },
+        "sourceUrl": { "type": "string" },
+        "sourceYear": { "type": "integer" },
+        "retrievedAt": { "type": "string" },
+        "license": { "type": "string" },
+        "notes": { "type": "string" }
+      }
+    },
+    "DataAuditLog": {
+      "type": "object",
+      "required": ["id", "entityType", "entityId", "action", "changedBy", "createdAt"],
+      "properties": {
+        "id": { "type": "string" },
+        "entityType": { "type": "string" },
+        "entityId": { "type": "string" },
+        "action": { "type": "string", "enum": ["CREATE", "UPDATE", "MERGE", "VERIFY", "REJECT"] },
+        "oldValue": { "type": "string" },
+        "newValue": { "type": "string" },
+        "changedBy": { "type": "string" },
+        "reason": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "AudioTrack": {
+      "type": "object",
+      "required": ["id", "storyId", "type", "languageId", "audioUrl", "status"],
+      "properties": {
+        "id": { "type": "string" },
+        "storyId": { "type": "string" },
+        "type": { "type": "string", "enum": ["ORIGINAL", "TRANSLATED"] },
+        "languageId": { "type": "string" },
+        "sourceLanguageId": { "type": "string" },
+        "targetLanguageId": { "type": "string" },
+        "audioUrl": { "type": "string" },
+        "duration": { "type": "string" },
+        "provider": { "type": "string" },
+        "voiceId": { "type": "string" },
+        "status": { "type": "string", "enum": ["GENERATING", "READY", "FAILED"] },
+        "createdAt": { "type": "string" }
+      }
+    }
+  }
+}

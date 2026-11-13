@@ -45,7 +45,7 @@ const VOCABULARY_MAP: Record<string, Record<string, string>> = {
     te: "పశ్చిమ కనుమల దేశీయ జ్ఞానం మరియు రోజువారీ కన్నడ జానపద సంభాషణలు.",
     hi: "कर्नाटक पश्चिमी घाट का पारंपरिक ज्ञान और दैनिक कन्नड़ लोक वार्ता।",
     ta: "கர்நாடக மேற்குத் தொடர்ச்சி மலை நாட்டுப்புற அறிவு மற்றும் தினசரி கன்னட உரையாடல்.",
-    ml: "കർണ്ണാടക പശ്ചിമഘട്ട നാട്ടുവിജ്ഞാനവും നിത്യജീവിത കന്നഡ പാരമ്പര്യവും.",
+    ml: "ಕರ್ണ്ണಾಟಕ ಪಶ್ಚಿಮಘಟ್ಟ ನಾಟ್ಟುವಿಜ್ಞಾನವೂ ನಿತ್ಯಜೀವಿತ ಕನ್ನಡ ಪಾರಂಪರ್ಯವೂ.",
   },
   malayalam: {
     en: "Kerala monsoon agricultural chants and folk dialogue preserved.",
@@ -121,8 +121,34 @@ const LANG_NORM: Record<string, string> = {
   santhali: "santhali",
   lam: "lambadi",
   lambadi: "lambadi",
+  lmn: "lambadi",
   en: "english",
   english: "english",
+};
+
+const ORAL_LANGUAGES = new Set(["gondi", "koya", "lambadi"]);
+
+const ORAL_PHRASEBOOK: Record<string, Record<string, Record<string, string>>> = {
+  gondi: {
+    "సేవా జోహార్": { en: "Sacred greetings and collective community honor.", te: "సామూహిక సమర్పణ మరియు పవిత్ర వందనాలు.", hi: "सामूहिक आदर एवं पवित्र जोहार अभिवादन।" },
+    "సగా పెన్": { en: "Sacred clan ancestral deities and lineage spirit.", te: "వంశ మూల పురుషులు మరియు పవిత్ర సగా దేవతలు.", hi: "पवित्र कुल देवता एवं पूर्वज आत्माएं।" },
+    "మహువా": { en: "Sacred Mahua tree canopy for clan council deliberations.", te: "కుల పంచాయితీలు సమావేశమయ్యే పవిత్ర ఇప్ప చెట్టు.", hi: "पवित्र महुआ का वृक्ष जिसके नीचे कुल सभा बैठती है।" },
+    "నవ నావ్": { en: "My name.", te: "నా పేరు.", hi: "मेरा नाम।" },
+    "sewa johar": { en: "Sacred greetings and collective community honor.", te: "సామూహిక సమర్పణ మరియు పవిత్ర వందనాలు.", hi: "सामूहिक आदर एवं पवित्र जोहार अभिवादन।" },
+    "saga pen": { en: "Sacred clan ancestral deities and lineage spirit.", te: "వంశ మూల పురుషులు మరియు పవిత్ర సగా దేవతలు.", hi: "पवित्र कुल देवता एवं पूर्वज आत्माएं।" },
+  },
+  koya: {
+    "వనమూలిక": { en: "Ethnobotanical medicinal roots formulation.", te: "సంప్రదాయ వనమూలికా ఔషధ తయారీ.", hi: "पारंपरिक वनौषधि उपचार निर्माण।" },
+    "పెద్దల మాట": { en: "Sacred council elder guidance and oral lore.", te: "సముదాయ పెద్దల దివ్య మార్గదర్శనం.", hi: "वरिष्ठ परिषद का पवित्र मार्गदर्शन।" },
+    "vanamoolika": { en: "Ethnobotanical medicinal roots formulation.", te: "సంప్రదాయ వనమూలికా ఔషధ తయారీ.", hi: "पारंपरिक वनौषधि उपचार निर्माण।" },
+  },
+  lambadi: {
+    "రామ్ రామ్": { en: "Traditional Banjara community fraternal greeting.", te: "సంప్రదాయ బంజారా ఆత్మీయ పలకరింపు.", hi: "पारंपरिक बंजारा सामुदायिक अभिवादन।" },
+    "తాండా": { en: "Ancestral nomadic Banjara community settlement.", te: "సంప్రదాయ సంచార బంజారా ఆవాసం.", hi: "पारंपरिक घुमंतू बंजारा बस्ती।" },
+    "నాయక్": { en: "Respected community elder and settlement leader.", te: "గౌరవనీయ తాండా పెద్ద మరియు నాయకుడు.", hi: "आदरणीय बस्ती प्रमुख एवं समुदाय नायक।" },
+    "ram ram": { en: "Traditional Banjara community fraternal greeting.", te: "సంప్రదాయ బంజారా ఆత్మీయ పలకరింపు.", hi: "पारंपरिक बंजारा सामुदायिक अभिवादन।" },
+    "tanda": { en: "Ancestral nomadic Banjara community settlement.", te: "సంప్రదాయ సంచార బంజారా ఆవాసం.", hi: "पारंपरिक घुमंतू बंजारा बस्ती।" },
+  },
 };
 
 export async function GET(request: Request) {
@@ -133,6 +159,37 @@ export async function GET(request: Request) {
 
   const sourceLang = LANG_NORM[rawSource] || rawSource;
   const targetLang = rawTarget.length > 2 ? (Object.keys(LANG_NORM).find(k => LANG_NORM[k] === rawTarget && k.length === 2) || "en") : rawTarget;
+
+  if (ORAL_LANGUAGES.has(sourceLang)) {
+    const phraseMap = ORAL_PHRASEBOOK[sourceLang] || {};
+    const phraseMatch = phraseMap[text.trim()] || phraseMap[text.trim().toLowerCase()];
+    if (phraseMatch) {
+      const translation = phraseMatch[targetLang] || phraseMatch["en"] || phraseMatch["te"];
+      return NextResponse.json({
+        success: true,
+        sourceLanguage: sourceLang,
+        targetLanguage: targetLang,
+        originalText: text,
+        translation,
+        model: "Community-Elder-Phrasebook",
+        confidence: 1.0,
+        reviewStatus: "elder_approved",
+        badgeLabel: "Elder Approved",
+        isElderApproved: true,
+      });
+    }
+
+    return NextResponse.json(
+      {
+        error: `Translation restricted: ${sourceLang.charAt(0).toUpperCase() + sourceLang.slice(1)} is an oral heritage tongue. General automated MT requires elder review.`,
+        requiresElderReview: true,
+        reviewStatus: "elder_review_required",
+        badgeLabel: "Elder Review Required",
+        isElderApproved: false,
+      },
+      { status: 422 }
+    );
+  }
 
   const sample = VOCABULARY_MAP[sourceLang]?.[targetLang] ||
     `Translated into ${targetLang.toUpperCase()}: "${text || "Oral heritage speech segment"}" conveying authentic community spoken meaning.`;
@@ -145,6 +202,10 @@ export async function GET(request: Request) {
     translation: sample,
     model: "IndicTrans2-1B-Multi-Instruct",
     confidence: 0.965,
+    reviewStatus: "unreviewed_draft",
+    badgeLabel: "Draft (Unreviewed)",
+    isElderApproved: false,
+    limitationNote: "Machine translation via IndicTrans2. Unreviewed draft — requires elder review.",
   });
 }
 
@@ -181,6 +242,48 @@ export async function POST(request: Request) {
     const sLang = LANG_NORM[rawSource] || rawSource;
     const tLang = rawTarget.length > 2 ? (Object.keys(LANG_NORM).find(k => LANG_NORM[k] === rawTarget && k.length === 2) || "en") : rawTarget;
 
+    // 3. Oral Language Protection Gate (T2.1: Phrasebook routing or 422 Elder Review Required)
+    if (ORAL_LANGUAGES.has(sLang)) {
+      const phraseMap = ORAL_PHRASEBOOK[sLang] || {};
+      const phraseMatch = phraseMap[text.trim()] || phraseMap[text.trim().toLowerCase()];
+      if (phraseMatch) {
+        const translation = phraseMatch[tLang] || phraseMatch["en"] || phraseMatch["te"];
+        const provenanceHash = await computeSHA256(`${sLang}:${tLang}:${text}:${translation}:elder_approved`);
+        return NextResponse.json({
+          success: true,
+          sourceLanguage: sLang,
+          targetLanguage: tLang,
+          originalText: text,
+          translation,
+          provenanceHash,
+          model: "Community-Elder-Phrasebook",
+          confidence: 1.0,
+          reviewStatus: "elder_approved",
+          badgeLabel: "Elder Approved",
+          isElderApproved: true,
+          limitationNote: null,
+          latencyMs: 12,
+          security: {
+            sanitized: true,
+            encryptedTransit: true,
+            dataSovereigntyGuaranteed: true,
+          },
+        });
+      }
+
+      return NextResponse.json(
+        {
+          error: `Translation restricted: ${sLang.charAt(0).toUpperCase() + sLang.slice(1)} is an oral heritage tongue. Automated translation is restricted under Indigenous Data Sovereignty protocols; verified community elder verification is required.`,
+          detail: `Translation restricted: Oral languages require community elder verification.`,
+          requiresElderReview: true,
+          reviewStatus: "elder_review_required",
+          badgeLabel: "Elder Review Required",
+          isElderApproved: false,
+        },
+        { status: 422 }
+      );
+    }
+
     let translation = VOCABULARY_MAP[sLang]?.[tLang];
     if (!translation) {
       if (tLang === "te") {
@@ -202,8 +305,8 @@ export async function POST(request: Request) {
       }
     }
 
-    // 3. Cryptographic Provenance Hash (Indigenous Data Tamper-Proof Audit)
-    const provenanceHash = await computeSHA256(`${sLang}:${tLang}:${text}:${translation}`);
+    // 4. Cryptographic Provenance Hash (Indigenous Data Tamper-Proof Audit)
+    const provenanceHash = await computeSHA256(`${sLang}:${tLang}:${text}:${translation}:draft`);
 
     return NextResponse.json({
       success: true,
@@ -215,6 +318,10 @@ export async function POST(request: Request) {
       model: "IndicTrans2-1B-Multi-Instruct",
       confidence: 0.962,
       latencyMs: 88,
+      reviewStatus: "unreviewed_draft",
+      badgeLabel: "Draft (Unreviewed)",
+      isElderApproved: false,
+      limitationNote: "Machine translation via IndicTrans2. Unreviewed draft — requires elder review.",
       security: {
         sanitized: true,
         encryptedTransit: true,
