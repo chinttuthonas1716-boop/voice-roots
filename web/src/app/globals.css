@@ -14,6 +14,10 @@
   --glass-bg: rgba(22, 59, 44, 0.45);
   --glass-bg-hover: rgba(31, 81, 56, 0.6);
   --glass-border: rgba(166, 196, 138, 0.22);
+  --gold-accent: #E2B93B;
+  --ease-out: cubic-bezier(0.23, 1, 0.32, 1);
+  --ease-in-out: cubic-bezier(0.77, 0, 0.175, 1);
+  --ease-drawer: cubic-bezier(0.32, 0.72, 0, 1);
 }
 
 html {
@@ -102,7 +106,8 @@ body {
   justify-content: center;
   gap: 0.5rem;
   box-shadow: 0 8px 24px -6px rgba(0, 0, 0, 0.4);
-  transition: all 180ms ease-out;
+  transition: transform 140ms var(--ease-out), background-color 180ms ease, box-shadow 180ms ease;
+  user-select: none;
 }
 .pill-btn-solid:hover {
   background: #A6C48A;
@@ -110,10 +115,70 @@ body {
   transform: translateY(-1px);
   box-shadow: 0 12px 28px -6px rgba(166, 196, 138, 0.4);
 }
+.pill-btn-solid:active {
+  transform: scale(0.97) translateY(0);
+}
 .pill-btn-solid:disabled {
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
+}
+
+/* Golden Underline Indicator (Reference: Image 1 "Know More") */
+.nav-gold-indicator {
+  position: relative;
+}
+.nav-gold-indicator::after {
+  content: "";
+  position: absolute;
+  bottom: -4px;
+  left: 12%;
+  width: 76%;
+  height: 2.5px;
+  background: #E2B93B;
+  border-radius: 9999px;
+  box-shadow: 0 0 8px rgba(226, 185, 59, 0.7);
+  transition: width 240ms var(--ease-out), transform 240ms var(--ease-out);
+}
+
+/* Chevron Slide & Pulse Animation (Reference: Image 2 `< < < <`) */
+@keyframes chevron-slide {
+  0%, 100% {
+    transform: translateX(0);
+    opacity: 0.45;
+  }
+  50% {
+    transform: translateX(-4px);
+    opacity: 1;
+  }
+}
+
+.animate-chevron-1 {
+  animation: chevron-slide 1.8s ease-in-out infinite;
+}
+.animate-chevron-2 {
+  animation: chevron-slide 1.8s ease-in-out 0.2s infinite;
+}
+.animate-chevron-3 {
+  animation: chevron-slide 1.8s ease-in-out 0.4s infinite;
+}
+.animate-chevron-4 {
+  animation: chevron-slide 1.8s ease-in-out 0.6s infinite;
+}
+
+/* Subtle Floating Mist Drift */
+@keyframes mist-drift {
+  0%, 100% {
+    transform: translate(0, 0) scale(1);
+    opacity: 0.25;
+  }
+  50% {
+    transform: translate(-10px, -8px) scale(1.06);
+    opacity: 0.45;
+  }
+}
+.animate-mist-drift {
+  animation: mist-drift 12s ease-in-out infinite;
 }
 
 /* Serif Display Typography (Reference: Image 1 & 2) */

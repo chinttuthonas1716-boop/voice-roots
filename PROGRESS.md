@@ -2753,3 +2753,29 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     4. Playwright Responsive & Screenshot Suite: `npm run test:e2e --prefix web -- e2e/screenshots_and_responsive.spec.ts` passed 18/18 tests in 27.9s with 0px horizontal overflow across all viewports.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none. UI alignment complete and verified.
+
+- [2026-11-13] [ANTIGRAVITY] DONE: Implemented Interactive Dual-Stage Misty Forest Motion UI & Smooth Animations (Reference Video & Image Alignment).
+  - Integrated full interactive motion choreography inspired by the reference video (`https://pin.it/6UJc9l3r2`):
+    1. `web/src/components/ui/Navbar.tsx`:
+       - Added animated mobile drawer with spring transitions and morphing Hamburger/X button.
+       - Implemented active golden indicator (`layoutId="nav-indicator"`) underneath active navigation items matching reference Image 1 ("Know More" gold line).
+       - Added quick search modal with backdrop blur for rapid lexicon and audio lookup.
+    2. `web/src/app/page.tsx`:
+       - Implemented interactive Dual-Stage Switcher ("Home" Hero vs "Know More" Collective Action) with Framer Motion spring physics.
+       - Scene 1 (Atmospheric Hero): Lowercase headline `voice roots.`, micro tag, narrative subtitle, and micro badges (`OCAP COMMUNITY SOVEREIGNTY`, `PRESERVE ROOTS`, `IMMUTABLE AUDIO`).
+       - Scene 2 (Collective Action): Frosted glassmorphism split panel with `BE A PART OF COLLECTIVE ACTION.`, pill inputs with icons, consent toggle, social logins, and right-hand canopy hero with `SAVE THE ROOTS, PRESERVE THE VOICES.`
+       - Interactive chevron carousel controls (`‹ ‹ ‹ ‹`) cycling through 3 dialect preservation narratives with directional motion.
+       - Preserved 4 frosted action cards and recent recordings audio player with sage waveform controls.
+    3. `web/src/app/login/page.tsx`:
+       - Upgraded split-screen login/sign-up experience with interactive 3-story carousel on right, Framer Motion entrance springs, and back-to-home navigation.
+    4. `web/src/app/globals.css`:
+       - Added custom easing variables (`--ease-out`, `--ease-in-out`, `--ease-drawer`).
+       - Added keyframes and utility classes for `@keyframes chevron-slide`, `@keyframes mist-drift`, and active button press feedback (`transform: scale(0.97)`).
+  - Files touched: `web/src/app/globals.css`, `web/src/components/ui/Navbar.tsx`, `web/src/app/page.tsx`, `web/src/app/login/page.tsx`, `docs/screenshots/*`, `PROGRESS.md`.
+  - VERIFIED:
+    1. TypeScript Strict Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    2. Next.js Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 53 static/dynamic routes with zero errors.
+    3. Playwright E2E User Lifecycle: `npm run test:e2e --prefix web -- e2e/voice_roots_workflow.spec.ts` passed 8/8 tests in 11.1s.
+    4. Playwright Responsive & Screenshot Suite: `npm run test:e2e --prefix web -- -g "landing|login"` passed 5/5 tests in 8.4s with 0px horizontal scroll on 1280px desktop and 390px mobile viewports.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.

@@ -2,7 +2,9 @@
 
 import React, { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { User, Mail, Lock, Sparkles, ShieldCheck, ChevronRight, TreePine } from "lucide-react";
+import Link from "next/link";
+import { motion, AnimatePresence } from "framer-motion";
+import { User, Mail, Lock, Sparkles, ShieldCheck, ChevronRight, TreePine, ChevronLeft } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import {
   getCurrentUser,
@@ -26,12 +28,43 @@ export default function LoginPage() {
   const [message, setMessage] = useState<string | null>(null);
   const [error, setError] = useState<string | null>(null);
 
+  // Carousel slide index for Right Column
+  const [carouselIndex, setCarouselIndex] = useState(0);
+  const carouselSlides = [
+    {
+      title: "Save the roots,",
+      subtitle: "preserve the voices.",
+      body: "Indigenous oral traditions carry centuries of botanical, ecological, and cultural knowledge. Join community elders in archiving spoken languages before they fade.",
+      tag: "COMMUNITY ROOTED ARCHIVING",
+    },
+    {
+      title: "Listen to the elders,",
+      subtitle: "honor living memory.",
+      body: "Spoken stories contain customary terminology and cultural context that machine models alone can never fully understand.",
+      tag: "SACRED KNOWLEDGE",
+    },
+    {
+      title: "Rooted in sovereignty,",
+      subtitle: "governed under OCAP®.",
+      body: "Communities retain permanent ownership and control. The acoustic master audio is never overwritten or commodified.",
+      tag: "DATA SOVEREIGNTY",
+    },
+  ];
+
   useEffect(() => {
     const user = getCurrentUser();
     if (user) {
       setCurrentUser(user);
     }
   }, []);
+
+  const handleNextSlide = () => {
+    setCarouselIndex((prev) => (prev + 1) % carouselSlides.length);
+  };
+
+  const handlePrevSlide = () => {
+    setCarouselIndex((prev) => (prev - 1 + carouselSlides.length) % carouselSlides.length);
+  };
 
   const handleGoogleSignIn = () => {
     setIsLoading(true);
@@ -122,19 +155,34 @@ export default function LoginPage() {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
           
           {/* Left Column: Frosted Glass Sign In / Sign Up Panel */}
-          <div className="lg:col-span-6 w-full">
+          <motion.div
+            initial={{ opacity: 0, x: -20, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            className="lg:col-span-6 w-full"
+          >
             <div className="forest-glass-panel p-6 sm:p-10 relative overflow-hidden">
               {/* Soft ambient inner glow */}
               <div className="absolute top-0 right-0 w-48 h-48 bg-[#A6C48A]/10 rounded-full blur-[80px] pointer-events-none" />
 
               {/* Logo / Header Branding */}
-              <div className="flex items-center gap-2 mb-4">
-                <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#1F5138]/60 border border-[#A6C48A]/30 text-sm shadow-sm">
-                  🌲
-                </span>
-                <span className="font-extrabold text-sm tracking-tight text-[#F5F3E9] uppercase">
-                  Voice Roots
-                </span>
+              <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-2">
+                  <span className="grid h-8 w-8 place-items-center rounded-xl bg-[#1F5138]/60 border border-[#A6C48A]/30 text-sm shadow-sm">
+                    🌲
+                  </span>
+                  <span className="font-extrabold text-sm tracking-tight text-[#F5F3E9] uppercase">
+                    Voice Roots
+                  </span>
+                </div>
+
+                <Link
+                  href="/"
+                  className="text-xs text-[#A6C48A] hover:text-white flex items-center gap-1 transition"
+                >
+                  <ChevronLeft className="h-3.5 w-3.5" />
+                  <span>Back to Home</span>
+                </Link>
               </div>
 
               {/* Serif Tracked Heading (Reference: Image 2) */}
@@ -162,7 +210,7 @@ export default function LoginPage() {
               {currentUser ? (
                 /* Logged In View */
                 <div className="space-y-5 text-center py-4">
-                  <div>
+                  <div className="rounded-2xl border border-[#A6C48A]/30 bg-[#163B2C]/40 p-4">
                     <p className="text-xs uppercase tracking-wider text-[#A6C48A]">Signed in as</p>
                     <h2 className="text-xl font-bold text-[#F5F3E9] mt-1">{currentUser.name}</h2>
                     <p className="text-sm text-[#A6C48A]/80">{currentUser.email}</p>
@@ -331,32 +379,66 @@ export default function LoginPage() {
                 </div>
               )}
             </div>
-          </div>
+          </motion.div>
 
           {/* Right Column: Hero Graphic & Serif Typography (Reference: Image 2) */}
-          <div className="lg:col-span-6 space-y-6 text-left px-2 sm:px-6">
+          <motion.div
+            initial={{ opacity: 0, x: 20, scale: 0.98 }}
+            animate={{ opacity: 1, x: 0, scale: 1 }}
+            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+            className="lg:col-span-6 space-y-6 text-left px-2 sm:px-6"
+          >
             <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-[#102B20]/60 border border-[#A6C48A]/30 text-xs font-semibold text-[#A6C48A] backdrop-blur-md">
               <TreePine className="h-4 w-4" />
-              <span>COMMUNITY ROOTED ARCHIVING</span>
+              <span>{carouselSlides[carouselIndex].tag}</span>
             </div>
 
-            <h2 className="font-serif-display text-4xl sm:text-6xl font-extrabold tracking-wider text-[#F5F3E9] uppercase leading-tight">
-              Save the roots,
-              <br />
-              <span className="text-[#A6C48A]">preserve the voices.</span>
-            </h2>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={carouselIndex}
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                transition={{ duration: 0.28, ease: [0.23, 1, 0.32, 1] }}
+                className="space-y-4"
+              >
+                <h2 className="font-serif-display text-4xl sm:text-6xl font-extrabold tracking-wider text-[#F5F3E9] uppercase leading-tight">
+                  {carouselSlides[carouselIndex].title}
+                  <br />
+                  <span className="text-[#A6C48A]">{carouselSlides[carouselIndex].subtitle}</span>
+                </h2>
 
-            <p className="text-base sm:text-lg text-[#F5F3E9]/80 font-light leading-relaxed max-w-lg">
-              Indigenous oral traditions carry centuries of botanical, ecological, and cultural knowledge. Join community elders in archiving spoken languages before they fade.
-            </p>
+                <p className="text-base sm:text-lg text-[#F5F3E9]/80 font-light leading-relaxed max-w-lg">
+                  {carouselSlides[carouselIndex].body}
+                </p>
+              </motion.div>
+            </AnimatePresence>
 
             {/* Chevron Indicators (Reference: Image 2 `< < < <`) */}
-            <div className="flex items-center gap-3 pt-2 text-[#A6C48A]/70 text-lg font-bold tracking-widest select-none">
-              <span>‹</span>
-              <span>‹</span>
-              <span>‹</span>
-              <span>‹</span>
-              <span className="text-xs uppercase font-sans tracking-widest text-[#A6C48A] ml-2">
+            <div className="flex flex-wrap items-center gap-2 sm:gap-3 pt-2 text-[#A6C48A] text-xl font-bold tracking-widest select-none max-w-full">
+              <button
+                type="button"
+                onClick={handlePrevSlide}
+                title="Previous story"
+                aria-label="Previous story"
+                className="hover:text-white hover:scale-110 transition p-1"
+              >
+                ‹
+              </button>
+              <span className="animate-chevron-1">‹</span>
+              <span className="animate-chevron-2">‹</span>
+              <span className="animate-chevron-3">‹</span>
+              <span className="animate-chevron-4">‹</span>
+              <button
+                type="button"
+                onClick={handleNextSlide}
+                title="Next story"
+                aria-label="Next story"
+                className="hover:text-white hover:scale-110 transition p-1"
+              >
+                ›
+              </button>
+              <span className="text-[10px] sm:text-xs uppercase font-sans tracking-widest text-[#A6C48A] ml-2 block w-full sm:w-auto">
                 GONDI · KOYA · SANTHALI · LAMBADI
               </span>
             </div>
@@ -374,7 +456,7 @@ export default function LoginPage() {
                 <p className="text-xs text-[#A6C48A]/80 mt-0.5">IndicTrans2 transparent machine drafts.</p>
               </div>
             </div>
-          </div>
+          </motion.div>
 
         </div>
       </main>
