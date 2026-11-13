@@ -1,7 +1,6 @@
-<div align="center">
-
 # 🏛️ VOICE ROOTS: ROOTING ORAL LANGUAGES IN TEXT WITH AI
-### An Indigenous Data Sovereignty Preservation Platform for Endangered Dravidian Tongues
+
+## An Indigenous Data Sovereignty Preservation Platform for Endangered Dravidian Tongues
 
 **A Capstone Final Engineering Report and Academic Thesis Deliverable**  
 Submitted in Partial Fulfillment of the Requirements for the Degree of  
@@ -14,12 +13,10 @@ Submitted in Partial Fulfillment of the Requirements for the Degree of
 **Academic Department**: Department of Computer Science & Engineering  
 **Academic Term**: Fall / Winter 2026  
 **Platform Release**: Version `v1.0.0-production`  
-**Git Release Tag**: [`v1.0.0-production`](https://github.com/chinttuthonas1716-boop/voice-roots/releases/tag/v1.0.0-production) | **Commit**: [`e5da22e`](https://github.com/chinttuthonas1716-boop/voice-roots/commit/e5da22e)  
+**Git Release Tag**: [`v1.0.0-production`](https://github.com/chinttuthonas1716-boop/voice-roots/releases/tag/v1.0.0-production) | **Commit**: [`93f3daa`](https://github.com/chinttuthonas1716-boop/voice-roots/commit/93f3daa)  
 **Canonical Repository**: [https://github.com/chinttuthonas1716-boop/voice-roots](https://github.com/chinttuthonas1716-boop/voice-roots)  
 **Live Production Application**: [https://voice-roots.onrender.com](https://voice-roots.onrender.com)  
 **Live Application Programming Interface**: [https://voice-roots-api.onrender.com](https://voice-roots-api.onrender.com)  
-
-</div>
 
 ---
 
@@ -28,6 +25,7 @@ Submitted in Partial Fulfillment of the Requirements for the Degree of
 Over 19,500 raw mother tongues were documented in the 2011 Census of India, yet fewer than 121 languages are spoken by 10,000 or more people, and only 22 are officially scheduled under the Constitution. Purely oral and unwritten languages—including Gondi (`gon`), Koya (`kfa`), Santhali (`sat`), and Lambadi (`lmn`)—face rapid attrition due to urban migration, linguistic hegemony, and educational assimilation. Concurrently, the proliferation of commercial speech recognition and foundation models poses severe ethical threats: indigenous oral recordings are frequently harvested without consent, stripping communities of moral ownership and cultural privacy.
 
 This capstone project presents **Voice Roots**, an end-to-end, production-grade speech preservation platform engineered strictly under the **First Nations OCAP® Principles (Ownership, Control, Access, and Possession)** and the **CARE Principles for Indigenous Data Governance**. Built as an Offline-First Progressive Web Application (Next.js 14 App Router, TypeScript 5, Tailwind CSS) connected to a modular FastAPI application gateway, PostgreSQL/SQLite dual-engine persistence layer, and Cloudflare R2 object storage with write-once permissions, Voice Roots establishes five foundational guarantees:
+
 1. **Acoustic Master Immutability**: Original spoken audio is archived in uncompressed lossless format as the permanent master truth; AI transcripts and translations are strictly relegated to assistive, reviewable annotation layers.
 2. **Dual Affirmative Informed Consent**: Acoustic voice archiving (`consent_given=true`) and AI processing (`transcription_consent=true`) require independent, voluntary, revocable permissions.
 3. **Sub-Second Cascade Revocation**: Speakers retain unilateral authority to withdraw consent at any time, instantly triggering atomic physical deletion of masters, derivative text, and vector embeddings across all storage tiers.
@@ -42,7 +40,7 @@ Empirical verification confirms **383/383 backend test cases passing (100%)**, *
 
 ## 📑 Executive Summary
 
-Language is the repository of human memory, ecological wisdom, and collective identity. Across the Indian subcontinent, thousands of mother tongues have flourished through oral tradition for millennia without institutionalized orthographies. In the 21st century, these languages face severe existential pressure from rapid linguistic homogenisation, urban migration, and educational assimilation. 
+Language is the repository of human memory, ecological wisdom, and collective identity. Across the Indian subcontinent, thousands of mother tongues have flourished through oral tradition for millennia without institutionalized orthographies. In the 21st century, these languages face severe existential pressure from rapid linguistic homogenisation, urban migration, and educational assimilation.
 
 Simultaneously, the unchecked expansion of commercial Large Language Models (LLMs) and automated Voice AI presents a double-edged sword: while computational linguistics offers unprecedented tools for preservation, unsupervised corporate data harvesting threatens to turn indigenous knowledge systems into non-consensual training fodder, stripping oral communities of copyright, moral ownership, and cultural privacy.
 
@@ -61,22 +59,28 @@ This report documents the theoretical rationale, system architecture, engineerin
 ## 1. Abstract & Linguistic Motivation
 
 ### 1.1 The Vulnerability of Unwritten Mother Tongues
+
 Unlike institutionalized languages that benefit from standardized scripts, print media, state educational curricula, and corporate software localization, purely oral and unwritten mother tongues exist exclusively in acoustic memory. In oral traditions, language is not merely a communicative medium; it encapsulates ethnobotanical taxonomies, customary legal pacts, traditional medicine, folklore, and genealogical history. When an oral language ceases to be spoken, this knowledge base disappears irrevocably.
 
 ### 1.2 The Demographic Context: Census of India 2011
+
 According to the official **Census of India 2011 (Language Analysis)**:
+
 - A total of **19,569 raw mother tongues** were recorded across the nation during field enumeration.
 - Of these, 18,200 were linguistically classified into rationalized mother tongues, and only **121 languages** were spoken by 10,000 or more people.
 - The **Eighth Schedule of the Constitution of India** recognizes just **22 official languages**, leaving hundreds of non-scheduled, tribal, and indigenous tongues without institutional protection, state funding, or computational language tooling.
 
 Voice Roots specifically targets four highly vulnerable Adivasi and Dravidian/Austroasiatic language clusters:
+
 1. **Gondi (`gon`)**: A central Dravidian language spoken by ~2.98 million Adivasis across Madhya Pradesh, Maharashtra, Chhattisgarh, and Telangana. Despite substantial speaker numbers, it suffers from severe dialectal fragmentation (e.g., Adilabad vs. Bastar Gondi) and orthographic instability across Devanagari, Telugu, and native Gunjala Gondi scripts.
 2. **Koya (`kfa`)**: A vulnerable South-Central Dravidian language spoken by ~405,000 people primarily in the Godavari agency tracts of Andhra Pradesh and Telangana. Koya has virtually zero digital presence, minimal print literature, and is rapidly endangered by regional Telugu assimilation.
 3. **Santhali (`sat`)**: An Austroasiatic (Munda) language spoken by ~7.36 million people across Jharkhand, Odisha, and West Bengal. While recognized in the Eighth Schedule and possessing the unique Ol Chiki alphabet, rural dialects face significant exclusion from modern conversational AI platforms.
 4. **Lambadi / Gor Boli (`lmn`)**: An Indo-Aryan nomadic language spoken by ~4.60 million Banjaras. Lacking a native script, Gor Boli is maintained almost entirely through oral song, oral history, and domestic discourse.
 
 ### 1.3 The Ethical Crisis of Extractive Voice AI
+
 Recent advances in generative AI, Automated Speech Recognition (ASR), and Neural Machine Translation (NMT) have intensified computational interest in "low-resource languages". However, standard commercial AI paradigms reproduce extractive colonial dynamics:
+
 - **Scraping Without Consent**: Public recordings of indigenous ceremonies, songs, and interviews are systematically scraped from digital platforms without community knowledge or consent to train proprietary corporate foundation models.
 - **Biometric Enclosure & Voice Cloning**: Acoustic embeddings extracted from sacred songs can be repurposed for synthetic text-to-speech (TTS) engines, allowing corporations to generate synthetic tribal speech without remunerating or attributing the living speakers.
 - **Linguistic Colonization & Hallucination**: When generic commercial translation APIs attempt to translate unwritten languages, they force oral expressions into dominant colonial idioms (e.g., translating clan names or sacred forest deities into generic Western/Sanskritic equivalents), thereby erasing authentic indigenous worldviews.
@@ -89,7 +93,7 @@ Voice Roots directly opposes extractive AI by establishing a technological and l
 
 The Voice Roots architecture is designed for fault tolerance, rural edge operation, strict cryptographic verification, and non-repudiable data boundaries.
 
-```
+```text
                               ┌─────────────────────────────────────────────────────────────┐
                               │                    CLIENT APPLICATION LAYER                  │
                               │            Next.js 14 (App Router) + TypeScript 5           │
@@ -134,12 +138,14 @@ The Voice Roots architecture is designed for fault tolerance, rural edge operati
 ```
 
 ### 2.1 Web Frontend Architecture (`web/`)
+
 - **Framework**: Next.js 14 utilising the React Server Components (RSC) App Router architecture.
 - **Language & Styling**: Strict TypeScript 5 with Tailwind CSS, utilizing fluid typography (`clamp()`) and container queries.
 - **Offline Capabilities**: Full Progressive Web App (PWA) manifest and Service Worker caching (`web/public/sw.js`). Audio recorded in remote, air-gapped agency forests is serialized into client-side IndexedDB queues (`web/src/lib/offlineQueue.ts`) and automatically synchronized via exponential backoff upon network restoration.
 - **Accessibility & Responsive Standards**: Minimum 44×44px touch targets on mobile viewports; verified zero horizontal layout overflow on both 390px (mobile) and 1280px+ (desktop) screens across all 22 platform routes.
 
 ### 2.2 API Backend Architecture (`backend/`)
+
 - **Framework**: FastAPI (ASGI) executed via Uvicorn.
 - **Modular Services**:
   - `auth_service.py`: Password hashing with BCrypt, JWT claim issuance, and role validation.
@@ -150,6 +156,7 @@ The Voice Roots architecture is designed for fault tolerance, rural edge operati
   - `monitoring_service.py`: Structured JSON logging, correlation ID injection (`X-Correlation-ID`), and deep readiness probes.
 
 ### 2.3 Storage & Persistence Tiers
+
 - **Relational Data**: PostgreSQL in cloud staging/production environments, with seamless automatic fallback to SQLite WAL (Write-Ahead Logging) mode for local field laptops.
 - **Lossless Acoustic Storage**: Cloudflare R2 object storage with write-once permissions and object versioning enabled. Direct bucket access is strictly private; media playback requires server-generated, time-limited (60-second expiry) HMAC-SHA256 signed tokens (`/api/v1/audio/{id}/stream?token=...`).
 
@@ -159,7 +166,7 @@ The Voice Roots architecture is designed for fault tolerance, rural edge operati
 
 Unlike standard corporate platforms where data sovereignty is treated as a terms-of-service footnote, Voice Roots operationalizes the **First Nations OCAP® Principles** directly into software constraints.
 
-```
+```text
        OWNERSHIP             CONTROL                ACCESS               POSSESSION
   ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐
   │ Community Owns   │ │ Elders Adjudicate│ │ Tiered Security  │ │ Local Fallback   │
@@ -170,10 +177,12 @@ Unlike standard corporate platforms where data sovereignty is treated as a terms
 ```
 
 ### 3.1 Ownership
+
 - **The Immutable Master Principle**: The original human voice recording is the immutable ground truth. Computational models (ASR, NMT) produce derivative annotation layers that are stored in distinct database columns (`machine_transcript_text`, `ai_translation`) and can never overwrite or displace the original acoustic master.
 - **Anti-Commercial Covenant**: All platform APIs, export archives, and data pipelines embed the **Indigenous Non-Commercial Research Covenant**, legally prohibiting third-party foundation model training or commercial monetization.
 
 ### 3.2 Control
+
 - **Dual Affirmative Informed Consent**: Recording submission requires two independent consent parameters:
   1. `consent_given=true`: Explicit permission to archive the acoustic voice sample for cultural preservation.
   2. `transcription_consent=true`: Optional, distinct consent permitting assistive AI processing.
@@ -185,14 +194,18 @@ Unlike standard corporate platforms where data sovereignty is treated as a terms
   5. An immutable entry recording the withdrawal is appended to `governance_audit_logs`.
 
 ### 3.3 Access
+
 Server-side access control strictly enforces four isolated tiers:
+
 - **`public`**: Fully approved, culturally open folklore, greetings, and Swadesh vocabulary accessible to general scholars.
 - **`community`**: Linguistic material accessible only to verified community members and registered speakers.
 - **`research`**: Phonetic and morphological datasets accessible to accredited academic researchers under signed institutional MOUs.
 - **`private` / `sacred_lore_restricted`**: Restricted cultural narratives, ritual songs, and clan genealogies shielded from public endpoints, search indexing, and external APIs.
 
 ### 3.4 Possession
+
 Recognizing that cloud-hosted infrastructure can be cut off from remote tribal hamlets, Voice Roots ensures physical possession:
+
 - The system operates fully on local hardware (field laptops, Raspberry Pi micro-servers).
 - The `scripts/export_restricted_data.py` pipeline enables community custodians to repatriate complete SQL dumps and FLAC/WAV masters onto offline physical hard drives, bundled with an immutable `OCAP_GOVERNANCE.txt` charter.
 
@@ -203,6 +216,7 @@ Recognizing that cloud-hosted infrastructure can be cut off from remote tribal h
 Voice Roots progressed through six rigorous engineering phases, verified by commit hashes, pull requests, and automated test gates:
 
 ### Phase 0: Scope Freeze & Baseline Stabilization
+
 - **Milestone Goal**: Establish immutable ground rules, freeze mobile apps (`flutter_app/`, `mobile/`), and halt unverified code sprawl.
 - **Deliverables**:
   - Authored `docs/RELEASE_BASELINE_FREEZE.md` and `docs/SAFE_DEVELOPMENT_RULES.md`.
@@ -210,6 +224,7 @@ Voice Roots progressed through six rigorous engineering phases, verified by comm
   - Sourced and validated baseline Swadesh wordlists for Gondi, Koya, Santhali, and Lambadi.
 
 ### Phase 1: Production Infrastructure & Storage Hardening
+
 - **Milestone Goal**: Eliminate development tunnel rewrites, support production cloud databases, and establish object storage.
 - **Deliverables**:
   - **Render Cloud Blueprint** (`render.yaml`): Defined Infrastructure-as-Code for `voice-roots-api` (FastAPI starter service) and `voice-roots` (Next.js web service).
@@ -220,6 +235,7 @@ Voice Roots progressed through six rigorous engineering phases, verified by comm
   - **Baseline Security Suite** (`tests/test_t1_6_security_basics.py`): Added 9 security tests covering authentication boundaries, CORS, and signed URLs.
 
 ### Phase 2: Cultural Preservation Core & Offline PWA
+
 - **Milestone Goal**: Deliver ethical AI transcription, reviewer moderation, prompted Swadesh recording, and community analytics.
 - **Deliverables**:
   - **Honest Translation Policy** (`web/src/app/translate/page.tsx`): Required all machine-translated content to display prominent amber `[DRAFT - UNREVIEWED]` warning badges.
@@ -233,6 +249,7 @@ Voice Roots progressed through six rigorous engineering phases, verified by comm
   - **Restricted Data Export** (`scripts/export_restricted_data.py`): Built CLI repatriation tool enforcing OCAP metadata embedding.
 
 ### Phase 3: Verification, Automation & Operational Hardening
+
 - **Milestone Goal**: End-to-end integration testing, CI/CD pipeline, automated backups, and structured telemetry.
 - **Deliverables**:
   - **Playwright E2E Lifecycle Suite** (`web/e2e/pilot_lifecycle.spec.ts`): Built 8-stage automated browser test covering: registration, consent capture, audio recording, draft badging, reviewer queue approval, dictionary indexing, demographic stats update, and consent revocation.
@@ -241,6 +258,7 @@ Voice Roots progressed through six rigorous engineering phases, verified by comm
   - **Comprehensive Security Pass** (`tests/test_t3_5_security_pass.py`): Audited JWT signing, SQL injection prevention, path traversal rejection, and rate limiting.
 
 ### Phase 4: Institutional Governance & Ethics Framework
+
 - **Milestone Goal**: Establish legal, ethical, and institutional protocols for human deployment.
 - **Deliverables**:
   - Authored **Ethical Governance Charter** (`docs/ETHICAL_GOVERNANCE_AND_OCAP.md`).
@@ -249,6 +267,7 @@ Voice Roots progressed through six rigorous engineering phases, verified by comm
   - Formalized OpenAPI Specification (`docs/API_CONTRACT.md`).
 
 ### Phase 5: Soft Launch & Production Release Readiness
+
 - **Milestone Goal**: Operational release preparation, production hardening, and academic handoff.
 - **Deliverables**:
   - Authored **Soft Launch Operational Runbook** (`docs/SOFT_LAUNCH_GUIDE.md`).
@@ -265,6 +284,7 @@ Voice Roots progressed through six rigorous engineering phases, verified by comm
 Every component of Voice Roots has been empirically tested using real command executions.
 
 ### 5.1 Automated Backend Verification Suite (Pytest)
+
 The backend test suite covers data persistence, authentication, storage adapters, reviewer moderation, backup/restore cycles, and security policies.
 
 ```text
@@ -298,13 +318,16 @@ tests/test_t3_5_security_pass.py ..........                              [ 53%]
 
 ============================== 383 passed in 68.60s ==============================
 ```
+
 - **Total Backend Tests**: **383 PASSED** (0 failures, 0 regressions).
 - **Execution Time**: 68.60 seconds.
 
 ### 5.2 Playwright End-to-End Lifecycle Suite
+
 The automated browser testing suite validates complete user journeys on a live headless browser engine.
+
 - **Test File**: `web/e2e/pilot_lifecycle.spec.ts`
-- **Results**: **8/8 PASSED** in 7.60s.
+- **Results**: **8/8 PASSED** in 7.60s:
   1. Contributor Registration & Role Verification: PASSED
   2. Dual Consent Capture & Validation: PASSED
   3. Audio Recording & Master Ingestion: PASSED
@@ -315,7 +338,9 @@ The automated browser testing suite validates complete user journeys on a live h
   8. Unilateral Consent Revocation & Cascade Deletion: PASSED
 
 ### 5.3 Mobile & Desktop Responsive Design Audit
+
 Responsive behavior was verified using automated Playwright viewport evaluations across 8 core routes on both Mobile (`390×844px`, iPhone 12 standard) and Desktop (`1280×800px`):
+
 - **Verification Rule**: `scrollWidth <= innerWidth` (Strict zero horizontal overflow).
 - **Audit Results**: **16/16 PASSED** (0 layout violations). Real PNG visual artifacts captured and cataloged in `docs/screenshots/`:
 
@@ -327,8 +352,8 @@ Responsive behavior was verified using automated Playwright viewport evaluations
 | Mobile (390px) | `/record` (Studio) | [`record_mobile.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/record_mobile.png) | ✅ VERIFIED |
 | Desktop (1280px) | `/translate` (Translator) | [`translate_desktop.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/translate_desktop.png) | ✅ VERIFIED |
 | Mobile (390px) | `/translate` (Translator) | [`translate_mobile.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/translate_mobile.png) | ✅ VERIFIED |
-| Desktop (1280px) | `/reviewer` (Elder Queue)| [`reviewer_desktop.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/reviewer_desktop.png) | ✅ VERIFIED |
-| Mobile (390px) | `/reviewer` (Elder Queue)| [`reviewer_mobile.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/reviewer_mobile.png) | ✅ VERIFIED |
+| Desktop (1280px) | `/reviewer` (Elder Queue) | [`reviewer_desktop.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/reviewer_desktop.png) | ✅ VERIFIED |
+| Mobile (390px) | `/reviewer` (Elder Queue) | [`reviewer_mobile.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/reviewer_mobile.png) | ✅ VERIFIED |
 | Desktop (1280px) | `/dictionary` (Lexicon) | [`dictionary_desktop.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/dictionary_desktop.png) | ✅ VERIFIED |
 | Mobile (390px) | `/dictionary` (Lexicon) | [`dictionary_mobile.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/dictionary_mobile.png) | ✅ VERIFIED |
 | Desktop (1280px) | `/stats` (Demographics) | [`stats_desktop.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/stats_desktop.png) | ✅ VERIFIED |
@@ -339,6 +364,7 @@ Responsive behavior was verified using automated Playwright viewport evaluations
 | Mobile (390px) | `/passport/1` (Passport) | [`passport_mobile.png`](file:///Users/harsha/.gemini/antigravity/scratch/voice-roots/docs/screenshots/passport_mobile.png) | ✅ VERIFIED |
 
 ### 5.4 Code Quality, Type Safety & Compilation
+
 - **Python Linter (`ruff`)**: `python3 -m ruff check backend/` &rarr; **0 errors**.
 - **TypeScript Static Analyzer**: `npm run typecheck --prefix web` &rarr; **0 errors**.
 - **Next.js Production Build**: `npm run build --prefix web` &rarr; **53 static & dynamic routes compiled cleanly** (Shared JS baseline: 87.3 kB).
@@ -359,7 +385,9 @@ Responsive behavior was verified using automated Playwright viewport evaluations
 | **Stale / Compromised Production Credentials** | High | Pre-seeded development accounts (`field_worker`, `elder_reviewer`) strictly gated behind `VOICE_ROOTS_ENV != "production"`. First-boot production instances generate a cryptographically random admin password. | `backend/auth_service.py` |
 
 ### 6.2 Transport Security & HTTP Hardening
+
 The FastAPI application gateway and Next.js edge configuration enforce modern HTTP security headers:
+
 - `Strict-Transport-Security (HSTS)`: `max-age=63072000; includeSubDomains; preload`
 - `X-Content-Type-Options`: `nosniff`
 - `X-Frame-Options`: `DENY` (prevents clickjacking attacks)
@@ -373,14 +401,18 @@ The FastAPI application gateway and Next.js edge configuration enforce modern HT
 In accordance with academic integrity and ethical transparency, the current platform has established clear operational boundaries:
 
 ### 7.1 Non-Software Prerequisites Before Field Data Collection
+
 As detailed in `PENDING_HUMAN_ACTIONS.md`, **software readiness does not constitute ethical authorization**. Live field recording among indigenous communities remains under an absolute moratorium pending:
+
 1. University Institutional Review Board (IRB) ethical clearance.
 2. Bilateral Memoranda of Understanding (MOUs) executed with traditional Tribal Councils.
 3. Native speaker voice talent recording certified spoken consent scripts in Gondi, Koya, Santhali, and Lambadi.
 4. Formal accreditation and credentialing of traditional village elders to staff the moderation queues.
 
 ### 7.2 Technical Roadmap for Version 2.0
+
 While Version 1.0 delivers a fully verified operational platform, several advanced computational capabilities are scheduled for Version 2.0:
+
 1. **Interactive Dialect Cartography**: Integrating MapLibre / Leaflet geospatial mapping to visualize dialect variations across agency mandals and tribal tracts.
 2. **Word-Level CTC Forced Alignment**: Aligning audio waveforms to phonetic transcripts at millisecond granularity to power interactive audio-karaoke read-alongs for rural schools.
 3. **Spaced-Repetition Mobile Learning**: Developing offline micro-learning flashcard modules to assist younger community members in acquiring their ancestral mother tongue.
@@ -398,12 +430,12 @@ All software deliverables, test suites, documentation packages, and verification
 
 ## 9. Academic References & Scholarly Citations
 
-1. **First Nations Information Governance Centre (FNIGC)** (2014). *The First Nations Principles of OCAP®*. First Nations Information Governance Centre, Ottawa, ON. Available: https://fnigc.ca/ocap-training/
-2. **Carroll, S. R., Herczog, E., Hudson, M., Russell, K., & Stall, S.** (2020). *The CARE Principles for Indigenous Data Governance*. Data Science Journal, 19(1), p. 43. DOI: http://doi.org/10.5334/dsj-2020-043
+1. **First Nations Information Governance Centre (FNIGC)** (2014). *The First Nations Principles of OCAP®*. First Nations Information Governance Centre, Ottawa, ON. Available: <https://fnigc.ca/ocap-training/>
+2. **Carroll, S. R., Herczog, E., Hudson, M., Russell, K., & Stall, S.** (2020). *The CARE Principles for Indigenous Data Governance*. Data Science Journal, 19(1), p. 43. DOI: <https://doi.org/10.5334/dsj-2020-043>
 3. **Office of the Registrar General & Census Commissioner, India** (2018). *Census of India 2011: Paper 1 of 2018 — Language: India, States and Union Territories (Table C-16)*. Ministry of Home Affairs, Government of India, New Delhi.
 4. **Radford, A., Kim, J. W., Xu, T., Brockman, G., McLeavey, C., & Sutskever, I.** (2023). *Robust Speech Recognition via Large-Scale Weak Supervision (Whisper)*. Proceedings of the 40th International Conference on Machine Learning (ICML 2023), PMLR 202:28492-28518.
 5. **Gala, J., et al.** (2023). *IndicTrans2: Towards High-Quality and Accessible Machine Translation Models for all 22 Scheduled Indian Languages*. Transactions on Machine Learning Research (TMLR), AI4Bharat, IIT Madras.
-6. **Moseley, C. (ed.)** (2010). *Atlas of the World’s Languages in Danger*. 3rd edn. Paris: UNESCO Publishing. Available: http://www.unesco.org/languages-atlas/
+6. **Moseley, C. (ed.)** (2010). *Atlas of the World’s Languages in Danger*. 3rd edn. Paris: UNESCO Publishing. Available: <http://www.unesco.org/languages-atlas/>
 7. **Canadian Institutes of Health Research, Natural Sciences and Engineering Research Council of Canada, and Social Sciences and Humanities Research Council of Canada** (2022). *Tri-Council Policy Statement: Ethical Conduct for Research Involving Humans (TCPS 2)*, Chapter 9: Research Involving the First Nations, Inuit and Métis Peoples of Canada.
 8. **Indian Council of Social Science Research (ICSSR)** (2020). *Code of Ethics in Social Science Research*. ICSSR, New Delhi.
 9. **Swadesh, M.** (1955). *Towards greater accuracy in lexicostatistic dating*. International Journal of American Linguistics, 21(2), 121-137.
@@ -471,4 +503,4 @@ The following high-resolution captures represent real, unmanipulated screenshots
 
 ---
 
-*End of Academic Capstone Final Report — Voice Roots Platform v1.0.0-production*
+> End of Academic Capstone Final Report — Voice Roots Platform v1.0.0-production
