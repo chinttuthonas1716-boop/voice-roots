@@ -311,14 +311,14 @@ export default function HomePage() {
                     </span>
                   </motion.div>
 
-                  {/* Iconic Lowercase Headline: forest. / voice roots. (Reference: Image 1) */}
+                  {/* Iconic Headline: Every Voice Holds a Heritage. */}
                   <motion.h1
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15, duration: 0.4 }}
-                    className="text-6xl sm:text-8xl lg:text-9xl font-black tracking-tight text-[#F5F3E9] font-sans drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)] select-none"
+                    className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F5F3E9] font-sans drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)] select-none leading-tight"
                   >
-                    forest<span className="text-[#A6C48A]">.</span>
+                    Every Voice Holds a <span className="text-[#A6C48A]">Heritage.</span>
                   </motion.h1>
 
                   {/* Subtitle Explaining Multi-Language Source Oral Archiving */}
@@ -328,8 +328,7 @@ export default function HomePage() {
                     transition={{ delay: 0.2, duration: 0.4 }}
                     className="text-base sm:text-xl text-[#F5F3E9]/90 max-w-2xl mx-auto font-light leading-relaxed drop-shadow-md"
                   >
-                    Voice Roots roots oral languages in text with AI.
-                    Preserving spoken stories, songs, and indigenous memories across all dialects and language sources.
+                    Preserving the world’s oral languages through AI, community knowledge and digital heritage.
                   </motion.p>
 
                   {/* Interactive Multi-Language Source Selector Chips */}
@@ -373,22 +372,30 @@ export default function HomePage() {
 
                   {/* Action CTA */}
                   <div className="pt-3 flex flex-wrap items-center justify-center gap-4">
+                    <Link
+                      href="/record"
+                      className="pill-btn-solid gap-2 group !bg-[#1F5138] !text-[#F5F3E9] hover:!bg-[#477A50] border border-[#A6C48A]/40 shadow-lg shadow-[#102B20]/50"
+                    >
+                      <Mic className="h-4 w-4 text-[#A6C48A]" />
+                      <span>Start Recording</span>
+                    </Link>
+
+                    <Link
+                      href="/explore"
+                      className="min-h-[48px] px-6 rounded-full border border-[#A6C48A]/35 bg-black/40 hover:bg-[#102B20]/60 text-sm font-semibold text-[#F5F3E9] backdrop-blur-md flex items-center gap-2 transition hover:border-[#A6C48A]"
+                    >
+                      <Languages className="h-4 w-4 text-[#A6C48A]" />
+                      <span>Explore Languages</span>
+                    </Link>
+
                     <button
                       type="button"
                       onClick={() => setActiveStage("collective")}
-                      className="pill-btn-solid gap-2 group !bg-[#F5F3E9] !text-[#102B20] hover:!bg-[#A6C48A]"
+                      className="min-h-[48px] px-5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-[#A6C48A] backdrop-blur-md flex items-center gap-1.5 transition"
                     >
                       <span>Know More</span>
-                      <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+                      <ChevronRight className="h-3.5 w-3.5 text-[#E2B93B]" />
                     </button>
-
-                    <Link
-                      href="/record"
-                      className="min-h-[48px] px-6 rounded-full border border-white/20 bg-black/40 hover:bg-black/60 text-sm font-semibold text-[#F5F3E9] backdrop-blur-md flex items-center gap-2 transition"
-                    >
-                      <Mic className="h-4 w-4 text-[#A6C48A]" />
-                      <span>Record Spoken Voice</span>
-                    </Link>
                   </div>
                 </motion.div>
               ) : (

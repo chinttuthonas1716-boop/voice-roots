@@ -54,14 +54,14 @@ export function Navbar() {
   const isReviewerOrAdmin = user?.role === "reviewer" || user?.role === "admin" || user?.verifiedElder;
 
   const navLinks = [
-    { href: "/", label: t("nav.home"), icon: Home },
-    { href: "/login", label: "Know More", icon: Sparkles },
-    { href: "/record", label: t("nav.record"), icon: Mic },
-    { href: "/translate", label: t("action.translate"), icon: Languages },
-    { href: "/dictionary", label: t("nav.dictionary"), icon: BookOpen },
-    { href: "/about", label: "Governance", icon: ShieldCheck },
-    { href: "/dashboard", label: t("nav.dashboard"), icon: HardDrive },
-    ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: t("nav.reviewer"), icon: ShieldCheck }] : []),
+    { href: "/", label: "Home", icon: Home },
+    { href: "/explore", label: "Explore Languages", icon: Languages },
+    { href: "/record", label: "Record Voice", icon: Mic },
+    { href: "/dictionary", label: "Dictionary", icon: BookOpen },
+    { href: "/archive", label: "Digital Archives", icon: HardDrive },
+    { href: "/dashboard", label: "My recordings", icon: Sparkles },
+    { href: "/about", label: "About", icon: ShieldCheck },
+    ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: "Reviewer", icon: ShieldCheck }] : []),
   ];
 
   return (
@@ -91,8 +91,8 @@ export function Navbar() {
           </div>
 
           {/* Desktop Nav: Elegant minimal links (Reference: Image 1 Home, Know More, etc.) */}
-          <nav aria-label="Main navigation" className="hidden md:flex items-center gap-1.5">
-            {navLinks.slice(0, 6).map(({ href, label, icon: Icon }) => {
+          <nav aria-label="Main navigation" className="hidden lg:flex items-center gap-1.5">
+            {navLinks.map(({ href, label, icon: Icon }) => {
               const isActive = pathname === href;
               const isKnowMore = href === "/login" && pathname === "/login";
               return (
@@ -198,7 +198,7 @@ export function Navbar() {
                 className="flex items-center gap-1.5 px-3.5 py-1.5 rounded-full border border-[#A6C48A]/35 bg-[#1F5138]/50 text-xs font-semibold text-[#F5F3E9] hover:bg-[#A6C48A] hover:text-[#102B20] transition-all shadow-sm"
               >
                 <User className="h-3.5 w-3.5" />
-                <span>Log in</span>
+                <span>Login / Sign Up</span>
               </Link>
             )}
           </div>

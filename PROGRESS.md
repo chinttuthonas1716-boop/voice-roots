@@ -2794,3 +2794,37 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     4. Playwright Responsive & Screenshot Suite: `npm run test:e2e --prefix web -- -g "landing|login"` passed 5/5 tests in 6.2s with 0px horizontal scroll on 1280px desktop and 390px mobile viewports.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-15] [ANTIGRAVITY] DONE: Complete Forest-Themed UI/UX Redesign across Landing, Registration, Dashboard, and 4-Step 48 kHz Recording Studio.
+  - Delivered comprehensive forest-themed design system matching Pinterest video reference and UI mockups across both frontends (`web/` Next.js App Router and `frontend/` React/Vite SPA):
+    1. Forest Master Palette & Design Tokens: Enforced `#071A13` (Deep forest), `#102B20` (Dark green), `#1F5138` (Forest green), `#477A50` (Leaf green), `#A6C48A` (Sage), `#DCE9D7` (Mist), and `#F5F3E9` (Warm ivory) across `frontend/src/index.css` and `web/src/app/globals.css`.
+    2. Full-Panoramic Hero Landing (`web/src/app/page.tsx` & `frontend/src/components/Home.tsx`):
+       - Heading: "Every Voice Holds a Heritage."
+       - Supporting text: "Preserving the world’s oral languages through AI, community knowledge and digital heritage."
+       - Primary CTA: "Start Recording" (`/record`).
+       - Secondary CTA: "Explore Languages" (`/explore`).
+       - Maintained interactive "Home" vs "Know More" dual-stage switcher with chevron slider from Reference Image 2, dynamic low-resource language explore chips, and cultural proverbs.
+    3. Translucent Glass Registration (`web/src/app/register/page.tsx`):
+       - Redesigned into frosted glassmorphism card over cinematic rainforest canopy background (`rainforest_canopy.jpg`).
+       - Included Name, Email, Password, Confirm Password, Clan/Homeland, Role, and OCAP consent checkbox.
+       - Password visibility toggles (Eye/EyeOff), real backend auth integration with `/api/auth/register`, and clear error states.
+    4. 4-Step 48 kHz Recording Experience (`web/src/components/audio/SimpleVoiceWorkflow.tsx`):
+       - Step 1 (Speaker Consent): Native-language consent audio playback (Telugu, Gondi, Koya, Hindi, English) with mandatory gate preventing recording without confirmed consent.
+       - Step 2 (Voice Recording): 48 kHz studio recording (`audioBitsPerSecond: 128000`), live animated audio waveform, timer (MM:SS), microphone permission indicators, and pause/resume controls.
+       - Step 3 (Language Information): Dynamic language catalog with open custom language & dialect input, fulfilling broad low-resource language inclusivity without hardcoded limits.
+       - Step 4 (Review & Save): Audio preview player, SHA-256 cryptographic audio integrity calculation & display, title/community metadata, offline-first IndexedDB save, and background cloud sync.
+    5. Modern Forest Dashboard (`web/src/app/dashboard/page.tsx`):
+       - Responsive sidebar navigation with all 11 required tabs: Overview, Record Voice, My Recordings, Language Explorer, Transcriptions, Community Verification, Digital Archives, Semantic Search, Knowledge Graph, Research Tools, and Settings.
+       - Integrated audio playback, search filter, language breakdown, and offline queue status.
+    6. Header Navigation (`web/src/components/ui/Navbar.tsx`):
+       - Configured links: Voice Roots Logo, Home, Explore Languages, Record Voice, Dictionary, Digital Archives, My recordings, About, and Login / Sign Up.
+  - Files touched: `frontend/src/components/Home.tsx`, `frontend/src/index.css`, `frontend/public/images/*`, `web/src/app/page.tsx`, `web/src/app/register/page.tsx`, `web/src/app/dashboard/page.tsx`, `web/src/components/audio/SimpleVoiceWorkflow.tsx`, `web/src/components/ui/Navbar.tsx`, `docs/screenshots/*`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Backend Regression Suite: `pytest tests/test_t*.py -q` passed 108/108 tests in 24.50s.
+    2. Frontend Vite Build: `npm run build --prefix frontend` compiled in 1.91s with 0 errors.
+    3. Next.js Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    4. Next.js Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 53 routes with 0 errors.
+    5. Playwright E2E User Lifecycle: `npm run test:e2e --prefix web -- e2e/voice_roots_workflow.spec.ts` passed 8/8 tests in 9.1s.
+    6. Playwright Responsive Layout & Screenshot Suite: `npm run test:e2e --prefix web -- e2e/screenshots_and_responsive.spec.ts` passed 18/18 tests in 30.2s with 0px horizontal scroll on 1280px desktop and 390px mobile viewports.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.

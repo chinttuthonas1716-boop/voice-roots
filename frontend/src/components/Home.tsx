@@ -55,40 +55,27 @@ export function Home({ onNavigate, transcriptCount, languageCount, vectorDocCoun
           </div>
 
           <h1 style={{ 
-            fontSize: 'clamp(36px, 8vw, 60px)', 
+            fontSize: 'clamp(32px, 7vw, 56px)', 
             fontWeight: '800', 
-            lineHeight: '1.12', 
+            lineHeight: '1.15', 
             letterSpacing: '-0.03em', 
             color: '#FFFFFF',
-            marginBottom: '12px'
+            marginBottom: '14px'
           }}>
-            Voice <span style={{ color: '#A6C48A' }}>Roots</span>
+            Every Voice Holds a <span style={{ color: '#A6C48A' }}>Heritage.</span>
           </h1>
 
-          <h2 style={{
-            fontSize: 'clamp(17px, 4vw, 22px)',
-            fontWeight: '600',
-            color: '#F5F3E9',
-            marginBottom: '14px',
-            letterSpacing: '-0.01em',
-            lineHeight: '1.3',
-            maxWidth: '100%',
-            overflowWrap: 'break-word'
-          }}>
-            Rooting Oral Languages in Text with AI — All in One Platform
-          </h2>
-
           <p style={{ 
-            fontSize: '15px', 
+            fontSize: 'clamp(15px, 2.5vw, 18px)', 
             lineHeight: '1.6', 
-            color: 'rgba(245, 243, 233, 0.85)', 
+            color: 'rgba(245, 243, 233, 0.9)', 
             marginBottom: '32px',
             maxWidth: '680px',
             margin: '0 auto 32px',
-            overflowWrap: 'break-word'
+            overflowWrap: 'break-word',
+            fontWeight: '300'
           }}>
-            Preserve, explore, and master indigenous and unwritten oral tongues. Powered by dual-layer AI annotation,
-            genealogical knowledge graphs, elder-governed cultural archives, acoustic phonetics, and open research APIs.
+            Preserving the world’s oral languages through AI, community knowledge and digital heritage.
           </p>
 
           {/* Primary Action Buttons */}
@@ -101,6 +88,16 @@ export function Home({ onNavigate, transcriptCount, languageCount, vectorDocCoun
             >
               <Mic size={18} />
               <span>Start Recording</span>
+            </button>
+
+            <button 
+              type="button"
+              onClick={() => onNavigate('languages')}
+              className="btn-secondary"
+              style={{ fontSize: '15px', padding: '12px 24px', borderRadius: '30px', background: 'rgba(16, 43, 32, 0.85)', border: '1px solid #A6C48A', flex: '1 1 180px', maxWidth: '240px', color: '#F5F3E9' }}
+            >
+              <Languages size={18} color="#A6C48A" />
+              <span>Explore Languages</span>
             </button>
 
             <button 

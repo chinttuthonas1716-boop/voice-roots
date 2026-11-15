@@ -2,17 +2,20 @@
 
 :root {
   /* 🌲 Voice Roots — Forest Green + Natural Earth Master Palette */
-  --color-deep-forest: #102B20;
+  --color-deep-forest: #071A13;
+  --color-dark-green: #102B20;
   --color-forest-green: #1F5138;
   --color-leaf-green: #477A50;
+  --color-sage: #A6C48A;
   --color-sage-green: #A6C48A;
-  --color-mist-green: #E8EFE1;
+  --color-mist: #DCE9D7;
+  --color-mist-green: #DCE9D7;
   --color-warm-ivory: #F5F3E9;
   --color-earth-text: #203329;
 
   /* Natural Earth Mode (Default Light / Warm Ivory Workspace) */
   --bg-deep: #F5F3E9;
-  --bg-evergreen: #E8EFE1;
+  --bg-evergreen: #DCE9D7;
   --surface-forest: #FFFFFF;
   --border-green: #D4DFCE;
   --accent-sage: #A6C48A;
@@ -22,7 +25,7 @@
   --text-muted: #496354;
   --text-dim: #718B7D;
   --card-bg: #FFFFFF;
-  --card-border: #E8EFE1;
+  --card-border: #DCE9D7;
   --card-border-hover: #A6C48A;
   --sidebar-bg: #102B20;
   --header-bg: #102B20;
@@ -30,7 +33,7 @@
   --btn-primary-bg: #1F5138;
   --btn-primary-text: #F5F3E9;
   --btn-primary-hover: #163B29;
-  --btn-secondary-bg: #E8EFE1;
+  --btn-secondary-bg: #DCE9D7;
   --btn-secondary-border: #477A50;
   --btn-secondary-text: #102B20;
   --waveform-bar: #A6C48A;
@@ -43,8 +46,8 @@
 /* 🌲 Deep Forest Dark Mode */
 [data-theme="dark"],
 .dark {
-  --bg-deep: #102B20;
-  --bg-evergreen: #0C2118;
+  --bg-deep: #071A13;
+  --bg-evergreen: #102B20;
   --surface-forest: #163B2C;
   --border-green: #1F5138;
   --accent-sage: #A6C48A;
@@ -53,11 +56,11 @@
   --text-primary: #F5F3E9;
   --text-muted: rgba(245, 243, 233, 0.72);
   --text-dim: rgba(245, 243, 233, 0.48);
-  --card-bg: rgba(22, 59, 44, 0.85);
+  --card-bg: rgba(16, 43, 32, 0.85);
   --card-border: #1F5138;
   --card-border-hover: #A6C48A;
-  --sidebar-bg: #0C2118;
-  --header-bg: #0C2118;
+  --sidebar-bg: #071A13;
+  --header-bg: #071A13;
   --header-text: #F5F3E9;
   --btn-primary-bg: #1F5138;
   --btn-primary-text: #F5F3E9;
@@ -66,7 +69,7 @@
   --btn-secondary-border: #477A50;
   --btn-secondary-text: #F5F3E9;
   --waveform-bar: #A6C48A;
-  --waveform-active: #E8EFE1;
+  --waveform-active: #DCE9D7;
   
   color-scheme: dark;
 }
@@ -128,11 +131,11 @@ body[data-theme="dark"] {
   overflow: hidden;
   border: 1px solid var(--border-green);
   background: 
-    linear-gradient(180deg, rgba(16, 43, 32, 0.55) 0%, rgba(16, 43, 32, 0.88) 65%, #102B20 100%),
-    url('https://images.unsplash.com/photo-1448375240586-882707db888b?auto=format&fit=crop&w=1600&q=80') center/cover no-repeat,
-    radial-gradient(circle at 50% 30%, rgba(31, 81, 56, 0.6) 0%, rgba(16, 43, 32, 0.95) 70%),
-    linear-gradient(135deg, #102B20 0%, #1F5138 50%, #0C2118 100%);
-  box-shadow: 0 20px 50px rgba(16, 43, 32, 0.35);
+    linear-gradient(180deg, rgba(7, 26, 19, 0.6) 0%, rgba(16, 43, 32, 0.88) 65%, #071A13 100%),
+    url('/images/misty_forest_hero.jpg') center/cover no-repeat,
+    radial-gradient(circle at 50% 30%, rgba(31, 81, 56, 0.6) 0%, rgba(7, 26, 19, 0.95) 70%),
+    linear-gradient(135deg, #071A13 0%, #1F5138 50%, #102B20 100%);
+  box-shadow: 0 20px 50px rgba(7, 26, 19, 0.6);
   color: #FFFFFF;
 }
 
