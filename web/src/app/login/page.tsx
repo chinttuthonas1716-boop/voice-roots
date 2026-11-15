@@ -147,22 +147,30 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen pb-20 pt-20">
+    <div className="min-h-screen pb-20 pt-16 sm:pt-20">
       <Navbar />
 
-      <main className="mx-auto max-w-6xl px-4 py-6 sm:py-12">
-        {/* Split Screen Master Layout (Reference: Image 2) */}
-        <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
-          
-          {/* Left Column: Frosted Glass Sign In / Sign Up Panel */}
-          <motion.div
-            initial={{ opacity: 0, x: -20, scale: 0.98 }}
-            animate={{ opacity: 1, x: 0, scale: 1 }}
-            transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
-            className="lg:col-span-6 w-full"
-          >
-            <div className="forest-glass-panel p-6 sm:p-10 relative overflow-hidden">
-              {/* Soft ambient inner glow */}
+      <main className="mx-auto max-w-7xl px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+        {/* Split Screen Master Layout with Rainforest Canopy Backdrop (Reference: Image 2) */}
+        <div className="relative rounded-3xl sm:rounded-[2.5rem] overflow-hidden border border-[#A6C48A]/25 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.9)] p-6 sm:p-10 lg:p-12">
+          {/* High-Res Aerial Rainforest Canopy Background */}
+          <div
+            className="absolute inset-0 bg-cover bg-center"
+            style={{ backgroundImage: "url('/images/rainforest_canopy.jpg')" }}
+          />
+          <div className="absolute inset-0 bg-gradient-to-r from-[#081610]/90 via-[#102B20]/50 to-[#081610]/60 pointer-events-none" />
+
+          <div className="relative z-10 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-12 items-center">
+            
+            {/* Left Column: Frosted Glass Sign In / Sign Up Panel */}
+            <motion.div
+              initial={{ opacity: 0, x: -20, scale: 0.98 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              transition={{ duration: 0.35, ease: [0.23, 1, 0.32, 1] }}
+              className="lg:col-span-6 w-full"
+            >
+              <div className="forest-glass-panel p-6 sm:p-10 relative overflow-hidden !rounded-l-2xl !rounded-r-[2.5rem]">
+                {/* Soft ambient inner glow */}
               <div className="absolute top-0 right-0 w-48 h-48 bg-[#A6C48A]/10 rounded-full blur-[80px] pointer-events-none" />
 
               {/* Logo / Header Branding */}
@@ -458,6 +466,7 @@ export default function LoginPage() {
             </div>
           </motion.div>
 
+        </div>
         </div>
       </main>
     </div>

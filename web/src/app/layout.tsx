@@ -34,23 +34,24 @@ export default function RootLayout({
           <div className="absolute -right-32 top-1/2 h-[520px] w-[520px] rounded-full bg-[#163B2C]/30 blur-[140px]" />
         </div>
         <LanguageProvider>
-          {/* Universal DEMO DATA & OCAP Governance Disclaimer Banner */}
-          <div className="relative z-50 bg-amber-500/15 border-b border-amber-500/30 px-3 py-1.5 text-center text-xs text-amber-200/90 flex flex-wrap items-center justify-center gap-2">
-            <span className="font-bold uppercase tracking-wider bg-amber-500/30 border border-amber-400/40 px-1.5 py-0.5 rounded text-[10px] text-amber-200">
-              DEMO DATA / ACADEMIC PILOT
-            </span>
-            <span>
-              All recordings, transcripts, and lexicons are designated as evaluation data pending formal IRB ethics clearance and bilateral community council agreements.
-            </span>
-            <Link href="/about" className="underline hover:text-white font-medium ml-1 text-amber-300">
-              OCAP® Governance Charter &rarr;
-            </Link>
-          </div>
-
-          <div className="min-h-screen flex flex-col pb-20 md:pb-0">
+          <div className="min-h-screen flex flex-col pb-20 md:pb-0 relative">
             <PageTransition className="flex-1 w-full">
               {children}
             </PageTransition>
+            
+            {/* Subtle OCAP Governance & Academic Pilot Disclaimer Footer Note */}
+            <div className="relative z-30 py-2 px-4 text-center text-[11px] text-[#A6C48A]/60 bg-[#0B1E16]/80 border-t border-[#A6C48A]/10 flex flex-wrap items-center justify-center gap-2">
+              <span className="font-semibold uppercase tracking-wider text-[#A6C48A] bg-[#163B2C] px-1.5 py-0.5 rounded text-[10px]">
+                OCAP® PILOT
+              </span>
+              <span>
+                Evaluation archive governed under customary data sovereignty across all language sources.
+              </span>
+              <Link href="/about" className="underline hover:text-white font-medium text-[#A6C48A]">
+                Charter &rarr;
+              </Link>
+            </div>
+
             <MobileBottomNav />
             <ServiceWorkerRegister />
           </div>
