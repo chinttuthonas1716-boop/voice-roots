@@ -2908,3 +2908,40 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     5. Sanitized ZIP Cleanliness: `unzip -l voice-roots-v2.0-audited-source.zip | grep -E "\.env$|\.db$"` returned 0 matches.
   - NOT VERIFIED: Third-party external penetration audit (requires external pen-testing vendor).
   - NEEDS FROM OTHER AGENT: CODEX: In `tests/test_milestone17_cultural_archives.py:344`, add `?limit=100` or filter by `access_level=SACRED_ELDER_ONLY` when querying `/api/v1/cultural-archives/collections` to prevent test fixture pagination truncation.
+
+- [2026-11-15] [ANTIGRAVITY] DONE: Forest-Themed Login & Sign Up Pages with Real Authentication & Role Security.
+  - Implemented the complete production authentication suite matching user's visual references:
+    1. Dedicated Login Page (`web/src/app/login/page.tsx`):
+       - Exact realization of Screenshot 1 with sunlit misty forest canopy header card.
+       - Cormorant Garamond headline: `Welcome back.` and Manrope subtitle: `Continue preserving the voices and stories of humanity.`
+       - Warm Ivory Card (`#F5F3E9` with dark forest `#102B20` typography) with Email address, Password (show/hide toggle), Remember me checkbox, Forgot password? link, and Sign In button.
+       - Link to `/signup` (`Create an account`).
+       - Quick evaluation role switcher for testing all 4 canonical roles (Elder Reviewer, Linguist Researcher, Contributor, Platform Admin).
+    2. Dedicated Sign Up Page (`web/src/app/signup/page.tsx` & `web/src/app/register/page.tsx`):
+       - Exact realization of Screenshots 2 & 3 with lush green canopy leaves card.
+       - Cormorant Garamond headline: `Join the movement.` and Manrope subtitle: `Become part of a global community preserving linguistic heritage.`
+       - Warm Ivory Card with Full name, Email address, Password, Confirm password, Account purpose dropdown, and Customary OCAP® stewardship checkbox.
+       - Role elevation prevention: public registration strictly forbids self-assigning `admin` or `reviewer` privileges. If selected, accounts are safely created as `contributor` with a pending administrative verification notice.
+       - Link to `/login` (`Sign in`).
+    3. Password Reset & Verification Workspaces:
+       - Restyled `/forgot-password` into the forest palette with 2-step token recovery.
+       - Built `/verify-email` with token auto-verification and request workflow wrapped in React Suspense boundary.
+    4. Backend Authentication Integration:
+       - Refactored `web/src/app/api/auth/login/route.ts` and `web/src/app/api/auth/register/route.ts` to call FastAPI backend (`http://localhost:8000/api/v1/auth/*`) with seamless fallback to `serverAuth.ts` (salted scrypt hashing, rate limiting, and HMAC session tokens).
+       - Created `web/src/app/api/auth/verify-email/route.ts` for email verification lifecycle.
+       - Added `loginUserAsync` and `registerUserAsync` in `web/src/lib/auth.ts`.
+  - Files touched: `web/src/app/login/page.tsx`, `web/src/app/signup/page.tsx`, `web/src/app/register/page.tsx`, `web/src/app/forgot-password/page.tsx`, `web/src/app/verify-email/page.tsx`, `web/src/app/api/auth/login/route.ts`, `web/src/app/api/auth/register/route.ts`, `web/src/app/api/auth/verify-email/route.ts`, `web/src/lib/auth.ts`, `web/src/lib/serverAuth.ts`, `web/e2e/auth_production_flows.spec.ts`, `PROGRESS.md`, `voice-roots-v2.0-audited-source.zip`.
+  - VERIFIED:
+    1. Automated Playwright Auth Production Test Suite: `npm run test:e2e --prefix web -- e2e/auth_production_flows.spec.ts` passed 6/6 tests in 8.5s (Registration, duplicate check, password mismatch, successful login, incorrect password error, and mobile 390px zero overflow).
+    2. Automated Playwright End-to-End Workflow: `npm run test:e2e --prefix web -- e2e/voice_roots_workflow.spec.ts` passed 8/8 tests in 9.1s.
+    3. Automated Playwright Responsive Layout Suite: `npm run test:e2e --prefix web -- e2e/screenshots_and_responsive.spec.ts` passed 18/18 tests in 30.6s (0px horizontal scroll on 1280px desktop and 390px mobile).
+    4. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    5. Production Next.js Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 56/56 routes cleanly with static prerendering.
+    6. API Endpoint Security Verification:
+       - Role elevation attempt: rejected self-assignment of `admin`; granted `contributor` with pending verification notice.
+       - Duplicate email: rejected with 409 status and clear notice.
+       - Weak password: rejected with 400 status.
+       - Invalid email: rejected with 400 status.
+       - Rate limiting: enforced on reset/verification endpoints.
+  - NOT VERIFIED: Real SMTP email delivery (tokens returned directly by verification API for testing).
+  - NEEDS FROM OTHER AGENT: none.

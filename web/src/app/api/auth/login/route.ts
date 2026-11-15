@@ -1,10 +1,23 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { DEMO_USERS, ROLE_DEFINITIONS, type UserProfile, type UserRole } from "@/lib/auth";
+import { authenticateServerUser, checkAuthRateLimit } from "@/lib/serverAuth";
 
-export async function POST(request: Request) {
+export async function POST(request: NextRequest) {
   try {
+    const clientIp = request.headers.get("x-forwarded-for")?.split(",")[0]?.trim() || "127.0.0.1";
+    const rateCheck = checkAuthRateLimit(clientIp, 12, 60000);
+    if (!rateCheck.allowed) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: `Too many sign-in attempts. Please try again in ${rateCheck.retryAfterSec || 60} seconds.`,
+        },
+        { status: 429 }
+      );
+    }
+
     const body = await request.json();
-    const { email, password, provider = "credentials" } = body;
+    const { email, password, rememberMe = false, provider = "credentials" } = body;
 
     // Google Sign-In Provider
     if (provider === "google") {
@@ -15,8 +28,8 @@ export async function POST(request: Request) {
         role: "contributor",
         roleTitle: ROLE_DEFINITIONS.contributor.title,
         clanOrCommunity: "Community Oral Circle",
-        location: "Deccan Plateau",
-        languages: ["Telugu (తెలుగు)", "English", "Hindi (हिन्दी)"],
+        location: "Global",
+        languages: ["English"],
         verifiedElder: false,
         contributionsCount: 3,
         memberSince: "October 2026",
@@ -25,12 +38,18 @@ export async function POST(request: Request) {
         token: `vr_tok_google_${Math.random().toString(36).substring(2, 10)}`,
       };
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         user: googleUser,
         token: googleUser.token,
         message: "Google Sign-In successful.",
       });
+      response.cookies.set("vr_token", googleUser.token, {
+        path: "/",
+        maxAge: 7 * 24 * 3600,
+        sameSite: "lax",
+      });
+      return response;
     }
 
     // Guest Access
@@ -43,7 +62,7 @@ export async function POST(request: Request) {
         roleTitle: ROLE_DEFINITIONS.guest.title,
         clanOrCommunity: "Public Explorer",
         location: "Global",
-        languages: ["English", "Telugu (తెలుగు)"],
+        languages: ["English"],
         verifiedElder: false,
         contributionsCount: 0,
         memberSince: "Today",
@@ -53,47 +72,111 @@ export async function POST(request: Request) {
         isGuest: true,
       };
 
-      return NextResponse.json({
+      const response = NextResponse.json({
         success: true,
         user: guestUser,
         token: guestUser.token,
         message: "Guest session established.",
       });
+      response.cookies.set("vr_token", guestUser.token, {
+        path: "/",
+        maxAge: 24 * 3600,
+        sameSite: "lax",
+      });
+      return response;
     }
 
-    // Standard Credentials
-    if (!email) {
+    // Standard Credentials Validation
+    if (!email || typeof email !== "string" || !email.trim()) {
       return NextResponse.json(
-        { success: false, error: "Email is required." },
+        { success: false, error: "Email address is required." },
         { status: 400 }
       );
     }
 
-    // Match existing demo user or create contributor session
-    const match = DEMO_USERS.find((u) => u.email.toLowerCase() === email.toLowerCase());
-    const user: UserProfile = match || {
-      id: `usr_${Date.now()}`,
-      name: email.split("@")[0].replace(/[._]/g, " ").replace(/\b\w/g, (c: string) => c.toUpperCase()),
-      email,
-      role: "contributor",
-      roleTitle: ROLE_DEFINITIONS.contributor.title,
-      clanOrCommunity: "Community Oral Circle",
-      location: "South Asia",
-      languages: ["Telugu (తెలుగు)", "English"],
-      verifiedElder: false,
-      contributionsCount: 1,
-      memberSince: "October 2026",
-      bio: "Preserving local spoken voices and family oral memories.",
-      avatarInitials: email.slice(0, 2).toUpperCase(),
-      token: `vr_tok_${Math.random().toString(36).substring(2, 12)}`,
-    };
+    if (!password || typeof password !== "string" || !password.trim()) {
+      return NextResponse.json(
+        { success: false, error: "Password is required." },
+        { status: 400 }
+      );
+    }
 
-    return NextResponse.json({
+    const cleanEmail = email.trim().toLowerCase();
+
+    // 1. Attempt FastAPI backend authentication if online
+    const FASTAPI_URL = process.env.FASTAPI_URL || process.env.NEXT_PUBLIC_API_URL || "http://localhost:8000";
+    try {
+      const backendRes = await fetch(`${FASTAPI_URL}/api/v1/auth/login`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ identifier: cleanEmail, password }),
+        signal: AbortSignal.timeout(1500),
+      });
+
+      if (backendRes.ok) {
+        const backendJson = await backendRes.json();
+        const bUser = backendJson.data;
+        const roleKey = (bUser.role || "contributor") as UserRole;
+        const userProfile: UserProfile = {
+          id: bUser.id,
+          name: bUser.full_name || bUser.username || cleanEmail.split("@")[0],
+          email: bUser.email || cleanEmail,
+          role: roleKey,
+          roleTitle: ROLE_DEFINITIONS[roleKey]?.title || "Oral Heritage Contributor",
+          clanOrCommunity: "Community Oral Circle",
+          location: "Global",
+          languages: ["English"],
+          verifiedElder: roleKey === "reviewer",
+          contributionsCount: 0,
+          memberSince: new Date(bUser.created_at || Date.now()).toLocaleDateString("en-US", { month: "long", year: "numeric" }),
+          bio: bUser.bio || "Preserving low-resource oral traditions.",
+          avatarInitials: (bUser.full_name || cleanEmail).slice(0, 2).toUpperCase(),
+          token: bUser.access_token || `vr_sess_${bUser.id}`,
+        };
+
+        const maxAge = rememberMe ? 30 * 24 * 3600 : 7 * 24 * 3600;
+        const response = NextResponse.json({
+          success: true,
+          user: userProfile,
+          token: userProfile.token,
+          message: `Welcome back, ${userProfile.name}!`,
+        });
+        response.cookies.set("vr_token", userProfile.token, {
+          path: "/",
+          maxAge,
+          sameSite: "lax",
+        });
+        return response;
+      }
+    } catch {
+      // Backend not running, proceed seamlessly with serverAuth
+    }
+
+    // 2. Authenticate against serverAuth (salted scrypt password verification)
+    const authResult = authenticateServerUser(cleanEmail, password);
+    if (!authResult.success || !authResult.user || !authResult.token) {
+      return NextResponse.json(
+        {
+          success: false,
+          error: authResult.error || "Invalid email or password. Please verify your credentials.",
+        },
+        { status: 401 }
+      );
+    }
+
+    const maxAge = rememberMe ? 30 * 24 * 3600 : 7 * 24 * 3600;
+    const response = NextResponse.json({
       success: true,
-      user,
-      token: user.token,
-      message: `Signed in as ${user.name} (${user.roleTitle}).`,
+      user: authResult.user,
+      token: authResult.token,
+      message: `Welcome back, ${authResult.user.name}!`,
     });
+    response.cookies.set("vr_token", authResult.token, {
+      path: "/",
+      maxAge,
+      sameSite: "lax",
+    });
+    return response;
   } catch (err: any) {
     return NextResponse.json(
       { success: false, error: "Authentication failed", details: err?.message },

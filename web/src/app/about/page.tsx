@@ -23,7 +23,7 @@ import { WORKFLOW_PHASES } from "@/lib/workflow";
 
 export default function AboutPage() {
   return (
-    <div className="min-h-screen bg-[#F5F3E9] text-[#203329] pb-24 pt-16 sm:pt-20 font-sans selection:bg-[#A6C48A]/40 selection:text-[#102B20]">
+    <div className="min-h-screen bg-[#F5F3E9] text-[#203329] pb-24 pt-16 sm:pt-20 font-sans selection:bg-[#A6C48A]/40 selection:text-[#102B20] overflow-x-hidden">
       <Navbar />
 
       <main className="max-w-6xl mx-auto px-4 sm:px-6 pt-6 pb-20 space-y-16">

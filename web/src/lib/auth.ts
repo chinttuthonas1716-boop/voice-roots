@@ -4,7 +4,7 @@
  * Roles: listener | contributor | reviewer | admin | guest
  */
 
-export type UserRole = "listener" | "contributor" | "reviewer" | "admin" | "guest";
+export type UserRole = "listener" | "contributor" | "researcher" | "reviewer" | "admin" | "guest";
 
 export interface UserProfile {
   id: string;
@@ -34,6 +34,11 @@ export const ROLE_DEFINITIONS: Record<UserRole, { title: string; description: st
     title: "Oral Heritage Contributor",
     description: "Record voice memories, upload high-fidelity audio, generate Heritage Passports, and manage spoken narratives.",
     permissions: ["record_audio", "upload_audio", "create_stories", "manage_own_recordings", "view_translations"],
+  },
+  researcher: {
+    title: "Linguistic Researcher",
+    description: "Explore oral corpora, analyze phonetic transcripts, evaluate ASR models, and conduct cross-lingual research.",
+    permissions: ["explore_stories", "listen_audio", "translate", "ask_ai", "export_datasets", "view_research_metrics"],
   },
   reviewer: {
     title: "Elder & Linguist Reviewer",
@@ -307,6 +312,54 @@ export function registerUser(data: {
 
   saveActiveUser(newUser);
   return newUser;
+}
+
+/**
+ * Asynchronously log in via API endpoint with fallback to local demo store
+ */
+export async function loginUserAsync(email: string, password: string, rememberMe = false): Promise<UserProfile> {
+  const cleanEmail = email.trim();
+  try {
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email: cleanEmail, password, rememberMe }),
+    });
+    const data = await res.json();
+    if (!res.ok || !data.success) {
+      throw new Error(data.error || "Invalid email or password.");
+    }
+    saveActiveUser(data.user);
+    return data.user;
+  } catch (err: any) {
+    if (typeof window !== "undefined" && !navigator.onLine) {
+      return loginUser(cleanEmail, password);
+    }
+    throw err;
+  }
+}
+
+/**
+ * Asynchronously register a new user via API endpoint
+ */
+export async function registerUserAsync(data: {
+  name: string;
+  email: string;
+  password: string;
+  role?: UserRole;
+  clanOrCommunity?: string;
+}): Promise<UserProfile> {
+  const res = await fetch("/api/auth/register", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data),
+  });
+  const json = await res.json();
+  if (!res.ok || !json.success) {
+    throw new Error(json.error || "Registration failed.");
+  }
+  saveActiveUser(json.user);
+  return json.user;
 }
 
 /**

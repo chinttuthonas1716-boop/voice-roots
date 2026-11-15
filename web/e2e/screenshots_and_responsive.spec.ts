@@ -23,7 +23,7 @@ test.describe("Responsive Layout & Screenshot Verification (Step 5 & 6)", () => 
 
       // Verify no horizontal overflow
       const hasHorizontalScroll = await page.evaluate(() => {
-        return document.documentElement.scrollWidth > window.innerWidth;
+        return document.documentElement.scrollWidth > document.documentElement.clientWidth;
       });
       expect(hasHorizontalScroll).toBe(false);
 
@@ -40,7 +40,7 @@ test.describe("Responsive Layout & Screenshot Verification (Step 5 & 6)", () => 
 
       // Verify no horizontal overflow
       const hasHorizontalScroll = await page.evaluate(() => {
-        return document.documentElement.scrollWidth > window.innerWidth;
+        return document.documentElement.scrollWidth > document.documentElement.clientWidth;
       });
       expect(hasHorizontalScroll).toBe(false);
 

@@ -57,6 +57,7 @@ scratch/
 *.zip
 
 # Local test databases, backups & coverage
+web/data/
 test_*.db
 *.sqlite3
 backend/storage/backups/

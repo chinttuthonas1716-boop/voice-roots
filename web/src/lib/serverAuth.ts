@@ -23,6 +23,10 @@ export interface ServerUserRecord {
   createdAt: string;
   resetToken?: string;
   resetTokenExpiry?: number;
+  isVerified?: boolean;
+  emailVerificationToken?: string;
+  requestedRole?: string;
+  pendingAdminApproval?: boolean;
 }
 
 // Secret key for HMAC token signing (falls back safely to default if not in env)
@@ -257,7 +261,7 @@ export function findServerUserById(id: string): ServerUserRecord | null {
 }
 
 /**
- * Register a new user with salted password hashing and duplicate check
+ * Register a new user with salted password hashing, duplicate check, and role protection
  */
 export function registerServerUser(data: {
   name: string;
@@ -268,41 +272,66 @@ export function registerServerUser(data: {
   location?: string;
   languages?: string[];
   bio?: string;
-}): { success: boolean; user?: UserProfile; token?: string; error?: string } {
+}): { success: boolean; user?: UserProfile; token?: string; error?: string; pendingApprovalNotice?: string } {
   const store = loadUsersStore();
   const cleanEmail = data.email.trim().toLowerCase();
 
   if (store.has(cleanEmail)) {
     return {
       success: false,
-      error: "An account with this email address already exists. Please log in instead.",
+      error: "An account with this email address already exists. Please sign in instead.",
     };
   }
 
-  const role: UserRole = data.role && ["listener", "contributor", "reviewer", "admin"].includes(data.role)
-    ? data.role
-    : "contributor";
+  if (!data.name || data.name.trim().length < 2) {
+    return { success: false, error: "Please enter your full name (at least 2 characters)." };
+  }
+
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+    return { success: false, error: "Please provide a valid email address." };
+  }
+
+  if (!data.password || data.password.length < 8) {
+    return { success: false, error: "Password must be at least 8 characters long." };
+  }
+
+  // NON-NEGOTIABLE SECURITY: Users CANNOT assign themselves administrator or reviewer privileges during registration
+  const requestedRole = data.role || "contributor";
+  let assignedRole: UserRole = "contributor";
+  let pendingApprovalNotice: string | undefined;
+
+  if (requestedRole === "researcher" || requestedRole === "listener") {
+    assignedRole = requestedRole;
+  } else if (requestedRole === "reviewer" || requestedRole === "admin") {
+    assignedRole = "contributor";
+    pendingApprovalNotice = `Account created as Community Contributor. Your request for elevated ${ROLE_DEFINITIONS[requestedRole as UserRole]?.title || requestedRole} status has been forwarded to authorized administrators for customary verification.`;
+  }
 
   const salt = crypto.randomBytes(16).toString("hex");
   const passwordHash = hashPassword(data.password, salt);
+  const emailToken = crypto.randomBytes(24).toString("hex");
 
   const newUser: ServerUserRecord = {
     id: `usr_${Date.now().toString(36)}_${crypto.randomBytes(3).toString("hex")}`,
     name: data.name.trim(),
     email: cleanEmail,
-    role,
-    roleTitle: ROLE_DEFINITIONS[role].title,
+    role: assignedRole,
+    roleTitle: ROLE_DEFINITIONS[assignedRole].title,
     clanOrCommunity: data.clanOrCommunity?.trim() || "Community Oral Circle",
-    location: data.location?.trim() || "India",
-    languages: data.languages || ["Telugu (తెలుగు)", "English"],
-    verifiedElder: role === "reviewer",
+    location: data.location?.trim() || "Global",
+    languages: data.languages || ["English"],
+    verifiedElder: false,
     contributionsCount: 0,
     memberSince: new Date().toLocaleDateString("en-US", { month: "long", year: "numeric" }),
-    bio: data.bio?.trim() || `${ROLE_DEFINITIONS[role].title} contributing to Voice Roots oral archive.`,
+    bio: data.bio?.trim() || `${ROLE_DEFINITIONS[assignedRole].title} contributing to Voice Roots oral archive.`,
     avatarInitials: data.name.trim().slice(0, 2).toUpperCase(),
     salt,
     passwordHash,
     createdAt: new Date().toISOString(),
+    isVerified: true,
+    emailVerificationToken: emailToken,
+    requestedRole: requestedRole !== assignedRole ? requestedRole : undefined,
+    pendingAdminApproval: requestedRole === "reviewer" || requestedRole === "admin",
   };
 
   store.set(cleanEmail, newUser);
@@ -313,6 +342,7 @@ export function registerServerUser(data: {
     success: true,
     user: sanitizeUserToProfile(newUser, token),
     token,
+    pendingApprovalNotice,
   };
 }
 
@@ -428,5 +458,40 @@ export function resetServerUserPassword(
   saveUsersStore(store);
 
   return { success: true };
+}
+
+/**
+ * Issue or retrieve email verification token
+ */
+export function createEmailVerificationToken(email: string): { success: boolean; token?: string; error?: string } {
+  const store = loadUsersStore();
+  const cleanEmail = email.trim().toLowerCase();
+  const user = store.get(cleanEmail);
+  if (!user) {
+    return { success: false, error: "No account found with this email address." };
+  }
+  const token = crypto.randomBytes(24).toString("hex");
+  user.emailVerificationToken = token;
+  store.set(cleanEmail, user);
+  saveUsersStore(store);
+  return { success: true, token };
+}
+
+/**
+ * Verify email using verification token
+ */
+export function verifyEmailToken(token: string): { success: boolean; email?: string; error?: string } {
+  if (!token) return { success: false, error: "Verification token is required." };
+  const store = loadUsersStore();
+  for (const [email, user] of store.entries()) {
+    if (user.emailVerificationToken === token) {
+      user.isVerified = true;
+      delete user.emailVerificationToken;
+      store.set(email, user);
+      saveUsersStore(store);
+      return { success: true, email };
+    }
+  }
+  return { success: false, error: "Invalid or expired verification token." };
 }
 

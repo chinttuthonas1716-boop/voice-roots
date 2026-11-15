@@ -3,6 +3,7 @@
 import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { motion, AnimatePresence } from "framer-motion";
 import {
   Lock,
   Mail,
@@ -10,46 +11,34 @@ import {
   EyeOff,
   AlertCircle,
   CheckCircle2,
-  Sparkles,
-  ArrowRight,
   ArrowLeft,
   KeyRound,
   ShieldCheck,
+  Loader2,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 
 export default function ForgotPasswordPage() {
   const router = useRouter();
-
-  // Step 1: Request reset token
-  // Step 2: Reset password with token
   const [step, setStep] = useState<1 | 2>(1);
-
-  // Form Fields
   const [email, setEmail] = useState("");
   const [token, setToken] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [showPassword, setShowPassword] = useState(false);
-
-  // Status & Feedback
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
-  // Step 1 Handler: Request Token
+  // Step 1: Request Token
   const handleRequestReset = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
     setSuccessMessage(null);
 
     const cleanEmail = email.trim();
-    if (!cleanEmail) {
-      setErrorMessage("Please enter your registered email address.");
-      return;
-    }
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
-      setErrorMessage("Please enter a valid email address.");
+    if (!cleanEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail)) {
+      setErrorMessage("Please enter a valid account email address.");
       return;
     }
 
@@ -79,7 +68,7 @@ export default function ForgotPasswordPage() {
     }
   };
 
-  // Step 2 Handler: Update Password
+  // Step 2: Set New Password
   const handleResetPassword = async (e: React.FormEvent) => {
     e.preventDefault();
     setErrorMessage(null);
@@ -89,12 +78,8 @@ export default function ForgotPasswordPage() {
       setErrorMessage("Please provide your reset token.");
       return;
     }
-    if (!newPassword) {
-      setErrorMessage("Please enter a new password.");
-      return;
-    }
-    if (newPassword.length < 6) {
-      setErrorMessage("New password must be at least 6 characters long.");
+    if (!newPassword || newPassword.length < 8) {
+      setErrorMessage("New password must be at least 8 characters long.");
       return;
     }
     if (newPassword !== confirmPassword) {
@@ -116,10 +101,10 @@ export default function ForgotPasswordPage() {
         throw new Error(data.error || "Password update failed.");
       }
 
-      setSuccessMessage("Password successfully updated! Redirecting to login...");
+      setSuccessMessage("Password successfully updated! Redirecting to sign in...");
       setTimeout(() => {
         router.push("/login");
-      }, 1500);
+      }, 1400);
     } catch (err: any) {
       setErrorMessage(err.message || "Failed to update password.");
     } finally {
@@ -128,182 +113,188 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="vr-app min-h-screen pb-20">
+    <div className="min-h-screen bg-[#071A13] text-[#F5F3E9] selection:bg-[#1F5138] selection:text-white pb-20 pt-16 sm:pt-20">
       <Navbar />
 
-      <main className="mx-auto max-w-lg px-4 pt-12 sm:px-6">
-        <div className="mb-6 text-center">
-          <Link
-            href="/login"
-            className="inline-flex items-center gap-1.5 text-xs text-[#A9AEC5] hover:text-[#F9B17A] transition mb-4"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            <span>Back to Log In</span>
-          </Link>
-          <div className="w-14 h-14 mx-auto mb-3 rounded-2xl bg-[#F9B17A]/15 border border-[#F9B17A]/30 grid place-items-center text-[#F9B17A]">
-            <KeyRound className="w-7 h-7" />
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-extrabold text-white">
-            {step === 1 ? "Reset Your Password" : "Set New Password"}
+      {/* Atmospheric Forest Glow */}
+      <div className="fixed inset-0 pointer-events-none opacity-40 mix-blend-screen bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-[#1F5138]/40 via-transparent to-transparent" />
+
+      <main className="relative z-10 mx-auto max-w-md px-4 sm:px-6 py-6 sm:py-10">
+        <Link
+          href="/login"
+          className="inline-flex items-center gap-1.5 text-xs text-[#A6C48A] hover:text-[#F5F3E9] transition mb-6"
+        >
+          <ArrowLeft className="w-3.5 h-3.5" />
+          <span>Back to Sign In</span>
+        </Link>
+
+        {/* Section Heading */}
+        <div className="mb-6 text-left">
+          <span className="inline-block px-2.5 py-1 rounded-full bg-[#1F5138]/60 border border-[#A6C48A]/30 text-[10px] uppercase font-bold tracking-widest text-[#DCE9D7] mb-2">
+            Security & Recovery
+          </span>
+          <h1 className="font-serif-display text-3xl sm:text-4xl font-bold tracking-tight text-[#F5F3E9] mb-2">
+            {step === 1 ? "Reset your password." : "Set new password."}
           </h1>
-          <p className="mt-1 text-xs sm:text-sm text-[#A9AEC5]">
+          <p className="text-sm text-[#A6C48A] leading-relaxed">
             {step === 1
-              ? "Enter your account email to receive a secure recovery verification code."
-              : "Enter your verification code and choose a new secure password."}
+              ? "Enter your account email to receive a secure recovery verification token."
+              : "Enter your verification token and create a new secure password."}
           </p>
         </div>
 
-        {/* Card Container */}
-        <div className="rounded-3xl border border-white/12 bg-[rgba(36,41,66,0.85)] p-6 sm:p-8 shadow-2xl backdrop-blur-2xl space-y-6">
-          {/* Error Banner */}
+        {/* Feedback Alerts */}
+        <AnimatePresence>
           {errorMessage && (
-            <div className="rounded-2xl border border-red-500/40 bg-red-500/10 p-3.5 text-xs text-red-200 flex items-start gap-2.5 animate-fade-in">
-              <AlertCircle className="w-4 h-4 shrink-0 text-red-400 mt-0.5" />
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 rounded-xl border border-rose-500/30 bg-rose-950/60 p-3 text-xs text-rose-200 flex items-center gap-2"
+            >
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
               <span>{errorMessage}</span>
-            </div>
+            </motion.div>
           )}
-
-          {/* Success Banner */}
           {successMessage && (
-            <div className="rounded-2xl border border-[#F9B17A]/40 bg-[#F9B17A]/10 p-3.5 text-xs text-[#F9B17A] flex items-start gap-2.5 animate-fade-in">
-              <CheckCircle2 className="w-4 h-4 shrink-0 mt-0.5" />
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: "auto" }}
+              exit={{ opacity: 0, height: 0 }}
+              className="mb-4 rounded-xl border border-[#A6C48A]/40 bg-[#1F5138]/70 p-3 text-xs text-[#DCE9D7] flex items-center gap-2"
+            >
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-[#A6C48A]" />
               <span>{successMessage}</span>
-            </div>
+            </motion.div>
           )}
+        </AnimatePresence>
 
+        {/* Warm Ivory Recovery Card */}
+        <div className="bg-[#F5F3E9] text-[#102B20] rounded-3xl p-6 sm:p-8 shadow-[0_20px_60px_-15px_rgba(0,0,0,0.7)] border border-[#A6C48A]/50">
           {step === 1 ? (
-            /* STEP 1: EMAIL ENTRY */
+            /* Step 1: Request Form */
             <form onSubmit={handleRequestReset} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#D9D9E2] mb-1.5">
+                <label className="block text-xs font-semibold text-[#1F5138] uppercase tracking-wider mb-1.5">
                   Account Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9AEC5]" />
                   <input
                     type="email"
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
-                    placeholder="e.g. priya.sharma@gmail.com"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 pl-10 pr-4 py-2.5 text-sm text-white placeholder-[#A9AEC5]/50 focus:border-[#F9B17A] focus:outline-none focus:ring-1 focus:ring-[#F9B17A] transition"
+                    placeholder="Enter your registered email"
                     required
+                    className="w-full rounded-xl bg-white/90 border border-[#A6C48A]/50 px-3.5 py-3 text-sm text-[#102B20] placeholder:text-[#477A50]/50 focus:outline-none focus:ring-2 focus:ring-[#1F5138] transition"
                   />
+                  <Mail className="absolute right-3.5 top-3.5 h-4 w-4 text-[#477A50]/50 pointer-events-none" />
                 </div>
               </div>
 
               <button
                 type="submit"
                 disabled={isLoading}
-                className="vr-button vr-button-primary w-full !min-h-11 font-bold text-sm shadow-lg shadow-[#F9B17A]/15 mt-2"
+                className="w-full bg-[#102B20] hover:bg-[#1F5138] text-[#F5F3E9] font-medium py-3.5 rounded-full transition shadow-md flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
               >
                 {isLoading ? (
-                  <span>Generating Code...</span>
-                ) : (
                   <>
-                    <span>Continue to Reset</span>
-                    <ArrowRight className="w-4 h-4 ml-1" />
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Issuing Recovery Token...</span>
                   </>
+                ) : (
+                  <span>Send Recovery Token</span>
                 )}
               </button>
-
-              <div className="pt-2 text-center">
-                <button
-                  type="button"
-                  onClick={() => setStep(2)}
-                  className="text-xs text-[#F9B17A] hover:underline"
-                >
-                  Already have a reset code? Click here &rarr;
-                </button>
-              </div>
             </form>
           ) : (
-            /* STEP 2: TOKEN & NEW PASSWORD */
+            /* Step 2: Reset Form */
             <form onSubmit={handleResetPassword} className="space-y-4">
               <div>
-                <label className="block text-xs font-semibold text-[#D9D9E2] mb-1.5">
-                  Recovery Token / Code
+                <label className="block text-xs font-semibold text-[#1F5138] uppercase tracking-wider mb-1.5">
+                  Verification Token
                 </label>
                 <div className="relative">
-                  <KeyRound className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9AEC5]" />
                   <input
                     type="text"
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
-                    placeholder="Paste your reset token here"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 pl-10 pr-4 py-2.5 text-xs font-mono text-white placeholder-[#A9AEC5]/50 focus:border-[#F9B17A] focus:outline-none focus:ring-1 focus:ring-[#F9B17A] transition"
+                    placeholder="Enter reset token"
                     required
+                    className="w-full rounded-xl bg-white/90 border border-[#A6C48A]/50 px-3.5 py-3 text-sm text-[#102B20] font-mono focus:outline-none focus:ring-2 focus:ring-[#1F5138] transition"
                   />
+                  <KeyRound className="absolute right-3.5 top-3.5 h-4 w-4 text-[#477A50]/50 pointer-events-none" />
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#D9D9E2] mb-1.5">
-                  New Password (min. 6 characters)
+                <label className="block text-xs font-semibold text-[#1F5138] uppercase tracking-wider mb-1.5">
+                  New Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9AEC5]" />
                   <input
                     type={showPassword ? "text" : "password"}
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 pl-10 pr-10 py-2.5 text-sm text-white placeholder-[#A9AEC5]/50 focus:border-[#F9B17A] focus:outline-none focus:ring-1 focus:ring-[#F9B17A] transition"
+                    placeholder="Enter at least 8 characters"
                     required
+                    className="w-full rounded-xl bg-white/90 border border-[#A6C48A]/50 px-3.5 py-3 pr-10 text-sm text-[#102B20] focus:outline-none focus:ring-2 focus:ring-[#1F5138] transition"
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3.5 top-1/2 -translate-y-1/2 text-[#A9AEC5] hover:text-white"
+                    className="absolute right-3.5 top-3.5 text-[#477A50]/60 hover:text-[#102B20] transition"
                   >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                   </button>
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-[#D9D9E2] mb-1.5">
+                <label className="block text-xs font-semibold text-[#1F5138] uppercase tracking-wider mb-1.5">
                   Confirm New Password
                 </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9AEC5]" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    placeholder="••••••••"
-                    className="w-full rounded-xl border border-white/15 bg-white/5 pl-10 pr-10 py-2.5 text-sm text-white placeholder-[#A9AEC5]/50 focus:border-[#F9B17A] focus:outline-none focus:ring-1 focus:ring-[#F9B17A] transition"
-                    required
-                  />
-                </div>
+                <input
+                  type={showPassword ? "text" : "password"}
+                  value={confirmPassword}
+                  onChange={(e) => setConfirmPassword(e.target.value)}
+                  placeholder="Re-enter your new password"
+                  required
+                  className="w-full rounded-xl bg-white/90 border border-[#A6C48A]/50 px-3.5 py-3 text-sm text-[#102B20] focus:outline-none focus:ring-2 focus:ring-[#1F5138] transition"
+                />
               </div>
 
-              <div className="flex gap-3 pt-2">
-                <button
-                  type="button"
-                  onClick={() => setStep(1)}
-                  className="vr-button vr-button-secondary !min-h-11 text-xs"
-                >
-                  Back
-                </button>
-                <button
-                  type="submit"
-                  disabled={isLoading}
-                  className="vr-button vr-button-primary flex-1 !min-h-11 font-bold text-sm shadow-lg shadow-[#F9B17A]/15"
-                >
-                  {isLoading ? "Saving New Password..." : "Update Password"}
-                </button>
-              </div>
+              <button
+                type="submit"
+                disabled={isLoading}
+                className="w-full bg-[#102B20] hover:bg-[#1F5138] text-[#F5F3E9] font-medium py-3.5 rounded-full transition shadow-md flex items-center justify-center gap-2 mt-4 disabled:opacity-50"
+              >
+                {isLoading ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Updating Password...</span>
+                  </>
+                ) : (
+                  <span>Update Password</span>
+                )}
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setStep(1)}
+                className="w-full text-center text-xs text-[#477A50] hover:text-[#102B20] pt-2 transition"
+              >
+                Request a different token
+              </button>
             </form>
           )}
 
-          <div className="border-t border-white/10 pt-4 text-center text-xs text-[#A9AEC5]">
-            Remember your credentials?{" "}
-            <Link href="/login" className="font-semibold text-[#F9B17A] hover:underline">
-              Sign In
-            </Link>{" "}
-            ·{" "}
-            <Link href="/register" className="font-semibold text-[#F9B17A] hover:underline">
-              Create an Account
+          <div className="mt-6 pt-5 border-t border-[#A6C48A]/30 text-center text-xs text-[#102B20]/75">
+            <span>Remember your password? </span>
+            <Link
+              href="/login"
+              className="text-[#1F5138] hover:text-[#102B20] font-bold underline-offset-2 hover:underline transition"
+            >
+              Sign in
             </Link>
           </div>
         </div>
@@ -311,4 +302,3 @@ export default function ForgotPasswordPage() {
     </div>
   );
 }
-
