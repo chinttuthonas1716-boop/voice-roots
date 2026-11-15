@@ -11,6 +11,9 @@ import {
   Play,
   Pause,
   ArrowRight,
+  ArrowUpRight,
+  Activity,
+  Archive,
   BookOpen,
   ShieldCheck,
   TreePine,
@@ -24,6 +27,8 @@ import {
   Menu,
   X,
   Volume2,
+  Globe,
+  Radio,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
 import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
@@ -288,7 +293,7 @@ export default function HomePage() {
             <AnimatePresence mode="wait">
               {activeStage === "hero" ? (
                 /* =========================================================================
-                   STAGE 1: ENCHANTED SUNLIT FOREST HERO (Reference: Image 1 "forest.")
+                   STAGE 1: LUXURY NATURE EDITORIAL HERO (Reference: Phone Mockup & Image 1)
                    ========================================================================= */
                 <motion.div
                   key="hero-stage"
@@ -296,29 +301,49 @@ export default function HomePage() {
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -30, scale: 0.98 }}
                   transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                  className="space-y-6 text-center max-w-4xl mx-auto py-6"
+                  className="space-y-6 text-center max-w-4xl mx-auto py-4"
                 >
-                  {/* Micro Tag */}
+                  {/* Sunlit Photographic Forest Card Window (Reference: Phone Mockup Upper Card) */}
+                  <div className="relative w-full h-48 sm:h-64 rounded-2xl sm:rounded-3xl overflow-hidden border border-[#A6C48A]/30 shadow-2xl group">
+                    <div
+                      className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
+                      style={{ backgroundImage: "url('/images/misty_forest_hero.jpg')" }}
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0C2118] via-transparent to-black/30" />
+                    
+                    {/* Micro Pill Badge in bottom-left (Reference: chatbotspace pill in mockup) */}
+                    <div className="absolute bottom-3 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-[#A6C48A]/35 text-xs text-[#F5F3E9] backdrop-blur-md">
+                      <span className="w-2 h-2 rounded-full bg-[#A6C48A] animate-pulse" />
+                      <span className="font-medium text-[11px] tracking-wide text-[#A6C48A]">
+                        oral roots sanctuary
+                      </span>
+                    </div>
+
+                    <div className="absolute top-3 right-4 hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-black/50 border border-white/15 text-[10px] text-[#F5F3E9]/80 backdrop-blur-sm">
+                      <span>48 kHz Master Acoustic</span>
+                    </div>
+                  </div>
+
+                  {/* Kicker Category Tag (Reference: Phone Mockup PRESERVING HUMANITY'S LINGUISTIC HERITAGE) */}
                   <motion.div
-                    initial={{ opacity: 0, y: -10 }}
+                    initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1, duration: 0.3 }}
-                    className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-black/40 border border-[#A6C48A]/35 text-xs font-semibold text-[#A6C48A] backdrop-blur-md shadow-sm"
+                    className="inline-block"
                   >
-                    <Sparkles className="h-3.5 w-3.5 text-[#E2B93B]" />
-                    <span className="tracking-wide uppercase text-[11px]">
-                      OPEN ORAL HERITAGE · NOT LIMITED TO A SINGLE LANGUAGE SOURCE
+                    <span className="text-[11px] sm:text-xs font-bold tracking-[0.22em] text-[#A6C48A] uppercase font-display">
+                      PRESERVING HUMANITY’S LINGUISTIC HERITAGE
                     </span>
                   </motion.div>
 
-                  {/* Iconic Headline: Every Voice Holds a Heritage. */}
+                  {/* Iconic Editorial Headline: Every Voice Holds a Heritage. */}
                   <motion.h1
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15, duration: 0.4 }}
-                    className="text-4xl sm:text-6xl lg:text-7xl font-extrabold tracking-tight text-[#F5F3E9] font-sans drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)] select-none leading-tight"
+                    className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#F5F3E9] font-serif font-serif-display drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)] select-none leading-tight"
                   >
-                    Every Voice Holds a <span className="text-[#A6C48A]">Heritage.</span>
+                    Every Voice Holds a <span className="text-[#A6C48A] italic">Heritage.</span>
                   </motion.h1>
 
                   {/* Subtitle Explaining Multi-Language Source Oral Archiving */}
@@ -326,10 +351,41 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.4 }}
-                    className="text-base sm:text-xl text-[#F5F3E9]/90 max-w-2xl mx-auto font-light leading-relaxed drop-shadow-md"
+                    className="text-sm sm:text-lg text-[#F5F3E9]/90 max-w-2xl mx-auto font-light leading-relaxed drop-shadow-md"
                   >
-                    Preserving the world’s oral languages through AI, community knowledge and digital heritage.
+                    Discover, document and preserve the world’s oral languages through artificial intelligence and community knowledge.
                   </motion.p>
+
+                  {/* Primary & Secondary Action CTAs (Reference: Phone Mockup Buttons) */}
+                  <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+                    {/* Start Recording ↗ (Pill with diagonal arrow) */}
+                    <Link
+                      href="/record"
+                      className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full bg-[#DCE9D7] text-[#071A13] font-bold text-sm tracking-wide hover:bg-[#A6C48A] transition-all duration-200 shadow-lg shadow-black/40 group active:scale-95"
+                    >
+                      <span>Start Recording</span>
+                      <ArrowUpRight className="h-4 w-4 text-[#071A13] group-hover:translate-x-0.5 group-hover:-translate-y-0.5 transition-transform" />
+                    </Link>
+
+                    {/* Explore Languages (Translucent Outline Pill) */}
+                    <Link
+                      href="/explore"
+                      className="inline-flex items-center justify-center gap-2 px-6 sm:px-8 py-3.5 rounded-full border border-[#A6C48A]/40 bg-[#102B20]/70 hover:bg-[#1F5138]/70 text-[#F5F3E9] font-semibold text-sm transition-all duration-200 backdrop-blur-md active:scale-95"
+                    >
+                      <Languages className="h-4 w-4 text-[#A6C48A]" />
+                      <span>Explore Languages</span>
+                    </Link>
+
+                    {/* Know More (Stage Switcher) */}
+                    <button
+                      type="button"
+                      onClick={() => setActiveStage("collective")}
+                      className="inline-flex items-center justify-center gap-1.5 px-4 sm:px-5 py-3 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-[#A6C48A] backdrop-blur-md transition"
+                    >
+                      <span>Know More</span>
+                      <ChevronRight className="h-3.5 w-3.5 text-[#E2B93B]" />
+                    </button>
+                  </div>
 
                   {/* Interactive Multi-Language Source Selector Chips */}
                   <motion.div
@@ -339,7 +395,7 @@ export default function HomePage() {
                     className="pt-2 flex flex-wrap items-center justify-center gap-2 max-w-2xl mx-auto"
                   >
                     <span className="text-xs uppercase tracking-wider text-[#A6C48A] font-semibold mr-1">
-                      Explore Sources:
+                      Oral Sources:
                     </span>
                     {languageSources.map((lang) => (
                       <button
@@ -370,32 +426,37 @@ export default function HomePage() {
                     <span className="text-[#A6C48A]/80">— {currentDialectInfo.meaning} ({currentDialectInfo.name})</span>
                   </div>
 
-                  {/* Action CTA */}
-                  <div className="pt-3 flex flex-wrap items-center justify-center gap-4">
+                  {/* The 3-Feature Pillar Strip (Reference: Phone Mockup Bottom Row) */}
+                  <div className="pt-4 border-t border-[#A6C48A]/20 grid grid-cols-3 gap-2 sm:gap-6 max-w-2xl mx-auto w-full">
+                    {/* Pillar 1: Record / Capture voices */}
                     <Link
                       href="/record"
-                      className="pill-btn-solid gap-2 group !bg-[#1F5138] !text-[#F5F3E9] hover:!bg-[#477A50] border border-[#A6C48A]/40 shadow-lg shadow-[#102B20]/50"
+                      className="flex flex-col items-center p-3 rounded-2xl bg-[#102B20]/50 hover:bg-[#163B2C]/70 border border-[#A6C48A]/20 hover:border-[#A6C48A]/40 transition-all group"
                     >
-                      <Mic className="h-4 w-4 text-[#A6C48A]" />
-                      <span>Start Recording</span>
+                      <Activity className="h-5 w-5 sm:h-6 sm:w-6 text-[#A6C48A] group-hover:scale-110 transition-transform" />
+                      <span className="font-bold text-xs sm:text-sm text-[#F5F3E9] mt-1.5">Record</span>
+                      <span className="text-[10px] sm:text-xs text-[#A6C48A]/75">Capture voices</span>
                     </Link>
 
+                    {/* Pillar 2: Discover / Explore languages */}
                     <Link
                       href="/explore"
-                      className="min-h-[48px] px-6 rounded-full border border-[#A6C48A]/35 bg-black/40 hover:bg-[#102B20]/60 text-sm font-semibold text-[#F5F3E9] backdrop-blur-md flex items-center gap-2 transition hover:border-[#A6C48A]"
+                      className="flex flex-col items-center p-3 rounded-2xl bg-[#102B20]/50 hover:bg-[#163B2C]/70 border border-[#A6C48A]/20 hover:border-[#A6C48A]/40 transition-all group"
                     >
-                      <Languages className="h-4 w-4 text-[#A6C48A]" />
-                      <span>Explore Languages</span>
+                      <Languages className="h-5 w-5 sm:h-6 sm:w-6 text-[#A6C48A] group-hover:scale-110 transition-transform" />
+                      <span className="font-bold text-xs sm:text-sm text-[#F5F3E9] mt-1.5">Discover</span>
+                      <span className="text-[10px] sm:text-xs text-[#A6C48A]/75">Explore languages</span>
                     </Link>
 
-                    <button
-                      type="button"
-                      onClick={() => setActiveStage("collective")}
-                      className="min-h-[48px] px-5 rounded-full border border-white/15 bg-white/5 hover:bg-white/10 text-xs font-semibold text-[#A6C48A] backdrop-blur-md flex items-center gap-1.5 transition"
+                    {/* Pillar 3: Preserve / Protect heritage */}
+                    <Link
+                      href="/archive"
+                      className="flex flex-col items-center p-3 rounded-2xl bg-[#102B20]/50 hover:bg-[#163B2C]/70 border border-[#A6C48A]/20 hover:border-[#A6C48A]/40 transition-all group"
                     >
-                      <span>Know More</span>
-                      <ChevronRight className="h-3.5 w-3.5 text-[#E2B93B]" />
-                    </button>
+                      <Archive className="h-5 w-5 sm:h-6 sm:w-6 text-[#A6C48A] group-hover:scale-110 transition-transform" />
+                      <span className="font-bold text-xs sm:text-sm text-[#F5F3E9] mt-1.5">Preserve</span>
+                      <span className="text-[10px] sm:text-xs text-[#A6C48A]/75">Protect heritage</span>
+                    </Link>
                   </div>
                 </motion.div>
               ) : (
@@ -761,6 +822,232 @@ export default function HomePage() {
               <span className="block text-xs text-[#A6C48A]/80 mt-0.5">Explore indigenous lexicons</span>
             </div>
           </Link>
+        </section>
+
+        {/* =========================================================================
+           SECTION 2: NATURE MAGAZINE EDITORIAL INTERFACE (Reference: Image 3 NATURA)
+           ========================================================================= */}
+        <section aria-label="Archival Journal" className="forest-glass-panel p-6 sm:p-10 relative overflow-hidden">
+          {/* Ambient Sheen & Background Botanical Texture */}
+          <div className="absolute top-0 right-0 w-80 h-80 bg-[#A6C48A]/10 rounded-full blur-[90px] pointer-events-none" />
+          
+          {/* Top Journal Metadata Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-4 pb-6 border-b border-[#A6C48A]/20 text-xs text-[#A6C48A]">
+            <div className="flex items-center gap-2">
+              <span className="font-bold tracking-[0.2em] uppercase text-[#F5F3E9]">NATURA ORAL ARCHIVES</span>
+              <span className="hidden sm:inline text-[#A6C48A]/50">·</span>
+              <span className="hidden sm:inline">DISCOVER THE LIVING BEAUTY OF SPEECH</span>
+            </div>
+            <div className="flex items-center gap-4 text-[11px] uppercase tracking-wider">
+              <span>VOL. 24 / ORAL HERITAGE</span>
+              <Link href="/archive" className="hover:text-white transition flex items-center gap-1 font-semibold text-[#E2B93B]">
+                <span>View Full Index</span>
+                <ChevronRight className="h-3.5 w-3.5" />
+              </Link>
+            </div>
+          </div>
+
+          {/* Split Magazine Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
+            {/* Left Featured Card (Reference: Natura Left Monstera Leaf Card) */}
+            <div className="lg:col-span-6 space-y-4">
+              <div className="p-4 sm:p-5 rounded-2xl bg-[#102B20]/80 border border-[#A6C48A]/30 backdrop-blur-md flex flex-col sm:flex-row gap-5 items-center">
+                <div className="relative w-full sm:w-44 h-44 rounded-xl overflow-hidden shrink-0 border border-white/10 shadow-md">
+                  <div
+                    className="absolute inset-0 bg-cover bg-center"
+                    style={{ backgroundImage: "url('/images/natura_editorial.jpg')" }}
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-transparent to-transparent" />
+                  <span className="absolute bottom-2 left-2 text-[10px] font-bold text-[#A6C48A] uppercase tracking-wider bg-black/60 px-2 py-0.5 rounded-full backdrop-blur-sm">
+                    Botanical Lore
+                  </span>
+                </div>
+
+                <div className="flex-1 space-y-2 text-center sm:text-left">
+                  <span className="text-[10px] font-bold tracking-[0.2em] text-[#A6C48A] uppercase">
+                    FEATURED ORAL TRADITION
+                  </span>
+                  <h3 className="font-serif font-serif-display text-xl sm:text-2xl font-bold text-[#F5F3E9] leading-snug">
+                    Kurumba Forest Songs & Mountain Flora
+                  </h3>
+                  <p className="text-xs text-[#F5F3E9]/80 font-light leading-relaxed line-clamp-3">
+                    Ancient unwritten Nilgiri dialect preserving 400+ medicinal plant names and honey-gathering oral songs governed under OCAP® customary rights.
+                  </p>
+                  <Link
+                    href="/explore"
+                    className="inline-flex items-center gap-1 text-xs font-semibold text-[#A6C48A] hover:text-white transition pt-1"
+                  >
+                    <span>Listen & Read Story</span>
+                    <ArrowRight className="h-3.5 w-3.5" />
+                  </Link>
+                </div>
+              </div>
+
+              {/* Bottom Curated Picks Pill (Reference: Natura Bottom Pill) */}
+              <div className="flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-2xl bg-[#163B2C]/50 border border-[#A6C48A]/25 backdrop-blur-md">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-8 w-8 place-items-center rounded-full bg-[#1F5138] text-[#A6C48A] shrink-0">
+                    <TreePine className="h-4 w-4" />
+                  </div>
+                  <div>
+                    <span className="block text-[11px] font-bold uppercase tracking-wider text-[#F5F3E9]">
+                      Curated Archival Picks
+                    </span>
+                    <span className="block text-[10px] text-[#A6C48A]/80">
+                      Handpicked oral stories from verified community elders.
+                    </span>
+                  </div>
+                </div>
+
+                <Link
+                  href="/explore"
+                  className="px-4 py-1.5 rounded-full border border-[#A6C48A]/40 bg-[#102B20]/60 hover:bg-[#1F5138] text-xs font-semibold text-[#F5F3E9] transition"
+                >
+                  Explore Now
+                </Link>
+              </div>
+            </div>
+
+            {/* Right Editorial Headline & Philosophy (Reference: Natura Right Nature Inspires) */}
+            <div className="lg:col-span-6 space-y-5 px-2 sm:px-6">
+              <div className="inline-flex items-center gap-2 text-xs font-semibold text-[#A6C48A] uppercase tracking-widest">
+                <Sparkles className="h-4 w-4 text-[#E2B93B]" />
+                <span>IMMUTABLE ORAL SOVEREIGNTY</span>
+              </div>
+
+              <h2 className="font-serif font-serif-display text-4xl sm:text-6xl font-bold text-[#F5F3E9] leading-tight">
+                Heritage
+                <br />
+                <span className="text-[#A6C48A] italic">Inspires.</span>
+              </h2>
+
+              <p className="text-base sm:text-lg text-[#F5F3E9]/85 font-light leading-relaxed max-w-lg">
+                Slow down. Take a breath. Every elder voice carries centuries of botanical wisdom, kinship, and the unwritten memory of the living earth.
+              </p>
+
+              {/* Numbered Pagination & Exploration Indicator (Reference: Natura 01, 02, 03) */}
+              <div className="flex items-center justify-between pt-4 border-t border-[#A6C48A]/20">
+                <div className="flex items-center gap-4 text-xs font-mono text-[#A6C48A]">
+                  <span className="font-bold text-[#F5F3E9] border-b-2 border-[#E2B93B] pb-0.5">01</span>
+                  <span>02</span>
+                  <span>03</span>
+                  <span className="text-[11px] font-sans text-[#A6C48A]/70 uppercase tracking-wider ml-2 hidden sm:inline">
+                    · Acoustic Archive
+                  </span>
+                </div>
+
+                <Link
+                  href="/record"
+                  className="grid h-11 w-11 place-items-center rounded-full bg-[#1F5138] hover:bg-[#A6C48A] text-[#F5F3E9] hover:text-[#102B20] transition-all shadow-md group"
+                  aria-label="Contribute oral story"
+                  title="Contribute oral story"
+                >
+                  <ArrowRight className="h-5 w-5 group-hover:translate-x-0.5 transition-transform" />
+                </Link>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {/* =========================================================================
+           SECTION 3: WARM IVORY BOTANICAL EDITORIAL ENVIRONMENT (Reference: Image 4)
+           ========================================================================= */}
+        <section
+          aria-label="Botanical Editorial"
+          className="rounded-[2.5rem] bg-[#F5F3E9] text-[#203329] p-6 sm:p-12 border border-[#DCE9D7] shadow-2xl relative overflow-hidden"
+        >
+          {/* Subtle Ambient Leaf Shadow */}
+          <div className="absolute top-0 right-0 w-96 h-96 bg-[#A6C48A]/20 rounded-full blur-[100px] pointer-events-none" />
+
+          {/* Top Editorial Kicker */}
+          <div className="flex items-center justify-between pb-6 border-b border-[#203329]/15">
+            <span className="text-xs font-bold tracking-[0.2em] text-[#1F5138] uppercase font-display">
+              COMMUNITY STEWARDSHIP & LIVING CULTURES
+            </span>
+            <span className="text-xs font-medium text-[#496354] hidden sm:inline">
+              OCAP® Custodianship Standards
+            </span>
+          </div>
+
+          {/* Body Content Split */}
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-center pt-8">
+            {/* Left Narrative */}
+            <div className="lg:col-span-7 space-y-5">
+              <h2 className="font-serif font-serif-display text-3xl sm:text-5xl font-bold text-[#102B20] leading-tight">
+                Reconnect with Living Heritage.
+              </h2>
+
+              <p className="text-base sm:text-lg text-[#203329]/90 font-light leading-relaxed max-w-xl">
+                Oral languages are living ecosystems. When an elder speaks, an entire continuum of ecological memory, traditional botanical healing, and ancestral song is preserved. Voice Roots provides customary protection so these voices remain sovereign forever.
+              </p>
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex flex-wrap items-center gap-4">
+                <Link
+                  href="/explore"
+                  className="inline-flex items-center justify-center gap-2 px-7 py-3.5 rounded-full bg-[#1F5138] text-[#F5F3E9] font-bold text-sm tracking-wide hover:bg-[#102B20] transition-all shadow-md active:scale-95"
+                >
+                  <span>Explore Oral Collections</span>
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+
+                {/* Audio Listen Pill */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const sampleAudio = new Audio("/audio/sample_voice.wav");
+                    sampleAudio.play().catch(() => {});
+                  }}
+                  className="inline-flex items-center gap-2 px-5 py-3 rounded-full border border-[#1F5138]/30 bg-white/70 hover:bg-white text-xs font-semibold text-[#1F5138] transition shadow-sm"
+                >
+                  <Play className="h-3.5 w-3.5 fill-current" />
+                  <span>Listen to introduction (2:15 min)</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Right Metric Pills & Visual Cards (Reference: Image 4 Right Column) */}
+            <div className="lg:col-span-5 space-y-4">
+              <div className="p-4 rounded-2xl bg-white/80 border border-[#DCE9D7] shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#DCE9D7] text-[#1F5138] font-bold">
+                    🌿
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-[#102B20]">Oral Tongues & Dialects</span>
+                    <span className="block text-xs text-[#496354]">Open across all language families</span>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-[#1F5138] font-mono">120+</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white/80 border border-[#DCE9D7] shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#DCE9D7] text-[#1F5138] font-bold">
+                    🪷
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-[#102B20]">Botanical Lexicons</span>
+                    <span className="block text-xs text-[#496354]">Customary ecological terms</span>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-[#1F5138] font-mono">80+</span>
+              </div>
+
+              <div className="p-4 rounded-2xl bg-white/80 border border-[#DCE9D7] shadow-sm flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-[#DCE9D7] text-[#1F5138] font-bold">
+                    📖
+                  </div>
+                  <div>
+                    <span className="block text-sm font-bold text-[#102B20]">Elder Community Councils</span>
+                    <span className="block text-xs text-[#496354]">Verified OCAP® stewardship</span>
+                  </div>
+                </div>
+                <span className="text-lg font-bold text-[#1F5138] font-mono">45+</span>
+              </div>
+            </div>
+          </div>
         </section>
 
         {/* Your Recent Recordings Section */}

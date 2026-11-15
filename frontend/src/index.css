@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Cinzel:wght@600;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;700&family=Manrope:wght@400;500;600;700&family=Cinzel:wght@600;700&display=swap');
 
 :root {
   /* 🌲 Voice Roots — Forest Green + Natural Earth Master Palette */
@@ -39,8 +39,12 @@
   --waveform-bar: #A6C48A;
   --waveform-active: #1F5138;
   
-  font-family: 'Plus Jakarta Sans', 'Noto Sans', 'Noto Sans Ol Chiki', 'Noto Sans Masaram Gondi', 'Noto Sans Telugu', 'Noto Sans Devanagari', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  font-family: 'Manrope', 'DM Sans', 'Noto Sans', 'Noto Sans Ol Chiki', 'Noto Sans Masaram Gondi', 'Noto Sans Telugu', 'Noto Sans Devanagari', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   color-scheme: light;
+}
+
+.font-serif-cormorant {
+  font-family: 'Cormorant Garamond', Georgia, serif;
 }
 
 /* 🌲 Deep Forest Dark Mode */

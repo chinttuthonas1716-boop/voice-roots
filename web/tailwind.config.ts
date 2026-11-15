@@ -9,6 +9,11 @@ const config: Config = {
   darkMode: "class",
   theme: {
     extend: {
+      fontFamily: {
+        serif: ["var(--font-cormorant)", "Cormorant Garamond", "Georgia", "serif"],
+        sans: ["var(--font-manrope)", "Manrope", "system-ui", "sans-serif"],
+        display: ["var(--font-dmsans)", "DM Sans", "sans-serif"],
+      },
       colors: {
         // Voice Roots Forest Green + Natural Earth Master Identity 🌲
         "deep-forest": "#102B20",

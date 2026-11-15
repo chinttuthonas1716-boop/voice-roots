@@ -14,6 +14,8 @@ import {
   Bot,
   Layers,
   Activity,
+  Archive,
+  ArrowUpRight,
   ExternalLink
 } from 'lucide-react';
 
@@ -45,37 +47,42 @@ export function Home({ onNavigate, transcriptCount, languageCount, vectorDocCoun
             border: '1px solid #A6C48A', 
             padding: '6px 14px', 
             borderRadius: '20px', 
-            marginBottom: '16px',
-            fontSize: '12px',
-            color: '#F5F3E9',
-            fontWeight: '600'
+            marginBottom: '14px',
+            fontSize: '11px',
+            color: '#A6C48A',
+            fontWeight: '700',
+            letterSpacing: '0.15em',
+            textTransform: 'uppercase'
           }}>
-            <Sparkles size={14} color="#A6C48A" />
-            <span>Milestone 21: Unified Oral Language AI Ecosystem</span>
+            <Sparkles size={14} color="#E2B93B" />
+            <span>PRESERVING HUMANITY’S LINGUISTIC HERITAGE</span>
           </div>
 
-          <h1 style={{ 
-            fontSize: 'clamp(32px, 7vw, 56px)', 
-            fontWeight: '800', 
-            lineHeight: '1.15', 
-            letterSpacing: '-0.03em', 
-            color: '#FFFFFF',
-            marginBottom: '14px'
-          }}>
-            Every Voice Holds a <span style={{ color: '#A6C48A' }}>Heritage.</span>
+          <h1 
+            className="font-serif-cormorant"
+            style={{ 
+              fontSize: 'clamp(36px, 7vw, 64px)', 
+              fontWeight: '700', 
+              lineHeight: '1.15', 
+              letterSpacing: '-0.02em', 
+              color: '#FFFFFF',
+              marginBottom: '14px'
+            }}
+          >
+            Every Voice Holds a <span style={{ color: '#A6C48A', fontStyle: 'italic' }}>Heritage.</span>
           </h1>
 
           <p style={{ 
             fontSize: 'clamp(15px, 2.5vw, 18px)', 
             lineHeight: '1.6', 
             color: 'rgba(245, 243, 233, 0.9)', 
-            marginBottom: '32px',
+            marginBottom: '28px',
             maxWidth: '680px',
-            margin: '0 auto 32px',
+            margin: '0 auto 28px',
             overflowWrap: 'break-word',
             fontWeight: '300'
           }}>
-            Preserving the world’s oral languages through AI, community knowledge and digital heritage.
+            Discover, document and preserve the world’s oral languages through artificial intelligence and community knowledge.
           </p>
 
           {/* Primary Action Buttons */}
@@ -84,17 +91,31 @@ export function Home({ onNavigate, transcriptCount, languageCount, vectorDocCoun
               type="button"
               onClick={() => onNavigate('record')}
               className="btn-primary"
-              style={{ fontSize: '15px', padding: '12px 24px', borderRadius: '30px', flex: '1 1 180px', maxWidth: '240px' }}
+              style={{ 
+                fontSize: '15px', 
+                fontWeight: '700',
+                padding: '12px 28px', 
+                borderRadius: '30px', 
+                flex: '1 1 180px', 
+                maxWidth: '240px',
+                background: '#DCE9D7',
+                color: '#071A13',
+                border: 'none',
+                display: 'inline-flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                gap: '8px'
+              }}
             >
-              <Mic size={18} />
               <span>Start Recording</span>
+              <ArrowUpRight size={18} color="#071A13" />
             </button>
 
             <button 
               type="button"
               onClick={() => onNavigate('languages')}
               className="btn-secondary"
-              style={{ fontSize: '15px', padding: '12px 24px', borderRadius: '30px', background: 'rgba(16, 43, 32, 0.85)', border: '1px solid #A6C48A', flex: '1 1 180px', maxWidth: '240px', color: '#F5F3E9' }}
+              style={{ fontSize: '15px', padding: '12px 24px', borderRadius: '30px', background: 'rgba(16, 43, 32, 0.85)', border: '1px solid rgba(166, 196, 138, 0.5)', flex: '1 1 180px', maxWidth: '240px', color: '#F5F3E9' }}
             >
               <Languages size={18} color="#A6C48A" />
               <span>Explore Languages</span>
@@ -119,6 +140,74 @@ export function Home({ onNavigate, transcriptCount, languageCount, vectorDocCoun
               <BookOpen size={18} color="#A6C48A" />
               <span>Cultural Archives</span>
             </button>
+          </div>
+
+          {/* ─── The 3-Feature Pillar Strip (Reference: Phone Mockup) ─── */}
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: '12px',
+            maxWidth: '680px',
+            margin: '28px auto 0',
+            paddingTop: '20px',
+            borderTop: '1px solid rgba(166, 196, 138, 0.25)'
+          }}>
+            <div 
+              onClick={() => onNavigate('record')}
+              style={{
+                cursor: 'pointer',
+                background: 'rgba(16, 43, 32, 0.65)',
+                border: '1px solid rgba(166, 196, 138, 0.25)',
+                borderRadius: '16px',
+                padding: '12px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center'
+              }}
+            >
+              <Activity size={22} color="#A6C48A" />
+              <span style={{ color: '#F5F3E9', fontWeight: '700', fontSize: '13px', marginTop: '6px' }}>Record</span>
+              <span style={{ color: 'rgba(166, 196, 138, 0.75)', fontSize: '11px', marginTop: '2px' }}>Capture voices</span>
+            </div>
+
+            <div 
+              onClick={() => onNavigate('languages')}
+              style={{
+                cursor: 'pointer',
+                background: 'rgba(16, 43, 32, 0.65)',
+                border: '1px solid rgba(166, 196, 138, 0.25)',
+                borderRadius: '16px',
+                padding: '12px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center'
+              }}
+            >
+              <Languages size={22} color="#A6C48A" />
+              <span style={{ color: '#F5F3E9', fontWeight: '700', fontSize: '13px', marginTop: '6px' }}>Discover</span>
+              <span style={{ color: 'rgba(166, 196, 138, 0.75)', fontSize: '11px', marginTop: '2px' }}>Explore languages</span>
+            </div>
+
+            <div 
+              onClick={() => onNavigate('cultural')}
+              style={{
+                cursor: 'pointer',
+                background: 'rgba(16, 43, 32, 0.65)',
+                border: '1px solid rgba(166, 196, 138, 0.25)',
+                borderRadius: '16px',
+                padding: '12px 8px',
+                display: 'flex',
+                flexDirection: 'column',
+                alignItems: 'center',
+                textAlign: 'center'
+              }}
+            >
+              <Archive size={22} color="#A6C48A" />
+              <span style={{ color: '#F5F3E9', fontWeight: '700', fontSize: '13px', marginTop: '6px' }}>Preserve</span>
+              <span style={{ color: 'rgba(166, 196, 138, 0.75)', fontSize: '11px', marginTop: '2px' }}>Protect heritage</span>
+            </div>
           </div>
 
           {/* Unified Ecosystem Metrics Bar */}

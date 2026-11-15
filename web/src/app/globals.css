@@ -1,3 +1,5 @@
+@import url('https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,400;0,600;0,700;1,400&family=DM+Sans:wght@400;500;700&family=Manrope:wght@400;500;600;700&display=swap');
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
@@ -30,7 +32,7 @@ body {
   overflow-x: hidden;
   background: linear-gradient(180deg, #102B20 0%, #0B1E16 100%);
   color: #F5F3E9;
-  font-family: ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  font-family: var(--font-manrope), "Manrope", ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
   font-size: 1rem;
   line-height: 1.5;
   -webkit-font-smoothing: antialiased;
@@ -181,10 +183,14 @@ body {
   animation: mist-drift 12s ease-in-out infinite;
 }
 
-/* Serif Display Typography (Reference: Image 1 & 2) */
+/* Serif Display Typography (Cormorant Garamond) */
 .font-serif-display {
-  font-family: ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
-  letter-spacing: 0.04em;
+  font-family: var(--font-cormorant), "Cormorant Garamond", ui-serif, Georgia, Cambria, "Times New Roman", Times, serif;
+  letter-spacing: 0.02em;
+}
+
+.font-sans-ui {
+  font-family: var(--font-dmsans), "DM Sans", system-ui, sans-serif;
 }
 
 /* Atmospheric Misty Forest Backdrop (Reference: Image 1) */

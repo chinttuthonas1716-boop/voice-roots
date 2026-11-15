@@ -1,10 +1,32 @@
 import type { Metadata, Viewport } from "next";
 import Link from "next/link";
+import { Cormorant_Garamond, Manrope, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/languageContext";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
+
+const cormorant = Cormorant_Garamond({
+  subsets: ["latin"],
+  weight: ["400", "600", "700"],
+  variable: "--font-cormorant",
+  display: "swap",
+});
+
+const manrope = Manrope({
+  subsets: ["latin"],
+  weight: ["400", "500", "600", "700"],
+  variable: "--font-manrope",
+  display: "swap",
+});
+
+const dmSans = DM_Sans({
+  subsets: ["latin"],
+  weight: ["400", "500", "700"],
+  variable: "--font-dmsans",
+  display: "swap",
+});
 
 export const metadata: Metadata = {
   title: "Voice Roots — Oral Heritage Platform",
@@ -26,7 +48,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen overflow-x-hidden bg-[#0B1E16] text-[#F5F3E9] antialiased misty-forest-atmosphere">
+      <body className={`min-h-screen overflow-x-hidden bg-[#0B1E16] text-[#F5F3E9] antialiased misty-forest-atmosphere ${cormorant.variable} ${manrope.variable} ${dmSans.variable} font-sans`}>
         {/* Soft ambient misty emerald forest light rays behind glass */}
         <div className="pointer-events-none fixed inset-0 overflow-hidden -z-10" aria-hidden="true">
           <div className="absolute left-1/4 -top-40 h-[520px] w-[520px] rounded-full bg-[#A6C48A]/10 blur-[140px]" />
