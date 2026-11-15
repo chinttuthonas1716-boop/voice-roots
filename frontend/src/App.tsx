@@ -7238,9 +7238,9 @@ ${feedbackRecommendation}
                 </div>
               </div>
 
-              {/* Right Column: Forest Heritage Hero Brand */}
+              {/* Right Column: Forest Heritage Hero Brand (Reference Image 3) */}
               <div style={{
-                background: 'linear-gradient(145deg, rgba(16, 56, 50, 0.85) 0%, rgba(16, 43, 32, 0.95) 50%, rgba(16, 43, 32, 1) 100%)',
+                background: "linear-gradient(145deg, rgba(7, 26, 19, 0.82) 0%, rgba(16, 43, 32, 0.92) 50%, rgba(7, 26, 19, 0.98) 100%), url('/images/rainforest_canopy.jpg') center/cover no-repeat",
                 padding: '40px 32px',
                 display: 'flex',
                 flexDirection: 'column',

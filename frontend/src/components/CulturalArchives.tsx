@@ -490,18 +490,18 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
   };
 
   return (
-    <div className="w-full max-w-7xl mx-auto px-4 py-8 space-y-8 text-neutral-800">
+    <div className="w-full max-w-7xl mx-auto px-4 py-8 space-y-8 text-[#F5F3E9]">
       {/* 1. Header & Telemetry */}
-      <div className="bg-gradient-to-r from-amber-900 via-amber-800 to-stone-900 rounded-2xl p-6 md:p-8 text-white shadow-xl relative overflow-hidden">
+      <div className="bg-gradient-to-r from-[#071A13] via-[#102B20] to-[#1F5138] border border-[#A6C48A]/30 rounded-2xl p-6 md:p-8 text-[#F5F3E9] shadow-xl relative overflow-hidden">
         <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
           <div className="space-y-2">
-            <div className="inline-flex items-center gap-2 px-3 py-1 bg-amber-700/60 backdrop-blur rounded-full text-xs font-semibold tracking-wide text-amber-200 uppercase">
+            <div className="inline-flex items-center gap-2 px-3 py-1 bg-[#1F5138]/60 border border-[#A6C48A]/30 backdrop-blur rounded-full text-xs font-semibold tracking-wide text-[#A6C48A] uppercase">
               <Sparkles className="w-3.5 h-3.5" /> Milestone 17 — Oral History & Cultural Archives
             </div>
-            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight">
+            <h1 className="text-3xl md:text-4xl font-extrabold tracking-tight text-[#F5F3E9]">
               Interactive Cultural & Oral Archives
             </h1>
-            <p className="text-amber-100/90 text-sm md:text-base max-w-2xl leading-relaxed">
+            <p className="text-[#DCE9D7]/90 text-sm md:text-base max-w-2xl leading-relaxed">
               Preserving living indigenous narratives, oral epics, healer chants, and harvest ballads with
               authentic master acoustic recordings, community governance, and strict OCAP data sovereignty.
             </p>
@@ -510,19 +510,19 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
           {/* Quick Actions & Role Switcher */}
           <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
             {currentUser && (
-              <div className="flex items-center gap-2 bg-emerald-950/70 px-3 py-1.5 rounded-xl border border-emerald-500/60 text-xs text-emerald-200 shadow-sm">
-                <CheckCircle2 className="w-4 h-4 text-emerald-400 shrink-0" />
+              <div className="flex items-center gap-2 bg-[#071A13]/80 px-3 py-1.5 rounded-xl border border-[#A6C48A]/40 text-xs text-[#DCE9D7] shadow-sm">
+                <CheckCircle2 className="w-4 h-4 text-[#A6C48A] shrink-0" />
                 <span>
-                  <strong className="uppercase text-emerald-300 font-bold">{currentUser.role}</strong>: {currentUser.full_name || currentUser.username}
+                  <strong className="uppercase text-[#A6C48A] font-bold">{currentUser.role}</strong>: {currentUser.full_name || currentUser.username}
                 </span>
               </div>
             )}
-            <div className="flex items-center gap-2 bg-stone-950/60 p-1.5 rounded-xl border border-amber-700/50 text-xs">
-              <span className="text-stone-400 font-medium px-2">Access View:</span>
+            <div className="flex items-center gap-2 bg-[#071A13]/70 p-1.5 rounded-xl border border-[#A6C48A]/30 text-xs">
+              <span className="text-[#DCE9D7]/70 font-medium px-2">Access View:</span>
               <button
                 onClick={() => setUserRole("public")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
-                  userRole === "public" ? "bg-amber-600 text-white font-semibold shadow" : "text-stone-300 hover:text-white"
+                  userRole === "public" ? "bg-[#1F5138] border border-[#A6C48A]/40 text-[#F5F3E9] font-semibold shadow" : "text-[#DCE9D7]/80 hover:text-white"
                 }`}
               >
                 Public
@@ -530,7 +530,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
               <button
                 onClick={() => setUserRole("elder")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
-                  userRole === "elder" ? "bg-amber-600 text-white font-semibold shadow" : "text-stone-300 hover:text-white"
+                  userRole === "elder" ? "bg-[#1F5138] border border-[#A6C48A]/40 text-[#F5F3E9] font-semibold shadow" : "text-[#DCE9D7]/80 hover:text-white"
                 }`}
               >
                 Elder / Custodian
@@ -538,7 +538,7 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
               <button
                 onClick={() => setUserRole("researcher")}
                 className={`px-3 py-1.5 rounded-lg transition-all ${
-                  userRole === "researcher" ? "bg-amber-600 text-white font-semibold shadow" : "text-stone-300 hover:text-white"
+                  userRole === "researcher" ? "bg-[#1F5138] border border-[#A6C48A]/40 text-[#F5F3E9] font-semibold shadow" : "text-[#DCE9D7]/80 hover:text-white"
                 }`}
               >
                 Researcher
@@ -547,40 +547,40 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
 
             <button
               onClick={handleOpenSubmitModal}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-amber-500 hover:bg-amber-400 text-stone-950 font-bold rounded-xl shadow-lg transition-all transform active:scale-95 text-sm"
+              className="inline-flex items-center gap-2 px-4 py-2.5 bg-[#1F5138] hover:bg-[#477A50] text-[#F5F3E9] border border-[#A6C48A]/40 font-bold rounded-xl shadow-lg transition-all transform active:scale-95 text-sm"
             >
-              <PlusCircle className="w-4 h-4" /> Propose Recording
+              <PlusCircle className="w-4 h-4 text-[#A6C48A]" /> Propose Recording
             </button>
           </div>
         </div>
 
         {/* Telemetry Stats Strip */}
         {overview && (
-          <div className="mt-8 pt-6 border-t border-amber-700/50 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-            <div className="bg-stone-900/40 p-3 rounded-xl border border-amber-600/20">
-              <div className="text-2xl font-black text-amber-300">{overview.total_collections}</div>
-              <div className="text-xs text-amber-200/80 uppercase tracking-wider font-medium">Curated Collections</div>
+          <div className="mt-8 pt-6 border-t border-[#A6C48A]/25 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
+            <div className="bg-[#071A13]/60 p-3 rounded-xl border border-[#A6C48A]/20">
+              <div className="text-2xl font-black text-[#A6C48A]">{overview.total_collections}</div>
+              <div className="text-xs text-[#DCE9D7]/80 uppercase tracking-wider font-medium">Curated Collections</div>
             </div>
-            <div className="bg-stone-900/40 p-3 rounded-xl border border-amber-600/20">
-              <div className="text-2xl font-black text-amber-300">{overview.total_stories}</div>
-              <div className="text-xs text-amber-200/80 uppercase tracking-wider font-medium">Oral Stories</div>
+            <div className="bg-[#071A13]/60 p-3 rounded-xl border border-[#A6C48A]/20">
+              <div className="text-2xl font-black text-[#A6C48A]">{overview.total_stories}</div>
+              <div className="text-xs text-[#DCE9D7]/80 uppercase tracking-wider font-medium">Oral Stories</div>
             </div>
-            <div className="bg-stone-900/40 p-3 rounded-xl border border-amber-600/20">
-              <div className="text-2xl font-black text-amber-300">
+            <div className="bg-[#071A13]/60 p-3 rounded-xl border border-[#A6C48A]/20">
+              <div className="text-2xl font-black text-[#A6C48A]">
                 {(overview.total_audio_duration_seconds / 60).toFixed(1)}m
               </div>
-              <div className="text-xs text-amber-200/80 uppercase tracking-wider font-medium">Acoustic Master Audio</div>
+              <div className="text-xs text-[#DCE9D7]/80 uppercase tracking-wider font-medium">Acoustic Master Audio</div>
             </div>
-            <div className="bg-stone-900/40 p-3 rounded-xl border border-amber-600/20">
-              <div className="text-2xl font-black text-amber-300">{overview.languages_represented.length}</div>
-              <div className="text-xs text-amber-200/80 uppercase tracking-wider font-medium">Languages Represented</div>
+            <div className="bg-[#071A13]/60 p-3 rounded-xl border border-[#A6C48A]/20">
+              <div className="text-2xl font-black text-[#A6C48A]">{overview.languages_represented.length}</div>
+              <div className="text-xs text-[#DCE9D7]/80 uppercase tracking-wider font-medium">Languages Represented</div>
             </div>
           </div>
         )}
       </div>
 
       {/* 2. Navigation & Filters */}
-      <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-stone-200 pb-4">
+      <div className="flex flex-col md:flex-row items-center justify-between gap-4 border-b border-[#A6C48A]/20 pb-4">
         <div className="flex items-center gap-2">
           <button
             onClick={() => {
@@ -589,8 +589,8 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
             }}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               activeTab === "collections"
-                ? "bg-stone-900 text-white shadow"
-                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                ? "bg-[#1F5138] text-[#F5F3E9] border border-[#A6C48A]/40 shadow"
+                : "bg-[#071A13]/40 text-[#DCE9D7]/80 border border-[#A6C48A]/15 hover:bg-[#102B20]"
             }`}
           >
             Curated Collections ({collections.length})
@@ -599,8 +599,8 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
             onClick={() => setActiveTab("stories")}
             className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
               activeTab === "stories"
-                ? "bg-stone-900 text-white shadow"
-                : "bg-stone-100 text-stone-600 hover:bg-stone-200"
+                ? "bg-[#1F5138] text-[#F5F3E9] border border-[#A6C48A]/40 shadow"
+                : "bg-[#071A13]/40 text-[#DCE9D7]/80 border border-[#A6C48A]/15 hover:bg-[#102B20]"
             }`}
           >
             All Oral Stories ({stories.length})
@@ -610,8 +610,8 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
               onClick={() => setActiveTab("elder_portal")}
               className={`px-4 py-2 rounded-xl text-sm font-semibold transition-all ${
                 activeTab === "elder_portal"
-                  ? "bg-amber-700 text-white shadow"
-                  : "bg-amber-100 text-amber-800 hover:bg-amber-200"
+                  ? "bg-[#1F5138] text-[#F5F3E9] border border-[#A6C48A]/40 shadow"
+                  : "bg-[#102B20]/60 text-[#A6C48A] border border-[#A6C48A]/30 hover:bg-[#1F5138]/50"
               }`}
             >
               Elder Review Portal
@@ -622,11 +622,11 @@ export const CulturalArchives: React.FC<CulturalArchivesProps> = ({
         {/* Search & Filters */}
         <div className="flex flex-wrap items-center gap-2 w-full md:w-auto">
           {selectedCollection && (
-            <div className="px-3 py-1.5 bg-amber-100 text-amber-900 rounded-xl text-xs font-semibold flex items-center gap-1.5">
+            <div className="px-3 py-1.5 bg-[#1F5138]/60 text-[#F5F3E9] border border-[#A6C48A]/30 rounded-xl text-xs font-semibold flex items-center gap-1.5">
               <span>Collection: {selectedCollection.title}</span>
               <button
                 onClick={() => setSelectedCollection(null)}
-                className="hover:text-amber-700 font-bold"
+                className="hover:text-[#A6C48A] font-bold"
               >
                 &times;
               </button>
