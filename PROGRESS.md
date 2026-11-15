@@ -2854,3 +2854,29 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     6. Playwright Responsive Layout & Screenshot Suite: `npm run test:e2e --prefix web -- e2e/screenshots_and_responsive.spec.ts` passed 18/18 tests in 31.3s with 0px horizontal scroll on 1280px desktop and 390px mobile viewports.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-15] [ANTIGRAVITY] DONE: Global Low-Resource Language Registry Architecture & Multi-Faceted Explore Workspace.
+  - Scaled Voice Roots beyond any fixed language list into an extensible, language-independent platform for low-resource oral languages worldwide:
+    1. Multi-Tier Discovery & Assessment Architecture (`web/src/lib/datasetRegistry.ts`):
+       - Established 4-tier pipeline directly mapping to architecture diagram: (1) Voice Roots Global Language Registry (India Census/CIIL + International Glottolog/UNESCO/ISO 639-3), (2) Language Assessment Engine auditing speech data, digital text, script, dialect variance, and customary consent, (3) Community-Approved Language Profiles under First Nations OCAP® protocols, and (4) Shared Multilingual AI & Preservation Engine.
+       - Defined discrete lifecycle stages: `DISCOVERED`, `RESEARCH_ASSESSED`, `COMMUNITY_APPROVED`, `DATASET_AVAILABLE`, and `OPERATIONAL_ASR`.
+       - Enforced core rule: *Never display an unverified language as fully supported* via explicit verification notices.
+       - Added global low-resource languages across all continents alongside Indian languages: Quechua (Andes), Nahuatl (Mexico), Guaraní (Paraguay), Te Reo Māori (Aotearoa), Inuktitut (Arctic Canada), Diné Bizaad / Navajo (North America), Juǀʼhoan / Khoisan (Kalahari), Yoruba (West Africa), Ainu (Japan), Hiri Motu (Papua New Guinea), Toda (Nilgiris), Kurumba (Nilgiris), Santhali, Gondi, Koya, Telugu, etc.
+    2. Dynamic Explore Languages Discovery Workspace (`web/src/app/explore/page.tsx`):
+       - Visual 4-tier pipeline diagram banner matching the user's uploaded specification.
+       - Verification transparency alert warning against false claims of support.
+       - Multi-dimensional filters: Origin scope (India vs International vs All Worldwide), Lifecycle Stage buttons with counts, Macro-region dropdown (7 global regions), Language family dropdown (10+ families), Script/Orthography dropdown (specifically featuring *Unwritten / Pure Oral Traditions*), and instant search.
+       - Detailed assessment scorecard modal displaying speech corpora, digital text, orthography, dialect variance, and OCAP® governance.
+       - "Propose a Low-Resource Language" onboarding modal allowing researchers, speakers, and community custodians to submit metadata.
+    3. Registry & Home Integration (`web/src/app/registry/page.tsx` & `web/src/app/page.tsx`):
+       - Refactored Registry page to reflect global + national baseline datasets (Common Voice, FLEURS, ELAR, IndicVoices).
+       - Enriched Home page language chips with global low-resource greetings (Quechua, Māori, Yoruba, Nahuatl, Gondi, Koya, Santhali).
+  - Files touched: `web/src/lib/datasetRegistry.ts`, `web/src/app/explore/page.tsx`, `web/src/app/registry/page.tsx`, `web/src/app/page.tsx`, `docs/screenshots/*`, `PROGRESS.md`.
+  - VERIFIED:
+    1. Backend Pytest: `pytest tests/test_t*.py -q` passed 108/108 tests in 24.26s.
+    2. Next.js Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    3. Next.js Production Build: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 53/53 routes cleanly (12 kB explore bundle).
+    4. Playwright E2E User Lifecycle: `npm run test:e2e --prefix web -- e2e/voice_roots_workflow.spec.ts` passed 8/8 tests in 12.3s.
+    5. Playwright Responsive Layout & Screenshot Suite: `npm run test:e2e --prefix web -- e2e/screenshots_and_responsive.spec.ts` passed 18/18 tests in 30.2s with 0px horizontal scroll on 1280px desktop and 390px mobile viewports.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.

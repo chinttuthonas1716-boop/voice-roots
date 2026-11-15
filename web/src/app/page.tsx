@@ -76,14 +76,15 @@ export default function HomePage() {
     },
   ];
 
-  // Multi-language sources and sample proverbs
+  // Multi-language sources and sample proverbs across global low-resource tongues
   const languageSources = [
-    { code: "gon", name: "Gondi", greeting: "Johar / Sewa", meaning: "Sacred forest greeting & elder reverence" },
-    { code: "koy", name: "Koya", greeting: "Paye Maro", meaning: "Living harmony with rivers and trees" },
-    { code: "sat", name: "Santhali", greeting: "Johar", meaning: "Ancestral salute to community and sky" },
-    { code: "lmn", name: "Lambadi", greeting: "Ram Ram Bhaaya", meaning: "Nomadic oral kinship blessing" },
-    { code: "kru", name: "Kurukh", greeting: "Gor Lagdan", meaning: "Oral heritage of the forest clans" },
-    { code: "mun", name: "Mundari", greeting: "Dahar Johar", meaning: "Pathways of ancestral songs" },
+    { code: "gon", name: "Gondi", greeting: "Johar / Sewa", meaning: "Sacred forest greeting & elder reverence (Central India)" },
+    { code: "koy", name: "Koya", greeting: "Paye Maro", meaning: "Living harmony with rivers and trees (Godavari Basin)" },
+    { code: "que", name: "Quechua", greeting: "Allillanchu", meaning: "Living in harmony with Pachamama (Andes / South America)" },
+    { code: "mri", name: "Māori", greeting: "Kia Ora", meaning: "Living breath and spiritual well-being (Aotearoa / Oceania)" },
+    { code: "sat", name: "Santhali", greeting: "Johar", meaning: "Ancestral salute to community and sky (Eastern India)" },
+    { code: "yor", name: "Yoruba", greeting: "Báwo ni", meaning: "Kinship greetings and vital life force (West Africa)" },
+    { code: "nhe", name: "Nahuatl", greeting: "Niltze", meaning: "Sacred flower-and-song salutation (Central Mexico)" },
   ];
 
   useEffect(() => {
@@ -412,10 +413,10 @@ export default function HomePage() {
                       </button>
                     ))}
                     <Link
-                      href="/registry"
+                      href="/explore"
                       className="px-2.5 py-1 rounded-full text-xs text-[#A6C48A] hover:text-white border border-[#A6C48A]/20 bg-black/20 transition"
                     >
-                      + 43 More Tongues
+                      + Global Catalog
                     </Link>
                   </motion.div>
 

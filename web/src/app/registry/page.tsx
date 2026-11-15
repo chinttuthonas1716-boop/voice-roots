@@ -154,56 +154,56 @@ export default function LanguageRegistryPage() {
   };
 
   return (
-    <div className="vr-app pb-28">
+    <div className="min-h-screen bg-[#071A13] pb-28 text-[#F5F3E9] font-sans">
       <Navbar />
 
-      <main className="mx-auto max-w-7xl space-y-10 px-4 pt-10 sm:px-6 lg:px-8">
+      <main className="mx-auto max-w-7xl space-y-10 px-4 pt-24 sm:px-6 sm:pt-28 lg:px-8">
         {/* Header */}
         <header className="space-y-3">
-          <div className="flex items-center gap-2">
-            <span className="eyebrow">
-              NATIONAL LANGUAGE REGISTRY · DIGITAL RESOURCE ASSESSMENT
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-bold bg-[#163B2C] border border-[#A6C48A]/40 text-[#A6C48A] uppercase tracking-wider font-display">
+              GLOBAL & REGIONAL LANGUAGE REGISTRY · DIGITAL RESOURCE ASSESSMENT
             </span>
-            <span className="rounded-full border border-[#F9B17A]/30 bg-[#F9B17A]/10 px-2.5 py-0.5 text-[10px] font-bold text-[#F9B17A]">
-              CENSUS 2011 & SPPEL BASELINE
+            <span className="rounded-full border border-[#A6C48A]/30 bg-black/40 px-2.5 py-0.5 text-[10px] font-bold text-[#F5F3E9]">
+              CENSUS, GLOTTOLOG & UNESCO BASELINES
             </span>
           </div>
-          <h1 className="text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
-            India Language Registry & Digital Resource Status
+          <h1 className="text-3xl sm:text-5xl font-bold tracking-tight text-[#F5F3E9] font-serif font-serif-display">
+            Global Language Registry & Digital Resource Status
           </h1>
-          <p className="max-w-3xl text-sm leading-relaxed text-[#D9D9E2] sm:text-base">
-            Tracking what is officially documented, what digital speech resources actually exist, and which oral languages require community preservation work. Grounded in the official <strong>Census of India 2011 C-16 report</strong> and government endangered-language publications.
+          <p className="max-w-3xl text-sm leading-relaxed text-[#F5F3E9]/85 sm:text-base font-light">
+            Tracking what is officially documented, what digital speech resources actually exist worldwide, and which low-resource oral languages require urgent community preservation. Grounded in international language repositories, national censuses, and customary elder councils.
           </p>
         </header>
 
         {/* Informational Methodology Banner */}
-        <div className="rounded-2xl border border-white/10 bg-[rgba(66,71,108,0.25)] p-5 text-xs text-[#D9D9E2] space-y-3">
-          <div className="flex items-center gap-2 text-[#F9B17A] font-bold text-sm">
-            <ShieldCheck className="h-4 w-4" />
+        <div className="forest-glass-panel p-6 rounded-2xl text-xs text-[#F5F3E9]/90 space-y-3">
+          <div className="flex items-center gap-2 text-[#A6C48A] font-bold text-sm font-serif">
+            <ShieldCheck className="h-5 w-5 text-[#A6C48A]" />
             <span>Voice Roots Evidence-Based Resource Classification Protocol</span>
           </div>
-          <p className="leading-relaxed">
-            A language being officially recognized in the Eighth Schedule does not guarantee digital speech resources, nor does endangered status mean zero recordings exist. We audit five discrete evidence tiers: <strong>Speech-to-Text (ASR)</strong>, <strong>Text-to-Speech (TTS)</strong>, <strong>Translation Datasets</strong>, <strong>Living Community Audio</strong>, and <strong>Human-Verified Transcripts</strong>.
+          <p className="leading-relaxed font-light">
+            A language being officially recognized in a government census does not guarantee digital speech resources, nor does low-resource status mean zero recordings exist. We audit five discrete evidence tiers: <strong>Speech-to-Text (ASR)</strong>, <strong>Text-to-Speech (TTS)</strong>, <strong>Translation Datasets</strong>, <strong>Living Community Audio</strong>, and <strong>Human-Verified Transcripts</strong>.
           </p>
-          <div className="flex flex-wrap gap-4 pt-1 text-[11px] text-white/70">
-            <span>• Population Baseline: Census 2011 (Table C-16)</span>
-            <span>• Endangered Programme: SPPEL Phase I (117 languages)</span>
-            <span>• Public Benchmarks: IndicVoices, Kathbath, Vistaar, Common Voice, Indic-TTS</span>
+          <div className="flex flex-wrap gap-4 pt-1 text-[11px] text-[#A6C48A]/80 border-t border-[#A6C48A]/20">
+            <span>• National Baselines: Census of India (Table C-16), CIIL SPPEL</span>
+            <span>• Global Repositories: UNESCO Atlas of World Languages, Glottolog, ISO 639-3</span>
+            <span>• Public Acoustic Benchmarks: Mozilla Common Voice, Google FLEURS, IndicVoices, ELAR</span>
           </div>
         </div>
 
         {/* Filter Controls */}
-        <section className="space-y-4 rounded-2xl border border-white/10 bg-white/[0.02] p-5">
+        <section className="space-y-4 rounded-2xl border border-[#A6C48A]/25 bg-[#102B20]/60 p-5">
           <div className="flex flex-wrap items-center justify-between gap-4">
             {/* Search Input */}
             <div className="relative w-full max-w-md">
-              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A9AEC5]" />
+              <Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#A6C48A]" />
               <input
                 type="text"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 placeholder="Search language, native name, state, family..."
-                className="w-full rounded-full border border-white/15 bg-[#1C1512] pl-10 pr-4 py-2.5 text-xs text-white placeholder-[#A9AEC5] outline-none focus:border-[#F9B17A]"
+                className="w-full rounded-full border border-[#A6C48A]/30 bg-[#071A13] pl-10 pr-4 py-2.5 text-xs text-[#F5F3E9] placeholder-[#A6C48A]/60 outline-none focus:border-[#A6C48A]"
               />
             </div>
 
@@ -212,7 +212,7 @@ export default function LanguageRegistryPage() {
               <select
                 value={taskFilter}
                 onChange={(e) => setTaskFilter(e.target.value as any)}
-                className="min-h-9 rounded-xl border border-white/15 bg-[#1C1512] px-3 text-xs text-white outline-none focus:border-[#F9B17A]"
+                className="min-h-9 rounded-xl border border-[#A6C48A]/30 bg-[#071A13] px-3 text-xs text-[#F5F3E9] outline-none focus:border-[#A6C48A]"
               >
                 <option value="all">All AI Tasks</option>
                 <option value="asr">ASR (Speech-to-Text) Available</option>
