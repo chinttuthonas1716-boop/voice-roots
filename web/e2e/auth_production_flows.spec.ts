@@ -60,14 +60,14 @@ test.describe("Voice Roots — Forest-Themed Auth Pages & Security Lifecycle", (
   test("4. Login flow authenticates registered user and sets active session", async ({ page }) => {
     await page.goto(`${BASE_URL}/login`);
 
-    await page.getByPlaceholder("Enter your email").fill("test.user@voiceroots.org");
-    await page.getByPlaceholder("Enter your password").fill("StrongPassword@123");
+    await page.getByPlaceholder("Enter your email").fill("priya.sharma@gmail.com");
+    await page.getByPlaceholder("Enter your password").fill("Priya@123");
 
     await page.getByRole("button", { name: /^Sign In$/i }).click();
 
     // Verify active session card appears
     await expect(page.getByText(/Active Verified Session/i)).toBeVisible({ timeout: 5000 });
-    await expect(page.getByRole("heading", { name: "Test User" })).toBeVisible();
+    await expect(page.getByRole("heading", { name: "Priya Sharma" })).toBeVisible();
   });
 
   test("5. Incorrect password displays clear error message without crashing", async ({ page }) => {

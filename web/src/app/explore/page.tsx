@@ -28,6 +28,7 @@ import {
   FileCheck2,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
+import { LanguageDiscoveryArchitecture } from "@/components/ui/LanguageDiscoveryArchitecture";
 import { AIAssistant } from "@/components/ai/AIAssistant";
 import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
 import {
@@ -276,104 +277,9 @@ export default function ExplorePage() {
         </header>
 
         {/* =========================================================================
-           ARCHITECTURE DIAGRAM: 4-TIER DISCOVERY FLOW (Reference: Uploaded Diagram)
+           ARCHITECTURE DIAGRAM: 4-TIER DISCOVERY FLOW (Reference: Screenshot 2)
            ========================================================================= */}
-        <section aria-label="Language Discovery Architecture" className="forest-glass-panel p-6 sm:p-8 rounded-[2rem] space-y-6">
-          <div className="flex items-center justify-between border-b border-[#A6C48A]/20 pb-4">
-            <div className="space-y-1">
-              <span className="text-[11px] font-bold tracking-[0.2em] uppercase text-[#A6C48A] font-display">
-                ARCHITECTURE BLUEPRINT
-              </span>
-              <h2 className="text-xl sm:text-2xl font-bold font-serif text-[#F5F3E9]">
-                The Voice Roots Language Discovery & Preservation Pipeline
-              </h2>
-            </div>
-            <span className="hidden sm:inline text-xs font-mono text-[#A6C48A]/70">
-              Language-Independent AI & OCAP® Governance
-            </span>
-          </div>
-
-          {/* Step 1: Global Registry Box */}
-          <div className="space-y-3">
-            <div className="rounded-2xl border border-[#A6C48A]/40 bg-[#102B20] p-4 sm:p-5 text-center shadow-md">
-              <h3 className="text-base sm:text-lg font-bold uppercase tracking-wider text-[#F5F3E9] font-display">
-                VOICE ROOTS GLOBAL LANGUAGE REGISTRY
-              </h3>
-              <p className="text-xs sm:text-sm text-[#A6C48A] mt-1 font-light">
-                Dynamic, extensible, and language-independent
-              </p>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-4 pt-3 border-t border-[#A6C48A]/20 text-left">
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                  <span className="block text-xs font-bold text-[#F5F3E9] uppercase">India Context</span>
-                  <span className="block text-xs text-[#A6C48A]/80 mt-0.5">
-                    Government language databases (Census 2011 C-16), CIIL SPPEL, Bhashini, and regional research institutes.
-                  </span>
-                </div>
-                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
-                  <span className="block text-xs font-bold text-[#F5F3E9] uppercase">Global Scope</span>
-                  <span className="block text-xs text-[#A6C48A]/80 mt-0.5">
-                    International repositories (Glottolog, UNESCO Atlas, ISO 639-3, OLAC, ELAR, Common Voice).
-                  </span>
-                </div>
-              </div>
-            </div>
-
-            <div className="flex justify-center">
-              <div className="w-0.5 h-6 bg-[#A6C48A]/40" />
-            </div>
-
-            {/* Step 2: Assessment Engine */}
-            <div className="rounded-2xl border border-[#DCE9D7]/40 bg-[#F5F3E9] text-[#102B20] p-4 sm:p-5 text-center shadow-md">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-[#1F5138]">
-                <Cpu className="h-4 w-4 text-[#1F5138]" />
-                <span>Language Assessment Engine</span>
-              </div>
-              <h4 className="text-base sm:text-lg font-bold font-serif text-[#102B20] mt-1">
-                Rigorous Multi-Dimensional Evaluation
-              </h4>
-              <p className="text-xs sm:text-sm text-[#496354] mt-1 font-light max-w-2xl mx-auto">
-                Assesses digital text corpora · Speech dataset availability · Script & orthography resources · Dialect diversity · Existing ASR support · Community participation · Customary consent permissions.
-              </p>
-            </div>
-
-            <div className="flex justify-center">
-              <div className="w-0.5 h-6 bg-[#A6C48A]/40" />
-            </div>
-
-            {/* Step 3: Community-Approved Profiles */}
-            <div className="rounded-2xl border border-[#A6C48A]/40 bg-[#102B20] p-4 sm:p-5 text-center shadow-md">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-[#A6C48A]">
-                <ShieldCheck className="h-4 w-4 text-[#A6C48A]" />
-                <span>Community-Approved Language Profiles</span>
-              </div>
-              <h4 className="text-base sm:text-lg font-bold font-serif text-[#F5F3E9] mt-1">
-                Customary Elder Authority & First Nations OCAP® Sovereignty
-              </h4>
-              <p className="text-xs sm:text-sm text-[#A6C48A]/90 mt-1 font-light max-w-2xl mx-auto">
-                Only onboarded when affirmative community consent and data-access permissions are formally satisfied. Sacred clan lore and restricted ceremonies remain shielded.
-              </p>
-            </div>
-
-            <div className="flex justify-center">
-              <div className="w-0.5 h-6 bg-[#A6C48A]/40" />
-            </div>
-
-            {/* Step 4: Shared Multilingual AI Engine */}
-            <div className="rounded-2xl border border-[#DCE9D7]/40 bg-[#F5F3E9] text-[#102B20] p-4 sm:p-5 text-center shadow-md">
-              <div className="inline-flex items-center gap-1.5 text-xs font-bold tracking-wider uppercase text-[#1F5138]">
-                <Radio className="h-4 w-4 text-[#1F5138]" />
-                <span>Shared Multilingual AI & Preservation Engine</span>
-              </div>
-              <h4 className="text-base sm:text-lg font-bold font-serif text-[#102B20] mt-1">
-                Unified Speech Recognition · Verification · Semantic Search · Lossless Archives
-              </h4>
-              <p className="text-xs sm:text-sm text-[#496354] mt-1 font-light max-w-2xl mx-auto">
-                Zero separate hardcoded apps per language. Shared acoustic encoders with configurable language profiles and human elder peer review.
-              </p>
-            </div>
-          </div>
-        </section>
+        <LanguageDiscoveryArchitecture />
 
         {/* =========================================================================
            CRITICAL ARCHIVAL RULE BANNER: NEVER DISPLAY UNVERIFIED AS FULLY SUPPORTED

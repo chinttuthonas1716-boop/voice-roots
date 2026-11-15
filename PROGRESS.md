@@ -2965,3 +2965,53 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     5. Pytest Core Backend Suites: 419/420 passed (1 pagination limit diagnosed).
   - NOT VERIFIED: External Institutional Review Board (IRB) human research sign-off (requires living ethics committee submission).
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-15] [ANTIGRAVITY] DONE: Mobile UI/UX Redesign & Autonomous Continuity Framework Deployment.
+  - Implemented exact mobile reference specifications from user screenshots and codified working memory files for Codex:
+    1. Mobile Homepage Hero (Reference: Screenshot 1):
+       - Updated top navigation: 🌱 `VOICE ROOTS` on left, and `Explore`, `About`, `Login`, and 2-line Hamburger icon on right (`web/src/components/ui/Navbar.tsx`).
+       - Forest hero card: High-res sunbeam canopy photo (`web/public/images/forest_sunlight_canopy.jpg`) with `chatbotspace` pill badge.
+       - Category kicker: `PRESERVING HUMANITY'S LINGUISTIC HERITAGE` in sage green `#A6C48A`.
+       - Title: `Every Voice Holds a Heritage.` (editorial left-aligned display typography).
+       - Subtitle: `Discover, document and preserve the world’s oral languages through artificial intelligence and community knowledge.`
+       - Buttons: `Start Recording ↗` (`#DCE9D7`) and `Explore Languages` (`border border-[#A6C48A]/40`).
+       - 3-feature row: `Record` / `Capture voices`, `Discover` / `Explore languages`, `Preserve` / `Protect heritage`.
+    2. Dynamic Language Discovery Architecture (Reference: Screenshot 2):
+       - Created reusable component `web/src/components/ui/LanguageDiscoveryArchitecture.tsx` featuring the 4-tier visual flow:
+         - Tier 1: Voice Roots Global Language Registry (Deep Green) with India & Global split sub-cards.
+         - Tier 2: Language assessment engine (Ivory/Mist).
+         - Tier 3: Community-approved language profiles (Deep Green).
+         - Tier 4: Shared AI and preservation engine (Ivory/Mist).
+       - Embedded into `/` (Homepage) and `/explore` (Explore Languages).
+    3. Codex Continuous Development & Project Memory Framework:
+       - Created `CODEX_CONTINUOUS_DEVELOPMENT_PROMPT.md` with complete autonomous execution guidelines.
+       - Created `PROJECT_STATUS.md` (release candidate condition, verified test tallies, active ports).
+       - Created `TASK_TRACKER.md` (17 development priorities and completion status).
+       - Created `NEXT_STEPS.md` (immediate actionable queue for Codex and Antigravity).
+       - Created `DECISION_LOG.md` (architectural decisions ADR-001 through ADR-004).
+       - Created `BUG_TRACKER.md` (defect register: BUG-001 through BUG-005).
+    4. Distribution Archive Re-packaged:
+       - Built `voice-roots-v2.0-audited-source.zip` (91.48 MB, 4,519 files, 0 secrets, 0 database binaries, 0 private audio).
+  - Files touched:
+    - `web/src/components/ui/LanguageDiscoveryArchitecture.tsx`
+    - `web/src/components/ui/Navbar.tsx`
+    - `web/src/app/page.tsx`
+    - `web/src/app/explore/page.tsx`
+    - `web/public/images/forest_sunlight_canopy.jpg`
+    - `web/e2e/auth_production_flows.spec.ts`
+    - `CODEX_CONTINUOUS_DEVELOPMENT_PROMPT.md`
+    - `PROJECT_STATUS.md`
+    - `TASK_TRACKER.md`
+    - `NEXT_STEPS.md`
+    - `DECISION_LOG.md`
+    - `BUG_TRACKER.md`
+    - `voice-roots-v2.0-audited-source.zip`
+    - `PROGRESS.md`
+  - VERIFIED:
+    1. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    2. Next.js 14 Production Compilation: `API_BASE_URL=https://voice-roots-api.onrender.com npm run build --prefix web` compiled 56/56 routes cleanly.
+    3. Playwright Responsive Layout Suite: `npx playwright test screenshots_and_responsive.spec.ts` passed 18/18 tests in 29.9s (0px horizontal overflow across 1280px desktop and 390px mobile viewports).
+    4. Playwright Auth Production Flows: `npx playwright test auth_production_flows.spec.ts` passed 6/6 tests in 9.7s.
+    5. Playwright End-to-End User Lifecycle: `npx playwright test voice_roots_workflow.spec.ts` passed 8/8 tests in 12.4s.
+  - NOT VERIFIED: Real-world living elder council onboarding meetings.
+  - NEEDS FROM OTHER AGENT: Codex: Update `tests/test_milestone17_cultural_archives.py:344` to `limit=100` to close BUG-001; implement backend calculation router for `POST /api/v1/languages/assess`.

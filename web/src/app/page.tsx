@@ -31,6 +31,7 @@ import {
   Radio,
 } from "lucide-react";
 import { Navbar } from "@/components/ui/Navbar";
+import { LanguageDiscoveryArchitecture } from "@/components/ui/LanguageDiscoveryArchitecture";
 import { getUserRecordings, type StoredVoiceRecord } from "@/lib/storage";
 import { registerUser, loginUser, loginWithGoogle, loginAsGuest, getCurrentUser, type UserProfile } from "@/lib/auth";
 
@@ -302,21 +303,21 @@ export default function HomePage() {
                   animate={{ opacity: 1, x: 0, scale: 1 }}
                   exit={{ opacity: 0, x: -30, scale: 0.98 }}
                   transition={{ duration: 0.4, ease: [0.23, 1, 0.32, 1] }}
-                  className="space-y-6 text-center max-w-4xl mx-auto py-4"
+                  className="space-y-5 text-left max-w-4xl mx-auto py-2 sm:py-4"
                 >
-                  {/* Sunlit Photographic Forest Card Window (Reference: Phone Mockup Upper Card) */}
+                  {/* Sunlit Photographic Forest Card Window (Reference: Screenshot 1) */}
                   <div className="relative w-full h-48 sm:h-64 rounded-2xl sm:rounded-3xl overflow-hidden border border-[#A6C48A]/30 shadow-2xl group">
                     <div
                       className="absolute inset-0 bg-cover bg-center transition-transform duration-700 group-hover:scale-105"
-                      style={{ backgroundImage: "url('/images/misty_forest_hero.jpg')" }}
+                      style={{ backgroundImage: "url('/images/forest_sunlight_canopy.jpg')" }}
                     />
-                    <div className="absolute inset-0 bg-gradient-to-t from-[#0C2118] via-transparent to-black/30" />
+                    <div className="absolute inset-0 bg-gradient-to-t from-[#0C2118]/80 via-transparent to-black/30" />
                     
-                    {/* Micro Pill Badge in bottom-left (Reference: chatbotspace pill in mockup) */}
-                    <div className="absolute bottom-3 left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/60 border border-[#A6C48A]/35 text-xs text-[#F5F3E9] backdrop-blur-md">
-                      <span className="w-2 h-2 rounded-full bg-[#A6C48A] animate-pulse" />
-                      <span className="font-medium text-[11px] tracking-wide text-[#A6C48A]">
-                        oral roots sanctuary
+                    {/* Micro Pill Badge in bottom-left (Reference: chatbotspace pill in Screenshot 1) */}
+                    <div className="absolute bottom-3 left-3 sm:left-4 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-black/70 border border-white/10 text-xs text-[#F5F3E9] backdrop-blur-md">
+                      <span className="w-1.5 h-1.5 rounded-full bg-[#A6C48A] animate-pulse" />
+                      <span className="font-medium text-[11px] tracking-wide text-[#F5F3E9]">
+                        chatbotspace
                       </span>
                     </div>
 
@@ -325,14 +326,14 @@ export default function HomePage() {
                     </div>
                   </div>
 
-                  {/* Kicker Category Tag (Reference: Phone Mockup PRESERVING HUMANITY'S LINGUISTIC HERITAGE) */}
+                  {/* Kicker Category Tag (Reference: Screenshot 1 PRESERVING HUMANITY'S LINGUISTIC HERITAGE) */}
                   <motion.div
                     initial={{ opacity: 0, y: -8 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.1, duration: 0.3 }}
                     className="inline-block"
                   >
-                    <span className="text-[11px] sm:text-xs font-bold tracking-[0.22em] text-[#A6C48A] uppercase font-display">
+                    <span className="text-[11px] sm:text-xs font-bold tracking-[0.2em] text-[#A6C48A] uppercase font-sans">
                       PRESERVING HUMANITY’S LINGUISTIC HERITAGE
                     </span>
                   </motion.div>
@@ -344,7 +345,8 @@ export default function HomePage() {
                     transition={{ delay: 0.15, duration: 0.4 }}
                     className="text-3xl sm:text-5xl lg:text-6xl font-bold tracking-tight text-[#F5F3E9] font-serif font-serif-display drop-shadow-[0_4px_25px_rgba(0,0,0,0.8)] select-none leading-tight"
                   >
-                    Every Voice Holds a <span className="text-[#A6C48A] italic">Heritage.</span>
+                    Every Voice Holds <br className="sm:hidden" />
+                    a <span className="text-[#A6C48A] italic">Heritage.</span>
                   </motion.h1>
 
                   {/* Subtitle Explaining Multi-Language Source Oral Archiving */}
@@ -352,13 +354,13 @@ export default function HomePage() {
                     initial={{ opacity: 0, y: 15 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.2, duration: 0.4 }}
-                    className="text-sm sm:text-lg text-[#F5F3E9]/90 max-w-2xl mx-auto font-light leading-relaxed drop-shadow-md"
+                    className="text-sm sm:text-base lg:text-lg text-[#F5F3E9]/90 max-w-2xl font-light leading-relaxed drop-shadow-md"
                   >
                     Discover, document and preserve the world’s oral languages through artificial intelligence and community knowledge.
                   </motion.p>
 
-                  {/* Primary & Secondary Action CTAs (Reference: Phone Mockup Buttons) */}
-                  <div className="pt-2 flex flex-wrap items-center justify-center gap-3 sm:gap-4">
+                  {/* Primary & Secondary Action CTAs (Reference: Screenshot 1 Buttons) */}
+                  <div className="pt-2 flex flex-wrap items-center gap-3 sm:gap-4">
                     {/* Start Recording ↗ (Pill with diagonal arrow) */}
                     <Link
                       href="/record"
@@ -769,6 +771,11 @@ export default function HomePage() {
             </div>
           </div>
         </section>
+
+        {/* =========================================================================
+           SECTION 3: LANGUAGE DISCOVERY ARCHITECTURE (Reference: Screenshot 2)
+           ========================================================================= */}
+        <LanguageDiscoveryArchitecture />
 
         {/* 4 Frosted Action Cards */}
         <section aria-label="Main actions" className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

@@ -69,25 +69,68 @@ export function Navbar() {
       <header className="fixed inset-x-0 top-0 z-40 border-b border-[#A6C48A]/15 bg-[#102B20]/90 backdrop-blur-2xl">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 sm:px-6 lg:px-8">
           
-          {/* Left: Hamburger & Brand (Reference: Image 1 Hamburger + Forest) */}
-          <div className="flex items-center gap-3">
+          {/* Left: Brand with Leaf Icon (Reference: Screenshot 1) */}
+          <div className="flex items-center gap-2 sm:gap-3">
+            <Link href="/" className="flex items-center gap-2 text-[#F5F3E9] hover:opacity-90 transition group">
+              <span className="grid h-8 w-8 sm:h-9 sm:w-9 place-items-center rounded-xl bg-[#1F5138]/60 border border-[#A6C48A]/30 text-base shadow-sm group-hover:scale-105 transition-transform" aria-hidden="true">
+                🌱
+              </span>
+              <span className="font-bold text-base sm:text-lg tracking-wider text-[#F5F3E9] font-sans uppercase">
+                VOICE ROOTS<span className="text-[#A6C48A]">.</span>
+              </span>
+            </Link>
+          </div>
+
+          {/* Mobile Right Navigation matching Screenshot 1 (Explore, About, Login + Hamburger) */}
+          <div className="flex lg:hidden items-center gap-2.5 sm:gap-3">
+            <Link
+              href="/explore"
+              className={`text-xs sm:text-sm font-medium transition ${
+                pathname === "/explore" ? "text-[#F5F3E9] font-semibold" : "text-[#A6C48A]/90 hover:text-[#F5F3E9]"
+              }`}
+            >
+              Explore
+            </Link>
+            <Link
+              href="/about"
+              className={`text-xs sm:text-sm font-medium transition ${
+                pathname === "/about" ? "text-[#F5F3E9] font-semibold" : "text-[#A6C48A]/90 hover:text-[#F5F3E9]"
+              }`}
+            >
+              About
+            </Link>
+            {user ? (
+              <Link
+                href="/dashboard"
+                className="text-xs sm:text-sm font-semibold text-[#A6C48A] hover:text-[#F5F3E9] transition"
+              >
+                {user.name.split(" ")[0]}
+              </Link>
+            ) : (
+              <Link
+                href="/login"
+                className={`text-xs sm:text-sm font-medium transition ${
+                  pathname === "/login" ? "text-[#F5F3E9] font-semibold" : "text-[#A6C48A]/90 hover:text-[#F5F3E9]"
+                }`}
+              >
+                Login
+              </Link>
+            )}
             <button
               type="button"
               onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="grid h-10 w-10 place-items-center rounded-xl bg-[#163B2C]/40 border border-[#A6C48A]/20 text-[#F5F3E9] hover:bg-[#1F5138]/60 transition md:hidden"
+              className="grid h-9 w-9 place-items-center rounded-xl bg-[#163B2C]/50 border border-[#A6C48A]/25 text-[#F5F3E9] hover:bg-[#1F5138]/70 transition ml-0.5"
               aria-label="Toggle navigation menu"
             >
-              {isMobileMenuOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
+              {isMobileMenuOpen ? (
+                <X className="h-4 w-4" />
+              ) : (
+                <div className="flex flex-col gap-1 w-4 justify-center items-center">
+                  <span className="w-4 h-0.5 bg-[#F5F3E9] rounded-full" />
+                  <span className="w-4 h-0.5 bg-[#F5F3E9] rounded-full" />
+                </div>
+              )}
             </button>
-
-            <Link href="/" className="flex items-center gap-2.5 text-[#F5F3E9] hover:opacity-90 transition group">
-              <span className="grid h-9 w-9 place-items-center rounded-xl bg-[#1F5138]/60 border border-[#A6C48A]/30 text-base shadow-sm group-hover:scale-105 transition-transform">
-                🌲
-              </span>
-              <span className="font-bold text-lg tracking-tight text-[#F5F3E9] font-sans">
-                voice roots<span className="text-[#A6C48A] font-black">.</span>
-              </span>
-            </Link>
           </div>
 
           {/* Desktop Nav: Elegant minimal links (Reference: Image 1 Home, Know More, etc.) */}
@@ -121,8 +164,8 @@ export function Navbar() {
             })}
           </nav>
 
-          {/* Right Controls: Search, Language & Auth (Reference: Image 1 Search Icon) */}
-          <div className="flex items-center gap-2 sm:gap-3">
+          {/* Desktop Right Controls: Search, Language & Auth */}
+          <div className="hidden lg:flex items-center gap-2 sm:gap-3">
             {/* Quick Search Button */}
             <button
               type="button"
