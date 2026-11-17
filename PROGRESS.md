@@ -3072,3 +3072,22 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     6. Live endpoint verification: `POST http://localhost:8000/api/translation/translate` and `POST http://localhost:3000/api/translate` both return genuine Gondi translation with HTTP 200 OK.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-17] [ANTIGRAVITY] DONE: Resolved blank page reports on /docs and optimized user experience for source download and translation navigation.
+  - Fixes implemented:
+    1. Content-Security-Policy (CSP) in backend/main.py: Added `https://cdn.jsdelivr.net` to `script-src` and `style-src`, and `https://fastapi.tiangolo.com` to `img-src`. Swagger UI on `http://localhost:3000/docs` and `http://localhost:8000/docs` now renders 100% cleanly without blocked CDN assets or ReferenceError.
+    2. Dedicated Source Download Portal (`web/src/app/download/page.tsx`): Built a forest luxury download hub (`http://localhost:3000/download`) featuring one-click ZIP download button (`/voice-roots-v2.0-audited-source.zip`), package stats (134 MB, 4,525 audited files), SHA-256 integrity verification, and quick setup terminal commands.
+    3. Navigation Bar (`web/src/components/ui/Navbar.tsx`): Added direct `Translate` link to header for seamless one-click navigation across desktop and mobile.
+  - Files touched:
+    - `backend/main.py`
+    - `web/src/app/download/page.tsx`
+    - `web/src/components/ui/Navbar.tsx`
+    - `PROGRESS.md`
+  - VERIFIED:
+    1. `http://localhost:3000/docs`: HTTP 200, Swagger UI loaded cleanly with interactive endpoints, verified via Playwright screenshot (`swagger_docs_verified.png`).
+    2. `http://localhost:3000/translate`: HTTP 200, full responsive multilingual UI loaded, verified via Playwright screenshot (`translate_full_check.png`).
+    3. `http://localhost:3000/download`: HTTP 200, luxury card rendered, verified via Playwright screenshot (`download_page_verified.png`).
+    4. `http://localhost:3000/voice-roots-v2.0-audited-source.zip`: HTTP 200, binary download active (134 MB).
+    5. TypeScript check: `npm run typecheck --prefix web` passed with 0 errors.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
