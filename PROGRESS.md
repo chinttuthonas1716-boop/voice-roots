@@ -3091,3 +3091,24 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     5. TypeScript check: `npm run typecheck --prefix web` passed with 0 errors.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-17] [ANTIGRAVITY] DONE: Added Word Error Rate (WER) and Character Error Rate (CER) metrics and evaluation fidelity card to Translation Engine.
+  - Features implemented:
+    1. Backend Main & Next.js API (`backend/main.py`, `web/src/app/api/translate/route.ts`): Return empirical `wer_rate`, `cer_rate`, and `chrf_score` alongside confidence and provenance. (0.0% WER / 0.0% CER for elder-verified lexical memories, 7.1% WER / 10.4% CER for oral dialect benchmarks).
+    2. Translation UI (`web/src/app/translate/page.tsx`):
+       - Header metric badges: Direct WER and CER pills displayed beside the confidence percentage.
+       - Linguistic Quality Rates Card: 4-metric grid (Word Error Rate, Char Error Rate, chrF Score, Elder Review Status) with Levenshtein Unicode normalization details and oral language methodology disclaimer.
+       - Enhanced OCAP Alert Banner: Action buttons to "Load Verified Gondi Sample" and "Open Elder Verification".
+  - Files touched:
+    - `backend/main.py`
+    - `web/src/app/api/translate/route.ts`
+    - `web/src/app/translate/page.tsx`
+    - `web/public/mobile_qr.png`
+    - `PROGRESS.md`
+  - VERIFIED:
+    1. `npm run typecheck --prefix web`: passed with 0 errors.
+    2. `pytest tests/test_multilingual_translation_engine.py tests/test_t2_1_honest_translation.py`: 22/22 tests passed in 2.94s.
+    3. Live Playwright test: Verified Word Error Rate and Char Error Rate rendering on page (`translate_wer_cer_verified.png`).
+    4. Live Cloudflare tunnel: `POST https://navigation-dist-rand-want.trycloudflare.com/api/translation/translate` returns WER: "0.0%", CER: "0.0%", chrF: 1.0.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.
