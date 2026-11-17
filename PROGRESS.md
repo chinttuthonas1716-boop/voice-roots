@@ -3112,3 +3112,24 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     4. Live Cloudflare tunnel: `POST https://navigation-dist-rand-want.trycloudflare.com/api/translation/translate` returns WER: "0.0%", CER: "0.0%", chrF: 1.0.
   - NOT VERIFIED: none.
   - NEEDS FROM OTHER AGENT: none.
+
+- [2026-11-17] [ANTIGRAVITY] DONE: Implemented AI Navigation & Help Bot ("Voice Roots AI Guide") across the application.
+  - Features implemented:
+    1. Assistant API Route (`web/src/app/api/assistant/route.ts`): Intent recognition for site navigation (`/translate`, `/download`, `/docs`, `/record`, `/dictionary`, `/stats`), automated FAQ explanations (OCAP protocols, WER/CER methodology, Gondi elder verification), and fallback to grounded local archive RAG (`/api/v1/assistant/query`).
+    2. UI Component (`web/src/components/ai/AINavigationBot.tsx`):
+       - Floating action button in bottom-right with pulsating online beacon.
+       - Conversational dialog with quick suggestion chips, message history, one-click page navigation buttons, grounded community citations, voice read-aloud (TTS), and chat reset.
+       - Mobile safe-area inset positioning above bottom navigation bar.
+    3. Universal Mounting (`web/src/app/layout.tsx`): Integrated `<AINavigationBot />` into root layout so it is available across all 58 routes on desktop, tablet, iPhone, and Android.
+  - Files touched:
+    - `web/src/app/api/assistant/route.ts`
+    - `web/src/components/ai/AINavigationBot.tsx`
+    - `web/src/app/layout.tsx`
+    - `PROGRESS.md`
+  - VERIFIED:
+    1. `npm run typecheck --prefix web`: passed with 0 errors.
+    2. Next.js production build: 58/58 static pages generated cleanly.
+    3. Playwright test desktop: Verified floating button, dialog opening, question sending, and navigation button (`ai_bot_verified.png`).
+    4. Playwright test mobile (iPhone 15): Verified touch interaction, OCAP prompt response, and safe-area rendering (`ai_bot_mobile_verified.png`).
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.

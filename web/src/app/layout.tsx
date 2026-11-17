@@ -4,6 +4,7 @@ import { Cormorant_Garamond, Manrope, DM_Sans } from "next/font/google";
 import "./globals.css";
 import { LanguageProvider } from "@/lib/languageContext";
 import { MobileBottomNav } from "@/components/navigation/MobileBottomNav";
+import { AINavigationBot } from "@/components/ai/AINavigationBot";
 import { PageTransition } from "@/components/transitions/PageTransition";
 import { ServiceWorkerRegister } from "@/components/pwa/ServiceWorkerRegister";
 
@@ -74,6 +75,7 @@ export default function RootLayout({
               </Link>
             </div>
 
+            <AINavigationBot />
             <MobileBottomNav />
             <ServiceWorkerRegister />
           </div>
