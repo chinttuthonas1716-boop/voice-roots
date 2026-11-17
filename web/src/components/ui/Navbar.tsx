@@ -19,6 +19,7 @@ import {
   TreePine,
   Sparkles,
   ArrowRight,
+  Code2,
 } from "lucide-react";
 import { getCurrentUser, logoutUser, type UserProfile } from "@/lib/auth";
 import { useAppLanguage } from "@/lib/languageContext";
@@ -60,6 +61,7 @@ export function Navbar() {
     { href: "/dictionary", label: "Dictionary", icon: BookOpen },
     { href: "/archive", label: "Digital Archives", icon: HardDrive },
     { href: "/dashboard", label: "My recordings", icon: Sparkles },
+    { href: "/docs", label: "API Docs", icon: Code2 },
     { href: "/about", label: "About", icon: ShieldCheck },
     ...(isReviewerOrAdmin ? [{ href: "/reviewer", label: "Reviewer", icon: ShieldCheck }] : []),
   ];
@@ -207,6 +209,17 @@ export function Navbar() {
                 हिन्दी
               </button>
             </div>
+
+            <Link
+              href="/docs"
+              target="_blank"
+              rel="noopener noreferrer"
+              title="Interactive API Swagger Documentation & Schemas"
+              className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-[#A6C48A]/30 bg-[#163B2C]/40 text-xs font-semibold text-[#A6C48A] hover:bg-[#1F5138]/50 hover:text-[#F5F3E9] transition"
+            >
+              <Code2 className="h-3.5 w-3.5" />
+              <span>API Docs</span>
+            </Link>
 
             <Link
               href="/reviewer"

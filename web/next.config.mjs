@@ -62,10 +62,31 @@ const nextConfig = {
     ];
   },
   async rewrites() {
+    const backend = API_BASE_URL || "http://localhost:8000";
     return [
       {
+        source: "/docs",
+        destination: `${backend}/docs`,
+      },
+      {
+        source: "/openapi.json",
+        destination: `${backend}/openapi.json`,
+      },
+      {
+        source: "/redoc",
+        destination: `${backend}/redoc`,
+      },
+      {
+        source: "/ready",
+        destination: `${backend}/ready`,
+      },
+      {
+        source: "/health",
+        destination: `${backend}/health`,
+      },
+      {
         source: "/api/v1/:path*",
-        destination: `${API_BASE_URL || "http://localhost:8000"}/api/v1/:path*`,
+        destination: `${backend}/api/v1/:path*`,
       },
     ];
   },
