@@ -1075,10 +1075,10 @@ async def security_and_logging_middleware(request: Request, call_next):
     response.headers["Permissions-Policy"] = "camera=(), microphone=(self), geolocation=()"
     response.headers["Cross-Origin-Opener-Policy"] = "same-origin"
     response.headers["Content-Security-Policy"] = (
-        "default-src 'self'; "
-        "script-src 'self' 'unsafe-inline' 'unsafe-eval'; "
-        "style-src 'self' 'unsafe-inline'; "
-        "img-src 'self' data: blob: https:; "
+        "default-src 'self' https://cdn.jsdelivr.net; "
+        "script-src 'self' 'unsafe-inline' 'unsafe-eval' https://cdn.jsdelivr.net; "
+        "style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; "
+        "img-src 'self' data: blob: https: https://fastapi.tiangolo.com; "
         "media-src 'self' blob: data: https:; "
         "connect-src 'self' http: https:;"
     )

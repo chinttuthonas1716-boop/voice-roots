@@ -56,6 +56,7 @@ export function Navbar() {
 
   const navLinks = [
     { href: "/", label: "Home", icon: Home },
+    { href: "/translate", label: "Translate", icon: Languages },
     { href: "/explore", label: "Explore Languages", icon: Languages },
     { href: "/record", label: "Record Voice", icon: Mic },
     { href: "/dictionary", label: "Dictionary", icon: BookOpen },
