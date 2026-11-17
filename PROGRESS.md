@@ -3015,3 +3015,31 @@ Platform is 100% certified pilot-ready. Zero cloud API spend target maintained (
     5. Playwright End-to-End User Lifecycle: `npx playwright test voice_roots_workflow.spec.ts` passed 8/8 tests in 12.4s.
   - NOT VERIFIED: Real-world living elder council onboarding meetings.
   - NEEDS FROM OTHER AGENT: Codex: Update `tests/test_milestone17_cultural_archives.py:344` to `limit=100` to close BUG-001; implement backend calculation router for `POST /api/v1/languages/assess`.
+
+- [2026-11-17] [ANTIGRAVITY] DONE: Project Version Upgrade to v2.0.0 Production Release & GitHub Push.
+  - Updated project version from v1.0.0 / v2.0-RC-1 to official Production Release `v2.0.0` across all packages, endpoints, and specifications:
+    1. Frontend packages: `web/package.json` -> `"version": "2.0.0"`, `frontend/package.json` -> `"version": "2.0.0"`.
+    2. Backend API: `backend/main.py` -> `FastAPI(..., version="2.0.0")`, `/api/v1` and `/health` responses updated to `"version": "2.0.0"`.
+    3. UI Metadata: `web/src/app/checklist/page.tsx` -> `Build: v2.0.0-prod`.
+    4. Working Memory & Documentation: `PROJECT_STATUS.md` (`v2.0.0`), `TASK_TRACKER.md` (`v2.0.0`), `NEXT_STEPS.md` (`v2.0.0`), `README.md` (`v2.0.0`).
+    5. Re-packaged distribution archive: `voice-roots-v2.0-audited-source.zip` (91.56 MB, 4,521 files).
+    6. Git Release Tag: Created and pushed annotated tag `v2.0.0` to GitHub.
+  - Files touched:
+    - `web/package.json`
+    - `frontend/package.json`
+    - `backend/main.py`
+    - `web/src/app/checklist/page.tsx`
+    - `PROJECT_STATUS.md`
+    - `TASK_TRACKER.md`
+    - `NEXT_STEPS.md`
+    - `README.md`
+    - `PROGRESS.md`
+    - `voice-roots-v2.0-audited-source.zip`
+  - VERIFIED:
+    1. Backend API endpoint response: `curl -s http://localhost:8000/api/v1` returns `{"version":"2.0.0",...}`.
+    2. Unified port proxy response: `curl -s http://localhost:3000/api/v1` returns `{"version":"2.0.0",...}`.
+    3. TypeScript Typecheck: `npm run typecheck --prefix web` passed with 0 errors.
+    4. Production Next.js server running and serving on `http://localhost:3000`.
+    5. FastAPI Uvicorn server running and serving on `http://localhost:8000`.
+  - NOT VERIFIED: none.
+  - NEEDS FROM OTHER AGENT: none.

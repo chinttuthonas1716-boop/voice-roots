@@ -1,8 +1,8 @@
 # VOICE ROOTS — NEXT STEPS & IMMEDIATE ACTION QUEUE
 
 **Queue State:** Ready for Autonomous Execution  
-**Current Release:** `v2.0-RC-1` (Production Candidate)  
-**Next Milestone:** `v2.0.0` (Institutional Pilot Launch)
+**Current Release:** `v2.0.0` (Production Release)  
+**Next Milestone:** `v2.1.0` (Institutional Field Pilot Deployment)
 
 ---
 

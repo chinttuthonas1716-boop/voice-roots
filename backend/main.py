@@ -664,7 +664,7 @@ def _sync_transcript_to_search(transcript_id: int):
 app = FastAPI(
     title="Voice Roots API",
     description="Rooting Oral Languages in Text with AI — Core Backend API",
-    version="1.0.0",
+    version="2.0.0",
 )
 
 # Initialize observability, structured logging, and error tracking (T3.4)
@@ -1326,7 +1326,7 @@ def root(request: Request):
         "name": "Voice Roots API",
         "tagline": "Rooting Oral Languages in Text with AI",
         "status": "online",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "docs_url": "/docs",
         "health_check": "/health",
     }
@@ -1340,7 +1340,7 @@ def api_root():
         "name": "Voice Roots API",
         "tagline": "Rooting Oral Languages in Text with AI",
         "status": "online",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "docs_url": "/docs",
         "health_check": "/health",
     }
@@ -1380,7 +1380,7 @@ def health_check():
     return {
         "status": status,
         "app": "Voice Roots",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "database": db_type,
         "database_status": db_status,
         "storage_status": "ok" if os.path.exists(STORAGE_DIR) else "not_configured",
@@ -1443,7 +1443,7 @@ def readiness_check():
     return {
         "status": "ready",
         "app": "Voice Roots",
-        "version": "1.0.0",
+        "version": "2.0.0",
         "checks": checks,
     }
 

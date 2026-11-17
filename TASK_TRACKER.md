@@ -1,8 +1,8 @@
 # VOICE ROOTS — TASK TRACKER (17 DEVELOPMENT PRIORITIES)
 
-**Release:** `v2.0-RC-1`  
+**Release:** `v2.0.0` (Production Release)  
 **Tracking Mode:** Autonomous Continuity Framework  
-**Last Updated:** November 15, 2026
+**Last Updated:** November 17, 2026
 
 | # | Priority Area | Primary Owner | Status | Verified Evidence |
 | :- | :--- | :--- | :--- | :--- |

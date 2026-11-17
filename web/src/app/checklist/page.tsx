@@ -210,7 +210,7 @@ export default function OnePageChecklistPage() {
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 pt-2 text-xs font-mono border-t border-white/5 print:border-black print:text-black">
             <div><span className="text-[#B9B3D6] print:text-gray-600">Tester:</span> ________________</div>
             <div><span className="text-[#B9B3D6] print:text-gray-600">Date:</span> 2026-10-08</div>
-            <div><span className="text-[#B9B3D6] print:text-gray-600">Build:</span> v1.0.0-prod</div>
+            <div><span className="text-[#B9B3D6] print:text-gray-600">Build:</span> v2.0.0-prod</div>
             <div><span className="text-[#B9B3D6] print:text-gray-600">Result:</span> <strong className="text-teal-400 print:text-black">75 / 75 PASS</strong></div>
           </div>
         </header>

@@ -1,7 +1,7 @@
 # VOICE ROOTS — PROJECT STATUS SNAPSHOT
 
-**Current Release Maturity:** `v2.0-RC-1` (Production Candidate / Institutional Pilot Certified)  
-**Last Updated:** November 15, 2026  
+**Current Release Maturity:** `v2.0.0` (Production Release / Institutional Pilot Certified)  
+**Last Updated:** November 17, 2026  
 **Active Working Agents:** `ANTIGRAVITY` (Frontend/Web/E2E), `CODEX` (Backend/Tests/Data)
 
 ---

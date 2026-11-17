@@ -1,6 +1,7 @@
 # Voice Roots: Rooting Oral Languages in Text with AI
 
-**Community-Governed, Offline-First Speech Preservation & Linguistic Intelligence Platform**
+**Community-Governed, Offline-First Speech Preservation & Linguistic Intelligence Platform**  
+**Release Version:** `v2.0.0` (Production Release — Forest Editorial UI & 4-Tier Language Discovery Engine)
 
 > **Live Production Web Application**: [`https://voice-roots.onrender.com`](https://voice-roots.onrender.com)  
 > **Live Production API Gateway**: [`https://voice-roots-api.onrender.com`](https://voice-roots-api.onrender.com)  
