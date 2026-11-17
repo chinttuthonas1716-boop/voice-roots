@@ -400,7 +400,7 @@ def init_db():
             """
             CREATE TABLE IF NOT EXISTS translations (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                transcript_id INTEGER NOT NULL,
+                transcript_id INTEGER NULL,
                 source_language TEXT NOT NULL,
                 target_language TEXT NOT NULL,
                 source_text TEXT NOT NULL,
@@ -425,6 +425,91 @@ def init_db():
             cursor.execute("ALTER TABLE translations ADD COLUMN review_status TEXT DEFAULT 'unreviewed_draft'")
         if "badge_label" not in existing_trans_cols:
             cursor.execute("ALTER TABLE translations ADD COLUMN badge_label TEXT DEFAULT 'Draft (Unreviewed)'")
+        for col_name, col_type in [
+            ("translation_method", "TEXT DEFAULT 'direct_neural'"),
+            ("pivot_language", "TEXT"),
+            ("confidence", "REAL DEFAULT 0.95"),
+            ("dialect", "TEXT"),
+            ("cultural_context", "TEXT"),
+            ("provenance_hash", "TEXT"),
+            ("user_id", "TEXT"),
+        ]:
+            if col_name not in existing_trans_cols:
+                try:
+                    cursor.execute(f"ALTER TABLE translations ADD COLUMN {col_name} {col_type}")
+                except Exception:
+                    pass
+
+        # Ensure transcript_id is nullable in SQLite for on-the-fly standalone translations
+        try:
+            trans_info = cursor.execute("PRAGMA table_info(translations)").fetchall()
+            is_transcript_id_notnull = any(r[1] == "transcript_id" and r[3] == 1 for r in trans_info)
+            if is_transcript_id_notnull:
+                cursor.execute(
+                    """
+                    CREATE TABLE translations_migrated (
+                        id INTEGER PRIMARY KEY AUTOINCREMENT,
+                        transcript_id INTEGER NULL,
+                        source_language TEXT NOT NULL,
+                        target_language TEXT NOT NULL,
+                        source_text TEXT NOT NULL,
+                        translated_text TEXT NOT NULL,
+                        provider TEXT NOT NULL,
+                        model TEXT,
+                        verified INTEGER DEFAULT 0,
+                        limitation_note TEXT,
+                        created_at TEXT NOT NULL,
+                        updated_at TEXT NOT NULL,
+                        review_status TEXT DEFAULT 'unreviewed_draft',
+                        badge_label TEXT DEFAULT 'Draft (Unreviewed)',
+                        translation_method TEXT DEFAULT 'direct_neural',
+                        pivot_language TEXT,
+                        confidence REAL DEFAULT 0.95,
+                        dialect TEXT,
+                        cultural_context TEXT,
+                        provenance_hash TEXT,
+                        user_id TEXT,
+                        FOREIGN KEY(transcript_id) REFERENCES transcripts(id) ON DELETE CASCADE
+                    )
+                    """
+                )
+                cols_present = [r[1] for r in trans_info]
+                common_cols = ", ".join(cols_present)
+                cursor.execute(f"INSERT INTO translations_migrated ({common_cols}) SELECT {common_cols} FROM translations")
+                cursor.execute("DROP TABLE translations")
+                cursor.execute("ALTER TABLE translations_migrated RENAME TO translations")
+                cursor.execute("CREATE INDEX IF NOT EXISTS idx_translations_transcript_id ON translations(transcript_id)")
+        except Exception as mig_err:
+            logger.warning("Translations table nullability migration note: %s", mig_err)
+
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS translation_reviews (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                translation_id INTEGER NOT NULL,
+                reviewer_name TEXT NOT NULL,
+                reviewer_role TEXT DEFAULT 'community_reviewer',
+                action TEXT NOT NULL,
+                approval_status TEXT NOT NULL,
+                corrected_text TEXT,
+                dialect_notes TEXT,
+                cultural_context TEXT,
+                created_at TEXT NOT NULL,
+                FOREIGN KEY(translation_id) REFERENCES translations(id) ON DELETE CASCADE
+            )
+            """
+        )
+        cursor.execute(
+            """
+            CREATE TABLE IF NOT EXISTS translation_feedback (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                translation_id INTEGER NOT NULL,
+                rating INTEGER,
+                feedback_text TEXT,
+                created_at TEXT NOT NULL
+            )
+            """
+        )
 
         cursor.execute(
             """
@@ -3277,22 +3362,43 @@ class TranslateRequest(BaseModel):
     targetLang: str | None = "en"
     transcript_id: int | None = None
     recording_id: int | None = None
+    user_id: str | None = None
+    dialect: str | None = None
+
+
+class TranslationReviewInput(BaseModel):
+    reviewer_name: str = "Community Reviewer"
+    reviewer_role: str = "community_elder"
+    action: str = "approve"  # approve, correct, reject
+    corrected_text: str | None = None
+    dialect_notes: str | None = None
+    cultural_context: str | None = None
+
+
+class TranslationFeedbackInput(BaseModel):
+    rating: int = 5
+    feedback_text: str | None = None
 
 
 class TranslationUpdate(BaseModel):
     translated_text: str | None = None
     verified: bool | None = None
     limitation_note: str | None = None
+    review_status: str | None = None
+    badge_label: str | None = None
 
 
+@app.post("/api/translation/translate")
 @app.post("/api/translate")
 @app.post("/api/v1/translate")
 def translate_text_endpoint(payload: TranslateRequest):
-    """Translate text between languages with provider discovery, oral language protections, and optional database persistence."""
-    src = (payload.source_language or payload.sourceLang or "").strip()
+    """Translate text between languages with provider discovery, oral language protections, and database persistence."""
+    src = (payload.source_language or payload.sourceLang or "auto").strip()
     tgt = (payload.target_language or payload.targetLang or "en").strip()
     text = payload.text.strip()
     target_id = payload.transcript_id or payload.recording_id
+    user_id = payload.user_id
+
     if not text:
         raise HTTPException(status_code=400, detail="Text to translate must not be empty.")
 
@@ -3305,57 +3411,79 @@ def translate_text_endpoint(payload: TranslateRequest):
 
     try:
         result = translation_manager.translate(text, src, tgt)
-        translation_id = None
         now = datetime.now(timezone.utc).isoformat()
-        if target_id is not None:
-            review_status = getattr(result, "review_status", "elder_approved" if result.verified else "unreviewed_draft")
-            badge_label = getattr(result, "badge_label", "Elder Approved" if result.verified else "Draft (Unreviewed)")
-            with sqlite3.connect(DB_PATH) as conn:
-                cursor = conn.cursor()
-                cursor.execute(
-                    """
-                    INSERT INTO translations (
-                        transcript_id, source_language, target_language, source_text,
-                        translated_text, provider, model, verified, limitation_note,
-                        review_status, badge_label,
-                        created_at, updated_at
-                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-                    """,
-                    (
-                        target_id,
-                        result.source_language,
-                        result.target_language,
-                        result.source_text,
-                        result.translated_text,
-                        result.provider,
-                        result.model,
-                        1 if result.verified else 0,
-                        result.limitation_note,
-                        review_status,
-                        badge_label,
-                        now,
-                        now,
-                    ),
-                )
-                conn.commit()
-                translation_id = cursor.lastrowid
+        review_status = getattr(result, "review_status", "elder_approved" if result.verified else "unreviewed_draft")
+        badge_label = getattr(result, "badge_label", "Elder Approved" if result.verified else "Draft (Unreviewed)")
+        translation_method = getattr(result, "translation_method", "direct_neural")
+        confidence = getattr(result, "confidence", 0.95)
+        dialect = getattr(result, "dialect", payload.dialect)
+        cultural_context = getattr(result, "cultural_context", None)
+        provenance_hash = getattr(result, "provenance_hash", None)
+
+        if not provenance_hash:
+            provenance_hash = hashlib.sha256(f"{result.source_language}:{result.target_language}:{text}:{result.translated_text}:{review_status}".encode("utf-8")).hexdigest()
+
+        translation_id = None
+        with sqlite3.connect(DB_PATH) as conn:
+            cursor = conn.cursor()
+            cursor.execute(
+                """
+                INSERT INTO translations (
+                    transcript_id, source_language, target_language, source_text,
+                    translated_text, provider, model, verified, limitation_note,
+                    review_status, badge_label, translation_method, confidence,
+                    dialect, cultural_context, provenance_hash, user_id,
+                    created_at, updated_at
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """,
+                (
+                    target_id,
+                    result.source_language,
+                    result.target_language,
+                    result.source_text,
+                    result.translated_text,
+                    result.provider,
+                    result.model,
+                    1 if result.verified else 0,
+                    result.limitation_note,
+                    review_status,
+                    badge_label,
+                    translation_method,
+                    confidence,
+                    dialect,
+                    cultural_context,
+                    provenance_hash,
+                    user_id,
+                    now,
+                    now,
+                ),
+            )
+            conn.commit()
+            translation_id = cursor.lastrowid
 
         return {
             "id": translation_id,
             "transcript_id": target_id,
             "source_text": result.source_text,
+            "original_text": result.source_text,
             "translated_text": result.translated_text,
+            "translation": result.translated_text,
             "source_language": result.source_language,
             "target_language": result.target_language,
             "provider": result.provider,
             "model": result.model,
             "verified": result.verified,
             "pair_status": result.pair_status,
-            "review_status": getattr(result, "review_status", "elder_approved" if result.verified else "unreviewed_draft"),
-            "badge_label": getattr(result, "badge_label", "Elder Approved" if result.verified else "Draft (Unreviewed)"),
-            "is_elder_approved": bool(getattr(result, "review_status", "") == "elder_approved" or result.verified),
+            "translation_method": translation_method,
+            "confidence": confidence,
+            "dialect": dialect,
+            "cultural_context": cultural_context,
+            "review_status": review_status,
+            "badge_label": badge_label,
+            "is_elder_approved": bool(review_status in ("elder_approved", "community_verified") or result.verified),
             "limitation_note": result.limitation_note,
-            "created_at": now if translation_id else None,
+            "provenance_hash": provenance_hash,
+            "created_at": now,
         }
     except OralLanguageElderReviewRequiredError as o_err:
         raise HTTPException(
@@ -3378,6 +3506,218 @@ def translate_text_endpoint(payload: TranslateRequest):
     except Exception as exc:  # noqa: BLE001
         logger.error("Translation provider error: %s", exc)
         raise HTTPException(status_code=502, detail=f"Translation provider request failed: {type(exc).__name__}")
+
+
+@app.get("/api/translation/languages")
+@app.get("/api/v1/translation/languages")
+def list_translation_languages():
+    """Retrieve catalog of all supported languages with native names, script, and translation capability tier."""
+    return {
+        "count": len(translation_manager.pair_registry.get_supported_languages()),
+        "languages": translation_manager.pair_registry.get_supported_languages(),
+    }
+
+
+@app.get("/api/translation/language-pairs")
+@app.get("/api/translation/pairs")
+@app.get("/api/v1/translation/pairs")
+def get_language_pairs_endpoint(
+    source: str | None = Query(None, description="Source language code or name"),
+    target: str | None = Query(None, description="Target language code or name"),
+):
+    """Check support status for a specific language pair or discover all supported pairs."""
+    if source and target:
+        return translation_manager.check_pair_support(source, target)
+    return {
+        "supported_families": ["Dravidian", "Indo-Aryan", "Austroasiatic", "Global World Languages"],
+        "neural_pairs_count": 506,  # 23 * 22 IndicTrans2 combinations
+        "community_memory_languages": ["gondi", "koya", "lambadi", "santhali"],
+        "status": "active",
+    }
+
+
+@app.get("/api/translation/models")
+@app.get("/api/v1/translation/models")
+def list_translation_models():
+    """Retrieve available translation models, capabilities, and provider status."""
+    return {
+        "models": [
+            {
+                "id": "indictrans2",
+                "name": "AI4Bharat IndicTrans2",
+                "coverage": "22 Scheduled Indian Languages + English",
+                "type": "Neural Machine Translation",
+                "status": "active",
+            },
+            {
+                "id": "community_phrasebook",
+                "name": "Community Translation Memory v2.1",
+                "coverage": "Gondi, Koya, Lambadi, Santhali Oral Heritage",
+                "type": "Elder-Verified Translation Memory",
+                "status": "active",
+            },
+            {
+                "id": "nllb_200",
+                "name": "Meta No Language Left Behind (NLLB-200)",
+                "coverage": "200 Global Languages",
+                "type": "Multilingual NMT",
+                "status": "configured_when_url_present",
+            },
+        ],
+    }
+
+
+@app.get("/api/translation/history")
+@app.get("/api/v1/translation/history")
+def get_translation_history(
+    limit: int = Query(50, ge=1, le=200),
+    user_id: str | None = Query(None),
+):
+    """Retrieve recent translation history with review status and provenance."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        query = "SELECT * FROM translations"
+        params: list[Any] = []
+        if user_id:
+            query += " WHERE user_id = ?"
+            params.append(user_id)
+        query += " ORDER BY id DESC LIMIT ?"
+        params.append(limit)
+        rows = conn.execute(query, params).fetchall()
+    return {
+        "count": len(rows),
+        "history": [dict(r) for r in rows],
+    }
+
+
+@app.get("/api/translation/{translation_id}")
+def get_translation_detail_endpoint(translation_id: int):
+    """Retrieve translation details and community reviews."""
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        row = conn.execute("SELECT * FROM translations WHERE id = ?", (translation_id,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Translation not found")
+        reviews = conn.execute(
+            "SELECT * FROM translation_reviews WHERE translation_id = ? ORDER BY id DESC",
+            (translation_id,),
+        ).fetchall()
+    item = dict(row)
+    item["reviews"] = [dict(r) for r in reviews]
+    return item
+
+
+@app.post("/api/translation/{translation_id}/review")
+@app.post("/api/v1/translations/{translation_id}/review")
+def review_translation_endpoint(translation_id: int, payload: TranslationReviewInput):
+    """Submit community elder verification, approval, or linguistic correction."""
+    now = datetime.now(timezone.utc).isoformat()
+    with sqlite3.connect(DB_PATH) as conn:
+        conn.row_factory = sqlite3.Row
+        cursor = conn.cursor()
+        existing = cursor.execute("SELECT * FROM translations WHERE id = ?", (translation_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="Translation record not found")
+
+        action = payload.action.lower()
+        if action == "approve":
+            approval_status = "approved"
+            new_status = "community_verified"
+            new_badge = "Community Verified"
+            is_verified = 1
+            updated_text = existing["translated_text"]
+        elif action == "correct":
+            approval_status = "corrected"
+            new_status = "community_verified"
+            new_badge = "Community Verified"
+            is_verified = 1
+            updated_text = (payload.corrected_text or "").strip() or existing["translated_text"]
+        elif action == "reject":
+            approval_status = "rejected"
+            new_status = "rejected"
+            new_badge = "Community Rejected"
+            is_verified = 0
+            updated_text = existing["translated_text"]
+        else:
+            raise HTTPException(status_code=400, detail=f"Invalid review action '{payload.action}'. Use approve, correct, or reject.")
+
+        cursor.execute(
+            """
+            INSERT INTO translation_reviews (
+                translation_id, reviewer_name, reviewer_role, action,
+                approval_status, corrected_text, dialect_notes, cultural_context, created_at
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """,
+            (
+                translation_id,
+                payload.reviewer_name,
+                payload.reviewer_role,
+                action,
+                approval_status,
+                payload.corrected_text,
+                payload.dialect_notes,
+                payload.cultural_context,
+                now,
+            ),
+        )
+
+        new_hash = hashlib.sha256(f"{existing['source_language']}:{existing['target_language']}:{existing['source_text']}:{updated_text}:{new_status}".encode("utf-8")).hexdigest()
+
+        cursor.execute(
+            """
+            UPDATE translations
+            SET translated_text = ?,
+                verified = ?,
+                review_status = ?,
+                badge_label = ?,
+                dialect = COALESCE(?, dialect),
+                cultural_context = COALESCE(?, cultural_context),
+                provenance_hash = ?,
+                updated_at = ?
+            WHERE id = ?
+            """,
+            (
+                updated_text,
+                is_verified,
+                new_status,
+                new_badge,
+                payload.dialect_notes,
+                payload.cultural_context,
+                new_hash,
+                now,
+                translation_id,
+            ),
+        )
+        conn.commit()
+
+    return {
+        "success": True,
+        "translation_id": translation_id,
+        "action": action,
+        "review_status": new_status,
+        "badge_label": new_badge,
+        "translated_text": updated_text,
+        "reviewer": payload.reviewer_name,
+        "reviewed_at": now,
+    }
+
+
+@app.post("/api/translation/{translation_id}/feedback")
+@app.post("/api/v1/translations/{translation_id}/feedback")
+def feedback_translation_endpoint(translation_id: int, payload: TranslationFeedbackInput):
+    """Submit quality rating and feedback for a translation."""
+    now = datetime.now(timezone.utc).isoformat()
+    with sqlite3.connect(DB_PATH) as conn:
+        cursor = conn.cursor()
+        existing = cursor.execute("SELECT id FROM translations WHERE id = ?", (translation_id,)).fetchone()
+        if not existing:
+            raise HTTPException(status_code=404, detail="Translation record not found")
+        cursor.execute(
+            "INSERT INTO translation_feedback (translation_id, rating, feedback_text, created_at) VALUES (?, ?, ?, ?)",
+            (translation_id, payload.rating, payload.feedback_text, now),
+        )
+        conn.commit()
+    return {"success": True, "translation_id": translation_id, "rating": payload.rating, "submitted_at": now}
 
 
 @app.get("/api/v1/transcripts/{transcript_id}/translations")

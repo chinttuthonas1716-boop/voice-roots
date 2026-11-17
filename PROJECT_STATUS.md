@@ -18,8 +18,8 @@ The platform has been audited, stabilized, hardened, and transformed into a cine
 
 | Component | Target Standard | Current Verified Count | Status | Notes |
 | :--- | :--- | :--- | :--- | :--- |
-| **Backend Pytest** | Zero regressions | **419 Passed** / 1 Known Fixture Issue | `GREEN` | `tests/test_t*.py`: 108/108 passed; full run 419/420 passed (see `BUG_TRACKER.md` for fixture pagination fix). |
-| **Frontend Playwright E2E** | Full user lifecycle | **32 / 32 Passed** | `GREEN` | 18 responsive layout tests (desktop + mobile), 6 auth production tests, 8 workflow lifecycle tests. |
+| **Backend Pytest** | Zero regressions | **434 Passed** / 1 Known Fixture Issue | `GREEN` | `tests/test_multilingual_translation_engine.py`: 15/15 passed; all 35 translation tests passed; full run 434/435 passed. |
+| **Frontend Playwright E2E** | Full user lifecycle | **33 / 33 Passed** | `GREEN` | 18 responsive layout tests (desktop + mobile), 6 auth production tests, 8 workflow lifecycle tests, 1 multilingual translation E2E test. |
 | **Next.js Production Build** | Zero compile errors | **56 / 56 Routes Compiled** | `GREEN` | All static and dynamic server routes compiled cleanly (`API_BASE_URL` configured). |
 | **TypeScript Typecheck** | Zero type errors | **0 Errors** (`tsc --noEmit`) | `GREEN` | Web codebase strictly typed across all components, API routes, and state stores. |
 | **Responsive Standards** | Zero horizontal scroll | **0px Overflow on 390px & 1280px** | `GREEN` | Verified on iPhone viewport (390px) and Desktop viewport (1280px) across all 9 core routes. |

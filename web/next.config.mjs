@@ -88,6 +88,10 @@ const nextConfig = {
         source: "/api/v1/:path*",
         destination: `${backend}/api/v1/:path*`,
       },
+      {
+        source: "/api/translation/:path*",
+        destination: `${backend}/api/translation/:path*`,
+      },
     ];
   },
 };

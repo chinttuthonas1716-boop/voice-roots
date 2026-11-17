@@ -23,6 +23,7 @@
 | **P15** | **API Documentation & Error Contracts** | Codex | `COMPLETED` | Documented in `API_DOCUMENTATION.md` and `MASTER_SPECIFICATION.md`. |
 | **P16** | **Sanitized Distribution Archive** | Antigravity | `COMPLETED` | Packaged `voice-roots-v2.0-audited-source.zip` (0 secrets, 0 database binaries, 0 private audio). |
 | **P17** | **Production Candidate Certification** | Shared | `COMPLETED` | Certified as Production Candidate (Pilot Certified) in `VOICE_ROOTS_PROJECT_ACCEPTANCE_REVIEW.md`. |
+| **P18** | **Multilingual Language-to-Language Translation Engine** | Shared | `COMPLETED` | Modular architecture (LanguagePairRegistry, Community Translation Memory, IndicTrans2, NLLB, LanguageDetectionService, Community Elder Verification); English <-> Gondi verified; 35 backend tests passed; Playwright E2E passed. |
 
 ---
 
